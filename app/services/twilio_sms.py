@@ -19,7 +19,7 @@ from app.services.tour_config import TOUR_TYPES
 # ── Internal send ─────────────────────────────────────────────────────────────
 
 async def _send(to_phone: str, body: str) -> dict:
-    if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN or not TWILIO_MESSAGING_SID:
+    if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN or not TWILIO_MESSAGING_SERVICE_SID:
         raise RuntimeError("Twilio credentials not set")
 
     url = f"https://api.twilio.com/2010-04-01/Accounts/{TWILIO_ACCOUNT_SID}/Messages.json"
@@ -28,7 +28,7 @@ async def _send(to_phone: str, body: str) -> dict:
             url,
             auth=(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN),
             data={
-                "MessagingServiceSid": TWILIO_MESSAGING_SID,
+                "MessagingServiceSid": TWILIO_MESSAGING_SERVICE_SID,
                 "To":   to_phone,
                 "Body": body,
             },
