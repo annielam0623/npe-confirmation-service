@@ -46,28 +46,28 @@ async def send_confirmation(
     booking = result.scalar_one_or_none()
     if not booking:
         raise HTTPException(404, "Booking not found")
-        if booking.status == BookingStatus.cancelled:
+    if booking.status == BookingStatus.cancelled:
         raise HTTPException(400, "Booking is cancelled")
 
     results = {}
 
-    if req.send_email and booking.guest_email:
+    if req.send_email and booking.customer_email:
         try:
             email_result = await sendgrid.send_confirmation_email(booking)
             results["email"] = email_result
-            await _log_notification(db, booking.id, NotificationType.confirmation, "email", booking.guest_email, email_result)
+            await _log_notification(db, booking.id, NotificationType.tour_confirmation, "email", booking.customer_email, email_result)
         except Exception as e:
             results["email"] = {"error": str(e)}
-            await _log_notification(db, booking.id, NotificationType.confirmation, "email", booking.guest_email, {"error": str(e)})
+            await _log_notification(db, booking.id, NotificationType.tour_confirmation, "email", booking.customer_email, {"error": str(e)})
 
-    if req.send_sms and booking.guest_phone:
+    if req.send_sms and booking.phone:
         try:
             sms_result = await twilio_sms.send_confirmation_sms(booking)
             results["sms"] = sms_result
-            await _log_notification(db, booking.id, NotificationType.confirmation, "sms", booking.guest_phone, sms_result)
+            await _log_notification(db, booking.id, NotificationType.tour_confirmation, "sms", booking.phone, sms_result)
         except Exception as e:
             results["sms"] = {"error": str(e)}
-            await _log_notification(db, booking.id, NotificationType.confirmation, "sms", booking.guest_phone, {"error": str(e)})
+            await _log_notification(db, booking.id, NotificationType.tour_confirmation, "sms", booking.phone, {"error": str(e)})
 
     booking.status = BookingStatus.sent
     await db.commit()
@@ -88,19 +88,19 @@ async def send_morning_reminder(
 
     results = {}
 
-    if req.send_email and booking.guest_email:
+    if req.send_email and booking.customer_email:
         try:
             r = await sendgrid.send_morning_reminder_email(booking)
             results["email"] = r
-            await _log_notification(db, booking.id, NotificationType.morning_reminder, "email", booking.guest_email, r)
+            await _log_notification(db, booking.id, NotificationType.morning_reminder, "email", booking.customer_email, r)
         except Exception as e:
             results["email"] = {"error": str(e)}
 
-    if req.send_sms and booking.guest_phone:
+    if req.send_sms and booking.phone:
         try:
             r = await twilio_sms.send_morning_reminder_sms(booking)
             results["sms"] = r
-            await _log_notification(db, booking.id, NotificationType.morning_reminder, "sms", booking.guest_phone, r)
+            await _log_notification(db, booking.id, NotificationType.morning_reminder, "sms", booking.phone, r)
         except Exception as e:
             results["sms"] = {"error": str(e)}
 
@@ -122,11 +122,11 @@ async def send_ticket_reminder(
 
     results = {}
 
-    if req.send_sms and booking.guest_phone:
+    if req.send_sms and booking.phone:
         try:
             r = await twilio_sms.send_ticket_reminder_sms(booking)
             results["sms"] = r
-            await _log_notification(db, booking.id, NotificationType.ticket_reminder, "sms", booking.guest_phone, r)
+            await _log_notification(db, booking.id, NotificationType.ticket_reminder, "sms", booking.phone, r)
         except Exception as e:
             results["sms"] = {"error": str(e)}
 
