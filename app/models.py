@@ -86,6 +86,46 @@ class Promotion(Base):
     tickets = relationship("BookingTicket", back_populates="promotion")
 
 
+# ─── Manifests ────────────────────────────────────────────────────────────────
+
+class Manifest(Base):
+    """
+    A manifest groups one or more Rezdy products into a named tour category.
+    e.g. "Grand Canyon South" covers multiple GYG/Viator product variants.
+    booking_type determines which send module applies.
+    """
+    __tablename__ = "manifests"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    name         = Column(String(200), unique=True, nullable=False)
+    booking_type = Column(String(20), nullable=False, default="bus_tour")
+    is_active    = Column(Boolean, default=True)
+    sort_order   = Column(Integer, default=0)
+    created_at   = Column(DateTime, server_default=func.now())
+    updated_at   = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    products = relationship("ManifestProduct", back_populates="manifest",
+                            cascade="all, delete-orphan")
+
+
+class ManifestProduct(Base):
+    """
+    Maps a Rezdy productCode to a Manifest.
+    product_code is the stable Rezdy P-code (e.g. P60JMF).
+    product_name is kept for display, auto-updated by webhook.
+    """
+    __tablename__ = "manifest_products"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    manifest_id  = Column(Integer, ForeignKey("manifests.id"), nullable=False, index=True)
+    product_code = Column(String(20), unique=True, nullable=False, index=True)
+    product_name = Column(String(300), nullable=False, default="")
+    created_at   = Column(DateTime, server_default=func.now())
+    updated_at   = Column(DateTime, server_default=func.now(), onupdate=func.now())
+
+    manifest = relationship("Manifest", back_populates="products")
+
+
 # ─── Bookings ─────────────────────────────────────────────────────────────────
 
 class Booking(Base):
@@ -103,7 +143,12 @@ class Booking(Base):
                              default=lambda: secrets.token_urlsafe(32))
     order_number    = Column(String(50), index=True, nullable=False)
     rezdy_order_id  = Column(String(128), nullable=True, index=True)
-    confirmation_no = Column(String(100), nullable=True)   # self_drive attraction confirmation#
+    confirmation_no = Column(String(100), nullable=True)   # attraction confirmation#
+
+    # Rezdy Product (v2)
+    product_code = Column(String(20),  nullable=True, index=True)
+    product_name = Column(String(300), nullable=True)
+    tt_number    = Column(String(50),  nullable=True)   # financial ref, stored not displayed
 
     # Guest Info
     first_name     = Column(String(100), nullable=False)
@@ -113,10 +158,10 @@ class Booking(Base):
     quantities     = Column(Integer, default=1)
 
     # Tour Info
-    tour_type    = Column(String(80), nullable=True)
-    tour_date    = Column(Date, nullable=True)
-    tour_time    = Column(String(30), nullable=True)      # self_drive: tour slot time
-    checkin_time = Column(String(30), nullable=True)      # self_drive: check-in time
+    tour_type     = Column(String(80), nullable=True)
+    tour_date     = Column(Date, nullable=True)
+    tour_time     = Column(String(30), nullable=True)     # self_drive: tour slot time
+    checkin_time  = Column(String(30), nullable=True)     # self_drive: check-in time
     tour_location = Column(String(200), nullable=True)    # self_drive: meeting location
 
     # Bus Tour Pickup
@@ -171,6 +216,38 @@ class Booking(Base):
     @property
     def guest_full_name(self):
         return f"{self.first_name} {self.last_name}".strip()
+
+
+# ─── Dismissed Bookings ───────────────────────────────────────────────────────
+
+class DismissedBooking(Base):
+    """
+    Records bookings dismissed from Action Required list.
+    The booking row itself is NOT deleted — this is an audit trail.
+    """
+    __tablename__ = "dismissed_bookings"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    booking_id   = Column(Integer, ForeignKey("bookings.id"), nullable=False,
+                          unique=True, index=True)
+    dismissed_by = Column(String(64), nullable=False, default="")
+    reason       = Column(Text, nullable=True)
+    dismissed_at = Column(DateTime, server_default=func.now())
+
+    booking = relationship("Booking")
+
+
+# ─── Settings ─────────────────────────────────────────────────────────────────
+
+class Setting(Base):
+    """Key-value store for ops configuration."""
+    __tablename__ = "settings"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    key        = Column(String(100), unique=True, nullable=False)
+    value      = Column(Text, nullable=False, default="")
+    label      = Column(String(200), nullable=False, default="")
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
 
 # ─── Booking Tickets ──────────────────────────────────────────────────────────
