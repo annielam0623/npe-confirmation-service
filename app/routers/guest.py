@@ -6,11 +6,12 @@ POST /confirm/{token}  — handle submission
 """
 
 from datetime import datetime
-from fastapi import APIRouter, Form, Request
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from app.database import AsyncSessionLocal
+from app.database import get_db
 from app.models import Booking
 from app.services.tour_config import TOUR_TYPES
 from app.services.sendgrid import send_staff_notification
@@ -312,10 +313,9 @@ var ck=document.querySelector('input[name="confirmation"]:checked');if(ck){{if(c
 # ── Routes ────────────────────────────────────────────────────────────────────
 
 @router.get("/confirm/{token}", response_class=HTMLResponse)
-async def guest_confirm_page(token: str):
-    async with AsyncSessionLocal() as db:
-        result = await db.execute(select(Booking).where(Booking.confirm_token == token))
-        booking = result.scalar_one_or_none()
+async def guest_confirm_page(token: str, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Booking).where(Booking.confirm_token == token))
+    booking = result.scalar_one_or_none()
 
     if not booking:
         return _expired()
@@ -327,6 +327,7 @@ async def guest_confirm_page(token: str):
 @router.post("/confirm/{token}", response_class=HTMLResponse)
 async def guest_confirm_submit(
     token: str,
+    db: AsyncSession = Depends(get_db),
     npe_submit:      str = Form(default=""),
     confirmation:    str = Form(default=""),
     lunch_turkey:    int = Form(default=0),
@@ -339,63 +340,62 @@ async def guest_confirm_submit(
     if npe_submit != "1":
         return _expired()
 
-    async with AsyncSessionLocal() as db:
-        result = await db.execute(select(Booking).where(Booking.confirm_token == token))
-        booking = result.scalar_one_or_none()
-        if not booking:
-            return _expired()
+    result = await db.execute(select(Booking).where(Booking.confirm_token == token))
+    booking = result.scalar_one_or_none()
+    if not booking:
+        return _expired()
 
-        tour_config = TOUR_TYPES.get(booking.tour_type or "", list(TOUR_TYPES.values())[0])
-        qty         = int(booking.quantities or 1)
-        has_lunch   = tour_config.get("has_lunch", False)
+    tour_config = TOUR_TYPES.get(booking.tour_type or "", list(TOUR_TYPES.values())[0])
+    qty         = int(booking.quantities or 1)
+    has_lunch   = tour_config.get("has_lunch", False)
 
-        # Validation
-        error_msg = ""
-        if confirmation not in ("yes", "modify_req"):
-            error_msg = "Please select YES or Modify."
-        elif confirmation == "yes" and has_lunch and (lunch_turkey + lunch_veggie + lunch_beef) != qty:
-            error_msg = f"Lunch total must equal your party size of {qty}."
+    # Validation
+    error_msg = ""
+    if confirmation not in ("yes", "modify_req"):
+        error_msg = "Please select YES or Modify."
+    elif confirmation == "yes" and has_lunch and (lunch_turkey + lunch_veggie + lunch_beef) != qty:
+        error_msg = f"Lunch total must equal your party size of {qty}."
 
-        if error_msg:
-            return _render(booking, tour_config, error_msg=error_msg)
+    if error_msg:
+        return _render(booking, tour_config, error_msg=error_msg)
 
-        # Build notes/history
-        new_count   = int(booking.submission_count or 0) + 1
-        final_notes = notes
-        new_history = booking.notes_history or ""
+    # Build notes/history
+    new_count   = int(booking.submission_count or 0) + 1
+    final_notes = notes
+    new_history = booking.notes_history or ""
 
-        if confirmation == "modify_req":
-            ts    = datetime.now().strftime("%Y-%m-%d %H:%M")
-            entry = (
-                f"[{ts}] Modify requested"
-                + (f": {reschedule_date}" if reschedule_date else "")
-                + (f" — {notes}" if notes else "")
-            )
-            final_notes = entry
-            new_history = (entry + "\n" + new_history).strip() if new_history else entry
+    if confirmation == "modify_req":
+        ts    = datetime.now().strftime("%Y-%m-%d %H:%M")
+        entry = (
+            f"[{ts}] Modify requested"
+            + (f": {reschedule_date}" if reschedule_date else "")
+            + (f" — {notes}" if notes else "")
+        )
+        final_notes = entry
+        new_history = (entry + "\n" + new_history).strip() if new_history else entry
 
-        # Persist
-        booking.confirmation     = confirmation
-        booking.lunch_turkey     = lunch_turkey
-        booking.lunch_veggie     = lunch_veggie
-        booking.lunch_beef       = lunch_beef
-        booking.notes            = final_notes
-        booking.notes_history    = new_history
-        booking.submitted_at     = datetime.now()
-        booking.submission_count = new_count
-        booking.source           = src
+    # Persist
+    booking.confirmation     = confirmation
+    booking.lunch_turkey     = lunch_turkey
+    booking.lunch_veggie     = lunch_veggie
+    booking.lunch_beef       = lunch_beef
+    booking.notes            = final_notes
+    booking.notes_history    = new_history
+    booking.submitted_at     = datetime.now()
+    booking.submission_count = new_count
+    booking.source           = src
 
-        await db.commit()
-        await db.refresh(booking)
+    await db.commit()
+    await db.refresh(booking)
 
-        # Staff notification (best-effort, don't block response)
-        try:
-            await send_staff_notification(
-                booking, confirmation,
-                turkey=lunch_turkey, veggie=lunch_veggie, beef=lunch_beef,
-                notes=final_notes, submission_count=new_count,
-            )
-        except Exception as exc:
-            print(f"[guest] staff notification failed: {exc}")
+    # Staff notification (best-effort, don't block response)
+    try:
+        await send_staff_notification(
+            booking, confirmation,
+            turkey=lunch_turkey, veggie=lunch_veggie, beef=lunch_beef,
+            notes=final_notes, submission_count=new_count,
+        )
+    except Exception as exc:
+        print(f"[guest] staff notification failed: {exc}")
 
     return _thanks(booking)
