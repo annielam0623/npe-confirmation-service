@@ -385,7 +385,7 @@ async def guest_confirm_submit(
     booking.notes_history    = new_history
     booking.submitted_at     = datetime.now()
     booking.submission_count = new_count
-    booking.source           = src
+    
 
     await db.commit()
     await db.refresh(booking)
