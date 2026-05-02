@@ -1,9 +1,9 @@
 """
 NPE Webhook Router
-Receives Rezdy order webhooks. Kept separate so it never breaks other modules.
-Will be expanded when Rezdy webhook integration begins.
+Receives Rezdy order webhooks.
 """
 
+import json
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,10 +14,13 @@ router = APIRouter()
 
 @router.post("/rezdy")
 async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
-    """
-    Placeholder for Rezdy webhook.
-    Will parse Rezdy order payload and create bookings automatically.
-    """
-    payload = await request.json()
-    # TODO: implement when Rezdy webhook is ready
-    return {"status": "received", "message": "Rezdy webhook not yet implemented"}
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = await request.body()
+        payload = payload.decode("utf-8")
+
+    print(f"[rezdy webhook] payload received:")
+    print(json.dumps(payload, indent=2, ensure_ascii=False) if isinstance(payload, dict) else payload)
+
+    return {"status": "received"}
