@@ -9,7 +9,7 @@ import httpx
 
 TWILIO_ACCOUNT_SID   = os.getenv("TWILIO_ACCOUNT_SID", "")
 TWILIO_AUTH_TOKEN    = os.getenv("TWILIO_AUTH_TOKEN", "")
-TWILIO_MESSAGING_SID = os.getenv("TWILIO_MESSAGING_SERVICE_SID", "")  # MG...
+TWILIO_MESSAGING_SERVICE_SID = os.getenv("TWILIO_MESSAGING_SERVICE_SID", "")  # MG...
 BASE_URL             = os.getenv("BASE_URL", "https://confirm.nationalparkexpress.com")
 SUPPORT_PHONE        = os.getenv("SUPPORT_PHONE", "702-948-4190")
 
