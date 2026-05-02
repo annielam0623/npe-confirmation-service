@@ -41,15 +41,12 @@ async def send_confirmation(
 ):
     """
     Send tour confirmation to guest (email + SMS).
-    Booking must have driver_name and bus_number filled in (status = ready).
-    """
+        """
     result = await db.execute(select(Booking).where(Booking.id == req.booking_id))
     booking = result.scalar_one_or_none()
     if not booking:
         raise HTTPException(404, "Booking not found")
-    if booking.status == BookingStatus.pending:
-        raise HTTPException(400, "Booking is still pending — fill in driver and bus number first")
-    if booking.status == BookingStatus.cancelled:
+        if booking.status == BookingStatus.cancelled:
         raise HTTPException(400, "Booking is cancelled")
 
     results = {}
