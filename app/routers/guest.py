@@ -314,9 +314,11 @@ var ck=document.querySelector('input[name="confirmation"]:checked');if(ck){{if(c
 
 @router.get("/confirm/{token}", response_class=HTMLResponse)
 async def guest_confirm_page(token: str, db: AsyncSession = Depends(get_db)):
+    print(f"[guest] looking up token: {token}")
     result = await db.execute(select(Booking).where(Booking.confirm_token == token))
     booking = result.scalar_one_or_none()
-
+    print(f"[guest] booking found: {booking}")
+    
     if not booking:
         return _expired()
 
