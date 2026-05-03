@@ -262,6 +262,7 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     rezdy_status = payload.get("status", "").strip().upper()
 
     print(f"[webhook] order={order_number} status={rezdy_status}")
+    print(f"[webhook] payload={json.dumps(payload, ensure_ascii=False)[:3000]}")
 
     # ── Handle cancellation ──
     if rezdy_status in ("CANCELLED", "DELETED"):
