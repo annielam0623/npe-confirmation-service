@@ -332,4 +332,5 @@ class AdminUser(Base):
     email           = Column(String(256), unique=True)
     hashed_password = Column(String(256))
     is_active       = Column(Boolean, default=True)
+    role = Column(String(20), nullable=False, default="staff")
     created_at      = Column(DateTime, server_default=func.now())
