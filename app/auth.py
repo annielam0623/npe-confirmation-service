@@ -1,109 +1,245 @@
+"""
+NPE Auth — JWT login, role-based access control
+Roles: admin (full access), staff (no Settings)
+"""
+
 import os
 from datetime import datetime, timedelta
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.templating import Jinja2Templates
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models import AdminUser
 
-SECRET_KEY = os.getenv("SECRET_KEY", "change-this-in-production-please")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8  # 8 hours
+# ─── Config ───────────────────────────────────────────────────────────────────
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+SECRET_KEY  = os.getenv("SECRET_KEY", "change-me-in-production-please")
+ALGORITHM   = "HS256"
+TOKEN_EXPIRE_HOURS = 12
+COOKIE_NAME = "npe_token"
+
+# ─── Setup ────────────────────────────────────────────────────────────────────
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token", auto_error=False)
+templates = Jinja2Templates(directory="app/templates")
 router = APIRouter()
 
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
+# ─── Pydantic Schemas ─────────────────────────────────────────────────────────
 
 class TokenData(BaseModel):
     username: Optional[str] = None
+    role: Optional[str] = None
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+class UserOut(BaseModel):
+    id: int
+    username: str
+    email: Optional[str]
+    role: str
+    is_active: bool
+
+    class Config:
+        from_attributes = True
 
 
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+# ─── Password Helpers ─────────────────────────────────────────────────────────
+
+def verify_password(plain: str, hashed: str) -> bool:
+    return pwd_context.verify(plain, hashed)
 
 
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+def hash_password(plain: str) -> str:
+    return pwd_context.hash(plain)
+
+
+# ─── JWT Helpers ──────────────────────────────────────────────────────────────
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
+    expire = datetime.utcnow() + (expires_delta or timedelta(hours=TOKEN_EXPIRE_HOURS))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+def decode_token(token: str) -> Optional[TokenData]:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
+        username = payload.get("sub")
+        role     = payload.get("role", "staff")
         if username is None:
-            raise credentials_exception
+            return None
+        return TokenData(username=username, role=role)
     except JWTError:
-        raise credentials_exception
+        return None
 
+
+# ─── DB Helper ────────────────────────────────────────────────────────────────
+
+async def get_user(db: AsyncSession, username: str):
+    from app.models import AdminUser
     result = await db.execute(select(AdminUser).where(AdminUser.username == username))
-    user = result.scalar_one_or_none()
-    if user is None or not user.is_active:
-        raise credentials_exception
+    return result.scalar_one_or_none()
+
+
+async def authenticate_user(db: AsyncSession, username: str, password: str):
+    user = await get_user(db, username)
+    if not user:
+        return None
+    if not verify_password(password, user.hashed_password):
+        return None
     return user
 
 
-@router.post("/login", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(AdminUser).where(AdminUser.username == form_data.username))
-    user = result.scalar_one_or_none()
+# ─── Current User Dependency ──────────────────────────────────────────────────
 
-    if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
+async def get_current_user(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    """Read JWT from cookie (browser) or Authorization header (API)."""
+    token = request.cookies.get(COOKIE_NAME)
+    if not token:
+        # fallback: Authorization: Bearer <token>
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Not authenticated")
+
+    token_data = decode_token(token)
+    if not token_data:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="Invalid or expired token")
+
+    user = await get_user(db, token_data.username)
+    if not user or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                            detail="User not found or inactive")
+    return user
+
+
+async def get_current_admin(current_user=Depends(get_current_user)):
+    """Only admin role allowed."""
+    if current_user.role != "admin":
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Admin access required")
+    return current_user
+
+
+def require_admin(current_user=Depends(get_current_user)):
+    """Dependency alias for admin-only routes."""
+    return get_current_admin(current_user)
+
+
+# ─── Auth Routes ──────────────────────────────────────────────────────────────
+
+@router.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    # If already logged in, redirect to dashboard
+    token = request.cookies.get(COOKIE_NAME)
+    if token and decode_token(token):
+        return RedirectResponse(url="/admin/dashboard", status_code=302)
+    return templates.TemplateResponse("login.html", {"request": request, "error": None})
+
+
+@router.post("/login", response_class=HTMLResponse)
+async def login_submit(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
+    form = await request.form()
+    username = str(form.get("username", "")).strip()
+    password = str(form.get("password", ""))
+
+    user = await authenticate_user(db, username, password)
+    if not user:
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": "Invalid username or password"},
+            status_code=400,
         )
 
-    access_token = create_access_token(
-        data={"sub": user.username},
-        expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
+    token = create_access_token({"sub": user.username, "role": user.role})
+    response = RedirectResponse(url="/admin/dashboard", status_code=302)
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=token,
+        httponly=True,
+        max_age=TOKEN_EXPIRE_HOURS * 3600,
+        samesite="lax",
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return response
 
+
+@router.post("/token")
+async def api_token(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: AsyncSession = Depends(get_db),
+):
+    """API token endpoint for swagger/testing."""
+    user = await authenticate_user(db, form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(status_code=400, detail="Incorrect username or password")
+    token = create_access_token({"sub": user.username, "role": user.role})
+    return {"access_token": token, "token_type": "bearer"}
+
+
+@router.get("/logout")
+async def logout():
+    response = RedirectResponse(url="/auth/login", status_code=302)
+    response.delete_cookie(COOKIE_NAME)
+    return response
+
+
+# ─── Create Admin Utility ─────────────────────────────────────────────────────
 
 @router.post("/create-admin")
-async def create_admin(username: str, email: str, password: str, db: AsyncSession = Depends(get_db)):
+async def create_admin(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+):
     """
-    One-time setup endpoint. Disable after first use by removing or protecting it.
-    Call: POST /auth/create-admin?username=admin&email=you@npe.com&password=yourpassword
+    One-time setup: create an admin user.
+    Protected by ADMIN_SETUP_KEY env var.
     """
-    # Check if any admin exists
-    result = await db.execute(select(AdminUser))
-    existing = result.scalars().first()
-    
-    SETUP_KEY = os.getenv("SETUP_KEY", "")
-    if existing and not SETUP_KEY:
-        raise HTTPException(status_code=403, detail="Admin already exists. Set SETUP_KEY env var to create more.")
+    from app.models import AdminUser
 
-    new_user = AdminUser(
+    setup_key = os.getenv("ADMIN_SETUP_KEY", "")
+    body = await request.json()
+
+    if setup_key and body.get("setup_key") != setup_key:
+        raise HTTPException(status_code=403, detail="Invalid setup key")
+
+    username = body.get("username", "").strip()
+    password = body.get("password", "")
+    email    = body.get("email", "")
+    role     = body.get("role", "admin")
+
+    if not username or not password:
+        raise HTTPException(status_code=400, detail="username and password required")
+
+    existing = await get_user(db, username)
+    if existing:
+        raise HTTPException(status_code=409, detail=f"User '{username}' already exists")
+
+    user = AdminUser(
         username=username,
         email=email,
-        hashed_password=get_password_hash(password),
+        hashed_password=hash_password(password),
+        role=role,
+        is_active=True,
     )
-    db.add(new_user)
+    db.add(user)
     await db.commit()
-    return {"message": f"Admin user '{username}' created successfully"}
+    return {"message": f"User '{username}' ({role}) created successfully"}

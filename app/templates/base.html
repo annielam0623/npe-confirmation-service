@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}NPE Operations{% endblock %}</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #f5f5f3;
+    color: #1a1a1a;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Sidebar ─────────────────────────────────────────── */
+  .sidebar {
+    width: 200px;
+    min-width: 200px;
+    background: #fff;
+    border-right: 0.5px solid rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    height: 100vh;
+  }
+  .sidebar-top {
+    padding: 16px 16px 12px;
+    border-bottom: 0.5px solid rgba(0,0,0,0.08);
+  }
+  .sidebar-logo { font-size: 13px; font-weight: 500; color: #1a1a1a; }
+  .sidebar-user { font-size: 11px; color: #999; margin-top: 2px; }
+
+  .nav-group { padding: 10px 0 4px; }
+  .nav-group-label {
+    font-size: 10px;
+    font-weight: 500;
+    color: #aaa;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    padding: 0 16px 4px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    padding: 6px 16px;
+    font-size: 13px;
+    color: #555;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+    text-decoration: none;
+    transition: background 0.1s;
+  }
+  .nav-item:hover { color: #1a1a1a; background: #f5f5f3; }
+  .nav-item.active {
+    color: #1a1a1a;
+    font-weight: 500;
+    border-left: 2px solid #1a1a1a;
+    background: #f5f5f3;
+  }
+  .nav-item.sub { padding-left: 28px; font-size: 12px; }
+  .nav-item.sub .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.35;
+    margin-right: 8px;
+    flex-shrink: 0;
+  }
+
+  /* ── Main ────────────────────────────────────────────── */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .topbar {
+    height: 48px;
+    background: #fff;
+    border-bottom: 0.5px solid rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+  .topbar-title { font-size: 15px; font-weight: 500; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .topbar-user { font-size: 13px; color: #888; }
+  .btn-logout {
+    font-size: 12px;
+    color: #888;
+    text-decoration: none;
+    padding: 4px 10px;
+    border: 0.5px solid rgba(0,0,0,0.15);
+    border-radius: 6px;
+  }
+  .btn-logout:hover { color: #1a1a1a; border-color: rgba(0,0,0,0.3); }
+
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    background: #f5f5f3;
+    position: relative;
+  }
+
+  /* ── Floating nav ────────────────────────────────────── */
+  .float-nav {
+    position: fixed;
+    right: 20px;
+    bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    z-index: 100;
+  }
+  .float-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: #fff;
+    border: 0.5px solid rgba(0,0,0,0.15);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    font-size: 16px;
+    color: #555;
+    text-decoration: none;
+    transition: background 0.1s;
+  }
+  .float-btn:hover { background: #f5f5f3; color: #1a1a1a; }
+
+  /* ── Utilities ───────────────────────────────────────── */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+  }
+  .badge-confirmed { background: #EAF3DE; color: #3B6D11; }
+  .badge-pending   { background: #E6F1FB; color: #185FA5; }
+  .badge-onhold    { background: #FAEEDA; color: #BA7517; }
+  .badge-cancelled { background: #FCEBEB; color: #A32D2D; }
+  .badge-new       { background: #EEEDFE; color: #534AB7; }
+  .badge-handled   { background: #EAF3DE; color: #3B6D11; }
+  .badge-source    { background: #f1efe8; color: #5f5e5a; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 5px 12px;
+    border-radius: 7px;
+    border: 0.5px solid rgba(0,0,0,0.15);
+    font-size: 12px;
+    cursor: pointer;
+    background: #fff;
+    color: #555;
+    text-decoration: none;
+    transition: background 0.1s;
+  }
+  .btn:hover { background: #f5f5f3; color: #1a1a1a; }
+  .btn-primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .btn-primary:hover { background: #333; }
+  .btn-email  { border-color: #185FA5; color: #185FA5; }
+  .btn-sms    { border-color: #3B6D11; color: #3B6D11; }
+  .btn-both   { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .btn-danger { border-color: #A32D2D; color: #A32D2D; }
+
+  {% block extra_styles %}{% endblock %}
+</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="sidebar-top">
+    <div class="sidebar-logo">NPE Operations</div>
+    {% if current_user %}
+    <div class="sidebar-user">{{ current_user.username }}</div>
+    {% endif %}
+  </div>
+
+  <div class="nav-group">
+    <a href="/admin/dashboard"
+       class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+      Dashboard
+    </a>
+    <a href="/admin/forecast"
+       class="nav-item {% if active_page == 'forecast' %}active{% endif %}">
+      30 Days Forecast
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Operations</div>
+    <a href="/admin/manifests"
+       class="nav-item {% if active_page == 'manifests' %}active{% endif %}">
+      Manifests
+    </a>
+    <a href="/admin/dispatch"
+       class="nav-item {% if active_page == 'dispatch' %}active{% endif %}">
+      Dispatch
+    </a>
+  </div>
+
+  <div class="nav-group">
+    <div class="nav-group-label">Logs</div>
+    <a href="/admin/logs/tour-confirmation"
+       class="nav-item sub {% if active_page == 'log_tour' %}active{% endif %}">
+      <span class="dot"></span>Tour Confirmation
+    </a>
+    <a href="/admin/logs/morning-reminder"
+       class="nav-item sub {% if active_page == 'log_morning' %}active{% endif %}">
+      <span class="dot"></span>Morning Reminder
+    </a>
+    <a href="/admin/logs/ticket-reminder"
+       class="nav-item sub {% if active_page == 'log_ticket' %}active{% endif %}">
+      <span class="dot"></span>Ticket Reminder
+    </a>
+    <a href="/admin/logs/shuttle-confirmation"
+       class="nav-item sub {% if active_page == 'log_shuttle' %}active{% endif %}">
+      <span class="dot"></span>Shuttle Confirmation
+    </a>
+  </div>
+
+  {% if current_user and current_user.role == 'admin' %}
+  <div class="nav-group" style="margin-top: auto;">
+    <a href="/admin/settings"
+       class="nav-item {% if active_page == 'settings' %}active{% endif %}">
+      Settings
+    </a>
+  </div>
+  {% endif %}
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title">{% block page_title %}{% endblock %}</span>
+    <div class="topbar-right">
+      {% if current_user %}
+      <span class="topbar-user">{{ current_user.username }}</span>
+      {% endif %}
+      <a href="/auth/logout" class="btn-logout">Sign out</a>
+    </div>
+  </div>
+
+  <div class="content" id="main-content">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+<!-- Floating scroll nav -->
+<div class="float-nav">
+  <a class="float-btn" onclick="document.getElementById('main-content').scrollTop=0"
+     title="Top">↑</a>
+  <a class="float-btn" onclick="document.getElementById('main-content').scrollTop=999999"
+     title="Bottom">↓</a>
+</div>
+
+{% block scripts %}{% endblock %}
+</body>
+</html>
