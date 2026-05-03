@@ -173,12 +173,20 @@ def _parse_order(payload: dict) -> Optional[dict]:
             return (val.get("locationName") or val.get("name", "")).strip() or None
         return None
 
+    _raw_pickup = payload.get("pickupLocation") or item.get("pickupLocation")
+    print(f"[webhook] raw pickupLocation={_raw_pickup}")
     pickup_location = (
-        _extract_location(item.get("pickupLocation"))
+        _extract_location(_raw_pickup)
         or _get_field(part_fields, "Pick-up Location", "Pickup Location",
                       "Hotel Name", "Hotel", "Pick Up Location")
         or _get_field(order_fields, "Pick-up Location", "Pickup Location")
     )
+    print(f"[webhook] parsed pickup_location={pickup_location}")
+
+    # Pickup time — from pickupLocation.pickupTime (earlier than startTime)
+    pickup_location_obj = payload.get("pickupLocation") or item.get("pickupLocation") or {}
+    pickup_time_raw = pickup_location_obj.get("pickupTime") if isinstance(pickup_location_obj, dict) else None
+    pickup_time = _parse_start_time(pickup_time_raw) or pickup_time
     # Special requirements — order level comments + item level
     special_req = (payload.get("comments") or "").strip()
     item_req    = (item.get("comments") or "").strip()
