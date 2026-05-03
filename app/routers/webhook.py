@@ -174,14 +174,12 @@ def _parse_order(payload: dict) -> Optional[dict]:
         return None
 
     _raw_pickup = payload.get("pickupLocation") or item.get("pickupLocation")
-    print(f"[webhook] raw pickupLocation={_raw_pickup}")
     pickup_location = (
         _extract_location(_raw_pickup)
         or _get_field(part_fields, "Pick-up Location", "Pickup Location",
                       "Hotel Name", "Hotel", "Pick Up Location")
         or _get_field(order_fields, "Pick-up Location", "Pickup Location")
     )
-    print(f"[webhook] parsed pickup_location={pickup_location}")
 
     # Pickup time — from pickupLocation.pickupTime (earlier than startTime)
     pickup_location_obj = payload.get("pickupLocation") or item.get("pickupLocation") or {}
@@ -270,7 +268,6 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     rezdy_status = payload.get("status", "").strip().upper()
 
     print(f"[webhook] order={order_number} status={rezdy_status}")
-    print(f"[webhook] payload={json.dumps(payload, ensure_ascii=False)[:3000]}")
 
     # ── Handle cancellation ──
     if rezdy_status in ("CANCELLED", "DELETED"):
