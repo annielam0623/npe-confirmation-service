@@ -163,14 +163,22 @@ def _parse_order(payload: dict) -> Optional[dict]:
                       "Barcode", "Ticket Number")
     )
 
-    # Pickup location — from participant fields
-    pickup_location = (
-        _get_field(part_fields, "Pick-up Location", "Pickup Location",
-                   "Hotel Name", "Hotel", "Pick Up Location")
-        or _get_field(order_fields, "Pick-up Location", "Pickup Location")
-        or item.get("pickupLocation", "")
-    )
+    # Pickup location — Rezdy can send a string OR a dict with locationName/address
+    def _extract_location(val) -> Optional[str]:
+        if not val:
+            return None
+        if isinstance(val, str):
+            return val.strip() or None
+        if isinstance(val, dict):
+            return (val.get("locationName") or val.get("name", "")).strip() or None
+        return None
 
+    pickup_location = (
+        _extract_location(item.get("pickupLocation"))
+        or _get_field(part_fields, "Pick-up Location", "Pickup Location",
+                      "Hotel Name", "Hotel", "Pick Up Location")
+        or _get_field(order_fields, "Pick-up Location", "Pickup Location")
+    )
     # Special requirements — order level comments + item level
     special_req = (payload.get("comments") or "").strip()
     item_req    = (item.get("comments") or "").strip()
