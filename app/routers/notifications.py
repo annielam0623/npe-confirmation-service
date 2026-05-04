@@ -55,6 +55,11 @@ from app.services.sms import send_sms
 router = APIRouter()
 
 
+def _to_date(d: str) -> date:
+    """Convert YYYY-MM-DD string to Python date object for asyncpg."""
+    return datetime.strptime(d, "%Y-%m-%d").date()
+
+
 # ══════════════════════════════════════════════════════════════════════════════
 # PREVIEW endpoints — parse Excel, check duplicates, return rows (no send)
 # ══════════════════════════════════════════════════════════════════════════════
@@ -85,7 +90,7 @@ async def preview_tour_confirmation(
               AND tour_date    = :tour_date
               AND module       = 'tour_confirmation'
             LIMIT 1
-        """), {"order_number": row["order_number"], "tour_date": tour_date})
+        """), {"order_number": row["order_number"], "tour_date": _to_date(tour_date)})
         row["duplicate"] = result.fetchone() is not None
         row["name"] = f"{row['first_name']} {row['last_name']}".strip()
 
@@ -119,7 +124,7 @@ async def preview_morning_pickup(
               AND tour_date    = :tour_date
               AND module       = 'morning_pickup'
             LIMIT 1
-        """), {"order_number": row["order_number"], "tour_date": today})
+        """), {"order_number": row["order_number"], "tour_date": _to_date(today)})
         row["duplicate"] = result.fetchone() is not None
         row["name"] = f"{row['first_name']} {row['last_name']}".strip()
 
@@ -151,7 +156,7 @@ async def preview_tickets_reminder(
               AND tour_date    = :tour_date
               AND module       = 'tickets_reminder'
             LIMIT 1
-        """), {"order_number": row["order_number"], "tour_date": service_date})
+        """), {"order_number": row["order_number"], "tour_date": _to_date(service_date)})
         row["duplicate"] = result.fetchone() is not None
         row["name"] = f"{row['first_name']} {row['last_name']}".strip()
 
@@ -182,7 +187,7 @@ async def tracking_tour_confirmation(
         WHERE b.tour_date = :tour_date
           AND b.module    = 'tour_confirmation'
         ORDER BY b.last_name ASC
-    """), {"tour_date": date})
+    """), {"tour_date": _to_date(date)})
 
     rows = result.mappings().all()
     return {
@@ -231,7 +236,7 @@ async def tracking_morning_pickup(
         WHERE b.tour_date = :tour_date
           AND b.module    = 'morning_pickup'
         ORDER BY b.pickup_time ASC
-    """), {"tour_date": date})
+    """), {"tour_date": _to_date(date)})
 
     rows = result.mappings().all()
     return {
@@ -274,7 +279,7 @@ async def tracking_tickets_reminder(
         WHERE b.tour_date = :tour_date
           AND b.module    = 'tickets_reminder'
         ORDER BY b.last_name ASC
-    """), {"tour_date": date})
+    """), {"tour_date": _to_date(date)})
 
     rows = result.mappings().all()
     return {
@@ -597,11 +602,11 @@ async def delete_by_date(
     res = await db.execute(text("""
         DELETE FROM bookings
         WHERE module = :module AND tour_date = :tour_date
-    """), {"module": module, "tour_date": tour_date})
+    """), {"module": module, "tour_date": _to_date(tour_date)})
     await db.execute(text("""
         DELETE FROM send_log
         WHERE module = :module AND tour_date = :tour_date
-    """), {"module": module, "tour_date": tour_date})
+    """), {"module": module, "tour_date": _to_date(tour_date)})
     await db.commit()
 
     return {"success": True, "message": f"Deleted records for {tour_date}"}
