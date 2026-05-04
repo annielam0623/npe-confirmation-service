@@ -10,7 +10,7 @@ Endpoints:
 from __future__ import annotations
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile, HTTPException
@@ -29,6 +29,13 @@ from app.services import tickets_reminder as tix
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+def _to_date(d: str) -> date:
+    """Convert YYYY-MM-DD string to Python date object for asyncpg."""
+    if isinstance(d, date):
+        return d
+    return datetime.strptime(d, "%Y-%m-%d").date()
 
 
 # ═══════════════════════════════════════════════════════════
@@ -152,7 +159,7 @@ async def send_tour_confirmation(
             "quantities":     int(row.get("quantities") or 1),
             "pickup_time":    row["pickup_time"],
             "pickup_location": row["pickup_location"],
-            "tour_date":      tour_date,
+            "tour_date":      _to_date(tour_date),
             "tour_type":      tour_type,
             "module":         "tour_confirmation",
         }
@@ -191,7 +198,7 @@ async def send_tour_confirmation(
             "last_name":    row["last_name"],
             "email":        email,
             "phone":        phone,
-            "tour_date":    tour_date,
+            "tour_date":    _to_date(tour_date),
             "tour_type":    tour_type,
             "email_status": email_status,
             "sms_status":   sms_status,
@@ -251,7 +258,7 @@ async def send_morning_pickup(
             "quantities":      int(row.get("quantities") or 1),
             "pickup_time":     row["pickup_time"],
             "pickup_location": row["pickup_location"],
-            "tour_date":       today,
+            "tour_date":       _to_date(today),
             "tour_type":       "",
             "module":          "morning_pickup",
         }
@@ -280,7 +287,7 @@ async def send_morning_pickup(
             "last_name":    row["last_name"],
             "email":        email,
             "phone":        phone,
-            "tour_date":    today,
+            "tour_date":    _to_date(today),
             "tour_type":    "",
             "email_status": email_status,
             "sms_status":   sms_status,
@@ -345,7 +352,7 @@ async def send_tickets_reminder(
             "quantities":      int(row.get("quantities") or 1),
             "pickup_time":     row.get("checkin_time", ""),
             "pickup_location": row.get("tour_location", ""),
-            "tour_date":       service_date,
+            "tour_date":       _to_date(service_date),
             "tour_type":       tour_type,
             "module":          "tickets_reminder",
         }
@@ -381,7 +388,7 @@ async def send_tickets_reminder(
             "last_name":    last,
             "email":        email,
             "phone":        phone,
-            "tour_date":    service_date,
+            "tour_date":    _to_date(service_date),
             "tour_type":    tour_type,
             "email_status": email_status,
             "sms_status":   sms_status,
