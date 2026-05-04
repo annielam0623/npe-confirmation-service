@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Morning Pickup Tracking — NPE</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0d1b2e; color: #e0eaf6; min-height: 100vh; }
+
+  .topbar {
+    background: #0a1628; border-bottom: 1px solid rgba(255,255,255,0.08);
+    padding: 0 24px; height: 56px; display: flex; align-items: center;
+    justify-content: space-between; position: sticky; top: 0; z-index: 10;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .topbar-title { font-size: 17px; font-weight: 700; color: #fff; }
+  .back-btn {
+    font-size: 12px; color: #7a9bbe; text-decoration: none;
+    padding: 4px 10px; border: 1px solid rgba(255,255,255,0.15); border-radius: 6px;
+  }
+  .back-btn:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px 24px; }
+
+  /* Date nav */
+  .date-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+  .btn-nav {
+    width: 32px; height: 32px; border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.15); background: #1a2f4a;
+    cursor: pointer; font-size: 16px; color: #a0c0e0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .btn-nav:hover { background: #1e3a5f; color: #fff; }
+  .date-display {
+    background: #1a2f4a; border: 1px solid rgba(255,255,255,0.15);
+    padding: 6px 18px; border-radius: 7px; font-size: 14px; font-weight: 600;
+    min-width: 140px; text-align: center; color: #fff;
+  }
+  .btn {
+    display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px;
+    border-radius: 7px; border: 1px solid rgba(255,255,255,0.15);
+    font-size: 12px; cursor: pointer; background: #1a2f4a; color: #a0c0e0;
+    text-decoration: none; transition: background 0.1s;
+  }
+  .btn:hover { background: #1e3a5f; color: #fff; }
+  .btn-today { background: #c47a12; border-color: #c47a12; color: #fff; font-weight: 600; }
+  .btn-today:hover { background: #a86510; }
+  .btn-refresh { background: #1a6b3a; border-color: #1a6b3a; color: #fff; }
+  .btn-refresh:hover { background: #145530; }
+
+  /* Driver pills */
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+  .pill {
+    padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1px solid rgba(255,255,255,0.12);
+    background: #1a2f4a; color: #7a9bbe; white-space: nowrap;
+  }
+  .pill:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+  .pill.active { background: #185FA5; border-color: #185FA5; color: #fff; }
+  .pill .cnt { font-size: 11px; opacity: 0.7; margin-left: 3px; }
+
+  /* Stats */
+  .stats-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+  .stat-card {
+    background: #1a2f4a; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+    padding: 12px 20px; text-align: center; min-width: 100px;
+  }
+  .stat-card .num { font-size: 26px; font-weight: 700; color: #fff; }
+  .stat-card .lbl { font-size: 11px; color: #7a9bbe; margin-top: 2px; }
+  .stat-card.checked-in .num { color: #2ecc71; }
+  .stat-card.pending-in .num  { color: #e67e22; }
+
+  /* Filter */
+  .filter-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
+  .filter-bar input {
+    padding: 7px 12px; border: 1px solid rgba(255,255,255,0.15); border-radius: 7px;
+    font-size: 13px; background: #1a2f4a; color: #e0eaf6; width: 220px;
+  }
+  .filter-bar input:focus { outline: none; border-color: #185FA5; }
+  .records-count { font-size: 12px; color: #5a7a9a; margin-left: auto; }
+
+  /* Table */
+  .table-card {
+    background: #1a2f4a; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden;
+  }
+  .table-header {
+    padding: 12px 16px; background: #0f2035;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .table-header span { font-size: 13px; font-weight: 600; color: #7ab3e0; }
+
+  table.track-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .track-tbl thead td {
+    padding: 9px 12px; font-size: 11px; font-weight: 700; color: #7a9bbe;
+    background: #0f2035; border-bottom: 1px solid rgba(255,255,255,0.08);
+    white-space: nowrap; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .track-tbl tbody tr { border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .track-tbl tbody tr:last-child { border-bottom: none; }
+  .track-tbl tbody tr:hover { background: rgba(255,255,255,0.03); }
+  .track-tbl tbody td { padding: 10px 12px; color: #c8ddf0; vertical-align: middle; }
+
+  /* Status */
+  .sp { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .sp-checkedin   { background: rgba(46,204,113,0.15); color: #2ecc71; }
+  .sp-pending     { background: rgba(230,126,34,0.15);  color: #e67e22; }
+  .sp-delivered   { background: rgba(52,152,219,0.15);  color: #3498db; }
+  .sp-sent        { background: rgba(155,89,182,0.15);  color: #9b59b6; }
+  .sp-undelivered { background: rgba(231,76,60,0.15);   color: #e74c3c; }
+  .sp-failed      { background: rgba(231,76,60,0.15);   color: #e74c3c; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="/admin/manifests" class="back-btn">← Back</a>
+    <span class="topbar-title">🔵 Morning Pickup Tracking</span>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button class="btn" onclick="exportExcel()">⬇ Export</button>
+    <button class="btn btn-refresh" onclick="loadData()">↻ Refresh</button>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Date nav -->
+  <div class="date-nav">
+    <button class="btn-nav" onclick="changeDate(-1)">‹</button>
+    <span class="date-display" id="date-display">—</span>
+    <button class="btn-nav" onclick="changeDate(1)">›</button>
+    <button class="btn btn-today" onclick="goToday()">Today</button>
+  </div>
+
+  <!-- Driver/Bus# pills -->
+  <div class="pills" id="pills-container">
+    <span class="pill active" data-driver="all" onclick="filterDriver('all',this)">
+      All <span class="cnt" id="cnt-all"></span>
+    </span>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card"><div class="num" id="stat-total">—</div><div class="lbl">Total</div></div>
+    <div class="stat-card checked-in"><div class="num" id="stat-checkedin">—</div><div class="lbl">Checked In</div></div>
+    <div class="stat-card pending-in"><div class="num" id="stat-pending">—</div><div class="lbl">Pending</div></div>
+  </div>
+
+  <!-- Filter -->
+  <div class="filter-bar">
+    <input type="text" id="search-input" placeholder="Search order #, name, phone…" oninput="applyFilter()">
+    <span class="records-count" id="records-count">— records</span>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-header">
+      <span>Check-in Log</span>
+      <span style="font-size:12px;color:#5a7a9a;" id="table-meta"></span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="track-tbl">
+        <thead>
+          <tr>
+            <td>Order #</td>
+            <td>Name</td>
+            <td>Phone</td>
+            <td>Bus #</td>
+            <td>Driver</td>
+            <td>Pickup Time</td>
+            <td>Pickup Location</td>
+            <td>SMS Status</td>
+            <td>Check-in</td>
+            <td>Check-in Time</td>
+          </tr>
+        </thead>
+        <tbody id="track-tbody">
+          <tr><td colspan="10" style="padding:28px;text-align:center;color:#4a6a8a;">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const params = new URLSearchParams(location.search);
+let currentDate = params.get('date') || new Date().toISOString().split('T')[0];
+let currentDriver = 'all';
+let allRows = [];
+
+function changeDate(d) {
+  const dt = new Date(currentDate + 'T00:00:00');
+  dt.setDate(dt.getDate() + d);
+  currentDate = dt.toISOString().split('T')[0];
+  loadData();
+}
+function goToday() { currentDate = new Date().toISOString().split('T')[0]; loadData(); }
+
+function filterDriver(driver, el) {
+  currentDriver = driver;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  applyFilter();
+}
+
+async function loadData() {
+  document.getElementById('date-display').textContent = formatDate(currentDate);
+  document.getElementById('track-tbody').innerHTML =
+    '<tr><td colspan="10" style="padding:28px;text-align:center;color:#4a6a8a;">Loading…</td></tr>';
+
+  try {
+    const res = await fetch(`/api/notifications/morning-pickup/tracking?date=${currentDate}`);
+    const data = await res.json();
+    allRows = data.rows || [];
+    buildDriverPills();
+    applyFilter();
+  } catch(e) {
+    document.getElementById('track-tbody').innerHTML =
+      '<tr><td colspan="10" style="padding:28px;text-align:center;color:#4a6a8a;">Failed to load.</td></tr>';
+  }
+}
+
+function buildDriverPills() {
+  const drivers = [...new Set(allRows.map(r => r.driver).filter(Boolean))];
+  const container = document.getElementById('pills-container');
+  const allPill = `<span class="pill active" data-driver="all" onclick="filterDriver('all',this)">All <span class="cnt">${allRows.length}</span></span>`;
+  const driverPills = drivers.map(d => {
+    const cnt = allRows.filter(r => r.driver === d).length;
+    const checkedIn = allRows.filter(r => r.driver === d && r.checkin_status === 'checked_in').length;
+    return `<span class="pill" data-driver="${d}" onclick="filterDriver('${d}',this)">${d}: ${checkedIn}/${cnt}</span>`;
+  }).join('');
+  container.innerHTML = allPill + driverPills;
+}
+
+function applyFilter() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  let rows = currentDriver === 'all' ? allRows : allRows.filter(r => r.driver === currentDriver);
+  if (search) rows = rows.filter(r =>
+    (r.order_number||'').toLowerCase().includes(search) ||
+    (r.name||'').toLowerCase().includes(search) ||
+    (r.phone||'').toLowerCase().includes(search));
+
+  document.getElementById('stat-total').textContent     = rows.length;
+  document.getElementById('stat-checkedin').textContent = rows.filter(r => r.checkin_status === 'checked_in').length;
+  document.getElementById('stat-pending').textContent   = rows.filter(r => r.checkin_status !== 'checked_in').length;
+  document.getElementById('records-count').textContent  = `${rows.length} records`;
+
+  const tbody = document.getElementById('track-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="10" style="padding:28px;text-align:center;color:#4a6a8a;">No records found.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const smsCls   = smsStatusClass(r.sms_status);
+    const checkinCls = r.checkin_status === 'checked_in' ? 'sp-checkedin' : 'sp-pending';
+    return `<tr>
+      <td style="color:#5ba3d9;font-weight:600;">${r.order_number || '—'}</td>
+      <td>${r.name || '—'}</td>
+      <td style="font-size:12px;color:#a0c0e0;">${r.phone || '—'}</td>
+      <td style="font-weight:600;">${r.vehicle_no || '—'}</td>
+      <td>${r.driver || '—'}</td>
+      <td style="font-weight:600;">${r.pickup_time || '—'}</td>
+      <td style="font-size:12px;">${r.pickup_location || '—'}</td>
+      <td><span class="sp ${smsCls}">${smsLabel(r.sms_status)}</span></td>
+      <td><span class="sp ${checkinCls}">${r.checkin_status === 'checked_in' ? '✓ Checked In' : '⏳ Pending'}</span></td>
+      <td style="font-size:11px;color:#7a9bbe;">${r.checkin_time ? new Date(r.checkin_time).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}) : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function smsStatusClass(s) {
+  if (!s) return 'sp-pending';
+  if (s.includes('delivered'))  return 'sp-delivered';
+  if (s.includes('sent'))       return 'sp-sent';
+  if (s.includes('undelivered') || s.includes('failed')) return 'sp-undelivered';
+  return 'sp-pending';
+}
+function smsLabel(s) {
+  if (!s) return '—';
+  if (s.includes('delivered'))  return 'Delivered';
+  if (s.includes('sent'))       return 'Sent';
+  if (s.includes('undelivered'))return 'Undelivered';
+  if (s.includes('failed'))     return 'Failed';
+  return s;
+}
+function formatDate(d) {
+  return new Date(d + 'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+}
+function exportExcel() {
+  location.href = `/api/notifications/morning-pickup/export?date=${currentDate}`;
+}
+
+document.getElementById('date-display').textContent = formatDate(currentDate);
+loadData();
+</script>
+</body>
+</html>

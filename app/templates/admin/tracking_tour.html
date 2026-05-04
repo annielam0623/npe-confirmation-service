@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tour Confirmation Tracking — NPE</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f3; color: #1a1a1a; }
+
+  .topbar {
+    background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.1);
+    padding: 0 24px; height: 52px; display: flex; align-items: center;
+    justify-content: space-between; position: sticky; top: 0; z-index: 10;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .topbar-title { font-size: 16px; font-weight: 700; color: #3B6D11; }
+  .back-btn {
+    font-size: 12px; color: #888; text-decoration: none;
+    padding: 4px 10px; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 6px;
+  }
+  .back-btn:hover { color: #1a1a1a; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px 24px; }
+
+  /* Date nav */
+  .date-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
+  .btn-nav {
+    width: 30px; height: 30px; border-radius: 7px;
+    border: 0.5px solid rgba(0,0,0,0.15); background: #fff;
+    cursor: pointer; font-size: 15px; color: #555;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .btn-nav:hover { background: #f5f5f3; }
+  .date-display {
+    background: #fff; border: 0.5px solid rgba(0,0,0,0.15);
+    padding: 5px 16px; border-radius: 7px; font-size: 13px; font-weight: 500;
+    min-width: 130px; text-align: center;
+  }
+  .btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 7px; border: 0.5px solid rgba(0,0,0,0.15); font-size: 12px; cursor: pointer; background: #fff; color: #555; text-decoration: none; }
+  .btn:hover { background: #f5f5f3; }
+  .btn-green { background: #3B6D11; color: #fff; border-color: #3B6D11; }
+  .btn-green:hover { background: #2d5409; }
+
+  /* Pills */
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .pill {
+    padding: 4px 14px; border-radius: 20px; font-size: 12px;
+    cursor: pointer; border: 0.5px solid rgba(0,0,0,0.15);
+    background: #fff; color: #555; white-space: nowrap;
+  }
+  .pill:hover { border-color: #3B6D11; color: #3B6D11; }
+  .pill.active { background: #EAF3DE; border-color: #3B6D11; color: #3B6D11; font-weight: 600; }
+  .pill .cnt { font-size: 11px; color: #aaa; margin-left: 3px; }
+  .pill.active .cnt { color: #3B6D11; }
+
+  /* Stats */
+  .stats-row { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .stat-card {
+    background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 10px;
+    padding: 12px 20px; text-align: center; min-width: 90px;
+  }
+  .stat-card .num { font-size: 24px; font-weight: 700; color: #1a1a1a; }
+  .stat-card .lbl { font-size: 11px; color: #aaa; margin-top: 2px; }
+  .stat-card.confirmed .num { color: #3B6D11; }
+  .stat-card.pending .num   { color: #185FA5; }
+  .stat-card.failed .num    { color: #A32D2D; }
+
+  /* Lunch stats */
+  .lunch-row { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .lunch-card {
+    background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 10px;
+    padding: 10px 16px; display: flex; align-items: center; gap: 8px;
+  }
+  .lunch-card .emoji { font-size: 20px; }
+  .lunch-card .count { font-size: 18px; font-weight: 700; }
+  .lunch-card .label { font-size: 11px; color: #888; }
+
+  /* Table */
+  .table-card {
+    background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+    border-radius: 12px; overflow: hidden;
+  }
+  .table-header {
+    padding: 10px 16px; background: #EAF3DE;
+    border-bottom: 0.5px solid rgba(0,0,0,0.08);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .table-header span { font-size: 13px; font-weight: 600; color: #3B6D11; }
+  table.track-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .track-tbl thead td {
+    padding: 8px 10px; font-size: 11px; font-weight: 600; color: #999;
+    background: #f9f9f7; border-bottom: 0.5px solid rgba(0,0,0,0.08); white-space: nowrap;
+  }
+  .track-tbl tbody tr { border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+  .track-tbl tbody tr:last-child { border-bottom: none; }
+  .track-tbl tbody tr:hover { background: #fafaf8; }
+  .track-tbl tbody td { padding: 8px 10px; color: #444; vertical-align: middle; }
+
+  /* Status badges */
+  .sp { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+  .sp-confirmed { background: #eaf3de; color: #3b6d11; }
+  .sp-pending   { background: #e6f1fb; color: #185fa5; }
+  .sp-failed    { background: #fcebeb; color: #a32d2d; }
+  .sp-sent      { background: #eeedfe; color: #534ab7; }
+  .sp-delivered { background: #eaf3de; color: #3b6d11; }
+  .sp-undelivered { background: #fcebeb; color: #a32d2d; }
+
+  /* Filter bar */
+  .filter-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+  .filter-bar input {
+    padding: 6px 10px; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 7px;
+    font-size: 13px; width: 220px;
+  }
+  .filter-bar input:focus { outline: none; border-color: #3B6D11; }
+  .filter-bar select {
+    padding: 6px 10px; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 7px;
+    font-size: 13px; background: #fff;
+  }
+
+  .records-count { font-size: 12px; color: #aaa; margin-left: auto; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <a href="/admin/manifests" class="back-btn">← Back</a>
+    <span class="topbar-title">🟢 Tour Confirmation Tracking</span>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button class="btn" onclick="exportExcel()">⬇ Export</button>
+    <button class="btn btn-green" onclick="loadData()">↻ Refresh</button>
+  </div>
+</div>
+
+<div class="container">
+  <!-- Date nav -->
+  <div class="date-nav">
+    <button class="btn-nav" onclick="changeDate(-1)">‹</button>
+    <span class="date-display" id="date-display">—</span>
+    <button class="btn-nav" onclick="changeDate(1)">›</button>
+    <button class="btn" onclick="goToday()">Today</button>
+    <button class="btn" onclick="goTomorrow()">Tomorrow</button>
+  </div>
+
+  <!-- Tour type pills -->
+  <div class="pills" id="pills-container">
+    <span class="pill active" data-type="all" onclick="filterType('all',this)">All <span class="cnt" id="cnt-all"></span></span>
+    <span class="pill" data-type="upper_antelope" onclick="filterType('upper_antelope',this)">AC-U <span class="cnt"></span></span>
+    <span class="pill" data-type="lower_antelope" onclick="filterType('lower_antelope',this)">AC-L <span class="cnt"></span></span>
+    <span class="pill" data-type="antelop_X" onclick="filterType('antelop_X',this)">AC-X <span class="cnt"></span></span>
+    <span class="pill" data-type="grand_canyon_south" onclick="filterType('grand_canyon_south',this)">South <span class="cnt"></span></span>
+    <span class="pill" data-type="grand_canyon_west" onclick="filterType('grand_canyon_west',this)">West <span class="cnt"></span></span>
+    <span class="pill" data-type="bryce_zion" onclick="filterType('bryce_zion',this)">BZ <span class="cnt"></span></span>
+    <span class="pill" data-type="valley_of_fire_full" onclick="filterType('valley_of_fire_full',this)">VOF-F <span class="cnt"></span></span>
+    <span class="pill" data-type="valley_of_fire_half" onclick="filterType('valley_of_fire_half',this)">VOF-H <span class="cnt"></span></span>
+    <span class="pill" data-type="hoover_dam" onclick="filterType('hoover_dam',this)">HD <span class="cnt"></span></span>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row" id="stats-row">
+    <div class="stat-card"><div class="num" id="stat-total">—</div><div class="lbl">Total</div></div>
+    <div class="stat-card confirmed"><div class="num" id="stat-confirmed">—</div><div class="lbl">Confirmed</div></div>
+    <div class="stat-card pending"><div class="num" id="stat-pending">—</div><div class="lbl">Pending</div></div>
+    <div class="stat-card failed"><div class="num" id="stat-failed">—</div><div class="lbl">No Response</div></div>
+  </div>
+
+  <!-- Lunch stats -->
+  <div class="lunch-row" id="lunch-row">
+    <div class="lunch-card"><span class="emoji">🦃</span><span class="count" id="lunch-turkey">—</span><span class="label">Turkey</span></div>
+    <div class="lunch-card"><span class="emoji">🥗</span><span class="count" id="lunch-veggie">—</span><span class="label">Veggie</span></div>
+    <div class="lunch-card"><span class="emoji">🥩</span><span class="count" id="lunch-beef">—</span><span class="label">Beef</span></div>
+  </div>
+
+  <!-- Filter -->
+  <div class="filter-bar">
+    <input type="text" id="search-input" placeholder="Search order #, name, email…" oninput="applyFilter()">
+    <select id="status-filter" onchange="applyFilter()">
+      <option value="">All Statuses</option>
+      <option value="confirmed">Confirmed</option>
+      <option value="pending">Pending</option>
+      <option value="no_response">No Response</option>
+    </select>
+    <select id="sms-filter" onchange="applyFilter()">
+      <option value="">All SMS</option>
+      <option value="delivered">Delivered</option>
+      <option value="sent">Sent</option>
+      <option value="undelivered">Undelivered</option>
+      <option value="failed">Failed</option>
+    </select>
+    <span class="records-count" id="records-count">— records</span>
+  </div>
+
+  <!-- Table -->
+  <div class="table-card">
+    <div class="table-header">
+      <span>Confirmation Log</span>
+      <span style="font-size:12px;color:#888;" id="table-meta"></span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="track-tbl">
+        <thead>
+          <tr>
+            <td>Order #</td>
+            <td>Status</td>
+            <td>Tour</td>
+            <td>Tour Date</td>
+            <td>Guest Name</td>
+            <td>Party</td>
+            <td>Pickup Time</td>
+            <td>📧 Email</td>
+            <td>📱 SMS</td>
+            <td>🦃</td><td>🥗</td><td>🥩</td>
+            <td>Lunch Selection</td>
+            <td>Submitted</td>
+          </tr>
+        </thead>
+        <tbody id="track-tbody">
+          <tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const TOUR_LABELS = {
+  upper_antelope: 'AC-U', lower_antelope: 'AC-L', antelop_X: 'AC-X',
+  grand_canyon_south: 'South', grand_canyon_west: 'West', bryce_zion: 'BZ',
+  valley_of_fire_full: 'VOF-F', valley_of_fire_half: 'VOF-H', hoover_dam: 'HD',
+};
+
+const params = new URLSearchParams(location.search);
+let currentDate = params.get('date') || new Date().toISOString().split('T')[0];
+let currentType = 'all';
+let allRows = [];
+
+function changeDate(d) {
+  const dt = new Date(currentDate + 'T00:00:00');
+  dt.setDate(dt.getDate() + d);
+  currentDate = dt.toISOString().split('T')[0];
+  loadData();
+}
+function goToday()    { currentDate = new Date().toISOString().split('T')[0]; loadData(); }
+function goTomorrow() {
+  const d = new Date(); d.setDate(d.getDate() + 1);
+  currentDate = d.toISOString().split('T')[0]; loadData();
+}
+
+function filterType(type, el) {
+  currentType = type;
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  applyFilter();
+}
+
+async function loadData() {
+  document.getElementById('date-display').textContent = formatDate(currentDate);
+  document.getElementById('track-tbody').innerHTML =
+    '<tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
+
+  try {
+    const res = await fetch(`/api/notifications/tour-confirmation/tracking?date=${currentDate}`);
+    const data = await res.json();
+    allRows = data.rows || [];
+    updatePillCounts();
+    applyFilter();
+  } catch(e) {
+    document.getElementById('track-tbody').innerHTML =
+      '<tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">Failed to load data.</td></tr>';
+  }
+}
+
+function updatePillCounts() {
+  document.querySelectorAll('.pill[data-type]').forEach(pill => {
+    const type = pill.dataset.type;
+    const cnt = type === 'all' ? allRows.length : allRows.filter(r => r.tour_type === type).length;
+    pill.querySelector('.cnt').textContent = cnt || '';
+  });
+}
+
+function applyFilter() {
+  const search = document.getElementById('search-input').value.toLowerCase();
+  const statusF = document.getElementById('status-filter').value;
+  const smsF    = document.getElementById('sms-filter').value;
+
+  let rows = currentType === 'all' ? allRows : allRows.filter(r => r.tour_type === currentType);
+  if (search)  rows = rows.filter(r =>
+    (r.order_number||'').toLowerCase().includes(search) ||
+    (r.guest_name||'').toLowerCase().includes(search) ||
+    (r.email||'').toLowerCase().includes(search));
+  if (statusF) rows = rows.filter(r => (r.confirmation_status||'').toLowerCase().includes(statusF));
+  if (smsF)    rows = rows.filter(r => (r.sms_status||'').toLowerCase().includes(smsF));
+
+  // Stats
+  document.getElementById('stat-total').textContent     = rows.length;
+  document.getElementById('stat-confirmed').textContent = rows.filter(r => r.confirmation_status === 'confirmed').length;
+  document.getElementById('stat-pending').textContent   = rows.filter(r => r.confirmation_status === 'pending').length;
+  document.getElementById('stat-failed').textContent    = rows.filter(r => !r.confirmation_status || r.confirmation_status === 'no_response').length;
+
+  // Lunch
+  document.getElementById('lunch-turkey').textContent = rows.reduce((s,r) => s + (r.lunch_turkey||0), 0);
+  document.getElementById('lunch-veggie').textContent = rows.reduce((s,r) => s + (r.lunch_veggie||0), 0);
+  document.getElementById('lunch-beef').textContent   = rows.reduce((s,r) => s + (r.lunch_beef||0), 0);
+
+  document.getElementById('records-count').textContent = `${rows.length} records`;
+
+  const tbody = document.getElementById('track-tbody');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const smsCls = smsStatusClass(r.sms_status);
+    const emailCls = r.email_status === 'sent' ? 'sp-delivered' : r.email_status?.startsWith('failed') ? 'sp-failed' : 'sp-pending';
+    const cfmCls = r.confirmation_status === 'confirmed' ? 'sp-confirmed' : 'sp-pending';
+    return `<tr>
+      <td style="color:#378ADD;font-weight:500;">${r.order_number}</td>
+      <td><span class="sp ${cfmCls}">${r.confirmation_status || 'Pending'}</span></td>
+      <td>${TOUR_LABELS[r.tour_type] || r.tour_type || '—'}</td>
+      <td style="white-space:nowrap;">${r.tour_date || '—'}</td>
+      <td>${r.guest_name || '—'}<br><span style="font-size:10px;color:#aaa;">${r.email||''}</span></td>
+      <td style="text-align:center;">${r.quantities || '—'}</td>
+      <td>${r.pickup_time || '—'}</td>
+      <td><span class="sp ${emailCls}">${r.email_status || '—'}</span></td>
+      <td><span class="sp ${smsCls}">${smsLabel(r.sms_status)}</span></td>
+      <td style="text-align:center;">${r.lunch_turkey||0}</td>
+      <td style="text-align:center;">${r.lunch_veggie||0}</td>
+      <td style="text-align:center;">${r.lunch_beef||0}</td>
+      <td style="font-size:11px;">${r.lunch_selection || '—'}</td>
+      <td style="font-size:11px;white-space:nowrap;">${r.submitted_at ? new Date(r.submitted_at).toLocaleString('en-US',{month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}) : '—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function smsStatusClass(s) {
+  if (!s) return 'sp-pending';
+  if (s.includes('delivered')) return 'sp-delivered';
+  if (s.includes('sent'))      return 'sp-sent';
+  if (s.includes('undelivered') || s.includes('failed')) return 'sp-undelivered';
+  return 'sp-pending';
+}
+function smsLabel(s) {
+  if (!s) return '—';
+  if (s.includes('delivered'))  return 'Delivered';
+  if (s.includes('sent'))       return 'Sent';
+  if (s.includes('undelivered'))return 'Undelivered';
+  if (s.includes('failed'))     return 'Failed';
+  return s;
+}
+
+function formatDate(d) {
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function exportExcel() {
+  location.href = `/api/notifications/tour-confirmation/export?date=${currentDate}&type=${currentType}`;
+}
+
+// Init
+document.getElementById('date-display').textContent = formatDate(currentDate);
+loadData();
+</script>
+</body>
+</html>

@@ -11,6 +11,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
+
 from app.database import get_db
 from app.auth import get_current_user
 from app.models import Booking, BookingType
@@ -308,4 +309,129 @@ async def settings(
         "active_page": "settings",
         "manifests":  manifests_list,
         "settings":   settings_list,
+    })
+
+
+
+# ─── Notifications — Page routes ──────────────────────────────────────────────
+
+@router.get("/notifications/tour-confirmation/send", response_class=HTMLResponse)
+async def notif_tour_send(
+    request: Request,
+    current_user=Depends(get_current_user),
+):
+    return templates.TemplateResponse("admin/send_tour.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "tour_send",
+    })
+
+
+@router.get("/notifications/tour-confirmation/tracking", response_class=HTMLResponse)
+async def notif_tour_tracking(
+    request: Request,
+    current_user=Depends(get_current_user),
+):
+    return templates.TemplateResponse("admin/tracking_tour.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "tour_tracking",
+    })
+
+
+@router.get("/notifications/tour-confirmation/utilities", response_class=HTMLResponse)
+async def notif_tour_utilities(
+    request: Request,
+    current_user=Depends(get_current_user),
+):
+    return templates.TemplateResponse("admin/utilities_tour.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "tour_utilities",
+    })
+
+
+@router.get("/notifications/morning-pickup/send", response_class=HTMLResponse)
+async def notif_morning_send(
+    request: Request,
+    current_user=Depends(get_current_user),
+):
+    return templates.TemplateResponse("admin/send_morning.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "morning_send",
+    })
+
+
+@router.get("/notifications/morning-pickup/tracking", response_class=HTMLResponse)
+async def notif_morning_tracking(
+    request: Request,
+    current_user=Depends(get_current_user),
+):
+    return templates.TemplateResponse("admin/tracking_morning.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "morning_tracking",
+    })
+
+
+@router.get("/notifications/morning-pickup/utilities", response_class=HTMLResponse)
+async def notif_morning_utilities(
+    request: Request,
+    current_user=Depends(get_current_user),
+):
+    return templates.TemplateResponse("admin/utilities_morning.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "morning_utilities",
+    })
+
+
+@router.get("/notifications/tickets-reminder/send", response_class=HTMLResponse)
+async def notif_tickets_send(
+    request: Request,
+    current_user=Depends(get_current_user),
+):
+    return templates.TemplateResponse("admin/send_tickets.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "tickets_send",
+    })
+
+
+@router.get("/notifications/tickets-reminder/tracking", response_class=HTMLResponse)
+async def notif_tickets_tracking(
+    request: Request,
+    current_user=Depends(get_current_user),
+):
+    return templates.TemplateResponse("admin/tracking_tickets.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "tickets_tracking",
+    })
+
+
+@router.get("/notifications/tickets-reminder/utilities", response_class=HTMLResponse)
+async def notif_tickets_utilities(
+    request: Request,
+    current_user=Depends(get_current_user),
+):
+    return templates.TemplateResponse("admin/utilities_tickets.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "tickets_utilities",
+    })
+
+
+@router.get("/notifications/send-log", response_class=HTMLResponse)
+async def notif_send_log(
+    request: Request,
+    current_user=Depends(get_current_user),
+):
+    today = date.today().strftime("%Y-%m-%d")
+    return templates.TemplateResponse("admin/send_log.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "send_log",
+        "today": today,
     })

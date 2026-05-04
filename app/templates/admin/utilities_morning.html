@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}Morning Pickup Utilities — NPE{% endblock %}
+{% block page_title %}Morning Pickup — Utilities{% endblock %}
+
+{% block extra_styles %}
+.util-card {
+  background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+  border-radius: 12px; padding: 22px; max-width: 600px; margin-bottom: 18px;
+}
+.util-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #1a1a1a; }
+.util-card p  { font-size: 13px; color: #666; margin-bottom: 14px; line-height: 1.6; }
+.form-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group label { font-size: 12px; color: #888; }
+.form-group input[type="date"],
+.form-group select {
+  padding: 7px 10px; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 7px;
+  font-size: 13px; background: #fff; font-family: inherit;
+}
+.form-group input:focus, .form-group select:focus { outline: none; border-color: #185FA5; }
+
+.btn-action {
+  background: #185FA5; color: #fff; border: none;
+  padding: 8px 20px; border-radius: 7px; font-size: 13px;
+  font-weight: 600; cursor: pointer;
+}
+.btn-action:hover { background: #124d8a; }
+.btn-danger-action {
+  background: #A32D2D; color: #fff; border: none;
+  padding: 8px 20px; border-radius: 7px; font-size: 13px;
+  font-weight: 600; cursor: pointer;
+}
+.btn-danger-action:hover { background: #821f1f; }
+
+.result-msg { font-size: 12px; margin-top: 8px; }
+.result-ok   { color: #185FA5; }
+.result-fail { color: #A32D2D; }
+
+.section-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; color: #185FA5; }
+{% endblock %}
+
+{% block content %}
+<div class="section-title">🔵 Morning Pickup — Utilities</div>
+
+<!-- Export Records -->
+<div class="util-card">
+  <h3>⬇ Export Records to Excel</h3>
+  <p>Export tour confirmation records for a specific date or date range to Excel.</p>
+  <div class="form-row">
+    <div class="form-group">
+      <label>From Date</label>
+      <input type="date" id="export-from">
+    </div>
+    <div class="form-group">
+      <label>To Date</label>
+      <input type="date" id="export-to">
+    </div>
+    <div class="form-group">
+      <label>—</label>
+      <select id="export-type">
+        <option value="">All Types</option>
+        <option value="upper_antelope">AC-U</option>
+        <option value="lower_antelope">AC-L</option>
+        <option value="antelop_X">AC-X</option>
+        <option value="grand_canyon_south">South</option>
+        <option value="grand_canyon_west">West</option>
+        <option value="bryce_zion">BZ</option>
+        <option value="valley_of_fire_full">VOF-F</option>
+        <option value="valley_of_fire_half">VOF-H</option>
+        <option value="hoover_dam">HD</option>
+      </select>
+    </div>
+    <button class="btn-action" onclick="exportRecords()">Export</button>
+  </div>
+</div>
+
+<!-- Resend single -->
+<div class="util-card">
+  <h3>📨 Resend to Single Guest</h3>
+  <p>Look up a booking by order number and resend the confirmation email and/or SMS.</p>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Order Number</label>
+      <input type="text" id="resend-order" placeholder="e.g. CHD12345" style="padding:7px 10px;border:0.5px solid rgba(0,0,0,0.2);border-radius:7px;font-size:13px;width:160px;">
+    </div>
+    <button class="btn-action" onclick="lookupOrder()">Look Up</button>
+  </div>
+  <div id="resend-result" style="margin-top:12px;"></div>
+</div>
+
+<!-- Delete records -->
+<div class="util-card">
+  <h3>🗑 Delete Records by Date</h3>
+  <p>Permanently delete all tour confirmation send records for a specific date. This cannot be undone.</p>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Tour Date</label>
+      <input type="date" id="delete-date">
+    </div>
+    <button class="btn-danger-action" onclick="deleteRecords()">Delete</button>
+  </div>
+  <div id="delete-result" class="result-msg"></div>
+</div>
+
+<!-- Stats -->
+<div class="util-card">
+  <h3>📊 Quick Stats</h3>
+  <p>Total records in the tour confirmation database.</p>
+  <button class="btn-action" onclick="loadStats()">Load Stats</button>
+  <div id="stats-result" style="margin-top:12px;font-size:13px;color:#555;"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function exportRecords() {
+  const from = document.getElementById('export-from').value;
+  const to   = document.getElementById('export-to').value;
+  const type = document.getElementById('export-type').value;
+  if (!from) { alert('Please select a from date.'); return; }
+  const toDate = to || from;
+  location.href = `/api/notifications/morning-pickup/export?from=${from}&to=${toDate}&type=${type}`;
+}
+
+async function lookupOrder() {
+  const order = document.getElementById('resend-order').value.trim();
+  if (!order) { alert('Please enter an order number.'); return; }
+  const res  = await fetch(`/api/notifications/morning-pickup/lookup?order=${order}`);
+  const data = await res.json();
+  const el   = document.getElementById('resend-result');
+  if (!data.booking) { el.innerHTML = '<span style="color:#A32D2D;font-size:12px;">Order not found.</span>'; return; }
+  const b = data.booking;
+  el.innerHTML = `
+    <div style="background:#f9f9f7;border-radius:8px;padding:12px;font-size:12px;">
+      <strong>${b.first_name} ${b.last_name}</strong> — ${b.order_number}<br>
+      ${b.customer_email} | ${b.phone}<br>
+      Tour: ${b.tour_type} on ${b.tour_date}<br>
+      Email: ${b.email_status} | SMS: ${b.sms_status}
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn-action" style="font-size:12px;padding:5px 14px;" onclick="resend(${b.id},'email')">📧 Resend Email</button>
+        <button class="btn-action" style="font-size:12px;padding:5px 14px;" onclick="resend(${b.id},'sms')">📱 Resend SMS</button>
+        <button class="btn-action" style="font-size:12px;padding:5px 14px;" onclick="resend(${b.id},'both')">Both</button>
+      </div>
+      <div id="resend-action-result" style="margin-top:6px;font-size:12px;"></div>
+    </div>`;
+}
+
+async function resend(id, channel) {
+  const res  = await fetch(`/api/notifications/morning-pickup/resend`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({booking_id: id, channel}),
+  });
+  const data = await res.json();
+  const el   = document.getElementById('resend-action-result');
+  el.innerHTML = `<span class="${data.success ? 'result-ok' : 'result-fail'}">${data.message || (data.success ? 'Sent!' : 'Failed.')}</span>`;
+}
+
+async function deleteRecords() {
+  const date = document.getElementById('delete-date').value;
+  if (!date) { alert('Please select a date.'); return; }
+  if (!confirm(`Delete ALL tour confirmation records for ${date}? This cannot be undone.`)) return;
+  const res  = await fetch(`/api/notifications/morning-pickup/delete-by-date`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({tour_date: date}),
+  });
+  const data = await res.json();
+  const el   = document.getElementById('delete-result');
+  el.innerHTML = `<span class="${data.success ? 'result-ok' : 'result-fail'}">${data.message || 'Done.'}</span>`;
+}
+
+async function loadStats() {
+  const res  = await fetch('/api/notifications/morning-pickup/stats');
+  const data = await res.json();
+  document.getElementById('stats-result').innerHTML = `
+    Total records: <strong>${data.total}</strong> &nbsp;|&nbsp;
+    This month: <strong>${data.this_month}</strong> &nbsp;|&nbsp;
+    Today: <strong>${data.today}</strong>`;
+}
+</script>
+{% endblock %}

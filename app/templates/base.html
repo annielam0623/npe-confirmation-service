@@ -17,8 +17,8 @@
 
   /* ── Sidebar ─────────────────────────────────────────── */
   .sidebar {
-    width: 200px;
-    min-width: 200px;
+    width: 210px;
+    min-width: 210px;
     background: #fff;
     border-right: 0.5px solid rgba(0,0,0,0.1);
     display: flex;
@@ -69,6 +69,54 @@
     margin-right: 8px;
     flex-shrink: 0;
   }
+
+  /* ── Notification module labels ──────────────────────── */
+  .nav-module-label {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 16px 3px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+  .nav-module-label .dot-module {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .nav-module-label.tour  { color: #3B6D11; }
+  .nav-module-label.tour .dot-module  { background: #3B6D11; }
+  .nav-module-label.morning { color: #185FA5; }
+  .nav-module-label.morning .dot-module { background: #185FA5; }
+  .nav-module-label.tickets { color: #BA7517; }
+  .nav-module-label.tickets .dot-module { background: #BA7517; }
+
+  .nav-item.sub.tour    { border-left-color: transparent; }
+  .nav-item.sub.tour.active    { border-left-color: #3B6D11; color: #3B6D11; background: #EAF3DE; }
+  .nav-item.sub.tour:hover     { background: #f2f8ec; color: #3B6D11; }
+
+  .nav-item.sub.morning { border-left-color: transparent; }
+  .nav-item.sub.morning.active { border-left-color: #185FA5; color: #185FA5; background: #E6F1FB; }
+  .nav-item.sub.morning:hover  { background: #eef5fc; color: #185FA5; }
+
+  .nav-item.sub.tickets { border-left-color: transparent; }
+  .nav-item.sub.tickets.active { border-left-color: #BA7517; color: #BA7517; background: #FAEEDA; }
+  .nav-item.sub.tickets:hover  { background: #fdf5ea; color: #BA7517; }
+
+  /* ── Send Log (bold) ─────────────────────────────────── */
+  .nav-item.send-log {
+    font-weight: 700;
+    font-size: 13px;
+    color: #1a1a1a;
+    margin-top: 4px;
+    border-top: 0.5px solid rgba(0,0,0,0.07);
+    padding-top: 10px;
+  }
+  .nav-item.send-log:hover { background: #f5f5f3; }
+  .nav-item.send-log.active { border-left: 2px solid #1a1a1a; background: #f5f5f3; }
 
   /* ── Main ────────────────────────────────────────────── */
   .main {
@@ -181,6 +229,7 @@
     {% endif %}
   </div>
 
+  <!-- Dashboard & Forecast -->
   <div class="nav-group">
     <a href="/admin/dashboard"
        class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
@@ -192,6 +241,7 @@
     </a>
   </div>
 
+  <!-- Operations -->
   <div class="nav-group">
     <div class="nav-group-label">Operations</div>
     <a href="/admin/manifests"
@@ -204,23 +254,65 @@
     </a>
   </div>
 
+  <!-- Notifications -->
   <div class="nav-group">
-    <div class="nav-group-label">Logs</div>
-    <a href="/admin/logs/tour-confirmation"
-       class="nav-item sub {% if active_page == 'log_tour' %}active{% endif %}">
-      <span class="dot"></span>Tour Confirmation
+    <div class="nav-group-label">Notifications</div>
+
+    <!-- Tour Confirmation -->
+    <div class="nav-module-label tour">
+      <span class="dot-module"></span>Tour Confirmation
+    </div>
+    <a href="/admin/notifications/tour-confirmation/send"
+       class="nav-item sub tour {% if active_page == 'tour_send' %}active{% endif %}">
+      <span class="dot"></span>Send
     </a>
-    <a href="/admin/logs/morning-reminder"
-       class="nav-item sub {% if active_page == 'log_morning' %}active{% endif %}">
-      <span class="dot"></span>Morning Reminder
+    <a href="/admin/notifications/tour-confirmation/tracking"
+       class="nav-item sub tour {% if active_page == 'tour_tracking' %}active{% endif %}" target="_blank">
+      <span class="dot"></span>Tracking
     </a>
-    <a href="/admin/logs/ticket-reminder"
-       class="nav-item sub {% if active_page == 'log_ticket' %}active{% endif %}">
-      <span class="dot"></span>Ticket Reminder
+    <a href="/admin/notifications/tour-confirmation/utilities"
+       class="nav-item sub tour {% if active_page == 'tour_utilities' %}active{% endif %}">
+      <span class="dot"></span>Utilities
     </a>
-    <a href="/admin/logs/shuttle-confirmation"
-       class="nav-item sub {% if active_page == 'log_shuttle' %}active{% endif %}">
-      <span class="dot"></span>Shuttle Confirmation
+
+    <!-- Morning Pickup -->
+    <div class="nav-module-label morning">
+      <span class="dot-module"></span>Morning Pickup
+    </div>
+    <a href="/admin/notifications/morning-pickup/send"
+       class="nav-item sub morning {% if active_page == 'morning_send' %}active{% endif %}">
+      <span class="dot"></span>Send
+    </a>
+    <a href="/admin/notifications/morning-pickup/tracking"
+       class="nav-item sub morning {% if active_page == 'morning_tracking' %}active{% endif %}" target="_blank">
+      <span class="dot"></span>Tracking
+    </a>
+    <a href="/admin/notifications/morning-pickup/utilities"
+       class="nav-item sub morning {% if active_page == 'morning_utilities' %}active{% endif %}">
+      <span class="dot"></span>Utilities
+    </a>
+
+    <!-- Tickets Reminder -->
+    <div class="nav-module-label tickets">
+      <span class="dot-module"></span>Tickets Reminder
+    </div>
+    <a href="/admin/notifications/tickets-reminder/send"
+       class="nav-item sub tickets {% if active_page == 'tickets_send' %}active{% endif %}">
+      <span class="dot"></span>Send
+    </a>
+    <a href="/admin/notifications/tickets-reminder/tracking"
+       class="nav-item sub tickets {% if active_page == 'tickets_tracking' %}active{% endif %}" target="_blank">
+      <span class="dot"></span>Tracking
+    </a>
+    <a href="/admin/notifications/tickets-reminder/utilities"
+       class="nav-item sub tickets {% if active_page == 'tickets_utilities' %}active{% endif %}">
+      <span class="dot"></span>Utilities
+    </a>
+
+    <!-- Send Log -->
+    <a href="/admin/notifications/send-log"
+       class="nav-item send-log {% if active_page == 'send_log' %}active{% endif %}">
+      📋 Send Log
     </a>
   </div>
 
