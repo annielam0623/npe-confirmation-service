@@ -6,6 +6,8 @@ import uvicorn
 
 from app.database import init_db
 from app.routers import auth, admin, bookings, notifications, tickets, guest, webhook
+from app.routers.send import router as send_router
+from app.routers import send
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -28,6 +30,7 @@ app.include_router(notifications.router, prefix="/api/notifications", tags=["not
 app.include_router(tickets.router,       prefix="/api/tickets",       tags=["tickets"])
 app.include_router(webhook.router,       prefix="/webhook",           tags=["webhook"])
 app.include_router(guest.router,                                      tags=["guest"])
+app.include_router(send.router)
 
 @app.get("/")
 def home():
