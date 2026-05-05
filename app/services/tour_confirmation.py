@@ -186,7 +186,8 @@ def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
   <tr><td style="background:#1a3a5c;border-radius:12px 12px 0 0;padding:32px;text-align:center;">
     <img src="https://nationalparkexpress.com/wp-content/uploads/2026/03/image002.png" style="width:120px;height:auto;margin-bottom:12px;" />
-    <h1 style="color:#fff;margin:10px 0 4px;font-size:22px;">Tour Confirmation &amp; Lunch Selection (If Applicable)</h1>
+    <h1 style="color:#fff;margin:10px 0 2px;font-size:22px;">Tour Confirmation &amp; Lunch Selection</h1>
+    <p style="color:#c8dff7;margin:2px 0 4px;font-size:14px;">(If Applicable)</p>
     <p style="color:#a8c4e0;margin:0;font-size:14px;">{label}</p>
   </td></tr>
   <tr><td style="background:#fff;padding:32px;">

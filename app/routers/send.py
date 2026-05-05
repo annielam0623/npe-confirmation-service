@@ -171,8 +171,20 @@ async def send_tour_confirmation(
         email_url = tc.confirm_url(token, src="email")
         sms_url   = tc.confirm_url(token, src="sms")
 
+        # Lookup pickup location photo URL
+        ploc = row.get('pickup_location', '')
+        loc_res = await db.execute(text(
+            "SELECT photo_url, instruction FROM pickup_locations WHERE hotel_name ILIKE :name LIMIT 1"
+        ), {"name": ploc})
+        loc_row = loc_res.fetchone()
+        pickup_photo_url   = loc_row[0] if loc_row else ''
+        pickup_instruction = loc_row[1] if loc_row else ''
+
         # Build & send email
-        email_html = tc.build_email(row, tour_type, tour_date, email_url)
+        email_html = tc.build_email(row, tour_type, tour_date, email_url,
+                                    pickup_instruction=pickup_instruction,
+                                    pickup_photo_url=pickup_photo_url,
+                                    pickup_photo_label=f"{ploc} Pickup location - click here for detail")
         subject    = f"Tour Confirmation & Lunch Selection – {_fmt_date(tour_date)}"
         email_res  = send_email(email, f"{first} {row['last_name']}", subject, email_html)
         email_status = "sent" if email_res["success"] else f"failed: {email_res.get('error','')}"

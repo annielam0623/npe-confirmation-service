@@ -318,9 +318,14 @@
 
   {% if current_user and current_user.role == 'admin' %}
   <div class="nav-group" style="margin-top: auto;">
+    <div class="nav-group-label">Settings</div>
     <a href="/admin/settings"
        class="nav-item {% if active_page == 'settings' %}active{% endif %}">
-      Settings
+      General
+    </a>
+    <a href="/admin/settings/pickup-locations"
+       class="nav-item {% if active_page == 'pickup_locations' %}active{% endif %}">
+      📍 Pickup Locations
     </a>
   </div>
   {% endif %}

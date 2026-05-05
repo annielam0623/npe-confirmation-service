@@ -1,0 +1,251 @@
+{% extends "base.html" %}
+{% block title %}Pickup Locations — NPE{% endblock %}
+{% block page_title %}Pickup Locations{% endblock %}
+
+{% block extra_styles %}
+.page-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 18px;
+}
+.page-header h2 { font-size: 15px; font-weight: 600; }
+
+.card {
+  background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+  border-radius: 12px; overflow: hidden; margin-bottom: 20px;
+}
+.card-header {
+  padding: 12px 16px; background: #f9f9f7;
+  border-bottom: 0.5px solid rgba(0,0,0,0.08);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-header span { font-size: 13px; font-weight: 600; }
+
+/* Add form */
+.add-form {
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr auto;
+  gap: 12px; align-items: end;
+}
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group label { font-size: 12px; color: #888; font-weight: 500; }
+.form-group input,
+.form-group textarea {
+  padding: 7px 10px; border: 0.5px solid rgba(0,0,0,0.2);
+  border-radius: 7px; font-size: 13px; font-family: inherit;
+  background: #fff;
+}
+.form-group input:focus,
+.form-group textarea:focus { outline: none; border-color: #1a1a1a; }
+
+.btn-add {
+  background: #1a1a1a; color: #fff; border: none;
+  padding: 8px 20px; border-radius: 7px; font-size: 13px;
+  font-weight: 600; cursor: pointer; white-space: nowrap;
+  height: 36px;
+}
+.btn-add:hover { background: #333; }
+
+/* Table */
+table.loc-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.loc-tbl thead td {
+  padding: 8px 12px; font-size: 11px; font-weight: 600;
+  color: #999; background: #f9f9f7;
+  border-bottom: 0.5px solid rgba(0,0,0,0.08);
+}
+.loc-tbl tbody tr { border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+.loc-tbl tbody tr:last-child { border-bottom: none; }
+.loc-tbl tbody tr:hover { background: #fafaf8; }
+.loc-tbl tbody td { padding: 9px 12px; color: #444; vertical-align: middle; }
+
+.btn-edit {
+  background: #fff; border: 0.5px solid rgba(0,0,0,0.2);
+  padding: 3px 10px; border-radius: 6px; font-size: 11px;
+  cursor: pointer; color: #555;
+}
+.btn-edit:hover { background: #f5f5f3; }
+.btn-delete {
+  background: #fff; border: 0.5px solid #A32D2D;
+  padding: 3px 10px; border-radius: 6px; font-size: 11px;
+  cursor: pointer; color: #A32D2D;
+}
+.btn-delete:hover { background: #fff5f5; }
+
+/* Inline edit */
+.inline-input {
+  padding: 4px 8px; border: 0.5px solid rgba(0,0,0,0.3);
+  border-radius: 6px; font-size: 12px; font-family: inherit;
+  width: 100%;
+}
+.inline-input:focus { outline: none; border-color: #1a1a1a; }
+
+.url-link { color: #378ADD; font-size: 11px; text-decoration: none; }
+.url-link:hover { text-decoration: underline; }
+
+.result-msg { font-size: 12px; margin-left: 10px; }
+.ok   { color: #3B6D11; }
+.fail { color: #A32D2D; }
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h2>📍 Pickup Locations</h2>
+  <span style="font-size:12px;color:#aaa;" id="total-count"></span>
+</div>
+
+<!-- Add new -->
+<div class="card">
+  <div class="card-header">
+    <span>+ Add New Location</span>
+  </div>
+  <div class="add-form">
+    <div class="form-group">
+      <label>Hotel Name *</label>
+      <input type="text" id="new-hotel" placeholder="e.g. MGM Grand">
+    </div>
+    <div class="form-group">
+      <label>Photo URL</label>
+      <input type="text" id="new-url" placeholder="https://nationalparkexpress.com/...">
+    </div>
+    <div class="form-group">
+      <label>Pickup Instruction</label>
+      <input type="text" id="new-instruction" placeholder="Please arrive at...">
+    </div>
+    <button class="btn-add" onclick="addLocation()">Add</button>
+  </div>
+  <div style="padding:0 20px 12px;">
+    <span id="add-result" class="result-msg"></span>
+  </div>
+</div>
+
+<!-- List -->
+<div class="card">
+  <div class="card-header">
+    <span>All Locations</span>
+    <input type="text" placeholder="Search…" oninput="filterTable(this.value)"
+           style="padding:4px 10px;border:0.5px solid rgba(0,0,0,0.2);border-radius:6px;font-size:12px;width:180px;">
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="loc-tbl">
+      <thead>
+        <tr>
+          <td style="width:20%">Hotel Name</td>
+          <td style="width:30%">Photo URL</td>
+          <td style="width:35%">Pickup Instruction</td>
+          <td style="width:15%">Actions</td>
+        </tr>
+      </thead>
+      <tbody id="loc-tbody">
+        <tr><td colspan="4" style="padding:20px;text-align:center;color:#ccc;">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let allLocations = [];
+
+async function loadLocations() {
+  const res  = await fetch('/api/pickup-locations');
+  const data = await res.json();
+  allLocations = data.locations || [];
+  document.getElementById('total-count').textContent = `${allLocations.length} locations`;
+  renderTable(allLocations);
+}
+
+function filterTable(q) {
+  const filtered = allLocations.filter(l =>
+    l.hotel_name.toLowerCase().includes(q.toLowerCase()) ||
+    (l.instruction||'').toLowerCase().includes(q.toLowerCase())
+  );
+  renderTable(filtered);
+}
+
+function renderTable(locs) {
+  const tbody = document.getElementById('loc-tbody');
+  if (!locs.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:20px;text-align:center;color:#ccc;">No locations found.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = locs.map(l => `
+    <tr data-id="${l.id}">
+      <td><strong style="font-size:12px;">${l.hotel_name}</strong></td>
+      <td>
+        ${l.photo_url
+          ? `<a href="${l.photo_url}" target="_blank" class="url-link">${l.photo_url.replace('https://nationalparkexpress.com','…')}</a>`
+          : '<span style="color:#ccc;">—</span>'}
+      </td>
+      <td style="font-size:12px;color:#666;">${l.instruction || '—'}</td>
+      <td style="display:flex;gap:6px;">
+        <button class="btn-edit" onclick="editRow(${l.id})">✏ Edit</button>
+        <button class="btn-delete" onclick="deleteLocation(${l.id},'${l.hotel_name.replace(/'/g,"\\'")}')">Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+function editRow(id) {
+  const loc  = allLocations.find(l => l.id === id);
+  if (!loc) return;
+  const tr   = document.querySelector(`tr[data-id="${id}"]`);
+  tr.innerHTML = `
+    <td><input class="inline-input" id="edit-name-${id}" value="${loc.hotel_name}"></td>
+    <td><input class="inline-input" id="edit-url-${id}"  value="${loc.photo_url||''}"></td>
+    <td><input class="inline-input" id="edit-inst-${id}" value="${loc.instruction||''}"></td>
+    <td style="display:flex;gap:6px;">
+      <button class="btn-add" style="font-size:11px;padding:4px 12px;height:30px;" onclick="saveEdit(${id})">Save</button>
+      <button class="btn-edit" onclick="loadLocations()">Cancel</button>
+    </td>`;
+}
+
+async function saveEdit(id) {
+  const name = document.getElementById(`edit-name-${id}`).value.trim();
+  const url  = document.getElementById(`edit-url-${id}`).value.trim();
+  const inst = document.getElementById(`edit-inst-${id}`).value.trim();
+  if (!name) { alert('Hotel name is required.'); return; }
+
+  const res  = await fetch(`/api/pickup-locations/${id}`, {
+    method: 'PUT',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({hotel_name: name, photo_url: url, instruction: inst}),
+  });
+  if (res.ok) loadLocations();
+  else alert('Save failed.');
+}
+
+async function addLocation() {
+  const name = document.getElementById('new-hotel').value.trim();
+  const url  = document.getElementById('new-url').value.trim();
+  const inst = document.getElementById('new-instruction').value.trim();
+  const el   = document.getElementById('add-result');
+  if (!name) { el.innerHTML = '<span class="fail">Hotel name is required.</span>'; return; }
+
+  const res  = await fetch('/api/pickup-locations', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({hotel_name: name, photo_url: url, instruction: inst}),
+  });
+  if (res.ok) {
+    el.innerHTML = '<span class="ok">✓ Added</span>';
+    document.getElementById('new-hotel').value = '';
+    document.getElementById('new-url').value   = '';
+    document.getElementById('new-instruction').value = '';
+    loadLocations();
+    setTimeout(() => el.innerHTML = '', 3000);
+  } else {
+    const data = await res.json();
+    el.innerHTML = `<span class="fail">${data.detail || 'Failed.'}</span>`;
+  }
+}
+
+async function deleteLocation(id, name) {
+  if (!confirm(`Delete "${name}"?`)) return;
+  const res = await fetch(`/api/pickup-locations/${id}`, {method: 'DELETE'});
+  if (res.ok) loadLocations();
+  else alert('Delete failed.');
+}
+
+loadLocations();
+</script>
+{% endblock %}

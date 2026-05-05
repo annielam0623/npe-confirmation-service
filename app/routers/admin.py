@@ -435,3 +435,19 @@ async def notif_send_log(
         "active_page": "send_log",
         "today": today,
     })
+
+
+# ─── Settings — Pickup Locations ─────────────────────────────────────────────
+
+@router.get("/settings/pickup-locations", response_class=HTMLResponse)
+async def settings_pickup_locations(
+    request: Request,
+    current_user=Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        return RedirectResponse(url="/admin/dashboard", status_code=302)
+    return templates.TemplateResponse("admin/pickup_locations.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "pickup_locations",
+    })
