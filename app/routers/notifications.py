@@ -35,8 +35,9 @@ Endpoints:
 from __future__ import annotations
 import io
 import csv
-from datetime import date, datetime
+from datetime import date, datetime, timezone, timedelta
 from typing import Optional
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -53,6 +54,17 @@ from app.services.mailer import send_email
 from app.services.sms import send_sms
 
 router = APIRouter()
+LA = ZoneInfo("America/Los_Angeles")
+
+
+def _to_la_str(dt) -> str | None:
+    """Convert a naive UTC datetime to LA time string MM/DD HH:MM."""
+    if not dt:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    la_dt = dt.astimezone(LA)
+    return la_dt.strftime("%-m/%-d %-I:%M %p")
 
 
 def _to_date(d: str) -> date:
@@ -182,11 +194,12 @@ async def tracking_tour_confirmation(
             b.tour_date, b.tour_type,
             b.email_status, b.sms_status, b.confirmation,
             b.lunch_turkey, b.lunch_veggie, b.lunch_beef,
-            b.submitted_at
+            b.submitted_at, b.notes, b.notes_history,
+            b.submission_count
         FROM bookings b
         WHERE b.tour_date = :tour_date
           AND b.module    = 'tour_confirmation'
-        ORDER BY b.last_name ASC
+        ORDER BY b.submitted_at DESC NULLS LAST, b.last_name ASC
     """), {"tour_date": _to_date(date)})
 
     rows = result.mappings().all()
@@ -214,7 +227,10 @@ async def tracking_tour_confirmation(
                     f"Veggie x{r['lunch_veggie']}" if r["lunch_veggie"] else "",
                     f"Beef x{r['lunch_beef']}"     if r["lunch_beef"]   else "",
                 ])),
-                "submitted_at":        r["submitted_at"].isoformat() if r["submitted_at"] else None,
+                "notes":               r["notes"] or "",
+                "notes_history":       r["notes_history"] or "",
+                "submission_count":    r["submission_count"] or 0,
+                "submitted_at":        _to_la_str(r["submitted_at"]),
             }
             for r in rows
         ],

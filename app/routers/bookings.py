@@ -315,6 +315,89 @@ async def handle_booking(
     }
 
 
+@router.put("/{booking_id}/confirmation")
+async def update_confirmation(
+    booking_id: int,
+    payload: dict,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """
+    Update confirmation status + optional lunch counts.
+    Used by Tracking page inline dropdown.
+    Cancel → clears lunch counts.
+    """
+    from sqlalchemy import text
+    from zoneinfo import ZoneInfo
+    LA = ZoneInfo("America/Los_Angeles")
+    now_la = datetime.now(LA).replace(tzinfo=None)
+
+    result = await db.execute(select(Booking).where(Booking.id == booking_id))
+    booking = result.scalar_one_or_none()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+
+    allowed = {"yes", "pending", "modify_req", "cancel"}
+    new_conf = (payload.get("confirmation") or "").lower()
+    if new_conf not in allowed:
+        raise HTTPException(status_code=400, detail=f"Invalid confirmation: {new_conf}")
+
+    booking.confirmation = new_conf
+    booking.updated_at   = now_la
+
+    # Cancel → clear lunch
+    if new_conf == "cancel":
+        booking.lunch_turkey = 0
+        booking.lunch_veggie = 0
+        booking.lunch_beef   = 0
+
+    # Update lunch if provided (only meaningful for YES)
+    if new_conf == "yes" and "lunch_turkey" in payload:
+        booking.lunch_turkey = int(payload.get("lunch_turkey") or 0)
+        booking.lunch_veggie = int(payload.get("lunch_veggie") or 0)
+        booking.lunch_beef   = int(payload.get("lunch_beef")   or 0)
+
+    await db.commit()
+    return {
+        "ok":           True,
+        "confirmation": booking.confirmation,
+        "lunch_turkey": booking.lunch_turkey,
+        "lunch_veggie": booking.lunch_veggie,
+        "lunch_beef":   booking.lunch_beef,
+    }
+
+
+@router.put("/{booking_id}/lunch")
+async def update_lunch(
+    booking_id: int,
+    payload: dict,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Update lunch counts for a YES booking."""
+    from zoneinfo import ZoneInfo
+    LA = ZoneInfo("America/Los_Angeles")
+    now_la = datetime.now(LA).replace(tzinfo=None)
+
+    result = await db.execute(select(Booking).where(Booking.id == booking_id))
+    booking = result.scalar_one_or_none()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    if booking.confirmation != "yes":
+        raise HTTPException(status_code=400, detail="Lunch can only be edited for YES bookings")
+
+    turkey = int(payload.get("lunch_turkey") or 0)
+    veggie = int(payload.get("lunch_veggie") or 0)
+    beef   = int(payload.get("lunch_beef")   or 0)
+
+    booking.lunch_turkey = turkey
+    booking.lunch_veggie = veggie
+    booking.lunch_beef   = beef
+    booking.updated_at   = now_la
+    await db.commit()
+    return {"ok": True, "lunch_turkey": turkey, "lunch_veggie": veggie, "lunch_beef": beef}
+
+
 @router.delete("/{booking_id}/handle")
 async def unhandle_booking(
     booking_id: int,

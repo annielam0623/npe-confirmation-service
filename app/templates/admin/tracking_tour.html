@@ -8,118 +8,106 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f3; color: #1a1a1a; }
 
-  .topbar {
-    background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.1);
-    padding: 0 24px; height: 52px; display: flex; align-items: center;
-    justify-content: space-between; position: sticky; top: 0; z-index: 10;
-  }
+  .topbar { background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.1); padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 10; }
   .topbar-left { display: flex; align-items: center; gap: 14px; }
   .topbar-title { font-size: 16px; font-weight: 700; color: #3B6D11; }
-  .back-btn {
-    font-size: 12px; color: #888; text-decoration: none;
-    padding: 4px 10px; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 6px;
-  }
+  .back-btn { font-size: 12px; color: #888; text-decoration: none; padding: 4px 10px; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 6px; }
   .back-btn:hover { color: #1a1a1a; }
 
-  .container { max-width: 1200px; margin: 0 auto; padding: 20px 24px; }
+  .container { max-width: 1300px; margin: 0 auto; padding: 20px 24px; }
 
-  /* Date nav */
-  .date-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
-  .btn-nav {
-    width: 30px; height: 30px; border-radius: 7px;
-    border: 0.5px solid rgba(0,0,0,0.15); background: #fff;
-    cursor: pointer; font-size: 15px; color: #555;
-    display: flex; align-items: center; justify-content: center;
-  }
+  .date-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+  .btn-nav { width: 30px; height: 30px; border-radius: 7px; border: 0.5px solid rgba(0,0,0,0.15); background: #fff; cursor: pointer; font-size: 15px; color: #555; display: flex; align-items: center; justify-content: center; }
   .btn-nav:hover { background: #f5f5f3; }
-  .date-display {
-    background: #fff; border: 0.5px solid rgba(0,0,0,0.15);
-    padding: 5px 10px; border-radius: 7px; font-size: 13px; font-weight: 500;
-    min-width: 130px; text-align: center; cursor: pointer; outline: none; font-family: inherit;
-  }
+  .date-display { background: #fff; border: 0.5px solid rgba(0,0,0,0.15); padding: 5px 10px; border-radius: 7px; font-size: 13px; font-weight: 500; min-width: 130px; text-align: center; cursor: pointer; outline: none; font-family: inherit; }
   .date-display:focus { border-color: #3B6D11; }
   .btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 7px; border: 0.5px solid rgba(0,0,0,0.15); font-size: 12px; cursor: pointer; background: #fff; color: #555; text-decoration: none; }
   .btn:hover { background: #f5f5f3; }
   .btn-green { background: #3B6D11; color: #fff; border-color: #3B6D11; }
   .btn-green:hover { background: #2d5409; }
 
-  /* Pills */
-  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-  .pill {
-    padding: 4px 14px; border-radius: 20px; font-size: 12px;
-    cursor: pointer; border: 0.5px solid rgba(0,0,0,0.15);
-    background: #fff; color: #555; white-space: nowrap;
-  }
+  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  .pill { padding: 4px 12px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 0.5px solid rgba(0,0,0,0.15); background: #fff; color: #555; white-space: nowrap; }
   .pill:hover { border-color: #3B6D11; color: #3B6D11; }
   .pill.active { background: #EAF3DE; border-color: #3B6D11; color: #3B6D11; font-weight: 600; }
-  .pill .cnt { font-size: 11px; color: #aaa; margin-left: 3px; }
-  .pill.active .cnt { color: #3B6D11; }
+  .pill .ratio { font-size: 11px; margin-left: 4px; color: #888; }
+  .pill.active .ratio { color: #3B6D11; }
 
-  /* Stats */
-  .stats-row { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
-  .stat-card {
-    background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 10px;
-    padding: 12px 20px; text-align: center; min-width: 90px;
-  }
-  .stat-card .num { font-size: 24px; font-weight: 700; color: #1a1a1a; }
+  .stats-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: flex-start; }
+  .stat-card { background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 10px 18px; text-align: center; min-width: 80px; }
+  .stat-card .num { font-size: 22px; font-weight: 700; color: #1a1a1a; }
   .stat-card .lbl { font-size: 11px; color: #aaa; margin-top: 2px; }
-  .stat-card.confirmed .num { color: #3B6D11; }
-  .stat-card.pending .num   { color: #185FA5; }
-  .stat-card.failed .num    { color: #A32D2D; }
+  .stat-card.s-yes .num { color: #3B6D11; }
+  .stat-card.s-modify .num { color: #e67e22; }
+  .stat-card.s-pending .num { color: #185FA5; }
+  .stat-card.s-cancel .num { color: #A32D2D; }
 
-  /* Lunch stats */
-  .lunch-row { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
-  .lunch-card {
-    background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 10px;
-    padding: 10px 16px; display: flex; align-items: center; gap: 8px;
-  }
-  .lunch-card .emoji { font-size: 20px; }
-  .lunch-card .count { font-size: 18px; font-weight: 700; }
-  .lunch-card .label { font-size: 11px; color: #888; }
+  .lunch-groups { display: flex; gap: 8px; flex-wrap: wrap; }
+  .lunch-card { background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 8px 14px; }
+  .lunch-card .lc-title { font-size: 11px; font-weight: 600; color: #3B6D11; margin-bottom: 4px; }
+  .lunch-card .lc-counts { display: flex; gap: 10px; font-size: 13px; font-weight: 600; }
 
-  /* Table */
-  .table-card {
-    background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
-    border-radius: 12px; overflow: hidden;
-  }
-  .table-header {
-    padding: 10px 16px; background: #EAF3DE;
-    border-bottom: 0.5px solid rgba(0,0,0,0.08);
-    display: flex; align-items: center; justify-content: space-between;
-  }
+  .filter-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+  .filter-bar input[type=text] { padding: 6px 10px; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 7px; font-size: 13px; width: 220px; }
+  .filter-bar input[type=text]:focus { outline: none; border-color: #3B6D11; }
+  .filter-bar select { padding: 6px 10px; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 7px; font-size: 13px; background: #fff; }
+  .records-count { font-size: 12px; color: #aaa; margin-left: auto; }
+
+  .table-card { background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 12px; overflow: hidden; }
+  .table-header { padding: 10px 16px; background: #EAF3DE; border-bottom: 0.5px solid rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: space-between; }
   .table-header span { font-size: 13px; font-weight: 600; color: #3B6D11; }
   table.track-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .track-tbl thead td {
-    padding: 8px 10px; font-size: 11px; font-weight: 600; color: #999;
-    background: #f9f9f7; border-bottom: 0.5px solid rgba(0,0,0,0.08); white-space: nowrap;
-  }
+  .track-tbl thead td { padding: 8px 10px; font-size: 11px; font-weight: 600; color: #999; background: #f9f9f7; border-bottom: 0.5px solid rgba(0,0,0,0.08); white-space: nowrap; }
   .track-tbl tbody tr { border-bottom: 0.5px solid rgba(0,0,0,0.06); }
   .track-tbl tbody tr:last-child { border-bottom: none; }
   .track-tbl tbody tr:hover { background: #fafaf8; }
   .track-tbl tbody td { padding: 8px 10px; color: #444; vertical-align: middle; }
 
-  /* Status badges */
-  .sp { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
-  .sp-confirmed { background: #eaf3de; color: #3b6d11; }
-  .sp-pending   { background: #e6f1fb; color: #185fa5; }
-  .sp-failed    { background: #fcebeb; color: #a32d2d; }
-  .sp-sent      { background: #eeedfe; color: #534ab7; }
-  .sp-delivered { background: #eaf3de; color: #3b6d11; }
-  .sp-undelivered { background: #fcebeb; color: #a32d2d; }
+  .sp { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; }
+  .sp-yes       { background: #EAF3DE; color: #3B6D11; }
+  .sp-modify    { background: #FEF3E2; color: #e67e22; }
+  .sp-pending   { background: #E6F1FB; color: #185FA5; }
+  .sp-cancel    { background: #FCEBEB; color: #A32D2D; }
+  .sp-sent      { background: #EEEDFE; color: #534AB7; }
+  .sp-delivered { background: #EAF3DE; color: #3B6D11; }
+  .sp-failed    { background: #FCEBEB; color: #A32D2D; }
+  .sp-undelivered { background: #FEF3E2; color: #e67e22; }
 
-  /* Filter bar */
-  .filter-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
-  .filter-bar input {
-    padding: 6px 10px; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 7px;
-    font-size: 13px; width: 220px;
-  }
-  .filter-bar input:focus { outline: none; border-color: #3B6D11; }
-  .filter-bar select {
-    padding: 6px 10px; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 7px;
-    font-size: 13px; background: #fff;
-  }
+  .conf-wrap { display: inline-flex; align-items: center; gap: 4px; }
+  .conf-select { font-size: 11px; font-weight: 600; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 6px; padding: 2px 4px; background: #fff; cursor: pointer; outline: none; }
+  .conf-select:focus { border-color: #3B6D11; }
+  .conf-select.v-yes      { color: #3B6D11; }
+  .conf-select.v-modify   { color: #e67e22; }
+  .conf-select.v-pending  { color: #185FA5; }
+  .conf-select.v-cancel   { color: #A32D2D; }
+  .conf-btn { width: 20px; height: 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; }
+  .conf-save-btn { background: #3B6D11; color: #fff; }
+  .conf-save-btn:hover { background: #2d5409; }
+  .conf-undo-btn { background: #eee; color: #555; }
+  .conf-undo-btn:hover { background: #ddd; }
+  .star { color: #e74c3c; font-size: 11px; margin-left: 2px; }
 
-  .records-count { font-size: 12px; color: #aaa; margin-left: auto; }
+  .notes-cell { max-width: 140px; }
+  .notes-text { background: #fffde7; border: 0.5px solid #f0d080; border-radius: 4px; padding: 3px 6px; font-size: 11px; color: #555; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 130px; display: inline-block; vertical-align: middle; }
+  .notes-text.expanded { white-space: normal; overflow: visible; max-width: none; }
+  .notes-collapse { font-size: 10px; color: #3B6D11; cursor: pointer; text-decoration: underline; display: block; margin-top: 2px; }
+
+  .lunch-val { cursor: pointer; color: #333; font-weight: 600; border-bottom: 1px dashed #ccc; }
+  .lunch-val:hover { color: #3B6D11; }
+  .lunch-dash { color: #ccc; }
+
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 999; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal-box { background: #fff; border-radius: 12px; padding: 24px; min-width: 300px; max-width: 380px; width: 90%; }
+  .modal-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .modal-sub { font-size: 12px; color: #888; margin-bottom: 16px; }
+  .lunch-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .lunch-row label { font-size: 13px; color: #555; }
+  .lunch-row input { width: 70px; padding: 6px 8px; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 6px; font-size: 14px; font-weight: 600; text-align: center; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .modal-save-btn { flex: 1; background: #3B6D11; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .modal-save-btn:hover { background: #2d5409; }
+  .modal-cancel-btn { flex: 1; background: #f5f5f3; color: #555; border: 0.5px solid rgba(0,0,0,0.15); padding: 10px; border-radius: 8px; font-size: 14px; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -129,14 +117,13 @@
     <a href="/admin/manifests" class="back-btn">← Back</a>
     <span class="topbar-title">🟢 Tour Confirmation Tracking</span>
   </div>
-  <div style="display:flex;gap:8px;align-items:center;">
-    <button class="btn" onclick="exportExcel()">⬇ Export</button>
+  <div style="display:flex;gap:8px;">
+    <button class="btn" onclick="exportCsv()">⬇ Export</button>
     <button class="btn btn-green" onclick="loadData()">↻ Refresh</button>
   </div>
 </div>
 
 <div class="container">
-  <!-- Date nav -->
   <div class="date-nav">
     <button class="btn-nav" onclick="changeDate(-1)">‹</button>
     <input type="date" class="date-display" id="date-display" onchange="onDatePick(this.value)" onclick="try{this.showPicker()}catch(e){}">
@@ -145,225 +132,347 @@
     <button class="btn" onclick="goTomorrow()">Tomorrow</button>
   </div>
 
-  <!-- Tour type pills -->
-  <div class="pills" id="pills-container">
-    <span class="pill active" data-type="all" onclick="filterType('all',this)">All <span class="cnt" id="cnt-all"></span></span>
-    <span class="pill" data-type="upper_antelope" onclick="filterType('upper_antelope',this)">AC-U <span class="cnt"></span></span>
-    <span class="pill" data-type="lower_antelope" onclick="filterType('lower_antelope',this)">AC-L <span class="cnt"></span></span>
-    <span class="pill" data-type="antelop_X" onclick="filterType('antelop_X',this)">AC-X <span class="cnt"></span></span>
-    <span class="pill" data-type="grand_canyon_south" onclick="filterType('grand_canyon_south',this)">South <span class="cnt"></span></span>
-    <span class="pill" data-type="grand_canyon_west" onclick="filterType('grand_canyon_west',this)">West <span class="cnt"></span></span>
-    <span class="pill" data-type="bryce_zion" onclick="filterType('bryce_zion',this)">BZ <span class="cnt"></span></span>
-    <span class="pill" data-type="valley_of_fire_full" onclick="filterType('valley_of_fire_full',this)">VOF-F <span class="cnt"></span></span>
-    <span class="pill" data-type="valley_of_fire_half" onclick="filterType('valley_of_fire_half',this)">VOF-H <span class="cnt"></span></span>
-    <span class="pill" data-type="hoover_dam" onclick="filterType('hoover_dam',this)">HD <span class="cnt"></span></span>
-  </div>
+  <div class="pills" id="pills-container"></div>
 
-  <!-- Stats -->
-  <div class="stats-row" id="stats-row">
+  <div class="stats-row">
     <div class="stat-card"><div class="num" id="stat-total">—</div><div class="lbl">Total</div></div>
-    <div class="stat-card confirmed"><div class="num" id="stat-confirmed">—</div><div class="lbl">Confirmed</div></div>
-    <div class="stat-card pending"><div class="num" id="stat-pending">—</div><div class="lbl">Pending</div></div>
-    <div class="stat-card failed"><div class="num" id="stat-failed">—</div><div class="lbl">No Response</div></div>
+    <div class="stat-card s-yes"><div class="num" id="stat-yes">—</div><div class="lbl">YES</div></div>
+    <div class="stat-card s-modify"><div class="num" id="stat-modify">—</div><div class="lbl">Modify</div></div>
+    <div class="stat-card s-pending"><div class="num" id="stat-pending">—</div><div class="lbl">Pending</div></div>
+    <div class="stat-card s-cancel"><div class="num" id="stat-cancel">—</div><div class="lbl">Cancel</div></div>
+    <div class="lunch-groups" id="lunch-groups"></div>
   </div>
 
-  <!-- Lunch stats -->
-  <div class="lunch-row" id="lunch-row">
-    <div class="lunch-card"><span class="emoji">🦃</span><span class="count" id="lunch-turkey">—</span><span class="label">Turkey</span></div>
-    <div class="lunch-card"><span class="emoji">🥗</span><span class="count" id="lunch-veggie">—</span><span class="label">Veggie</span></div>
-    <div class="lunch-card"><span class="emoji">🥩</span><span class="count" id="lunch-beef">—</span><span class="label">Beef</span></div>
-  </div>
-
-  <!-- Filter -->
   <div class="filter-bar">
-    <input type="text" id="search-input" placeholder="Search order #, name, email…" oninput="applyFilter()">
+    <input type="text" id="search-input" placeholder="Search order #, name, phone…" oninput="applyFilter()">
     <select id="status-filter" onchange="applyFilter()">
       <option value="">All Statuses</option>
-      <option value="confirmed">Confirmed</option>
+      <option value="yes">YES</option>
+      <option value="modify_req">Modify</option>
       <option value="pending">Pending</option>
-      <option value="no_response">No Response</option>
-    </select>
-    <select id="sms-filter" onchange="applyFilter()">
-      <option value="">All SMS</option>
-      <option value="delivered">Delivered</option>
-      <option value="sent">Sent</option>
-      <option value="undelivered">Undelivered</option>
-      <option value="failed">Failed</option>
+      <option value="cancel">Cancel</option>
     </select>
     <span class="records-count" id="records-count">— records</span>
   </div>
 
-  <!-- Table -->
   <div class="table-card">
-    <div class="table-header">
-      <span>Confirmation Log</span>
-      <span style="font-size:12px;color:#888;" id="table-meta"></span>
-    </div>
+    <div class="table-header"><span>Confirmation Log</span></div>
     <div style="overflow-x:auto;">
       <table class="track-tbl">
-        <thead>
-          <tr>
-            <td>Order #</td>
-            <td>Status</td>
-            <td>Tour</td>
-            <td>Tour Date</td>
-            <td>Guest Name</td>
-            <td>Party</td>
-            <td>Pickup Time</td>
-            <td>📧 Email</td>
-            <td>📱 SMS</td>
-            <td>🦃</td><td>🥗</td><td>🥩</td>
-            <td>Lunch Selection</td>
-            <td>Submitted</td>
-          </tr>
-        </thead>
+        <thead><tr>
+          <td>Order #</td><td>Status</td><td>Tour</td><td>Tour Date</td>
+          <td>Guest Name</td><td>Party</td>
+          <td>📧 Email</td><td>📱 SMS</td>
+          <td>🦃 T</td><td>🥗 V</td><td>🥩 B</td>
+          <td>Notes</td><td>Submitted</td>
+        </tr></thead>
         <tbody id="track-tbody">
-          <tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>
+          <tr><td colspan="13" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>
         </tbody>
       </table>
     </div>
   </div>
 </div>
 
+<!-- Lunch edit modal -->
+<div class="modal-overlay" id="lunch-modal">
+  <div class="modal-box">
+    <div class="modal-title">Edit Lunch Selection</div>
+    <div class="modal-sub" id="lunch-modal-sub"></div>
+    <div class="lunch-row"><label>🦃 Turkey</label><input type="number" id="lm-turkey" min="0"></div>
+    <div class="lunch-row"><label>🥗 Veggie</label><input type="number" id="lm-veggie" min="0"></div>
+    <div class="lunch-row" id="lm-beef-row"><label>🥩 Beef</label><input type="number" id="lm-beef" min="0"></div>
+    <div class="modal-actions">
+      <button class="modal-save-btn" onclick="saveLunch()">Save</button>
+      <button class="modal-cancel-btn" onclick="closeLunchModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <script>
-const TOUR_LABELS = {
-  upper_antelope: 'AC-U', lower_antelope: 'AC-L', antelop_X: 'AC-X',
-  grand_canyon_south: 'South', grand_canyon_west: 'West', bryce_zion: 'BZ',
-  valley_of_fire_full: 'VOF-F', valley_of_fire_half: 'VOF-H', hoover_dam: 'HD',
+const TOUR_ABBR = {
+  upper_antelope:'AC-U', lower_antelope:'AC-L', antelop_X:'AC-X',
+  grand_canyon_south:'South', grand_canyon_west:'West',
+  bryce_zion:'BZ', valley_of_fire_full:'VOF-F', valley_of_fire_half:'VOF-H',
+  hoover_dam:'HD',
+};
+const TOUR_HAS_BEEF = {
+  upper_antelope:true, lower_antelope:true, antelop_X:true,
+  grand_canyon_south:false, grand_canyon_west:false,
+  bryce_zion:false, valley_of_fire_full:false, valley_of_fire_half:false, hoover_dam:false,
+};
+const TOUR_HAS_LUNCH = {
+  upper_antelope:true, lower_antelope:true, antelop_X:true,
+  grand_canyon_south:true, grand_canyon_west:false,
+  bryce_zion:true, valley_of_fire_full:true, valley_of_fire_half:false, hoover_dam:false,
+};
+const LUNCH_GROUPS = {
+  'Antelope': ['upper_antelope','lower_antelope','antelop_X'],
+  'South':    ['grand_canyon_south'],
+  'BZ':       ['bryce_zion'],
+  'VOF-F':    ['valley_of_fire_full'],
 };
 
-const params = new URLSearchParams(location.search);
-let currentDate = params.get('date') || new Date().toISOString().split('T')[0];
+const urlParams = new URLSearchParams(location.search);
+let currentDate = urlParams.get('date') || new Date().toISOString().split('T')[0];
 let currentType = 'all';
 let allRows = [];
+let lunchEditId = null;
 
-function onDatePick(val) { currentDate = val; loadData(); }
+function onDatePick(val) { currentDate=val; loadData(); }
 function changeDate(d) {
-  const dt = new Date(currentDate + 'T00:00:00');
-  dt.setDate(dt.getDate() + d);
-  currentDate = dt.toISOString().split('T')[0];
-  document.getElementById('date-display').value = currentDate;
-  loadData();
+  const dt=new Date(currentDate+'T00:00:00'); dt.setDate(dt.getDate()+d);
+  currentDate=dt.toISOString().split('T')[0];
+  document.getElementById('date-display').value=currentDate; loadData();
 }
-function goToday()    { currentDate = new Date().toISOString().split('T')[0]; document.getElementById('date-display').value = currentDate; loadData(); }
-function goTomorrow() {
-  const d = new Date(); d.setDate(d.getDate() + 1);
-  currentDate = d.toISOString().split('T')[0]; document.getElementById('date-display').value = currentDate; loadData();
-}
+function goToday()    { currentDate=new Date().toISOString().split('T')[0]; document.getElementById('date-display').value=currentDate; loadData(); }
+function goTomorrow() { const d=new Date(); d.setDate(d.getDate()+1); currentDate=d.toISOString().split('T')[0]; document.getElementById('date-display').value=currentDate; loadData(); }
 
 function filterType(type, el) {
-  currentType = type;
-  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  currentType=type;
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
   el.classList.add('active');
   applyFilter();
 }
 
 async function loadData() {
-  document.getElementById('track-tbody').innerHTML =
-    '<tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
-
+  document.getElementById('track-tbody').innerHTML='<tr><td colspan="13" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
   try {
-    const res = await fetch(`/api/notifications/tour-confirmation/tracking?date=${currentDate}`);
-    const data = await res.json();
-    allRows = data.rows || [];
-    updatePillCounts();
+    const res=await fetch(`/api/notifications/tour-confirmation/tracking?date=${currentDate}`);
+    const data=await res.json();
+    allRows=data.rows||[];
+    buildPills();
     applyFilter();
   } catch(e) {
-    document.getElementById('track-tbody').innerHTML =
-      '<tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">Failed to load data.</td></tr>';
+    document.getElementById('track-tbody').innerHTML='<tr><td colspan="13" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
   }
 }
 
-function updatePillCounts() {
-  document.querySelectorAll('.pill[data-type]').forEach(pill => {
-    const type = pill.dataset.type;
-    const cnt = type === 'all' ? allRows.length : allRows.filter(r => r.tour_type === type).length;
-    pill.querySelector('.cnt').textContent = cnt || '';
+function buildPills() {
+  const types=[...new Set(allRows.map(r=>r.tour_type).filter(Boolean))];
+  const allReplied=allRows.filter(r=>r.confirmation_status!=='pending').length;
+  let html=`<span class="pill active" onclick="filterType('all',this)">All <span class="ratio">${allReplied}/${allRows.length}</span></span>`;
+  types.forEach(t=>{
+    const rows=allRows.filter(r=>r.tour_type===t);
+    const replied=rows.filter(r=>r.confirmation_status!=='pending').length;
+    html+=`<span class="pill" onclick="filterType('${t}',this)">${TOUR_ABBR[t]||t} <span class="ratio">${replied}/${rows.length}</span></span>`;
   });
+  document.getElementById('pills-container').innerHTML=html;
+}
+
+function updateStats(rows) {
+  const yes=rows.filter(r=>r.confirmation_status==='yes').length;
+  const modify=rows.filter(r=>r.confirmation_status==='modify_req').length;
+  const pending=rows.filter(r=>r.confirmation_status==='pending').length;
+  const cancel=rows.filter(r=>r.confirmation_status==='cancel').length;
+  document.getElementById('stat-total').textContent=rows.length;
+  document.getElementById('stat-yes').textContent=yes;
+  document.getElementById('stat-modify').textContent=modify;
+  document.getElementById('stat-pending').textContent=pending;
+  document.getElementById('stat-cancel').textContent=cancel;
+
+  const yesRows=rows.filter(r=>r.confirmation_status==='yes');
+  let lunchHtml='';
+  Object.entries(LUNCH_GROUPS).forEach(([label,types])=>{
+    const gr=yesRows.filter(r=>types.includes(r.tour_type));
+    if(!gr.length) return;
+    const t=gr.reduce((s,r)=>s+(r.lunch_turkey||0),0);
+    const v=gr.reduce((s,r)=>s+(r.lunch_veggie||0),0);
+    const b=gr.reduce((s,r)=>s+(r.lunch_beef||0),0);
+    const hasBf=gr.some(r=>TOUR_HAS_BEEF[r.tour_type]);
+    lunchHtml+=`<div class="lunch-card"><div class="lc-title">${label}</div><div class="lc-counts">🦃 ${t} &nbsp;🥗 ${v}${hasBf?' &nbsp;🥩 '+b:''}</div></div>`;
+  });
+  document.getElementById('lunch-groups').innerHTML=lunchHtml;
 }
 
 function applyFilter() {
-  const search = document.getElementById('search-input').value.toLowerCase();
-  const statusF = document.getElementById('status-filter').value;
-  const smsF    = document.getElementById('sms-filter').value;
+  const search=document.getElementById('search-input').value.toLowerCase();
+  const statusF=document.getElementById('status-filter').value;
+  let rows=currentType==='all'?allRows:allRows.filter(r=>r.tour_type===currentType);
+  if(search) rows=rows.filter(r=>(r.order_number||'').toLowerCase().includes(search)||(r.guest_name||'').toLowerCase().includes(search)||(r.phone||'').toLowerCase().includes(search));
+  if(statusF) rows=rows.filter(r=>r.confirmation_status===statusF);
+  document.getElementById('records-count').textContent=`${rows.length} records`;
+  updateStats(rows);
+  renderTable(rows);
+}
 
-  let rows = currentType === 'all' ? allRows : allRows.filter(r => r.tour_type === currentType);
-  if (search)  rows = rows.filter(r =>
-    (r.order_number||'').toLowerCase().includes(search) ||
-    (r.guest_name||'').toLowerCase().includes(search) ||
-    (r.email||'').toLowerCase().includes(search));
-  if (statusF) rows = rows.filter(r => (r.confirmation_status||'').toLowerCase().includes(statusF));
-  if (smsF)    rows = rows.filter(r => (r.sms_status||'').toLowerCase().includes(smsF));
+function renderTable(rows) {
+  const tbody=document.getElementById('track-tbody');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="13" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';return;}
 
-  // Stats
-  document.getElementById('stat-total').textContent     = rows.length;
-  document.getElementById('stat-confirmed').textContent = rows.filter(r => r.confirmation_status === 'confirmed').length;
-  document.getElementById('stat-pending').textContent   = rows.filter(r => r.confirmation_status === 'pending').length;
-  document.getElementById('stat-failed').textContent    = rows.filter(r => !r.confirmation_status || r.confirmation_status === 'no_response').length;
+  tbody.innerHTML=rows.map(r=>{
+    const conf=r.confirmation_status||'pending';
+    const abbr=TOUR_ABBR[r.tour_type]||r.tour_type||'—';
+    const star=(r.submission_count>1)?'<span class="star">★</span>':'';
+    const hasLunch=TOUR_HAS_LUNCH[r.tour_type];
+    const hasBf=TOUR_HAS_BEEF[r.tour_type];
 
-  // Lunch
-  document.getElementById('lunch-turkey').textContent = rows.reduce((s,r) => s + (r.lunch_turkey||0), 0);
-  document.getElementById('lunch-veggie').textContent = rows.reduce((s,r) => s + (r.lunch_veggie||0), 0);
-  document.getElementById('lunch-beef').textContent   = rows.reduce((s,r) => s + (r.lunch_beef||0), 0);
+    // Status dropdown
+    const vCls={'yes':'v-yes','modify_req':'v-modify','pending':'v-pending','cancel':'v-cancel'}[conf]||'v-pending';
+    const statusCell=`<div class="conf-wrap">
+      <select class="conf-select ${vCls}" data-id="${r.id}" data-orig="${conf}" onchange="onConfChange(this)">
+        <option value="yes"        ${conf==='yes'?'selected':''}>YES</option>
+        <option value="modify_req" ${conf==='modify_req'?'selected':''}>Modify</option>
+        <option value="pending"    ${conf==='pending'?'selected':''}>Pending</option>
+        <option value="cancel"     ${conf==='cancel'?'selected':''}>Cancel</option>
+      </select>${star}
+      <button class="conf-btn conf-save-btn" id="save-${r.id}" onclick="saveConf(${r.id})" style="display:none">✓</button>
+      <button class="conf-btn conf-undo-btn" id="undo-${r.id}" onclick="cancelConf(${r.id})" style="display:none">✕</button>
+    </div>`;
 
-  document.getElementById('records-count').textContent = `${rows.length} records`;
+    // Email/SMS
+    const emailTxt=r.email_status?.startsWith('sent')?'Sent':r.email_status?.startsWith('failed')?'Failed':'—';
+    const emailCls=r.email_status?.startsWith('sent')?'sp-delivered':r.email_status?.startsWith('failed')?'sp-failed':'';
+    const smsTxt=smsLabel(r.sms_status);
+    const smsCls=smsClass(r.sms_status);
 
-  const tbody = document.getElementById('track-tbody');
-  if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';
-    return;
-  }
+    // Lunch cells
+    let tCell='<span class="lunch-dash">—</span>',vCell='<span class="lunch-dash">—</span>',bCell='<span class="lunch-dash">—</span>';
+    if(hasLunch && conf==='yes'){
+      tCell=`<span class="lunch-val" onclick="openLunchModal(${r.id})">${r.lunch_turkey||0}</span>`;
+      vCell=`<span class="lunch-val" onclick="openLunchModal(${r.id})">${r.lunch_veggie||0}</span>`;
+      bCell=hasBf?`<span class="lunch-val" onclick="openLunchModal(${r.id})">${r.lunch_beef||0}</span>`:'<span class="lunch-dash">—</span>';
+    }
 
-  tbody.innerHTML = rows.map(r => {
-    const smsCls = smsStatusClass(r.sms_status);
-    const emailCls = r.email_status === 'sent' ? 'sp-delivered' : r.email_status?.startsWith('failed') ? 'sp-failed' : 'sp-pending';
-    const cfmCls = r.confirmation_status === 'confirmed' ? 'sp-confirmed' : 'sp-pending';
-    return `<tr>
-      <td style="color:#378ADD;font-weight:500;">${r.order_number}</td>
-      <td><span class="sp ${cfmCls}">${r.confirmation_status || 'Pending'}</span></td>
-      <td>${TOUR_LABELS[r.tour_type] || r.tour_type || '—'}</td>
-      <td style="white-space:nowrap;">${r.tour_date || '—'}</td>
-      <td>${r.guest_name || '—'}<br><span style="font-size:10px;color:#aaa;">${r.email||''}</span></td>
-      <td style="text-align:center;">${r.quantities || '—'}</td>
-      <td>${r.pickup_time || '—'}</td>
-      <td><span class="sp ${emailCls}">${r.email_status || '—'}</span></td>
-      <td><span class="sp ${smsCls}">${smsLabel(r.sms_status)}</span></td>
-      <td style="text-align:center;">${r.lunch_turkey||0}</td>
-      <td style="text-align:center;">${r.lunch_veggie||0}</td>
-      <td style="text-align:center;">${r.lunch_beef||0}</td>
-      <td style="font-size:11px;">${r.lunch_selection || '—'}</td>
-      <td style="font-size:11px;white-space:nowrap;">${r.submitted_at ? new Date(r.submitted_at).toLocaleString('en-US',{month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}) : '—'}</td>
+    // Notes — strip timestamp prefix, show content only
+    let notesCell='<span style="color:#ccc;">—</span>';
+    if(r.notes){
+      let display=r.notes.replace(/^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}\]\s*/,'');
+      display=display.replace(/^Modify requested:\s*/i,'requested: ');
+      notesCell=`<div class="notes-cell"><span class="notes-text" id="nt-${r.id}" onclick="toggleNote(${r.id})" title="Click to expand">${escHtml(display)}</span></div>`;
+    }
+
+    return `<tr data-id="${r.id}">
+      <td style="color:#3B6D11;font-weight:600;white-space:nowrap;">${r.order_number||'—'}</td>
+      <td>${statusCell}</td>
+      <td style="font-size:11px;color:#3B6D11;font-weight:600;">${abbr}</td>
+      <td style="white-space:nowrap;font-size:11px;">${r.tour_date||'—'}</td>
+      <td>${escHtml(r.guest_name||'—')}<br><span style="font-size:10px;color:#aaa;">${r.phone||''}</span></td>
+      <td style="text-align:center;">${r.quantities||'—'}</td>
+      <td>${emailTxt!=='—'?`<span class="sp ${emailCls}">${emailTxt}</span>`:'<span style="color:#ccc;">—</span>'}</td>
+      <td>${smsTxt!=='—'?`<span class="sp ${smsCls}">${smsTxt}</span>`:'<span style="color:#ccc;">—</span>'}</td>
+      <td style="text-align:center;">${tCell}</td>
+      <td style="text-align:center;">${vCell}</td>
+      <td style="text-align:center;">${bCell}</td>
+      <td>${notesCell}</td>
+      <td style="font-size:11px;white-space:nowrap;color:#888;">${r.submitted_at||'—'}</td>
     </tr>`;
   }).join('');
 }
 
-function smsStatusClass(s) {
-  if (!s) return 'sp-pending';
-  if (s.includes('delivered')) return 'sp-delivered';
-  if (s.includes('sent'))      return 'sp-sent';
-  if (s.includes('undelivered') || s.includes('failed')) return 'sp-undelivered';
-  return 'sp-pending';
+// ── Confirmation dropdown ─────────────────────────────────────────────────────
+function onConfChange(sel) {
+  const id=sel.dataset.id;
+  const vCls={'yes':'v-yes','modify_req':'v-modify','pending':'v-pending','cancel':'v-cancel'};
+  sel.className=`conf-select ${vCls[sel.value]||'v-pending'}`;
+  document.getElementById(`save-${id}`).style.display='inline-flex';
+  document.getElementById(`undo-${id}`).style.display='inline-flex';
 }
-function smsLabel(s) {
-  if (!s) return '—';
-  if (s.includes('delivered'))  return 'Delivered';
-  if (s.includes('sent'))       return 'Sent';
-  if (s.includes('undelivered'))return 'Undelivered';
-  if (s.includes('failed'))     return 'Failed';
+
+function cancelConf(id) {
+  const sel=document.querySelector(`.conf-select[data-id="${id}"]`);
+  sel.value=sel.dataset.orig;
+  const vCls={'yes':'v-yes','modify_req':'v-modify','pending':'v-pending','cancel':'v-cancel'};
+  sel.className=`conf-select ${vCls[sel.value]||'v-pending'}`;
+  document.getElementById(`save-${id}`).style.display='none';
+  document.getElementById(`undo-${id}`).style.display='none';
+}
+
+async function saveConf(id) {
+  const sel=document.querySelector(`.conf-select[data-id="${id}"]`);
+  const conf=sel.value;
+  const res=await fetch(`/api/bookings/${id}/confirmation`,{
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({confirmation:conf}),
+  });
+  if(res.ok){
+    const row=allRows.find(r=>r.id===parseInt(id));
+    if(row){
+      row.confirmation_status=conf;
+      if(conf==='cancel'){row.lunch_turkey=0;row.lunch_veggie=0;row.lunch_beef=0;}
+    }
+    sel.dataset.orig=conf;
+    document.getElementById(`save-${id}`).style.display='none';
+    document.getElementById(`undo-${id}`).style.display='none';
+    buildPills();
+    applyFilter();
+  } else {
+    alert('Failed to update. Please try again.');
+    cancelConf(id);
+  }
+}
+
+// ── Lunch modal ───────────────────────────────────────────────────────────────
+function openLunchModal(id) {
+  const row=allRows.find(r=>r.id===id);
+  if(!row||row.confirmation_status!=='yes') return;
+  lunchEditId=id;
+  const hasBf=TOUR_HAS_BEEF[row.tour_type];
+  document.getElementById('lunch-modal-sub').textContent=`${row.guest_name} (Party: ${row.quantities})`;
+  document.getElementById('lm-turkey').value=row.lunch_turkey||0;
+  document.getElementById('lm-veggie').value=row.lunch_veggie||0;
+  document.getElementById('lm-beef').value=row.lunch_beef||0;
+  document.getElementById('lm-beef-row').style.display=hasBf?'flex':'none';
+  document.getElementById('lunch-modal').classList.add('open');
+}
+
+function closeLunchModal() {
+  document.getElementById('lunch-modal').classList.remove('open');
+  lunchEditId=null;
+}
+
+async function saveLunch() {
+  if(!lunchEditId) return;
+  const turkey=parseInt(document.getElementById('lm-turkey').value)||0;
+  const veggie=parseInt(document.getElementById('lm-veggie').value)||0;
+  const beef=parseInt(document.getElementById('lm-beef').value)||0;
+  const res=await fetch(`/api/bookings/${lunchEditId}/lunch`,{
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({lunch_turkey:turkey,lunch_veggie:veggie,lunch_beef:beef}),
+  });
+  if(res.ok){
+    const row=allRows.find(r=>r.id===lunchEditId);
+    if(row){row.lunch_turkey=turkey;row.lunch_veggie=veggie;row.lunch_beef=beef;}
+    closeLunchModal();
+    applyFilter();
+  } else {
+    alert('Failed to save. Please try again.');
+  }
+}
+
+// ── Notes toggle ──────────────────────────────────────────────────────────────
+function toggleNote(id) {
+  const el=document.getElementById(`nt-${id}`);
+  if(el) el.classList.toggle('expanded');
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function smsClass(s){
+  if(!s) return '';
+  if(s.includes('delivered')) return 'sp-delivered';
+  if(s.includes('sent'))      return 'sp-sent';
+  if(s.includes('undelivered')) return 'sp-undelivered';
+  if(s.includes('failed'))    return 'sp-failed';
+  return '';
+}
+function smsLabel(s){
+  if(!s) return '—';
+  if(s.includes('delivered'))  return 'Delivered';
+  if(s.includes('sent'))       return 'Sent';
+  if(s.includes('undelivered'))return 'Undelivered';
+  if(s.includes('failed'))     return 'Failed';
   return s;
 }
-
-function formatDate(d) {
-  const dt = new Date(d + 'T00:00:00');
-  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function exportCsv(){
+  location.href=`/api/notifications/tour-confirmation/export?date=${currentDate}`;
 }
 
-function exportExcel() {
-  location.href = `/api/notifications/tour-confirmation/export?date=${currentDate}&type=${currentType}`;
-}
-
-// Init
-document.getElementById('date-display').value = currentDate;
+document.getElementById('date-display').value=currentDate;
 loadData();
 </script>
 </body>
