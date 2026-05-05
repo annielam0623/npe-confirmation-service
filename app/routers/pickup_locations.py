@@ -69,8 +69,7 @@ async def update_pickup_location(
         UPDATE pickup_locations
         SET hotel_name  = :name,
             photo_url   = :url,
-            instruction = :inst,
-            updated_at  = NOW()
+            instruction = :inst
         WHERE id = :id
     """), {"name": name, "url": url, "inst": inst, "id": location_id})
     await db.commit()
