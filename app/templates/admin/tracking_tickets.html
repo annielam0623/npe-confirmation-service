@@ -2,270 +2,357 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Tickets Reminder Tracking — NPE</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tickets Reminder Log</title>
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f3; color: #1a1a1a; }
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f0f2f5;color:#333;font-size:13px;}
 
-  .topbar {
-    background: #fff; border-bottom: 0.5px solid rgba(0,0,0,0.1);
-    padding: 0 24px; height: 52px; display: flex; align-items: center;
-    justify-content: space-between; position: sticky; top: 0; z-index: 10;
-  }
-  .topbar-left { display: flex; align-items: center; gap: 14px; }
-  .topbar-title { font-size: 16px; font-weight: 700; color: #BA7517; }
-  .back-btn { font-size: 12px; color: #888; text-decoration: none; padding: 4px 10px; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 6px; }
-  .back-btn:hover { color: #1a1a1a; }
+/* ── Header ── */
+.top-bar{background:#1a3a5c;color:#fff;padding:10px 20px;display:flex;align-items:center;gap:12px;}
+.top-bar img{height:36px;width:auto;}
+.top-bar h1{font-size:16px;font-weight:700;flex:1;}
+.logout-btn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;}
+.logout-btn:hover{background:rgba(255,255,255,.25);}
 
-  .container { max-width: 1200px; margin: 0 auto; padding: 20px 24px; }
+/* ── Toolbar ── */
+.toolbar{background:#fff;border-bottom:1px solid #dee2e6;padding:10px 20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.btn-today{background:#1a3a5c;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-today:hover{background:#0f2440;}
+.btn-tmr{background:#6c757d;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-tmr:hover{background:#5a6268;}
+.btn-nav{background:#fff;border:1px solid #ced4da;color:#495057;width:30px;height:30px;border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;line-height:1;}
+.btn-nav:hover{background:#f8f9fa;}
+.date-wrap{position:relative;display:inline-block;cursor:pointer;}
+.date-wrap input[type="date"]{
+  height:30px;padding:0 10px;border:1px solid #ced4da;border-radius:6px;
+  font-size:13px;font-weight:600;color:#1a3a5c;background:#fff;
+  cursor:pointer;min-width:150px;font-family:inherit;
+}
+.date-wrap input[type="date"]::-webkit-calendar-picker-indicator{display:none;}
+.btn-refresh{background:#17a2b8;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;}
+.btn-refresh:hover{background:#138496;}
+.btn-export{background:#28a745;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;margin-left:auto;}
+.btn-export:hover{background:#218838;}
 
-  .date-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
-  .btn-nav { width: 30px; height: 30px; border-radius: 7px; border: 0.5px solid rgba(0,0,0,0.15); background: #fff; cursor: pointer; font-size: 15px; color: #555; display: flex; align-items: center; justify-content: center; }
-  .btn-nav:hover { background: #f5f5f3; }
-  .date-display { background: #fff; border: 0.5px solid rgba(0,0,0,0.15); padding: 5px 10px; border-radius: 7px; font-size: 13px; font-weight: 500; min-width: 130px; text-align: center; cursor: pointer; outline: none; font-family: inherit; }
-  .date-display:focus { border-color: #BA7517; }
-  .btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 7px; border: 0.5px solid rgba(0,0,0,0.15); font-size: 12px; cursor: pointer; background: #fff; color: #555; text-decoration: none; }
-  .btn:hover { background: #f5f5f3; }
-  .btn-orange { background: #BA7517; color: #fff; border-color: #BA7517; }
-  .btn-orange:hover { background: #9a6010; }
+/* ── Tour pills ── */
+.pills-bar{background:#fff;border-bottom:1px solid #dee2e6;padding:8px 20px;display:flex;gap:6px;flex-wrap:wrap;}
+.pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid #dee2e6;background:#fff;color:#495057;white-space:nowrap;}
+.pill:hover{border-color:#1a3a5c;color:#1a3a5c;}
+.pill.active{background:#1a3a5c;color:#fff;border-color:#1a3a5c;}
+.pill .cnt{font-size:11px;background:rgba(0,0,0,.08);border-radius:8px;padding:1px 5px;}
+.pill.active .cnt{background:rgba(255,255,255,.25);}
 
-  /* Tour type pills */
-  .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
-  .pill { padding: 4px 14px; border-radius: 20px; font-size: 12px; cursor: pointer; border: 0.5px solid rgba(0,0,0,0.15); background: #fff; color: #555; white-space: nowrap; }
-  .pill:hover { border-color: #BA7517; color: #BA7517; }
-  .pill.active { background: #FAEEDA; border-color: #BA7517; color: #BA7517; font-weight: 600; }
-  .pill .cnt { font-size: 11px; color: #aaa; margin-left: 3px; }
-  .pill.active .cnt { color: #BA7517; }
+/* ── Stat cards ── */
+.stats-bar{padding:12px 20px;display:flex;gap:10px;flex-wrap:wrap;}
+.stat{display:flex;flex-direction:column;align-items:center;min-width:76px;padding:8px 14px;border-radius:10px;border:1.5px solid #dee2e6;background:#fff;}
+.stat .num{font-size:26px;font-weight:700;line-height:1.1;}
+.stat .lbl{font-size:11px;color:#6c757d;margin-top:2px;}
+.stat.s-total .num{color:#1a3a5c;}
+.stat.s-yes   .num{color:#28a745;}
+.stat.s-resc  .num{color:#fd7e14;}
+.stat.s-pend  .num{color:#6c757d;}
 
-  /* Stats */
-  .stats-row { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
-  .stat-card { background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 10px; padding: 12px 20px; text-align: center; min-width: 90px; }
-  .stat-card .num { font-size: 24px; font-weight: 700; color: #1a1a1a; }
-  .stat-card .lbl { font-size: 11px; color: #aaa; margin-top: 2px; }
-  .stat-card.confirmed .num { color: #BA7517; }
-  .stat-card.pending .num   { color: #185FA5; }
-  .stat-card.failed .num    { color: #A32D2D; }
+/* ── Table ── */
+.records-bar{padding:6px 20px;display:flex;justify-content:space-between;align-items:center;}
+.records-bar span{font-size:12px;color:#6c757d;}
+.table-wrap{padding:0 20px 24px;overflow-x:auto;}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+thead tr{background:#e9ecef;}
+th{padding:8px 10px;text-align:left;font-size:12px;font-weight:600;color:#495057;white-space:nowrap;border-bottom:2px solid #dee2e6;}
+td{padding:7px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle;font-size:12px;}
+tr:hover td{background:#f8f9fa;}
+tr:last-child td{border-bottom:none;}
 
-  /* Filter */
-  .filter-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
-  .filter-bar input { padding: 6px 10px; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 7px; font-size: 13px; width: 220px; }
-  .filter-bar input:focus { outline: none; border-color: #BA7517; }
-  .filter-bar select { padding: 6px 10px; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 7px; font-size: 13px; background: #fff; }
-  .records-count { font-size: 12px; color: #aaa; margin-left: auto; }
+/* ── Notes ── */
+.notes-cell{min-width:140px;max-width:200px;}
+.notes-input{width:100%;border:1px solid transparent;background:transparent;font-size:12px;font-family:inherit;padding:3px 5px;border-radius:4px;resize:none;outline:none;overflow:hidden;line-height:1.4;transition:all .15s;}
+.notes-input:focus{border-color:#ffc107;background:#fffbea;}
+.notes-input.dirty{border-color:#ffc107;background:#fffbea;}
+th.notes-hdr.hdr-dirty{background:#fff3cd !important;color:#856404;}
 
-  /* Table */
-  .table-card { background: #fff; border: 0.5px solid rgba(0,0,0,0.1); border-radius: 12px; overflow: hidden; }
-  .table-header { padding: 10px 16px; background: #FAEEDA; border-bottom: 0.5px solid rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: space-between; }
-  .table-header span { font-size: 13px; font-weight: 600; color: #BA7517; }
-  table.track-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .track-tbl thead td { padding: 8px 10px; font-size: 11px; font-weight: 600; color: #999; background: #f9f9f7; border-bottom: 0.5px solid rgba(0,0,0,0.08); white-space: nowrap; }
-  .track-tbl tbody tr { border-bottom: 0.5px solid rgba(0,0,0,0.06); }
-  .track-tbl tbody tr:last-child { border-bottom: none; }
-  .track-tbl tbody tr:hover { background: #fafaf8; }
-  .track-tbl tbody td { padding: 8px 10px; color: #444; vertical-align: middle; }
-
-  .sp { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
-  .sp-confirmed   { background: #FAEEDA; color: #BA7517; }
-  .sp-pending     { background: #E6F1FB; color: #185FA5; }
-  .sp-failed      { background: #FCEBEB; color: #A32D2D; }
-  .sp-sent        { background: #EEEDFE; color: #534AB7; }
-  .sp-delivered   { background: #EAF3DE; color: #3B6D11; }
-  .sp-undelivered { background: #FCEBEB; color: #A32D2D; }
+/* ── Status ── */
+.s-sel{border:none;background:transparent;font-size:12px;font-weight:700;cursor:pointer;padding:2px 4px;border-radius:4px;}
+.s-sel.yes{color:#28a745;}
+.s-sel.pending{color:#fd7e14;}
+.s-sel:focus{outline:1px solid #1a3a5c;}
+.badge-sent{color:#28a745;font-size:11px;font-weight:600;}
+.badge-fail{color:#dc3545;font-size:11px;font-weight:600;}
+.badge-none{color:#adb5bd;font-size:11px;}
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="topbar-left">
-    <a href="/admin/manifests" class="back-btn">← Back</a>
-    <span class="topbar-title">🟠 Tickets Reminder Tracking</span>
-  </div>
-  <div style="display:flex;gap:8px;">
-    <button class="btn" onclick="exportExcel()">⬇ Export</button>
-    <button class="btn btn-orange" onclick="loadData()">↻ Refresh</button>
-  </div>
+<div class="top-bar">
+  <img src="https://nationalparkexpress.com/wp-content/uploads/2026/03/image002.png" alt="NPE">
+  <h1>Tickets Reminder Log</h1>
+  <button class="logout-btn" onclick="location.href='/auth/logout'">Logout</button>
 </div>
 
-<div class="container">
-  <div class="date-nav">
-    <button class="btn-nav" onclick="changeDate(-1)">‹</button>
-    <input type="date" class="date-display" id="date-display" onchange="onDatePick(this.value)" onclick="try{this.showPicker()}catch(e){}">
-    <button class="btn-nav" onclick="changeDate(1)">›</button>
-    <button class="btn" onclick="goToday()">Today</button>
-    <button class="btn" onclick="goTomorrow()">Tomorrow</button>
+<div class="toolbar">
+  <button class="btn-today" onclick="goToday()">Today</button>
+  <button class="btn-tmr"   onclick="goTomorrow()">Tomorrow</button>
+  <button class="btn-nav"   onclick="changeDate(-1)">&#8249;</button>
+  <div class="date-wrap" id="date-wrap">
+    <input type="date" id="date-input" onchange="loadData()">
   </div>
+  <button class="btn-nav"     onclick="changeDate(1)">&#8250;</button>
+  <button class="btn-refresh" onclick="loadData()">&#x21bb; Refresh</button>
+  <button class="btn-export"  onclick="exportCSV()">&#128190; Export CSV</button>
+</div>
 
-  <!-- Tour type pills -->
-  <div class="pills" id="pills-container">
-    <span class="pill active" data-type="all" onclick="filterType('all',this)">All <span class="cnt" id="cnt-all"></span></span>
-    <span class="pill" data-type="upper_antelope_tsosie" onclick="filterType('upper_antelope_tsosie',this)">U-TC <span class="cnt"></span></span>
-    <span class="pill" data-type="upper_antelope_brenda" onclick="filterType('upper_antelope_brenda',this)">U-BR <span class="cnt"></span></span>
-    <span class="pill" data-type="upper_antelope_aact" onclick="filterType('upper_antelope_aact',this)">U-AA <span class="cnt"></span></span>
-    <span class="pill" data-type="upper_antelope_hogan_transport" onclick="filterType('upper_antelope_hogan_transport',this)">U-HT <span class="cnt"></span></span>
-    <span class="pill" data-type="upper_antelope_hogan_hiking" onclick="filterType('upper_antelope_hogan_hiking',this)">U-HH <span class="cnt"></span></span>
-    <span class="pill" data-type="lower_antelope_kens" onclick="filterType('lower_antelope_kens',this)">L-KT <span class="cnt"></span></span>
-    <span class="pill" data-type="lower_antelope_dixie" onclick="filterType('lower_antelope_dixie',this)">L-DX <span class="cnt"></span></span>
-    <span class="pill" data-type="canyon_x" onclick="filterType('canyon_x',this)">X-TT <span class="cnt"></span></span>
-    <span class="pill" data-type="rattlesnake_aact" onclick="filterType('rattlesnake_aact',this)">R-AA <span class="cnt"></span></span>
-  </div>
+<div class="pills-bar">
+  <span class="pill active" data-tour="all" onclick="filterTour(this,'all')">All <span class="cnt" id="p-all">0/0</span></span>
+  <span class="pill" data-tour="upper_antelope_tsosie"          onclick="filterTour(this,'upper_antelope_tsosie')">U-TC <span class="cnt" id="p-utc">0/0</span></span>
+  <span class="pill" data-tour="upper_antelope_brenda"          onclick="filterTour(this,'upper_antelope_brenda')">U-BR <span class="cnt" id="p-ubr">0/0</span></span>
+  <span class="pill" data-tour="upper_antelope_aact"            onclick="filterTour(this,'upper_antelope_aact')">U-AA <span class="cnt" id="p-uaa">0/0</span></span>
+  <span class="pill" data-tour="upper_antelope_hogan_transport" onclick="filterTour(this,'upper_antelope_hogan_transport')">U-HT <span class="cnt" id="p-uht">0/0</span></span>
+  <span class="pill" data-tour="upper_antelope_hogan_hiking"    onclick="filterTour(this,'upper_antelope_hogan_hiking')">U-HH <span class="cnt" id="p-uhh">0/0</span></span>
+  <span class="pill" data-tour="lower_antelope_kens"            onclick="filterTour(this,'lower_antelope_kens')">L-KT <span class="cnt" id="p-lkt">0/0</span></span>
+  <span class="pill" data-tour="lower_antelope_dixie"           onclick="filterTour(this,'lower_antelope_dixie')">L-DX <span class="cnt" id="p-ldx">0/0</span></span>
+  <span class="pill" data-tour="canyon_x"                       onclick="filterTour(this,'canyon_x')">X-TT <span class="cnt" id="p-xtt">0/0</span></span>
+  <span class="pill" data-tour="rattlesnake_aact"               onclick="filterTour(this,'rattlesnake_aact')">R-AA <span class="cnt" id="p-raa">0/0</span></span>
+</div>
 
-  <!-- Stats -->
-  <div class="stats-row">
-    <div class="stat-card"><div class="num" id="stat-total">—</div><div class="lbl">Total</div></div>
-    <div class="stat-card confirmed"><div class="num" id="stat-confirmed">—</div><div class="lbl">Confirmed</div></div>
-    <div class="stat-card pending"><div class="num" id="stat-pending">—</div><div class="lbl">Pending</div></div>
-    <div class="stat-card failed"><div class="num" id="stat-failed">—</div><div class="lbl">No Response</div></div>
-  </div>
+<div class="stats-bar">
+  <div class="stat s-total"><div class="num" id="s-total">0</div><div class="lbl">Total</div></div>
+  <div class="stat s-yes">  <div class="num" id="s-yes">0</div>  <div class="lbl">YES</div></div>
+  <div class="stat s-resc"> <div class="num" id="s-resc">0</div> <div class="lbl">Reschedule</div></div>
+  <div class="stat s-pend"> <div class="num" id="s-pend">0</div> <div class="lbl">Pending</div></div>
+</div>
 
-  <!-- Filter -->
-  <div class="filter-bar">
-    <input type="text" id="search-input" placeholder="Search CHD#, name, phone…" oninput="applyFilter()">
-    <select id="status-filter" onchange="applyFilter()">
-      <option value="">All Statuses</option>
-      <option value="confirmed">Confirmed</option>
-      <option value="pending">Pending</option>
-    </select>
-    <select id="sms-filter" onchange="applyFilter()">
-      <option value="">All SMS</option>
-      <option value="delivered">Delivered</option>
-      <option value="sent">Sent</option>
-      <option value="undelivered">Undelivered</option>
-      <option value="failed">Failed</option>
-    </select>
-    <span class="records-count" id="records-count">— records</span>
-  </div>
+<div class="records-bar">
+  <span id="rec-label">0 records</span>
+</div>
 
-  <!-- Table -->
-  <div class="table-card">
-    <div class="table-header">
-      <span>Tickets Tracking Log</span>
-    </div>
-    <div style="overflow-x:auto;">
-      <table class="track-tbl">
-        <thead>
-          <tr>
-            <td>CHD#</td><td>Confirmation#</td><td>Tour Type</td>
-            <td>Service Date</td><td>Guest Name</td><td>Party</td>
-            <td>Check-in Time</td><td>Tour Time</td>
-            <td>📧 Email</td><td>📱 SMS</td>
-            <td>Status</td><td>Submitted</td>
-          </tr>
-        </thead>
-        <tbody id="track-tbody">
-          <tr><td colspan="12" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+<div class="table-wrap">
+  <table>
+    <thead><tr>
+      <th>Tour</th>
+      <th>Service Date</th>
+      <th>CHD#</th>
+      <th>Pax</th>
+      <th>Check-in Time</th>
+      <th>Tour Time</th>
+      <th>Guest Name</th>
+      <th>Phone</th>
+      <th>Confirmation#</th>
+      <th>&#9679; Email</th>
+      <th>&#9632; SMS</th>
+      <th class="notes-hdr" id="notes-hdr">Notes</th>
+      <th>Status</th>
+      <th>Submit Time</th>
+    </tr></thead>
+    <tbody id="tbody">
+      <tr><td colspan="14" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>
+    </tbody>
+  </table>
 </div>
 
 <script>
-const TOUR_ABBR = {
-  upper_antelope_tsosie:'U-TC', upper_antelope_brenda:'U-BR', upper_antelope_aact:'U-AA',
-  upper_antelope_hogan_transport:'U-HT', upper_antelope_hogan_hiking:'U-HH',
-  lower_antelope_kens:'L-KT', lower_antelope_dixie:'L-DX',
-  canyon_x:'X-TT', rattlesnake_aact:'R-AA',
+var LABELS = {
+  upper_antelope_tsosie:          'Upper Antelope – Tsosie',
+  upper_antelope_brenda:          'Upper Antelope – Brenda',
+  upper_antelope_aact:            'Upper Antelope – AACT',
+  upper_antelope_hogan_transport: 'Upper Antelope – Hogan',
+  upper_antelope_hogan_hiking:    'Upper Antelope – Hogan Hike',
+  lower_antelope_kens:            "Lower Antelope – Ken's",
+  lower_antelope_dixie:           "Lower Antelope – Dixie's",
+  canyon_x:                       'Antelope Canyon X',
+  rattlesnake_aact:               'Rattlesnake Canyon',
+};
+var PILLS = {
+  upper_antelope_tsosie:'p-utc', upper_antelope_brenda:'p-ubr',
+  upper_antelope_aact:'p-uaa', upper_antelope_hogan_transport:'p-uht',
+  upper_antelope_hogan_hiking:'p-uhh', lower_antelope_kens:'p-lkt',
+  lower_antelope_dixie:'p-ldx', canyon_x:'p-xtt', rattlesnake_aact:'p-raa',
 };
 
-const params = new URLSearchParams(location.search);
-let currentDate = params.get('date') || new Date().toISOString().split('T')[0];
-let currentType = 'all';
-let allRows = [];
+var allRows = [], activeTour = 'all';
 
-function onDatePick(val) { currentDate = val; loadData(); }
-function changeDate(d) { const dt = new Date(currentDate+'T00:00:00'); dt.setDate(dt.getDate()+d); currentDate=dt.toISOString().split('T')[0]; document.getElementById('date-display').value=currentDate; loadData(); }
-function goToday()    { currentDate=new Date().toISOString().split('T')[0]; document.getElementById('date-display').value=currentDate; loadData(); }
-function goTomorrow() { const d=new Date(); d.setDate(d.getDate()+1); currentDate=d.toISOString().split('T')[0]; document.getElementById('date-display').value=currentDate; loadData(); }
+function toYMD(d){ return d.toLocaleDateString('en-CA'); }
+function getDate(){ return document.getElementById('date-input').value; }
 
-function filterType(type, el) {
-  currentType = type;
-  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+function goToday(){
+  var la = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
+  document.getElementById('date-input').value = toYMD(la);
+  loadData();
+}
+function goTomorrow(){
+  var la = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
+  la.setDate(la.getDate()+1);
+  document.getElementById('date-input').value = toYMD(la);
+  loadData();
+}
+function changeDate(n){
+  var inp = document.getElementById('date-input');
+  var dt  = inp.value ? new Date(inp.value+'T12:00:00') : new Date();
+  dt.setDate(dt.getDate()+n);
+  inp.value = toYMD(dt);
+  loadData();
+}
+
+// Click anywhere in date-wrap → showPicker
+document.getElementById('date-wrap').addEventListener('click', function(){
+  try{ document.getElementById('date-input').showPicker(); }catch(e){}
+});
+
+function loadData(){
+  var date = getDate(); if(!date) return;
+  document.getElementById('tbody').innerHTML =
+    '<tr><td colspan="14" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>';
+  fetch('/api/tickets-reminder/log?date='+date, {credentials:'include'})
+    .then(function(r){ return r.json(); })
+    .then(function(data){ allRows = data; updatePills(); renderTable(); })
+    .catch(function(){
+      document.getElementById('tbody').innerHTML =
+        '<tr><td colspan="14" style="text-align:center;padding:24px;color:#dc3545;">Failed to load. Please refresh.</td></tr>';
+    });
+}
+
+function updatePills(){
+  var tot={}, yes={};
+  for(var k in PILLS){ tot[k]=0; yes[k]=0; }
+  var gT=0, gY=0;
+  allRows.forEach(function(r){
+    gT++;
+    if(r.confirmation==='yes') gY++;
+    if(tot[r.tour_type]!==undefined){
+      tot[r.tour_type]++;
+      if(r.confirmation==='yes') yes[r.tour_type]++;
+    }
+  });
+  document.getElementById('p-all').textContent = gY+'/'+gT;
+  for(var k in PILLS) document.getElementById(PILLS[k]).textContent = yes[k]+'/'+tot[k];
+}
+
+function filterTour(el, tour){
+  document.querySelectorAll('.pill').forEach(function(p){ p.classList.remove('active'); });
   el.classList.add('active');
-  applyFilter();
+  activeTour = tour;
+  renderTable();
 }
 
-async function loadData() {
-  document.getElementById('track-tbody').innerHTML = '<tr><td colspan="12" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
-  try {
-    const res = await fetch(`/api/notifications/tickets-reminder/tracking?date=${currentDate}`);
-    const data = await res.json();
-    allRows = data.rows || [];
-    updatePillCounts();
-    applyFilter();
-  } catch(e) {
-    document.getElementById('track-tbody').innerHTML = '<tr><td colspan="12" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
+function renderTable(){
+  var rows = activeTour==='all' ? allRows : allRows.filter(function(r){ return r.tour_type===activeTour; });
+  var tot=rows.length, yes=0, resc=0, pend=0;
+  rows.forEach(function(r){
+    if(r.confirmation==='yes') yes++;
+    else if(r.confirmation==='reschedule_req') resc++;
+    else pend++;
+  });
+  document.getElementById('s-total').textContent = tot;
+  document.getElementById('s-yes').textContent   = yes;
+  document.getElementById('s-resc').textContent  = resc;
+  document.getElementById('s-pend').textContent  = pend;
+  document.getElementById('rec-label').textContent = tot+' record'+(tot===1?'':'s');
+
+  if(!rows.length){
+    document.getElementById('tbody').innerHTML =
+      '<tr><td colspan="14" style="text-align:center;padding:24px;color:#aaa;">No records for this date.</td></tr>';
+    return;
   }
+
+  var html = '';
+  rows.forEach(function(r){
+    var lbl  = LABELS[r.tour_type] || r.tour_type;
+    var emB  = r.email_status==='sent' ? '<span class="badge-sent">&#10003; Sent</span>'
+               : r.email_status==='failed' ? '<span class="badge-fail">&#10007; Failed</span>'
+               : '<span class="badge-none">—</span>';
+    var smB  = r.sms_status==='sent' ? '<span class="badge-sent">&#10003; Sent</span>'
+               : r.sms_status==='failed' ? '<span class="badge-fail">&#10007; Failed</span>'
+               : '<span class="badge-none">—</span>';
+    var subT = r.submitted_at
+      ? new Date(r.submitted_at).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'})
+      : '—';
+    var notes = e(r.reschedule_notes||'');
+    var conf  = r.confirmation||'pending';
+    html += '<tr data-id="'+r.id+'" data-chd="'+e(r.chd_number)+'" data-date="'+e(r.service_date)+'">'
+      +'<td style="white-space:nowrap">'+e(lbl)+'</td>'
+      +'<td>'+e(r.service_date)+'</td>'
+      +'<td style="font-weight:600">'+e(r.chd_number)+'</td>'
+      +'<td style="text-align:center">'+e(r.no_of_pax)+'</td>'
+      +'<td>'+e(r.checkin_time)+'</td>'
+      +'<td>'+e(r.tour_time)+'</td>'
+      +'<td>'+e(r.name)+'</td>'
+      +'<td style="font-size:11px">'+e(r.phone||'—')+'</td>'
+      +'<td>'+e(r.confirmation_no||'—')+'</td>'
+      +'<td>'+emB+'</td>'
+      +'<td>'+smB+'</td>'
+      +'<td class="notes-cell"><textarea class="notes-input" rows="1"'
+        +' data-orig="'+notes+'"'
+        +' oninput="onNoteInput(this)" onblur="saveNotes(this)">'+notes+'</textarea></td>'
+      +'<td><select class="s-sel '+conf+'" onchange="saveStatus(this)" data-orig="'+conf+'">'
+        +'<option value="yes"'+(conf==='yes'?' selected':'')+'>&#10003; YES</option>'
+        +'<option value="pending"'+(conf==='pending'?' selected':'')+'>&#8987; Pending</option>'
+        +'</select></td>'
+      +'<td style="white-space:nowrap;font-size:11px">'+subT+(r.resubmitted?'<span style="color:#dc3545;font-weight:700"> &#9733;</span>':'')+'</td>'
+      +'</tr>';
+  });
+  document.getElementById('tbody').innerHTML = html;
+  autoResize();
 }
 
-function updatePillCounts() {
-  document.querySelectorAll('.pill[data-type]').forEach(pill => {
-    const type = pill.dataset.type;
-    const cnt = type==='all' ? allRows.length : allRows.filter(r=>r.tour_type===type).length;
-    pill.querySelector('.cnt').textContent = cnt || '';
+function e(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Notes: yellow on edit, header yellow if any unsaved ──
+function onNoteInput(el){
+  el.style.height='auto'; el.style.height=el.scrollHeight+'px';
+  el.classList.toggle('dirty', el.value !== el.getAttribute('data-orig'));
+  document.getElementById('notes-hdr').classList.toggle('hdr-dirty', !!document.querySelector('.notes-input.dirty'));
+}
+
+function autoResize(){
+  document.querySelectorAll('.notes-input').forEach(function(el){
+    el.style.height='auto'; el.style.height=el.scrollHeight+'px';
   });
 }
 
-function applyFilter() {
-  const search  = document.getElementById('search-input').value.toLowerCase();
-  const statusF = document.getElementById('status-filter').value;
-  const smsF    = document.getElementById('sms-filter').value;
-
-  let rows = currentType==='all' ? allRows : allRows.filter(r=>r.tour_type===currentType);
-  if (search)  rows = rows.filter(r=>(r.order_number||'').toLowerCase().includes(search)||(r.name||'').toLowerCase().includes(search)||(r.phone||'').toLowerCase().includes(search));
-  if (statusF) rows = rows.filter(r=>(r.confirmation_status||'').toLowerCase().includes(statusF));
-  if (smsF)    rows = rows.filter(r=>(r.sms_status||'').toLowerCase().includes(smsF));
-
-  document.getElementById('stat-total').textContent     = rows.length;
-  document.getElementById('stat-confirmed').textContent = rows.filter(r=>r.confirmation_status==='confirmed').length;
-  document.getElementById('stat-pending').textContent   = rows.filter(r=>r.confirmation_status==='pending'||!r.confirmation_status).length;
-  document.getElementById('stat-failed').textContent    = rows.filter(r=>r.confirmation_status==='no_response').length;
-  document.getElementById('records-count').textContent  = `${rows.length} records`;
-
-  const tbody = document.getElementById('track-tbody');
-  if (!rows.length) { tbody.innerHTML='<tr><td colspan="12" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>'; return; }
-
-  tbody.innerHTML = rows.map(r => {
-    const smsCls  = smsStatusClass(r.sms_status);
-    const emailCls = r.email_status==='sent'?'sp-delivered':r.email_status?.startsWith('failed')?'sp-failed':'sp-pending';
-    const cfmCls  = r.confirmation_status==='confirmed'?'sp-confirmed':'sp-pending';
-    return `<tr>
-      <td style="color:#BA7517;font-weight:600;">${r.order_number||'—'}</td>
-      <td style="font-size:11px;">${r.confirmation_no||'—'}</td>
-      <td>${TOUR_ABBR[r.tour_type]||r.tour_type||'—'}</td>
-      <td style="white-space:nowrap;">${r.tour_date||'—'}</td>
-      <td>${r.guest_name||'—'}<br><span style="font-size:10px;color:#aaa;">${r.phone||''}</span></td>
-      <td style="text-align:center;">${r.quantities||'—'}</td>
-      <td style="font-weight:500;">${r.checkin_time||'—'}</td>
-      <td>${r.tour_time||'—'}</td>
-      <td><span class="sp ${emailCls}">${r.email_status||'—'}</span></td>
-      <td><span class="sp ${smsCls}">${smsLabel(r.sms_status)}</span></td>
-      <td><span class="sp ${cfmCls}">${r.confirmation_status||'Pending'}</span></td>
-      <td style="font-size:11px;white-space:nowrap;">${r.submitted_at?new Date(r.submitted_at).toLocaleString('en-US',{month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}):'—'}</td>
-    </tr>`;
-  }).join('');
+function saveNotes(el){
+  if(el.value===el.getAttribute('data-orig')) return;
+  var id = el.closest('tr').getAttribute('data-id');
+  fetch('/api/tickets-reminder/update-notes',{
+    method:'POST', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({id:parseInt(id), notes:el.value})
+  }).then(function(r){
+    if(r.ok){
+      el.setAttribute('data-orig', el.value);
+      el.classList.remove('dirty');
+      document.getElementById('notes-hdr').classList.toggle('hdr-dirty', !!document.querySelector('.notes-input.dirty'));
+    }
+  });
 }
 
-function smsStatusClass(s) {
-  if (!s) return 'sp-pending';
-  if (s.includes('delivered')) return 'sp-delivered';
-  if (s.includes('sent'))      return 'sp-sent';
-  if (s.includes('undelivered')||s.includes('failed')) return 'sp-undelivered';
-  return 'sp-pending';
+function saveStatus(el){
+  var row = el.closest('tr');
+  var val = el.value;
+  el.className = 's-sel '+val;
+  fetch('/api/tickets-reminder/update-status',{
+    method:'POST', credentials:'include',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({chd_number:row.getAttribute('data-chd'), service_date:row.getAttribute('data-date'), confirmation:val})
+  }).then(function(r){
+    if(r.ok) el.setAttribute('data-orig', val);
+    else{ el.value=el.getAttribute('data-orig'); el.className='s-sel '+el.value; }
+  });
 }
-function smsLabel(s) {
-  if (!s) return '—';
-  if (s.includes('delivered'))  return 'Delivered';
-  if (s.includes('sent'))       return 'Sent';
-  if (s.includes('undelivered'))return 'Undelivered';
-  if (s.includes('failed'))     return 'Failed';
-  return s;
-}
-function formatDate(d) { return new Date(d+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}); }
-function exportExcel() { location.href=`/api/notifications/tickets-reminder/export?date=${currentDate}&type=${currentType}`; }
 
-document.getElementById('date-display').value = currentDate;
-loadData();
+function exportCSV(){
+  var rows = activeTour==='all' ? allRows : allRows.filter(function(r){ return r.tour_type===activeTour; });
+  var cols = ['tour_type','service_date','chd_number','no_of_pax','checkin_time','tour_time','name','phone','confirmation_no','email_status','sms_status','reschedule_notes','confirmation','submitted_at'];
+  var csv  = cols.join(',')+'\n';
+  rows.forEach(function(r){
+    csv += cols.map(function(c){ return '"'+(r[c]||'').toString().replace(/"/g,'""')+'"'; }).join(',')+'\n';
+  });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download = 'tickets-'+getDate()+'.csv';
+  a.click();
+}
+
+goToday();
+setInterval(loadData, 60000);
 </script>
 </body>
 </html>
