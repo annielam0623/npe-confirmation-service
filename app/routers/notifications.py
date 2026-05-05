@@ -208,6 +208,7 @@ async def tracking_tour_confirmation(
         "rows": [
             {
                 "order_number":        r["order_number"],
+                "first_name":          r["first_name"] or "",
                 "guest_name":          f"{r['first_name']} {r['last_name']}".strip(),
                 "email":               r["email"] or "",
                 "phone":               r["phone"] or "",

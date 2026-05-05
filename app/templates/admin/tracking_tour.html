@@ -118,8 +118,6 @@
     <span class="topbar-title">🟢 Tour Confirmation Tracking</span>
   </div>
   <div style="display:flex;gap:8px;">
-    <button class="btn" onclick="exportCsv()">⬇ Export</button>
-    <button class="btn btn-green" onclick="loadData()">↻ Refresh</button>
   </div>
 </div>
 
@@ -152,6 +150,8 @@
       <option value="pending">Pending</option>
       <option value="cancel">Cancel</option>
     </select>
+    <button class="btn" onclick="exportCsv()">⬇ Export</button>
+    <button class="btn btn-green" onclick="loadData()">↻ Refresh</button>
     <span class="records-count" id="records-count">— records</span>
   </div>
 
@@ -161,13 +161,13 @@
       <table class="track-tbl">
         <thead><tr>
           <td>Order #</td><td>Status</td><td>Tour</td><td>Tour Date</td>
-          <td>Guest Name</td><td>Party</td>
+          <td>Guest Name</td><td>Phone</td><td>Party</td>
           <td>📧 Email</td><td>📱 SMS</td>
           <td>🦃 T</td><td>🥗 V</td><td>🥩 B</td>
           <td>Notes</td><td>Submitted</td>
         </tr></thead>
         <tbody id="track-tbody">
-          <tr><td colspan="13" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>
+          <tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -236,7 +236,7 @@ function filterType(type, el) {
 }
 
 async function loadData() {
-  document.getElementById('track-tbody').innerHTML='<tr><td colspan="13" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
+  document.getElementById('track-tbody').innerHTML='<tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
   try {
     const res=await fetch(`/api/notifications/tour-confirmation/tracking?date=${currentDate}`);
     const data=await res.json();
@@ -244,15 +244,20 @@ async function loadData() {
     buildPills();
     applyFilter();
   } catch(e) {
-    document.getElementById('track-tbody').innerHTML='<tr><td colspan="13" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
+    document.getElementById('track-tbody').innerHTML='<tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
   }
 }
 
+const TOUR_ORDER = [
+  'upper_antelope','lower_antelope','antelop_X',
+  'grand_canyon_south','grand_canyon_west',
+  'bryce_zion','valley_of_fire_full','valley_of_fire_half','hoover_dam',
+];
+
 function buildPills() {
-  const types=[...new Set(allRows.map(r=>r.tour_type).filter(Boolean))];
   const allReplied=allRows.filter(r=>r.confirmation_status!=='pending').length;
   let html=`<span class="pill active" onclick="filterType('all',this)">All <span class="ratio">${allReplied}/${allRows.length}</span></span>`;
-  types.forEach(t=>{
+  TOUR_ORDER.forEach(t=>{
     const rows=allRows.filter(r=>r.tour_type===t);
     const replied=rows.filter(r=>r.confirmation_status!=='pending').length;
     html+=`<span class="pill" onclick="filterType('${t}',this)">${TOUR_ABBR[t]||t} <span class="ratio">${replied}/${rows.length}</span></span>`;
@@ -298,7 +303,7 @@ function applyFilter() {
 
 function renderTable(rows) {
   const tbody=document.getElementById('track-tbody');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="13" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';return;}
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';return;}
 
   tbody.innerHTML=rows.map(r=>{
     const conf=r.confirmation_status||'pending';
@@ -347,7 +352,8 @@ function renderTable(rows) {
       <td>${statusCell}</td>
       <td style="font-size:11px;color:#3B6D11;font-weight:600;">${abbr}</td>
       <td style="white-space:nowrap;font-size:11px;">${r.tour_date||'—'}</td>
-      <td>${escHtml(r.guest_name||'—')}<br><span style="font-size:10px;color:#aaa;">${r.phone||''}</span></td>
+      <td>${escHtml(r.first_name||r.guest_name||'—')}</td>
+      <td style="font-size:11px;color:#888;white-space:nowrap;">${r.phone||'—'}</td>
       <td style="text-align:center;">${r.quantities||'—'}</td>
       <td>${emailTxt!=='—'?`<span class="sp ${emailCls}">${emailTxt}</span>`:'<span style="color:#ccc;">—</span>'}</td>
       <td>${smsTxt!=='—'?`<span class="sp ${smsCls}">${smsTxt}</span>`:'<span style="color:#ccc;">—</span>'}</td>
@@ -409,7 +415,7 @@ function openLunchModal(id) {
   if(!row||row.confirmation_status!=='yes') return;
   lunchEditId=id;
   const hasBf=TOUR_HAS_BEEF[row.tour_type];
-  document.getElementById('lunch-modal-sub').textContent=`${row.guest_name} (Party: ${row.quantities})`;
+  document.getElementById('lunch-modal-sub').textContent=`${row.first_name||row.guest_name} (Party: ${row.quantities})`;
   document.getElementById('lm-turkey').value=row.lunch_turkey||0;
   document.getElementById('lm-veggie').value=row.lunch_veggie||0;
   document.getElementById('lm-beef').value=row.lunch_beef||0;
@@ -453,6 +459,7 @@ function smsClass(s){
   if(!s) return '';
   if(s.includes('delivered')) return 'sp-delivered';
   if(s.includes('sent'))      return 'sp-sent';
+  if(s.includes('queued'))    return 'sp-sent';
   if(s.includes('undelivered')) return 'sp-undelivered';
   if(s.includes('failed'))    return 'sp-failed';
   return '';
@@ -461,6 +468,7 @@ function smsLabel(s){
   if(!s) return '—';
   if(s.includes('delivered'))  return 'Delivered';
   if(s.includes('sent'))       return 'Sent';
+  if(s.includes('queued'))     return 'Queued';
   if(s.includes('undelivered'))return 'Undelivered';
   if(s.includes('failed'))     return 'Failed';
   return s;

@@ -6,10 +6,11 @@ POST /confirm/{token}  — handle submission
 """
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, text as _sql_text
 
 from app.database import get_db
 from app.models import Booking
@@ -17,8 +18,21 @@ from app.services.tour_config import TOUR_TYPES
 from app.services.sendgrid import send_staff_notification
 
 router = APIRouter()
-
 BASE_URL = "https://confirm.nationalparkexpress.com"
+LA = ZoneInfo("America/Los_Angeles")
+
+
+async def _fetch_pickup_info(pickup_location: str, db: AsyncSession):
+    """Fetch instruction, photo_url, photo_label from pickup_locations table."""
+    if not pickup_location:
+        return "", "", ""
+    loc_res = await db.execute(_sql_text(
+        "SELECT instruction, photo_url, hotel_name FROM pickup_locations WHERE hotel_name ILIKE :n LIMIT 1"
+    ), {"n": f"%{pickup_location}%"})
+    row = loc_res.fetchone()
+    if not row:
+        return "", "", f"{pickup_location} Pickup Photos"
+    return (row[0] or ""), (row[1] or ""), ((row[2] or pickup_location) + " Pickup Photos")
 
 
 # ── CSS ───────────────────────────────────────────────────────────────────────
@@ -112,7 +126,8 @@ def _thanks(booking) -> HTMLResponse:
     return HTMLResponse(_page("Confirmed!", body))
 
 
-def _render(booking, tour_config: dict, error_msg: str = "") -> HTMLResponse:
+def _render(booking, tour_config: dict, error_msg: str = "",
+            pickup_instruction: str = "", pickup_photo_url: str = "", pickup_photo_label: str = "") -> HTMLResponse:
     from datetime import date as date_type
     tour_date  = booking.tour_date
     date_fmt   = tour_date.strftime("%A, %B %-d, %Y") if tour_date else "—"
@@ -126,17 +141,22 @@ def _render(booking, tour_config: dict, error_msg: str = "") -> HTMLResponse:
         (datetime.now() - booking.submitted_at).total_seconds() < 43200
     ) if booking.submitted_at else False
 
-    # Pickup box — photo_url stored in pickup_location if it starts with http,
-    # otherwise just show the location name
+    # Pickup box
     ploc = booking.pickup_location or ""
     pickup_html = ""
     if ploc:
-        pickup_html += f'<div class="gf-row"><span>📍</span><span>Please arrive at <strong>{ploc}</strong></span></div>'
+        instruction_display = pickup_instruction if pickup_instruction else f"Please arrive at <strong>{ploc}</strong>"
+        pickup_html += f'<div class="gf-row"><span>📍</span><span>{instruction_display}</span></div>'
     if booking.pickup_time:
         pickup_html += (
             f'<div class="gf-row"><span>⏰</span><span>Arrive by '
             f'<strong>{booking.pickup_time}</strong> for check-in. '
             f'Departs promptly — vehicle cannot wait for late arrivals.</span></div>'
+        )
+    if pickup_photo_url:
+        pickup_html += (
+            f'<div class="gf-row"><span>🗺️</span>'
+            f'<a href="{pickup_photo_url}" target="_blank" style="color:#1a3a5c;">{pickup_photo_label}</a></div>'
         )
 
     fee_html = ""
@@ -206,8 +226,7 @@ def _render(booking, tour_config: dict, error_msg: str = "") -> HTMLResponse:
     reminders_html = "".join(f"<li>{r}</li>" for r in (tour_config.get("extra_reminders") or []))
     reminders_html += """<li>Dress appropriately for the weather and stay hydrated.</li>
     <li>Vehicles are air-conditioned; in extreme heat, cooling may take a moment.</li>
-    <li>You may bring small items like personal fans or ice packs.</li>
-    <li>If you don't see the shuttle 10 min before departure, call <strong>702-948-4190</strong>.</li>"""
+    <li>You may bring small items like personal fans or ice packs.</li>"""
 
     tomorrow = (date_type.today().__class__.fromordinal(date_type.today().toordinal() + 1)).isoformat()
 
@@ -234,7 +253,7 @@ var ck=document.querySelector('input[name="confirmation"]:checked');if(ck){{if(c
           <h1>Tour Confirmation</h1>
           <div class="gf-tour-badge">{tour_config['label']}</div>
           <div class="gf-date">{date_fmt}</div>
-          <div class="gf-meta">Order #{booking.order_number or ''} &nbsp;·&nbsp; {booking.first_name} {booking.last_name} &nbsp;·&nbsp; Party of {qty}</div>
+          <div class="gf-meta">Order #{booking.order_number or ''} &nbsp;·&nbsp; {booking.first_name} &nbsp;·&nbsp; Party of {qty}</div>
         </div>
       </div>
 
@@ -286,9 +305,9 @@ var ck=document.querySelector('input[name="confirmation"]:checked');if(ck){{if(c
 
         <div class="gf-section">
           <div style="background:#f0f6ff;border:1px solid #b3d1f7;border-radius:8px;padding:16px 18px;margin-bottom:16px;font-size:14px;color:#333;line-height:1.7;">
-            <p style="margin:0 0 8px;">Check-in and Bus Track information will be sent to your mobile phone prior to departure.</p>
-            <p style="margin:0 0 8px;">Please confirm your phone number is correct: <strong>{booking.phone or 'Not on file'}</strong></p>
-            <p style="margin:0;">If incorrect, please enter your correct number in the Notes box below.</p>
+            <p style="margin:0 0 8px;">To ensure a smooth pick-up process, check-in and Bus Track information will be sent to your mobile phone prior to departure.</p>
+            <p style="margin:0 0 8px;">Please confirm that the following phone number is correct: <strong>{booking.phone or 'Not on file'}</strong></p>
+            <p style="margin:0;">If this number is incorrect, kindly provide the correct number in the Notes section below.</p>
           </div>
           <h2>📝 Notes <span class="gf-opt">(optional)</span></h2>
           <textarea name="notes" rows="3" placeholder="Special requests, dietary notes...">{booking.notes or ''}</textarea>
@@ -330,7 +349,9 @@ async def guest_confirm_page(token: str, db: AsyncSession = Depends(get_db)):
         return _expired()
 
     tour_config = TOUR_TYPES.get(booking.tour_type or "", list(TOUR_TYPES.values())[0])
-    return _render(booking, tour_config)
+    pu_inst, pu_photo, pu_label = await _fetch_pickup_info(booking.pickup_location, db)
+    return _render(booking, tour_config,
+                   pickup_instruction=pu_inst, pickup_photo_url=pu_photo, pickup_photo_label=pu_label)
 
 
 @router.post("/confirm/{token}", response_class=HTMLResponse)
@@ -366,7 +387,9 @@ async def guest_confirm_submit(
         error_msg = f"Lunch total must equal your party size of {qty}."
 
     if error_msg:
-        return _render(booking, tour_config, error_msg=error_msg)
+        pu_inst, pu_photo, pu_label = await _fetch_pickup_info(booking.pickup_location, db)
+        return _render(booking, tour_config, error_msg=error_msg,
+                       pickup_instruction=pu_inst, pickup_photo_url=pu_photo, pickup_photo_label=pu_label)
 
     # Build notes/history
     new_count   = int(booking.submission_count or 0) + 1
@@ -374,7 +397,7 @@ async def guest_confirm_submit(
     new_history = booking.notes_history or ""
 
     if confirmation == "modify_req":
-        ts    = datetime.now().strftime("%Y-%m-%d %H:%M")
+        ts    = datetime.now(LA).strftime("%Y-%m-%d %H:%M")
         entry = (
             f"[{ts}] Modify requested"
             + (f": {reschedule_date}" if reschedule_date else "")
@@ -390,7 +413,7 @@ async def guest_confirm_submit(
     booking.lunch_beef       = lunch_beef
     booking.notes            = final_notes
     booking.notes_history    = new_history
-    booking.submitted_at     = datetime.now()
+    booking.submitted_at     = datetime.now(LA).replace(tzinfo=None)
     booking.submission_count = new_count
     
 
