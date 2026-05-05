@@ -76,19 +76,20 @@ async def _upsert_booking(db: AsyncSession, data: dict) -> int:
         """), {**data, "id": row.id})
         return row.id
 
+    booking_type = "self_drive" if data.get("module") == "tickets_reminder" else "bus_tour"
     result = await db.execute(text("""
         INSERT INTO bookings
             (order_number, first_name, last_name, customer_email, phone,
              quantities, pickup_time, pickup_location, tour_date, tour_type,
-             module, confirmation, token_created, email_status, sms_status,
+             module, booking_type, confirmation, token_created, email_status, sms_status,
              created_at, updated_at)
         VALUES
             (:order_number, :first_name, :last_name, :customer_email, :phone,
              :quantities, :pickup_time, :pickup_location, :tour_date, :tour_type,
-             :module, 'pending', NOW(), 'pending', 'pending',
+             :module, :booking_type, 'pending', NOW(), 'pending', 'pending',
              NOW(), NOW())
         RETURNING id
-    """), data)
+    """), {**data, "booking_type": booking_type})
     return result.fetchone().id
 
 
