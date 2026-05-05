@@ -445,7 +445,7 @@ from app.services.tickets_reminder import (
     render_thanks       as tix_render_thanks,
     render_form         as tix_render_form,
 )
-from app.services.sendgrid import send_email as _send_email
+from app.services.sendgrid import send_raw_email as _send_email
 
 _TIX_STAFF = "confirmations@nationalparkexpress.com"
 
@@ -480,7 +480,7 @@ async def tix_confirm_get(request: Request, db: AsyncSession = Depends(get_db)):
         row = dict(result.mappings().fetchone())
         subj, body = tix_build_staff_email(row, row.get("tour_type", ""), row.get("reschedule_notes", "") or "")
         try:
-            await _send_email(_TIX_STAFF, subj, body)
+            await _send_email(_TIX_STAFF, "NPE Staff", subj, body)
         except Exception as exc:
             print(f"[tix_confirm] staff email failed: {exc}")
 
@@ -522,7 +522,7 @@ async def tix_confirm_post(
 
     subj, body = tix_build_staff_email(row, row.get("tour_type", ""), notes)
     try:
-        await _send_email(_TIX_STAFF, subj, body)
+        await _send_email(_TIX_STAFF, "NPE Staff", subj, body)
     except Exception as exc:
         print(f"[tix_confirm] staff email failed: {exc}")
 
