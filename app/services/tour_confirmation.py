@@ -184,11 +184,17 @@ def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
 <body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f8;padding:30px 0;"><tr><td align="center">
 <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
-  <tr><td style="background:#1a3a5c;border-radius:12px 12px 0 0;padding:32px;text-align:center;">
-    <img src="https://nationalparkexpress.com/wp-content/uploads/2026/03/image002.png" style="width:120px;height:auto;margin-bottom:12px;" />
-    <h1 style="color:#fff;margin:10px 0 2px;font-size:22px;">Tour Confirmation &amp; Lunch Selection</h1>
-    <p style="color:#c8dff7;margin:2px 0 4px;font-size:14px;">(If Applicable)</p>
-    <p style="color:#a8c4e0;margin:0;font-size:14px;">{label}</p>
+  <tr><td style="background:#1a3a5c;border-radius:12px 12px 0 0;padding:20px 28px;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr>
+      <td style="width:20%;vertical-align:middle;">
+        <img src="https://nationalparkexpress.com/wp-content/uploads/2026/03/image002.png" style="width:90px;height:auto;display:block;" />
+      </td>
+      <td style="vertical-align:middle;text-align:center;padding-right:20px;">
+        <h1 style="color:#fff;margin:0 0 2px;font-size:20px;line-height:1.3;">Tour Confirmation &amp; Lunch Selection</h1>
+        <p style="color:#c8dff7;margin:2px 0 6px;font-size:13px;">(If Applicable)</p>
+        <p style="color:#a8c4e0;margin:0;font-size:13px;">{label}</p>
+      </td>
+    </tr></table>
   </td></tr>
   <tr><td style="background:#fff;padding:32px;">
     <p style="font-size:16px;">Hi <strong>{first}</strong>,</p>

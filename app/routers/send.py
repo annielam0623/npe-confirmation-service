@@ -180,7 +180,7 @@ async def send_tour_confirmation(
         ploc = row.get('pickup_location', '')
         loc_res = await db.execute(text(
             "SELECT photo_url, instruction FROM pickup_locations WHERE hotel_name ILIKE :name LIMIT 1"
-        ), {"name": ploc})
+        ), {"name": f"%{ploc}%"})
         loc_row = loc_res.fetchone()
         pickup_photo_url   = loc_row[0] if loc_row else ''
         pickup_instruction = loc_row[1] if loc_row else ''
