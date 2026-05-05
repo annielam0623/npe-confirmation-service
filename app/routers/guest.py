@@ -27,11 +27,14 @@ GUEST_CSS = """*{box-sizing:border-box;margin:0;padding:0;}
 body{background:#f0f4f8;font-family:"Helvetica Neue",Arial,sans-serif;color:#333;padding:16px;}
 .gf-wrap{max-width:580px;margin:0 auto;padding:10px 0 40px;}
 .gf-card{background:#fff;border-radius:16px;box-shadow:0 4px 24px rgba(0,0,0,.10);overflow:hidden;}
-.gf-header{background:#1a3a5c;color:#fff;padding:26px;text-align:center;}
-.gf-header h1{font-size:20px;margin:8px 0 4px;}
-.gf-tour-badge{background:rgba(255,255,255,.15);border-radius:6px;padding:5px 14px;display:inline-block;font-size:13px;font-weight:bold;margin-bottom:6px;}
-.gf-date{font-size:17px;font-weight:bold;color:#fff;margin:4px 0;}
-.gf-meta{font-size:12px;color:#a8c4e0;margin-top:4px;}
+.gf-header{background:#1a3a5c;color:#fff;padding:22px 26px;display:flex;align-items:center;gap:20px;}
+.gf-header-logo{flex-shrink:0;width:20%;}
+.gf-header-logo img{width:90px;height:auto;display:block;}
+.gf-header-text{flex:1;text-align:center;overflow:hidden;}
+.gf-header h1{font-size:20px;margin:0 0 8px;font-weight:bold;white-space:nowrap;}
+.gf-tour-badge{background:rgba(255,255,255,.15);border-radius:6px;padding:4px 14px;display:inline-block;font-size:13px;font-weight:bold;margin-bottom:8px;white-space:nowrap;}
+.gf-date{font-size:17px;font-weight:bold;color:#fff;margin:0 0 4px;white-space:nowrap;}
+.gf-meta{font-size:12px;color:#a8c4e0;margin:0;white-space:nowrap;}
 .gf-pickup-box,.gf-fee-box{padding:16px 22px;font-size:13px;line-height:1.6;}
 .gf-pickup-box{background:#eef6ff;border-bottom:1px solid #d0e6ff;}
 .gf-fee-box{background:#fffbf0;border-bottom:1px solid #f0d080;}
@@ -224,11 +227,15 @@ var ck=document.querySelector('input[name="confirmation"]:checked');if(ck){{if(c
 
     body = f"""<div class="gf-wrap"><div class="gf-card">
       <div class="gf-header">
-        <img src="https://nationalparkexpress.com/wp-content/uploads/2026/03/image002.png" style="width:100px;height:auto;" />
-        <div class="gf-tour-badge">{tour_config['label']}</div>
-        <h1>Tour Confirmation</h1>
-        <div class="gf-date">{date_fmt}</div>
-        <div class="gf-meta">Order #{booking.order_number or ''} &nbsp;·&nbsp; {booking.first_name} {booking.last_name} &nbsp;·&nbsp; Party of {qty}</div>
+        <div class="gf-header-logo">
+          <img src="https://nationalparkexpress.com/wp-content/uploads/2026/03/image002.png" />
+        </div>
+        <div class="gf-header-text">
+          <h1>Tour Confirmation</h1>
+          <div class="gf-tour-badge">{tour_config['label']}</div>
+          <div class="gf-date">{date_fmt}</div>
+          <div class="gf-meta">Order #{booking.order_number or ''} &nbsp;·&nbsp; {booking.first_name} {booking.last_name} &nbsp;·&nbsp; Party of {qty}</div>
+        </div>
       </div>
 
       <div class="gf-pickup-box">

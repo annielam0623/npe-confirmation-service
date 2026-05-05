@@ -9,6 +9,7 @@ from app.routers import auth, admin, bookings, notifications, tickets, guest, we
 from app.routers.send import router as send_router
 from app.routers import send
 from app.routers import notifications
+from app.routers import pickup_locations
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -31,8 +32,9 @@ app.include_router(notifications.router, prefix="/api/notifications", tags=["not
 app.include_router(tickets.router,       prefix="/api/tickets",       tags=["tickets"])
 app.include_router(webhook.router,       prefix="/webhook",           tags=["webhook"])
 app.include_router(guest.router,                                      tags=["guest"])
-app.include_router(send.router),
+app.include_router(send.router)
 app.include_router(notifications.router, prefix="/api/notifications")
+app.include_router(pickup_locations.router, prefix="/api/pickup-locations", tags=["pickup_locations"])
 
 @app.get("/")
 def home():
