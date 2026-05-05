@@ -171,6 +171,11 @@ async def send_tour_confirmation(
         email_url = tc.confirm_url(token, src="email")
         sms_url   = tc.confirm_url(token, src="sms")
 
+        # Store token in bookings.confirm_token so guest.py can look it up
+        await db.execute(text(
+            "UPDATE bookings SET confirm_token = :token WHERE id = :id"
+        ), {"token": token, "id": booking_id})
+
         # Lookup pickup location photo URL
         ploc = row.get('pickup_location', '')
         loc_res = await db.execute(text(
