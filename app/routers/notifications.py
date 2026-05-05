@@ -182,7 +182,7 @@ async def tracking_tour_confirmation(
             b.tour_date, b.tour_type,
             b.email_status, b.sms_status, b.confirmation,
             b.lunch_turkey, b.lunch_veggie, b.lunch_beef,
-            b.lunch_selection, b.submitted_at
+            b.submitted_at
         FROM bookings b
         WHERE b.tour_date = :tour_date
           AND b.module    = 'tour_confirmation'
@@ -209,7 +209,11 @@ async def tracking_tour_confirmation(
                 "lunch_turkey":        r["lunch_turkey"] or 0,
                 "lunch_veggie":        r["lunch_veggie"] or 0,
                 "lunch_beef":          r["lunch_beef"] or 0,
-                "lunch_selection":     r["lunch_selection"] or "",
+                "lunch_selection":     ", ".join(filter(None, [
+                    f"Turkey x{r['lunch_turkey']}" if r["lunch_turkey"] else "",
+                    f"Veggie x{r['lunch_veggie']}" if r["lunch_veggie"] else "",
+                    f"Beef x{r['lunch_beef']}"     if r["lunch_beef"]   else "",
+                ])),
                 "submitted_at":        r["submitted_at"].isoformat() if r["submitted_at"] else None,
             }
             for r in rows
