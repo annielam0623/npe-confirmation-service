@@ -34,9 +34,10 @@
   .btn-nav:hover { background: #f5f5f3; }
   .date-display {
     background: #fff; border: 0.5px solid rgba(0,0,0,0.15);
-    padding: 5px 16px; border-radius: 7px; font-size: 13px; font-weight: 500;
-    min-width: 130px; text-align: center;
+    padding: 5px 10px; border-radius: 7px; font-size: 13px; font-weight: 500;
+    min-width: 130px; text-align: center; cursor: pointer; outline: none; font-family: inherit;
   }
+  .date-display:focus { border-color: #3B6D11; }
   .btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 7px; border: 0.5px solid rgba(0,0,0,0.15); font-size: 12px; cursor: pointer; background: #fff; color: #555; text-decoration: none; }
   .btn:hover { background: #f5f5f3; }
   .btn-green { background: #3B6D11; color: #fff; border-color: #3B6D11; }
@@ -138,7 +139,7 @@
   <!-- Date nav -->
   <div class="date-nav">
     <button class="btn-nav" onclick="changeDate(-1)">‹</button>
-    <span class="date-display" id="date-display">—</span>
+    <input type="date" class="date-display" id="date-display" onchange="onDatePick(this.value)" onclick="try{this.showPicker()}catch(e){}">
     <button class="btn-nav" onclick="changeDate(1)">›</button>
     <button class="btn" onclick="goToday()">Today</button>
     <button class="btn" onclick="goTomorrow()">Tomorrow</button>
@@ -236,16 +237,18 @@ let currentDate = params.get('date') || new Date().toISOString().split('T')[0];
 let currentType = 'all';
 let allRows = [];
 
+function onDatePick(val) { currentDate = val; loadData(); }
 function changeDate(d) {
   const dt = new Date(currentDate + 'T00:00:00');
   dt.setDate(dt.getDate() + d);
   currentDate = dt.toISOString().split('T')[0];
+  document.getElementById('date-display').value = currentDate;
   loadData();
 }
-function goToday()    { currentDate = new Date().toISOString().split('T')[0]; loadData(); }
+function goToday()    { currentDate = new Date().toISOString().split('T')[0]; document.getElementById('date-display').value = currentDate; loadData(); }
 function goTomorrow() {
   const d = new Date(); d.setDate(d.getDate() + 1);
-  currentDate = d.toISOString().split('T')[0]; loadData();
+  currentDate = d.toISOString().split('T')[0]; document.getElementById('date-display').value = currentDate; loadData();
 }
 
 function filterType(type, el) {
@@ -256,7 +259,6 @@ function filterType(type, el) {
 }
 
 async function loadData() {
-  document.getElementById('date-display').textContent = formatDate(currentDate);
   document.getElementById('track-tbody').innerHTML =
     '<tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
 
@@ -361,7 +363,7 @@ function exportExcel() {
 }
 
 // Init
-document.getElementById('date-display').textContent = formatDate(currentDate);
+document.getElementById('date-display').value = currentDate;
 loadData();
 </script>
 </body>

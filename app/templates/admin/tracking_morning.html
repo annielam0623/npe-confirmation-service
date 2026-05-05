@@ -34,9 +34,12 @@
   .btn-nav:hover { background: #1e3a5f; color: #fff; }
   .date-display {
     background: #1a2f4a; border: 1px solid rgba(255,255,255,0.15);
-    padding: 6px 18px; border-radius: 7px; font-size: 14px; font-weight: 600;
+    padding: 6px 10px; border-radius: 7px; font-size: 14px; font-weight: 600;
     min-width: 140px; text-align: center; color: #fff;
+    cursor: pointer; outline: none; font-family: inherit;
+    color-scheme: dark;
   }
+  .date-display:focus { border-color: #185FA5; }
   .btn {
     display: inline-flex; align-items: center; gap: 5px; padding: 6px 14px;
     border-radius: 7px; border: 1px solid rgba(255,255,255,0.15);
@@ -129,7 +132,7 @@
   <!-- Date nav -->
   <div class="date-nav">
     <button class="btn-nav" onclick="changeDate(-1)">‹</button>
-    <span class="date-display" id="date-display">—</span>
+    <input type="date" class="date-display" id="date-display" onchange="onDatePick(this.value)" onclick="try{this.showPicker()}catch(e){}">
     <button class="btn-nav" onclick="changeDate(1)">›</button>
     <button class="btn btn-today" onclick="goToday()">Today</button>
   </div>
@@ -190,13 +193,20 @@ let currentDate = params.get('date') || new Date().toISOString().split('T')[0];
 let currentDriver = 'all';
 let allRows = [];
 
+function onDatePick(val) { currentDate = val; loadData(); }
+
 function changeDate(d) {
   const dt = new Date(currentDate + 'T00:00:00');
   dt.setDate(dt.getDate() + d);
   currentDate = dt.toISOString().split('T')[0];
+  document.getElementById('date-display').value = currentDate;
   loadData();
 }
-function goToday() { currentDate = new Date().toISOString().split('T')[0]; loadData(); }
+function goToday() {
+  currentDate = new Date().toISOString().split('T')[0];
+  document.getElementById('date-display').value = currentDate;
+  loadData();
+}
 
 function filterDriver(driver, el) {
   currentDriver = driver;
@@ -206,7 +216,6 @@ function filterDriver(driver, el) {
 }
 
 async function loadData() {
-  document.getElementById('date-display').textContent = formatDate(currentDate);
   document.getElementById('track-tbody').innerHTML =
     '<tr><td colspan="10" style="padding:28px;text-align:center;color:#4a6a8a;">Loading…</td></tr>';
 
@@ -293,7 +302,7 @@ function exportExcel() {
   location.href = `/api/notifications/morning-pickup/export?date=${currentDate}`;
 }
 
-document.getElementById('date-display').textContent = formatDate(currentDate);
+document.getElementById('date-display').value = currentDate;
 loadData();
 </script>
 </body>
