@@ -21,7 +21,7 @@ from sqlalchemy import text
 from app.database import get_db
 from app.auth import get_current_user
 from app.services.excel_parser import parse_excel
-from app.services.mailer import send_email
+from app.services.sendgrid import send_raw_email as send_email
 from app.services.sms import send_sms
 from app.services import tour_confirmation as tc
 from app.services import morning_pickup as mp
@@ -191,7 +191,7 @@ async def send_tour_confirmation(
                                     pickup_photo_url=pickup_photo_url,
                                     pickup_photo_label=f"{ploc} Pickup location - click here for detail")
         subject    = f"Tour Confirmation & Lunch Selection – {_fmt_date(tour_date)}"
-        email_res  = send_email(email, f"{first} {row['last_name']}", subject, email_html)
+        email_res  = await send_email(email, f"{first} {row['last_name']}", subject, email_html)
         email_status = "sent" if email_res["success"] else f"failed: {email_res.get('error','')}"
         await _update_email_status(db, booking_id, email_status)
 
@@ -294,7 +294,7 @@ async def send_morning_pickup(
         if email:
             email_html   = mp.build_email(row)
             subject      = mp.email_subject(row)
-            email_res    = send_email(email, row.get("name", first), subject, email_html)
+            email_res    = await send_email(email, row.get("name", first), subject, email_html)
             email_status = "sent" if email_res["success"] else f"failed: {email_res.get('error','')}"
             await _update_email_status(db, booking_id, email_status)
 
@@ -385,7 +385,7 @@ async def send_tickets_reminder(
         if email:
             email_html   = tix.build_email(row, tour_type, service_date, form_url)
             subject      = f"Tickets Reminder – {tix.TOUR_TYPES[tour_type]['label']} – {_fmt_date(service_date)}"
-            email_res    = send_email(email, f"{first} {last}", subject, email_html)
+            email_res    = await send_email(email, f"{first} {last}", subject, email_html)
             email_status = "sent" if email_res["success"] else f"failed: {email_res.get('error','')}"
             await _update_email_status(db, booking_id, email_status)
 

@@ -544,7 +544,7 @@ async def resend_booking(
             html  = tix.build_email(dict(b), b["tour_type"], str(b["tour_date"]), url)
             subj  = f"Tickets Reminder – {b['tour_type']}"
 
-        er = send_email(b["customer_email"], f"{b['first_name']} {b['last_name']}", subj, html)
+        er = await send_email(b["customer_email"], f"{b['first_name']} {b['last_name']}", subj, html)
         results.append(f"Email: {'sent' if er['success'] else er.get('error','failed')}")
 
     if channel in ("sms", "both") and b["phone"]:
