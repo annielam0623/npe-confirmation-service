@@ -232,6 +232,7 @@ function setSendType(val) {
 let currentFile = null;
 let currentTourType = '';
 let currentServiceDate = '';
+let previewRows = [];
 
 async function uploadPreview() {
   const file = document.getElementById('excel-file').files[0];
@@ -249,15 +250,16 @@ async function uploadPreview() {
   currentServiceDate = serviceDate;
 
   const fd = new FormData();
-  fd.append('file', file);
+  fd.append('manifest', file);
   fd.append('tour_type', tourType);
   fd.append('service_date', serviceDate);
 
   try {
-    const res = await fetch('/api/notifications/tickets-reminder/preview', { method: 'POST', body: fd });
+    const res = await fetch('/api/tickets-reminder/check-duplicates', { method: 'POST', body: fd });
     const data = await res.json();
     if (!res.ok) { errEl.textContent = data.detail || 'Upload failed.'; return; }
-    showPreview(data);
+    previewRows = data.rows || [];
+    showPreview({ rows: previewRows });
   } catch(e) {
     errEl.textContent = 'Network error. Please try again.';
   }
@@ -290,19 +292,35 @@ function showPreview(data) {
 }
 
 async function confirmSend() {
+  const sendType = document.querySelector('input[name="send_type"]:checked')?.value || 'combined';
   const btn = document.getElementById('btn-confirm-send');
   const errEl = document.getElementById('send-err');
   errEl.textContent = '';
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Sending…';
 
-  const fd = new FormData();
-  fd.append('file', currentFile);
-  fd.append('tour_type', currentTourType);
-  fd.append('service_date', currentServiceDate);
+  const guests = (previewRows || [])
+    .filter(r => !r.duplicate)
+    .map(r => ({
+      chd_number:      r.order_number,
+      confirmation_no: r.confirmation_no || '',
+      first_name:      (r.name || '').split(' ')[0] || '',
+      last_name:       (r.name || '').split(' ').slice(1).join(' ') || '',
+      customer_email:  r.email || '',
+      phone:           r.phone || '',
+      service_date:    currentServiceDate,
+      tour_type:       currentTourType,
+      checkin_time:    r.checkin_time || '',
+      tour_time:       r.tour_time || '',
+      no_of_pax:       r.quantities || 1,
+    }));
 
   try {
-    const res = await fetch('/send/tickets-reminder', { method: 'POST', body: fd });
+    const res = await fetch('/api/tickets-reminder/send-bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ send_type: sendType, guests })
+    });
     const data = await res.json();
     if (!res.ok) { errEl.textContent = data.detail || 'Send failed.'; btn.disabled = false; btn.innerHTML = '✉️ Send Reminders'; return; }
     showResults(data);
@@ -314,25 +332,20 @@ async function confirmSend() {
 }
 
 function showResults(data) {
-  const results = data.results;
-  const sent    = results.filter(r => (r.email_status||'').startsWith('sent')).length;
-  const failed  = results.filter(r => (r.email_status||'').startsWith('failed')).length;
-  const skipped = results.filter(r => r.status === 'skipped').length;
+  const results = data.results || [];
+  const sent    = results.filter(r => r.email_ok || r.sms_ok).length;
+  const failed  = results.filter(r => !r.email_ok && !r.sms_ok).length;
 
-  document.getElementById('res-sent').textContent    = sent;
+  document.getElementById('res-sent').textContent    = data.sent ?? sent;
   document.getElementById('res-failed').textContent  = failed;
-  document.getElementById('res-skipped').textContent = skipped;
-  document.getElementById('res-total').textContent   = data.total;
+  document.getElementById('res-skipped').textContent = 0;
+  document.getElementById('res-total').textContent   = data.sent ?? results.length;
 
   document.getElementById('result-tbody').innerHTML = results.map(r => `
     <tr>
-      <td>${r.order}</td><td>${r.name||''}</td>
-      <td class="${(r.email_status||'').startsWith('sent') ? 'status-ok' : (r.email_status||'').startsWith('failed') ? 'status-fail' : 'status-skip'}">
-        ${r.email_status || '—'}
-      </td>
-      <td class="${(r.sms_status||'').startsWith('sent') ? 'status-ok' : (r.sms_status||'').startsWith('failed') ? 'status-fail' : ''}">
-        ${r.sms_status || '—'}
-      </td>
+      <td>${r.chd_number||''}</td><td>${r.name||''}</td>
+      <td class="${r.email_ok ? 'status-ok' : 'status-fail'}">${r.email_ok ? 'sent' : 'failed'}</td>
+      <td class="${r.sms_ok ? 'status-ok' : 'status-fail'}">${r.sms_ok ? 'sent' : 'failed'}</td>
     </tr>`).join('');
 
   document.getElementById('step-preview').classList.add('hidden');
