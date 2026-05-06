@@ -16,14 +16,14 @@ import tempfile
 import time
 from datetime import datetime
 
-import pytz
+from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.auth import get_current_user
-from app.services.sendgrid import send_raw_email
+from app.services.sendgrid import send_email
 from app.services.sms import send_sms
 from app.services.tickets_reminder import (
     TOUR_TYPES, make_token, confirm_url, build_sms, build_email, build_staff_email,
@@ -75,13 +75,12 @@ async def _do_send(d: dict, send_type: str, db: AsyncSession) -> dict:
 
     sms_ok, email_ok = False, False
     if send_type in ("sms", "combined"):
-        r      = send_sms(d.get("phone", ""), build_sms(d, d.get("tour_type", ""), form_url))
+        r      = await send_sms(d.get("phone", ""), build_sms(d, d.get("tour_type", ""), form_url))
         sms_ok = r.get("success", False)
     if send_type in ("email", "combined") and email_addr:
         subj     = f"Tickets Reminder — {sms_label} on " + (
             datetime.strptime(svc_date, "%Y-%m-%d").strftime("%B %-d, %Y") if svc_date else "")
-        result   = await send_raw_email(email_addr, "Guest", subj, build_email(d, d.get("tour_type", ""), svc_date, form_url))
-        email_ok = bool(result)
+        email_ok = await send_email(email_addr, "Guest", subj, build_email(d, d.get("tour_type", ""), svc_date, form_url))
 
     sms_st = "sent" if sms_ok else ("failed" if send_type in ("sms", "combined") else "")
     em_st  = "sent" if email_ok else ("failed" if send_type in ("email", "combined") else "")
@@ -158,7 +157,7 @@ async def tour_types(_=Depends(get_current_user)):
 @router.get("/log")
 async def log(date: str = "", db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
     if not date:
-        date = datetime.now(pytz.timezone("America/Los_Angeles")).strftime("%Y-%m-%d")
+        date = datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
     result = await db.execute(
         text("""SELECT id, chd_number, confirmation_no, first_name, last_name,
                        tour_type, service_date, checkin_time, tour_time, no_of_pax,
