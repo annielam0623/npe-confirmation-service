@@ -215,8 +215,8 @@ async def send_ticket_reminder_email(booking) -> dict:
     tour_date_f  = _fmt_date(booking.tour_date)
     checkin_time = _fmt_time(booking.checkin_time)
     tour_time    = _fmt_time(booking.tour_time)
-    label        = TOUR_TYPES.get(booking.tour_type or "", {}).get("label", booking.tour_type or "Tour")
-
+    cfg = TOUR_TYPES.get(booking.tour_type or "", {})
+    label = cfg.get("sms_label") or cfg.get("label", booking.tour_type or "Tour")
     inner = f"""
     <h2 style="color:#1a3a5c;margin:0 0 16px;">Your {label} Reminder</h2>
     <p style="font-size:16px;">Hi <strong>{booking.first_name}</strong>,</p>
