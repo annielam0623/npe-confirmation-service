@@ -76,6 +76,19 @@ table.preview-tbl {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .hidden { display: none !important; }
+/* ── Send type selector ──────────────────────────── */
+.stype-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 16px; border-radius: 7px; font-size: 13px;
+  cursor: pointer; border: 1.5px solid rgba(0,0,0,0.15);
+  background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
+}
+.stype-btn:hover { opacity: 0.85; }
+.stype-btn.active            { border-color: #6B4FBB; background: #F0ECFF; color: #6B4FBB; font-weight: 600; }
+.stype-btn.stype-sms.active  { border-color: #185FA5; background: #E6F1FB; color: #185FA5; font-weight: 600; }
+.stype-btn.stype-email.active{ border-color: #BA7517; background: #FAEEDA; color: #BA7517; font-weight: 600; }
+.stype-icon { font-size: 14px; }
+
 {% endblock %}
 
 {% block content %}
@@ -145,16 +158,28 @@ table.preview-tbl {
       </table>
     </div>
   </div>
-  <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;">
-    <div>
-      <div id="preview-meta-bar" style="font-size:12px;color:#888;margin-bottom:8px;"></div>
-      <div style="display:flex;gap:10px;align-items:center;">
-        <button class="btn-send" id="btn-confirm-send" onclick="confirmSend()">
-          ✉️ Send Reminders
-        </button>
-        <button class="btn" onclick="resetForm()">↩ Start Over</button>
-        <span id="send-err" style="font-size:12px;color:#A32D2D;margin-left:4px;"></span>
-      </div>
+  <div style="margin-bottom:20px;">
+    <div id="preview-meta-bar" style="font-size:12px;color:#888;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <label class="stype-btn active" id="lbl-combined" onclick="setSendType('combined')">
+        <input type="radio" name="send_type" value="combined" checked style="display:none;">
+        <span class="stype-icon">✉️📱</span> Both (SMS + Email)
+      </label>
+      <label class="stype-btn stype-sms" id="lbl-sms" onclick="setSendType('sms')">
+        <input type="radio" name="send_type" value="sms" style="display:none;">
+        <span class="stype-icon">📱</span> SMS Only
+      </label>
+      <label class="stype-btn stype-email" id="lbl-email" onclick="setSendType('email')">
+        <input type="radio" name="send_type" value="email" style="display:none;">
+        <span class="stype-icon">📧</span> Email Only
+      </label>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button class="btn-send" id="btn-confirm-send" data-base="Send Reminders" onclick="confirmSend()">
+        ✉️ Send Reminders (SMS + Email)
+      </button>
+      <button class="btn" onclick="resetForm()">↩ Start Over</button>
+      <span id="send-err" style="font-size:12px;color:#A32D2D;margin-left:4px;"></span>
     </div>
   </div>
 </div>
@@ -192,6 +217,18 @@ table.preview-tbl {
 
 {% block scripts %}
 <script>
+
+function setSendType(val) {
+  document.querySelector(`input[name="send_type"][value="${val}"]`).checked = true;
+  ['combined','sms','email'].forEach(v => {
+    document.getElementById('lbl-' + v).classList.toggle('active', v === val);
+  });
+  const labels = { combined: 'SMS + Email', sms: 'SMS Only', email: 'Email Only' };
+  const icons  = { combined: '✉️', sms: '📱', email: '📧' };
+  const btn = document.getElementById('btn-confirm-send');
+  if (btn) btn.innerHTML = icons[val] + ' ' + (btn.dataset.base || 'Send') + ' (' + labels[val] + ')';
+}
+
 let currentFile = null;
 let currentTourType = '';
 let currentServiceDate = '';
