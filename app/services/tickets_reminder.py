@@ -259,19 +259,6 @@ def build_email(row: dict, tour_type: str, service_date: str, form_url: str) -> 
         f'&nbsp;&nbsp;<a href="{location_photo}" style="color:#1a3a5c;margin-left:16px;" target="_blank">📸 Location Photo</a></p>'
     ) if location_photo else ""
 
-    prepare_html = ""
-    steps = cfg.get("prepare_steps", [])
-    if steps:
-        items = ""
-        for s in steps:
-            note_html = f'<br><span style="font-size:12px;color:#555;line-height:1.6;">{escape(s["note"])}</span>' if s.get("note") else ""
-            items += f'<li style="margin-bottom:8px;">{escape(s["label"])} — <a href="{s["url"]}" style="color:#1a3a5c;font-weight:bold;" target="_blank">Click here</a>{note_html}</li>'
-        prepare_html = f"""
-    <div style="background:#eaf4ff;border:1px solid #b3d9ff;border-radius:8px;padding:18px 20px;margin-bottom:20px;font-size:13px;color:#1a3a5c;">
-      <strong>📋 Prepare for Your Tour</strong>
-      <p style="color:#555;margin:8px 0 10px;font-size:13px;">To help you prepare for your tour, you may choose to complete the following steps in advance. Completing these steps before arrival will help shorten your check-in time.</p>
-      <ul style="margin:0;padding-left:18px;line-height:1.9;">{items}</ul>
-    </div>"""
 
     return f"""<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f4f6f8;font-family:Arial,sans-serif;">
@@ -300,7 +287,6 @@ def build_email(row: dict, tour_type: str, service_date: str, form_url: str) -> 
       ★ All times are based on the Arizona (AZ) time zone.
     </div>
     <p style="color:#555;line-height:1.6;margin-bottom:20px;">Please click the &ldquo;Reconfirm My Tour &amp; Continue&rdquo; button below to review important information about your tour. This may include the check-in procedure, supplier rules, age requirements, local regulations, and other important notes to help you prepare for your trip.</p>
-    {prepare_html}
     <div style="text-align:center;margin:28px 0;">
       <a href="{form_url}" style="display:inline-block;background:#1a3a5c;color:#fff;text-decoration:none;padding:16px 44px;border-radius:8px;font-size:16px;font-weight:bold;">Reconfirm My Tour &amp; Continue</a>
       <p style="margin:10px 0 0;font-size:12px;color:#aaa;">Link expires the day after your tour</p>

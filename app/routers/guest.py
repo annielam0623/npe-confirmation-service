@@ -336,6 +336,102 @@ var ck=document.querySelector('input[name="confirmation"]:checked');if(ck){{if(c
     return HTMLResponse(_page("Tour Confirmation", body))
 
 
+# ── Tickets Reminder — Guest Confirmation ─────────────────────────────────────
+# GET  /confirm/tickets?token=...&npe_tix_autoyes=1&src=...
+# POST /confirm/tickets
+
+from app.services.tickets_reminder import (
+    TOUR_TYPES          as TIX_TOUR_TYPES,
+    verify_token        as tix_verify_token,
+    build_staff_email   as tix_build_staff_email,
+    render_expired      as tix_render_expired,
+    render_thanks       as tix_render_thanks,
+    render_form         as tix_render_form,
+)
+from app.services.sendgrid import send_raw_email as _send_email
+
+_TIX_STAFF = "confirmations@nationalparkexpress.com"
+
+
+@router.get("/confirm/tickets", response_class=HTMLResponse)
+async def tix_confirm_get(request: Request, db: AsyncSession = Depends(get_db)):
+    token   = request.query_params.get("token", "")
+    autoyes = request.query_params.get("npe_tix_autoyes", "")
+    src     = request.query_params.get("src", "")
+
+    err, row = await tix_verify_token(token, db)
+    if err:
+        return HTMLResponse(tix_render_expired())
+
+    cfg = TIX_TOUR_TYPES.get(row.get("tour_type", ""), next(iter(TIX_TOUR_TYPES.values())))
+
+    # Auto-YES: guest clicked the email CTA button
+    if autoyes == "1" and row.get("confirmation") != "yes":
+        new_count = int(row.get("submission_count") or 0) + 1
+        await db.execute(
+            _sql_text("""UPDATE tickets_reminders
+                         SET confirmation='yes', submitted_at=:ts,
+                             submission_count=:c, source=:s
+                         WHERE id=:id"""),
+            {"ts": datetime.now(LA).replace(tzinfo=None),
+             "c": new_count, "s": src, "id": row["id"]},
+        )
+        await db.commit()
+        result = await db.execute(
+            _sql_text("SELECT * FROM tickets_reminders WHERE id=:id"), {"id": row["id"]}
+        )
+        row = dict(result.mappings().fetchone())
+        subj, body = tix_build_staff_email(row, row.get("tour_type", ""), row.get("reschedule_notes", "") or "")
+        try:
+            await _send_email(_TIX_STAFF, "NPE Staff", subj, body)
+        except Exception as exc:
+            print(f"[tix_confirm] staff email failed: {exc}")
+
+    already = bool(row.get("submitted_at")) and row.get("confirmation") != "pending"
+    return HTMLResponse(tix_render_form(row, cfg, token=token, already=already))
+
+
+@router.post("/confirm/tickets", response_class=HTMLResponse)
+async def tix_confirm_post(
+    db: AsyncSession  = Depends(get_db),
+    token: str        = Form(""),
+    confirmation: str = Form(""),
+    notes: str        = Form(""),
+):
+    err, row = await tix_verify_token(token, db)
+    if err:
+        return HTMLResponse(tix_render_expired())
+
+    cfg = TIX_TOUR_TYPES.get(row.get("tour_type", ""), next(iter(TIX_TOUR_TYPES.values())))
+
+    if confirmation != "yes":
+        return HTMLResponse(tix_render_form(row, cfg, token=token,
+                                            error_msg="Please select YES to confirm."))
+
+    new_count = int(row.get("submission_count") or 0) + 1
+    await db.execute(
+        _sql_text("""UPDATE tickets_reminders
+                     SET confirmation='yes', reschedule_notes=:n,
+                         submitted_at=:ts, submission_count=:c, source='form'
+                     WHERE id=:id"""),
+        {"n": notes, "ts": datetime.now(LA).replace(tzinfo=None),
+         "c": new_count, "id": row["id"]},
+    )
+    await db.commit()
+    result = await db.execute(
+        _sql_text("SELECT * FROM tickets_reminders WHERE id=:id"), {"id": row["id"]}
+    )
+    row = dict(result.mappings().fetchone())
+
+    subj, body = tix_build_staff_email(row, row.get("tour_type", ""), notes)
+    try:
+        await _send_email(_TIX_STAFF, "NPE Staff", subj, body)
+    except Exception as exc:
+        print(f"[tix_confirm] staff email failed: {exc}")
+
+    return HTMLResponse(tix_render_thanks(row))
+
+
 # ── Routes ────────────────────────────────────────────────────────────────────
 
 @router.get("/confirm/{token}", response_class=HTMLResponse)
@@ -431,99 +527,3 @@ async def guest_confirm_submit(
         print(f"[guest] staff notification failed: {exc}")
 
     return _thanks(booking)
-
-
-# ── Tickets Reminder — Guest Confirmation ─────────────────────────────────────
-# GET  /confirm/tickets?token=...&npe_tix_autoyes=1&src=...
-# POST /confirm/tickets
-
-from app.services.tickets_reminder import (
-    TOUR_TYPES          as TIX_TOUR_TYPES,
-    verify_token        as tix_verify_token,
-    build_staff_email   as tix_build_staff_email,
-    render_expired      as tix_render_expired,
-    render_thanks       as tix_render_thanks,
-    render_form         as tix_render_form,
-)
-from app.services.sendgrid import send_raw_email as _send_email
-
-_TIX_STAFF = "confirmations@nationalparkexpress.com"
-
-
-@router.get("/confirm/tickets", response_class=HTMLResponse)
-async def tix_confirm_get(request: Request, db: AsyncSession = Depends(get_db)):
-    token   = request.query_params.get("token", "")
-    autoyes = request.query_params.get("npe_tix_autoyes", "")
-    src     = request.query_params.get("src", "")
-
-    err, row = await tix_verify_token(token, db)
-    if err:
-        return HTMLResponse(tix_render_expired())
-
-    cfg = TIX_TOUR_TYPES.get(row.get("tour_type", ""), next(iter(TIX_TOUR_TYPES.values())))
-
-    # Auto-YES: guest clicked the email CTA button
-    if autoyes == "1" and row.get("confirmation") != "yes":
-        new_count = int(row.get("submission_count") or 0) + 1
-        await db.execute(
-            _sql_text("""UPDATE tickets_reminders
-                         SET confirmation='yes', submitted_at=:ts,
-                             submission_count=:c, source=:s
-                         WHERE id=:id"""),
-            {"ts": datetime.now(LA).replace(tzinfo=None),
-             "c": new_count, "s": src, "id": row["id"]},
-        )
-        await db.commit()
-        result = await db.execute(
-            _sql_text("SELECT * FROM tickets_reminders WHERE id=:id"), {"id": row["id"]}
-        )
-        row = dict(result.mappings().fetchone())
-        subj, body = tix_build_staff_email(row, row.get("tour_type", ""), row.get("reschedule_notes", "") or "")
-        try:
-            await _send_email(_TIX_STAFF, "NPE Staff", subj, body)
-        except Exception as exc:
-            print(f"[tix_confirm] staff email failed: {exc}")
-
-    already = bool(row.get("submitted_at")) and row.get("confirmation") != "pending"
-    return HTMLResponse(tix_render_form(row, cfg, token=token, already=already))
-
-
-@router.post("/confirm/tickets", response_class=HTMLResponse)
-async def tix_confirm_post(
-    db: AsyncSession  = Depends(get_db),
-    token: str        = Form(""),
-    confirmation: str = Form(""),
-    notes: str        = Form(""),
-):
-    err, row = await tix_verify_token(token, db)
-    if err:
-        return HTMLResponse(tix_render_expired())
-
-    cfg = TIX_TOUR_TYPES.get(row.get("tour_type", ""), next(iter(TIX_TOUR_TYPES.values())))
-
-    if confirmation != "yes":
-        return HTMLResponse(tix_render_form(row, cfg, token=token,
-                                            error_msg="Please select YES to confirm."))
-
-    new_count = int(row.get("submission_count") or 0) + 1
-    await db.execute(
-        _sql_text("""UPDATE tickets_reminders
-                     SET confirmation='yes', reschedule_notes=:n,
-                         submitted_at=:ts, submission_count=:c, source='form'
-                     WHERE id=:id"""),
-        {"n": notes, "ts": datetime.now(LA).replace(tzinfo=None),
-         "c": new_count, "id": row["id"]},
-    )
-    await db.commit()
-    result = await db.execute(
-        _sql_text("SELECT * FROM tickets_reminders WHERE id=:id"), {"id": row["id"]}
-    )
-    row = dict(result.mappings().fetchone())
-
-    subj, body = tix_build_staff_email(row, row.get("tour_type", ""), notes)
-    try:
-        await _send_email(_TIX_STAFF, "NPE Staff", subj, body)
-    except Exception as exc:
-        print(f"[tix_confirm] staff email failed: {exc}")
-
-    return HTMLResponse(tix_render_thanks(row))
