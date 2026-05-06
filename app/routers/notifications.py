@@ -50,7 +50,7 @@ from app.services.excel_parser import parse_excel
 from app.services import tour_confirmation as tc
 from app.services import morning_pickup as mp
 from app.services import tickets_reminder as tix
-from app.services.mailer import send_email
+from app.services.sendgrid import send_raw_email as send_email
 from app.services.sms import send_sms
 
 router = APIRouter()
