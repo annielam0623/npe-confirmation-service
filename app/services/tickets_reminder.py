@@ -16,6 +16,9 @@ import hmac
 import os
 import time
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+
+_LA = ZoneInfo("America/Los_Angeles")
 from html import escape
 
 SECRET_KEY       = os.environ.get("TOKEN_SECRET", "npe_tix_secret_fallback")
@@ -168,7 +171,7 @@ def make_token(record_id: int, email: str, service_date: str) -> str:
     if service_date:
         try:
             sd = datetime.strptime(service_date, "%Y-%m-%d")
-            expires = int((sd + timedelta(days=1, hours=23, minutes=59, seconds=59)).timestamp())
+            expires = int(datetime(sd.year, sd.month, sd.day, 23, 59, 59, tzinfo=_LA).timestamp())
         except ValueError:
             expires = int(time.time()) + 7 * 86400
     else:
