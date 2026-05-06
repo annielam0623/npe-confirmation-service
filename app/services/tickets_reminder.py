@@ -303,7 +303,7 @@ def build_email(row: dict, tour_type: str, service_date: str, form_url: str) -> 
 # ── Staff notification email ───────────────────────────────────────────────────
 def build_staff_email(row: dict, tour_type: str, notes: str) -> tuple[str, str]:
     cfg      = TOUR_TYPES.get(tour_type, {})
-    label    = cfg.get("sms_label") or cfg.get("label", tour_type)
+    label    = cfg.get("label") or cfg.get("sms_label", tour_type)  # internal: show supplier
     svc_date = str(row.get("service_date", ""))
     try:
         date_str = datetime.strptime(svc_date, "%Y-%m-%d").strftime("%B %-d, %Y")
