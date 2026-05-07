@@ -7,7 +7,7 @@ from app.database import init_db
 from app.routers import auth, admin, bookings, notifications, guest, webhook
 from app.routers import send
 from app.routers import pickup_locations
-from app.routers import tickets                  # PDF upload — 不动
+from app.routers import promotions               # PDF upload — 不动
 from app.routers import send_tickets             # tickets reminder 发送 API
 
 
@@ -30,7 +30,7 @@ app.include_router(auth.router,             prefix="/auth",                   ta
 app.include_router(admin.router,            prefix="/admin",                  tags=["admin"])
 app.include_router(bookings.router,         prefix="/api/bookings",           tags=["bookings"])
 app.include_router(notifications.router,    prefix="/api/notifications",      tags=["notifications"])
-app.include_router(tickets.router,          prefix="/api/tickets",            tags=["tickets"])
+app.include_router(promotions.router,          prefix="/api/promotions",      tags=["promotions"])
 app.include_router(send_tickets.router,     prefix="/api/tickets-reminder",   tags=["tickets-reminder"])
 app.include_router(webhook.router,          prefix="/webhook",                tags=["webhook"])
 app.include_router(guest.router,                                              tags=["guest"])
