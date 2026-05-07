@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bus Tracker – National Park Express</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background: #0A1E38; color: white;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    padding: 40px 20px;
+  }
+  .card { max-width: 420px; width: 100%; }
+  .logo { text-align: center; margin-bottom: 20px; }
+  .logo img { width: 100px; height: auto; }
+  h1 { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 4px; }
+  .order-no { color: #aaa; font-size: 13px; text-align: center; margin-bottom: 24px; }
+
+  /* Status boxes */
+  .box { border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; }
+  .box-blue   { background: #1a3a5c; }
+  .box-dark   { background: #2a1a1a; border: 1px solid #5c2a2a; }
+  .box-green  { background: #1a5c2a; }
+  .box p      { font-size: 15px; margin: 0; }
+  .box .sub   { font-size: 13px; color: #ccc; margin-top: 8px; }
+  .box-green .sub { color: #cfc; }
+
+  /* Samsara track button */
+  .btn-track {
+    display: block; background: #0A428C; color: white; text-decoration: none;
+    border-radius: 12px; padding: 18px 40px; font-size: 16px; font-weight: 600;
+    margin-bottom: 20px; text-align: center;
+  }
+  .btn-track:hover { background: #0d52b0; }
+
+  /* I'm Here form */
+  .checkin-form { margin-bottom: 20px; }
+  .checkin-form p { color: #aaa; font-size: 14px; margin-bottom: 12px; text-align: center; }
+  .btn-checkin {
+    width: 100%; background: #F59E0B; color: #000; border: none;
+    border-radius: 12px; padding: 16px 40px; font-size: 18px; font-weight: 700;
+    cursor: pointer;
+  }
+  .btn-checkin:hover { background: #d97706; }
+
+  /* Hours box */
+  .hours-box {
+    background: #0d2444; border: 1px solid #1e3f6a; border-radius: 12px;
+    padding: 14px 24px; text-align: center;
+  }
+  .hours-box .lbl  { font-size: 14px; margin-bottom: 6px; color: #aaa; }
+  .hours-box .time { font-size: 14px; font-weight: 600; }
+
+  /* Unknown van */
+  .box-warn { background: #2a1a1a; border: 1px solid #5c2a2a; }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <div class="logo">
+    <img src="https://nationalparkexpress.com/wp-content/uploads/2026/03/image002.png" alt="NPE Logo" />
+  </div>
+
+  <h1>Bus Tracker – National Park Express</h1>
+  <p class="order-no">Order #: {{ order_number }}</p>
+
+  {% if window == "unknown" %}
+    <!-- Unknown van ID -->
+    <div class="box box-warn">
+      <p>⚠️ Bus not found.</p>
+      <p class="sub">Please contact us at 702-948-4190 for assistance.</p>
+    </div>
+
+  {% elif window == "before" %}
+    <!-- Before tracking window -->
+    <div class="box box-blue">
+      <p>🕓 Pickup tracking has not started yet.</p>
+      <p class="sub">Tracking is available during: <strong>{{ hours_label }}</strong></p>
+    </div>
+
+  {% elif window == "after" %}
+    <!-- After tracking window -->
+    <div class="box box-dark">
+      <p>⏰ Pickup tracking has ended for today.</p>
+      <p class="sub">Tracking was available: <strong>{{ hours_label }}</strong></p>
+    </div>
+
+  {% elif window == "in" %}
+    <!-- In tracking window -->
+
+    <!-- Track button — always visible -->
+    <a href="{{ samsara_url }}" target="_blank" class="btn-track">
+      Click here to track Bus Location in real time
+    </a>
+
+    <!-- Check-in section -->
+    {% if already_checked_in %}
+      <div class="box box-green">
+        <p>✅ Thank you for checking in!</p>
+        <p class="sub">Your driver has been notified.</p>
+      </div>
+    {% else %}
+      <div class="checkin-form">
+        <p>Please click the button below when you arrive at the pickup point.</p>
+        <form method="POST" action="/tracking/checkin">
+          <input type="hidden" name="van_id"        value="{{ van_id }}">
+          <input type="hidden" name="order_number"  value="{{ order_number }}">
+          <input type="hidden" name="customer_name" value="{{ customer_name }}">
+          <input type="hidden" name="phone"         value="{{ phone }}">
+          <input type="hidden" name="agent_name"    value="{{ agent_name }}">
+          <button type="submit" class="btn-checkin">📍 I'm Here!</button>
+        </form>
+      </div>
+    {% endif %}
+
+  {% endif %}
+
+  <!-- Tracking hours — always shown -->
+  <div class="hours-box">
+    <p class="lbl">🕓 Pickup Tracking Hours</p>
+    <p class="time">{{ hours_label }}</p>
+  </div>
+
+</div>
+</body>
+</html>

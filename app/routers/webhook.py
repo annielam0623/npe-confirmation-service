@@ -383,3 +383,159 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
 
     await db.commit()
     return {"status": "ok", "order_number": order_number}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# APPEND THIS BLOCK to the bottom of app/routers/webhook.py
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# Delivery status callbacks
+# Twilio:   POST /webhook/sms-status     (set as StatusCallback in sms.py ✓)
+# SendGrid: POST /webhook/sendgrid-status (set once in SendGrid dashboard)
+#
+# send_log columns used:
+#   sms_sid          — matched to find the row for Twilio
+#   email_message_id — matched to find the row for SendGrid
+#   sms_status       — updated to e.g. "delivered", "failed", "undelivered"
+#   email_status     — updated to e.g. "delivered", "bounce", "dropped"
+#   delivered_at     — set when delivered
+# ─────────────────────────────────────────────────────────────────────────────
+
+import json as _json
+from datetime import datetime, timezone
+from sqlalchemy import text as _text
+
+
+@router.post("/sms-status")
+async def sms_status_callback(request: Request, db: AsyncSession = Depends(get_db)):
+    """
+    Twilio delivery status callback.
+    Twilio POSTs application/x-www-form-urlencoded with:
+      MessageSid, MessageStatus, To, From, ...
+    Statuses: queued → sent → delivered / undelivered / failed
+    """
+    try:
+        form = await request.form()
+        message_sid    = str(form.get("MessageSid", "")).strip()
+        message_status = str(form.get("MessageStatus", "")).strip().lower()
+    except Exception as e:
+        print(f"[webhook/sms-status] parse error: {e}")
+        return {"status": "error"}
+
+    if not message_sid or not message_status:
+        return {"status": "ignored"}
+
+    now_utc = datetime.now(timezone.utc)
+    delivered_at = now_utc if message_status == "delivered" else None
+
+    try:
+        if delivered_at:
+            await db.execute(
+                _text("""
+                    UPDATE send_log
+                       SET sms_status   = :status,
+                           delivered_at = :delivered_at
+                     WHERE sms_sid = :sid
+                """),
+                {"status": message_status, "delivered_at": delivered_at, "sid": message_sid},
+            )
+        else:
+            await db.execute(
+                _text("""
+                    UPDATE send_log
+                       SET sms_status = :status
+                     WHERE sms_sid = :sid
+                """),
+                {"status": message_status, "sid": message_sid},
+            )
+        await db.commit()
+        print(f"[webhook/sms-status] sid={message_sid} status={message_status}")
+    except Exception as e:
+        print(f"[webhook/sms-status] db error: {e}")
+
+    # Twilio expects a 200 with empty or minimal body
+    return {"status": "ok"}
+
+
+@router.post("/sendgrid-status")
+async def sendgrid_status_callback(request: Request, db: AsyncSession = Depends(get_db)):
+    """
+    SendGrid Event Webhook callback.
+    SendGrid POSTs a JSON array of events, each with:
+      sg_message_id, event, email, timestamp, ...
+
+    Events we care about:
+      delivered  → email_status = "delivered", delivered_at = timestamp
+      bounce     → email_status = "bounce"
+      dropped    → email_status = "dropped"
+      spamreport → email_status = "spam"
+
+    Configure once in SendGrid dashboard:
+      Settings → Mail Settings → Event Webhook → HTTP POST URL →
+      https://confirm.nationalparkexpress.com/webhook/sendgrid-status
+      Enable: Delivered, Bounce, Dropped, Spam Report
+    """
+    try:
+        body = await request.body()
+        events = _json.loads(body)
+        if not isinstance(events, list):
+            events = [events]
+    except Exception as e:
+        print(f"[webhook/sendgrid-status] parse error: {e}")
+        return {"status": "error"}
+
+    for event in events:
+        try:
+            # sg_message_id may have a suffix like ".filter-xxx" — strip it
+            raw_id      = str(event.get("sg_message_id", "")).split(".")[0].strip()
+            event_type  = str(event.get("event", "")).lower()
+            ts          = event.get("timestamp")  # Unix timestamp int
+
+            if not raw_id or not event_type:
+                continue
+
+            status_map = {
+                "delivered":  "delivered",
+                "bounce":     "bounce",
+                "bounced":    "bounce",
+                "dropped":    "dropped",
+                "spamreport": "spam",
+                "deferred":   "deferred",
+            }
+            new_status = status_map.get(event_type)
+            if not new_status:
+                continue  # open, click, unsubscribe etc. — ignore
+
+            delivered_at = (
+                datetime.fromtimestamp(ts, tz=timezone.utc)
+                if ts and new_status == "delivered"
+                else None
+            )
+
+            if delivered_at:
+                await db.execute(
+                    _text("""
+                        UPDATE send_log
+                           SET email_status   = :status,
+                               delivered_at   = :delivered_at
+                         WHERE email_message_id = :mid
+                    """),
+                    {"status": new_status, "delivered_at": delivered_at, "mid": raw_id},
+                )
+            else:
+                await db.execute(
+                    _text("""
+                        UPDATE send_log
+                           SET email_status = :status
+                         WHERE email_message_id = :mid
+                    """),
+                    {"status": new_status, "mid": raw_id},
+                )
+
+            print(f"[webhook/sendgrid-status] msg_id={raw_id} event={event_type} → {new_status}")
+
+        except Exception as e:
+            print(f"[webhook/sendgrid-status] row error: {e}")
+            continue
+
+    await db.commit()
+    return {"status": "ok"}

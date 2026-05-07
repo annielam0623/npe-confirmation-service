@@ -113,11 +113,11 @@ async def _log_send(db: AsyncSession, data: dict):
         INSERT INTO send_log
             (module, order_number, first_name, last_name, email, phone,
              tour_date, tour_type, email_status, sms_status,
-             sms_sid, error_msg, sent_at)
+             sms_sid, email_message_id, error_msg, sent_at)
         VALUES
             (:module, :order_number, :first_name, :last_name, :email, :phone,
              :tour_date, :tour_type, :email_status, :sms_status,
-             :sms_sid, :error_msg, NOW())
+             :sms_sid, :email_message_id, :error_msg, NOW())
     """), data)
 
 
@@ -189,18 +189,20 @@ async def send_tour_confirmation(
         pickup_instruction = loc_row[1] if loc_row else ''
 
         # Build & send email
-        email_html   = tc.build_email(row, tour_type, tour_date, email_url,
-                                      pickup_instruction=pickup_instruction,
-                                      pickup_photo_url=pickup_photo_url,
-                                      pickup_photo_label=f"{ploc} Pickup location - click here for detail")
-        subject      = f"Tour Confirmation & Lunch Selection – {_fmt_date(tour_date)}"
+        email_html = tc.build_email(row, tour_type, tour_date, email_url,
+                                    pickup_instruction=pickup_instruction,
+                                    pickup_photo_url=pickup_photo_url,
+                                    pickup_photo_label=f"{ploc} Pickup location - click here for detail")
+        subject = f"Tour Confirmation & Lunch Selection – {_fmt_date(tour_date)}"
 
+        email_message_id = ""
         try:
-           await send_email(email, f"{first} {row['last_name']}", subject, email_html)
-           email_status = "sent"
+            email_res        = await send_email(email, f"{first} {row['last_name']}", subject, email_html)
+            email_message_id = email_res.get("message_id", "") if isinstance(email_res, dict) else ""
+            email_status     = "sent"
         except Exception as e:
-           email_status = f"failed: {e}"
-           logger.error(f"[tour_confirmation] Email failed — {email} error={e}")
+            email_status = f"failed: {e}"
+            logger.error(f"[tour_confirmation] Email failed — {email} error={e}")
         await _update_email_status(db, booking_id, email_status)
 
         # Send SMS
@@ -219,27 +221,26 @@ async def send_tour_confirmation(
 
         # Log
         await _log_send(db, {
-            "module":       "tour_confirmation",
-            "order_number": order_num,
-            "first_name":   first,
-            "last_name":    row["last_name"],
-            "email":        email,
-            "phone":        phone,
-            "tour_date":    _to_date(tour_date),
-            "tour_type":    tour_type,
-            "email_status": email_status,
-            "sms_status":   sms_status,
-            "sms_sid":      sms_sid,
-            "error_msg": "" if email_status.startswith("sent") else email_status,
+            "module":           "tour_confirmation",
+            "order_number":     order_num,
+            "first_name":       first,
+            "last_name":        row["last_name"],
+            "email":            email,
+            "phone":            phone,
+            "tour_date":        _to_date(tour_date),
+            "tour_type":        tour_type,
+            "email_status":     email_status,
+            "sms_status":       sms_status,
+            "sms_sid":          sms_sid,
+            "email_message_id": email_message_id,
+            "error_msg":        "" if email_status.startswith("sent") else email_status,
         })
-
         results.append({
             "order":        order_num,
             "name":         f"{first} {row['last_name']}",
             "email_status": email_status,
             "sms_status":   sms_status,
         })
-
         await asyncio.sleep(0.3)
 
     await db.commit()
@@ -267,15 +268,14 @@ async def send_morning_pickup(
 
     for row in rows:
         order_num = row["order_number"]
+        email     = row.get("email", "")
         phone     = row["phone"]
-        email     = row["email"]
         first     = row["first_name"]
 
         if not phone:
             results.append({"order": order_num, "status": "skipped", "reason": "no phone"})
             continue
 
-        # Upsert
         booking_data = {
             "order_number":    order_num,
             "first_name":      first,
@@ -300,32 +300,35 @@ async def send_morning_pickup(
             logger.error(f"[morning_pickup] SMS failed — phone={phone} order={order_num} error={sms_res.get('error','')}")
         await _update_sms_status(db, booking_id, sms_status)
 
-        # Email (optional — only if column  pesent)
-        email_status = ""
+        # Email (optional — only if column present)
+        email_status     = ""
+        email_message_id = ""
         if email:
-            email_html   = mp.build_email(row)
-            subject      = mp.email_subject(row)
+            email_html = mp.build_email(row)
+            subject    = mp.email_subject(row)
             try:
-               await send_email(email, f"{first} {row['last_name']}", subject, email_html)
-               email_status = "sent"
+                email_res        = await send_email(email, f"{first} {row['last_name']}", subject, email_html)
+                email_message_id = email_res.get("message_id", "") if isinstance(email_res, dict) else ""
+                email_status     = "sent"
             except Exception as e:
-               email_status = f"failed: {e}"
-               logger.error(f"[tour_confirmation] Email failed — {email} error={e}")
+                email_status = f"failed: {e}"
+                logger.error(f"[morning_pickup] Email failed — {email} error={e}")
             await _update_email_status(db, booking_id, email_status)
 
         await _log_send(db, {
-            "module":       "morning_pickup",
-            "order_number": order_num,
-            "first_name":   first,
-            "last_name":    row["last_name"],
-            "email":        email,
-            "phone":        phone,
-            "tour_date":    _to_date(today),
-            "tour_type":    "",
-            "email_status": email_status,
-            "sms_status":   sms_status,
-            "sms_sid":      sms_sid,
-            "error_msg": "" if email_status.startswith("sent") else email_status,
+            "module":           "morning_pickup",
+            "order_number":     order_num,
+            "first_name":       first,
+            "last_name":        row["last_name"],
+            "email":            email,
+            "phone":            phone,
+            "tour_date":        _to_date(today),
+            "tour_type":        "",
+            "email_status":     email_status,
+            "sms_status":       sms_status,
+            "sms_sid":          sms_sid,
+            "email_message_id": email_message_id,
+            "error_msg":        "" if sms_status.startswith("sent") else sms_status,
         })
 
         results.append({
@@ -395,16 +398,18 @@ async def send_tickets_reminder(
         sms_url  = tix.confirm_url(token, src="sms")
 
         # Email
-        email_status = ""
+        email_status     = ""
+        email_message_id = ""
         if email:
-            email_html   = tix.build_email(row, tour_type, service_date, form_url)
-            subject      = f"Tickets Reminder – {tix.TOUR_TYPES[tour_type]['label']} – {_fmt_date(service_date)}"
+            email_html = tix.build_email(row, tour_type, service_date, form_url)
+            subject    = f"Tickets Reminder – {tix.TOUR_TYPES[tour_type]['label']} – {_fmt_date(service_date)}"
             try:
-               await send_email(email, f"{first} {row['last_name']}", subject, email_html)
-               email_status = "sent"
+                email_res        = await send_email(email, f"{first} {last}", subject, email_html)
+                email_message_id = email_res.get("message_id", "") if isinstance(email_res, dict) else ""
+                email_status     = "sent"
             except Exception as e:
-               email_status = f"failed: {e}"
-               logger.error(f"[tour_confirmation] Email failed — {email} error={e}")
+                email_status = f"failed: {e}"
+                logger.error(f"[tickets_reminder] Email failed — {email} error={e}")
             await _update_email_status(db, booking_id, email_status)
 
         # SMS
@@ -420,18 +425,19 @@ async def send_tickets_reminder(
             await _update_sms_status(db, booking_id, sms_status)
 
         await _log_send(db, {
-            "module":       "tickets_reminder",
-            "order_number": order_num,
-            "first_name":   first,
-            "last_name":    last,
-            "email":        email,
-            "phone":        phone,
-            "tour_date":    _to_date(service_date),
-            "tour_type":    tour_type,
-            "email_status": email_status,
-            "sms_status":   sms_status,
-            "sms_sid":      sms_sid,
-            "error_msg":    "",
+            "module":           "tickets_reminder",
+            "order_number":     order_num,
+            "first_name":       first,
+            "last_name":        last,
+            "email":            email,
+            "phone":            phone,
+            "tour_date":        _to_date(service_date),
+            "tour_type":        tour_type,
+            "email_status":     email_status,
+            "sms_status":       sms_status,
+            "sms_sid":          sms_sid,
+            "email_message_id": email_message_id,
+            "error_msg":        "",
         })
 
         results.append({
@@ -492,3 +498,4 @@ async def sms_status_webhook(
     await db.commit()
     logger.info("SMS callback: %s → %s", sid, status)
     return JSONResponse({"ok": True})
+
