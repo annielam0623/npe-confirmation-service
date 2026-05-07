@@ -299,7 +299,7 @@ def build_email(row: dict, tour_type: str, service_date: str, form_url: str) -> 
       <tr><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#666;background:#e8f0ff;">📍 Check-in Location</td><td style="padding:10px 16px;font-size:13px;">{checkin_loc}</td></tr>
       {maps_row}
     </table>
-    <div style="background:#fff5f5;border:1px solid #f5c6c6;border-radius:6px;padding:8px 14px;margin-bottom:20px;font-size:11px;color:#c0392b;line-height:1.6;">
+    <div style="background:#fff5f5;border:1px solid #f5c6c6;border-radius:6px;padding:8px 14px;margin-bottom:20px;font-size:11px;color:#c0392b;line-height:1.3;">
       ★ Late check-in is subject to forfeiting your tour entry.<br>
       ★ All times are based on the Arizona (AZ) time zone.
     </div>

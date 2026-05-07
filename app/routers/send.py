@@ -194,8 +194,12 @@ async def send_tour_confirmation(
                                       pickup_photo_url=pickup_photo_url,
                                       pickup_photo_label=f"{ploc} Pickup location - click here for detail")
         subject      = f"Tour Confirmation & Lunch Selection – {_fmt_date(tour_date)}"
-        email_res    = await send_email(email, f"{first} {row['last_name']}", subject, email_html)
-        email_status = "sent" if email_res["success"] else f"failed: {email_res.get('error','')}"
+
+        try:
+            await send_email(...)
+            email_status = "sent"
+        except Exception as e:
+            email_status = f"failed: {e}"
         await _update_email_status(db, booking_id, email_status)
 
         # Send SMS
@@ -225,7 +229,7 @@ async def send_tour_confirmation(
             "email_status": email_status,
             "sms_status":   sms_status,
             "sms_sid":      sms_sid,
-            "error_msg":    "" if email_res["success"] else email_res.get("error", ""),
+            "error_msg": "" if email_status.startswith("sent") else email_status,
         })
 
         results.append({
@@ -295,13 +299,16 @@ async def send_morning_pickup(
             logger.error(f"[morning_pickup] SMS failed — phone={phone} order={order_num} error={sms_res.get('error','')}")
         await _update_sms_status(db, booking_id, sms_status)
 
-        # Email (optional — only if column present)
+        # Email (optional — only if column  pesent)
         email_status = ""
         if email:
             email_html   = mp.build_email(row)
             subject      = mp.email_subject(row)
-            email_res    = await send_email(email, row.get("name", first), subject, email_html)
-            email_status = "sent" if email_res["success"] else f"failed: {email_res.get('error','')}"
+            try:
+               await send_email(...)
+               email_status = "sent"
+            except Exception as e:
+               email_status = f"failed: {e}"
             await _update_email_status(db, booking_id, email_status)
 
         await _log_send(db, {
@@ -316,7 +323,7 @@ async def send_morning_pickup(
             "email_status": email_status,
             "sms_status":   sms_status,
             "sms_sid":      sms_sid,
-            "error_msg":    "" if sms_res["success"] else sms_res.get("error", ""),
+            "error_msg": "" if email_status.startswith("sent") else email_status,
         })
 
         results.append({
@@ -390,8 +397,11 @@ async def send_tickets_reminder(
         if email:
             email_html   = tix.build_email(row, tour_type, service_date, form_url)
             subject      = f"Tickets Reminder – {tix.TOUR_TYPES[tour_type]['label']} – {_fmt_date(service_date)}"
-            email_res    = await send_email(email, f"{first} {last}", subject, email_html)
-            email_status = "sent" if email_res["success"] else f"failed: {email_res.get('error','')}"
+            try:
+                await send_email(...)
+                email_status = "sent"
+            except Exception as e:
+                email_status = f"failed: {e}"
             await _update_email_status(db, booking_id, email_status)
 
         # SMS
