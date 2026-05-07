@@ -19,7 +19,7 @@ def _tracking_url(row: dict) -> str:
         "name":  row.get("name", ""),
         "phone": row.get("phone", ""),
     })
-    return f"{base}/?{params}"
+    return f"{base}/tracking?{params}"
 
 
 def build_sms(row: dict) -> str:
