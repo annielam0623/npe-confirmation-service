@@ -12,7 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import AsyncSessionLocal
 from app.models import EmailQueue, NotificationChannel
-from app.services import sendgrid, twilio_sms
+from app.services import sendgrid
+from app.services.sms import send_sms_async
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +79,6 @@ async def _send_queued_sms(item: EmailQueue):
     """Send a pre-rendered SMS from the queue."""
     if not item.to_phone or not item.sms_body:
         raise ValueError("Missing phone or SMS body")
-    await twilio_sms.send_raw_sms(
-        to_phone=item.to_phone,
-        body=item.sms_body,
-    )
+    result = await send_sms_async(item.to_phone, item.sms_body, module="scheduler")
+    if not result.get("success"):
+        raise RuntimeError(result.get("error", "SMS send failed"))

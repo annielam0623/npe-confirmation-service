@@ -1,7 +1,7 @@
 """
 app/services/tour_config.py
 Tour types config — ported from PHP npe_tconf_tour_types()
-Used by sendgrid.py, twilio_sms.py, guest.py
+Used by sendgrid.py, guest.py
 """
 
 TOUR_TYPES: dict[str, dict] = {

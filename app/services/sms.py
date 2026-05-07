@@ -5,10 +5,11 @@ StatusCallback points to /webhook/sms-status for delivery tracking.
 """
 from __future__ import annotations
 import os
+import asyncio
 import httpx
 
-TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "")
-TWILIO_AUTH_TOKEN  = os.environ.get("TWILIO_AUTH_TOKEN", "")
+TWILIO_ACCOUNT_SID   = os.environ.get("TWILIO_ACCOUNT_SID", "")
+TWILIO_AUTH_TOKEN    = os.environ.get("TWILIO_AUTH_TOKEN", "")
 TWILIO_MESSAGING_SID = os.environ.get("TWILIO_MESSAGING_SERVICE_SID", "")
 
 # Base URL of this service — used to build the StatusCallback URL
@@ -17,7 +18,7 @@ SERVICE_BASE_URL = os.environ.get("SERVICE_BASE_URL", "https://confirm.nationalp
 
 def send_sms(to_phone: str, body: str, module: str = "") -> dict:
     """
-    Send an SMS via Twilio Messaging Service.
+    Send an SMS via Twilio Messaging Service (synchronous).
     Returns:
         {"success": True,  "sid": "SMxxx", "module": module}
         {"success": False, "error": "...",  "module": module}
@@ -56,6 +57,15 @@ def send_sms(to_phone: str, body: str, module: str = "") -> dict:
     except Exception:
         msg = f"HTTP {resp.status_code}"
     return {"success": False, "error": msg, "module": module}
+
+
+async def send_sms_async(to_phone: str, body: str, module: str = "") -> dict:
+    """
+    Async wrapper around send_sms() — for use in async contexts (scheduler, etc.)
+    Runs the synchronous send_sms in a thread pool to avoid blocking the event loop.
+    """
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, lambda: send_sms(to_phone, body, module))
 
 
 def _normalise_phone(raw: str) -> str:

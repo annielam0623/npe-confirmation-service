@@ -11,6 +11,7 @@ POST /update-notes
 POST /update-status
 """
 
+import logging
 import os
 import tempfile
 import time
@@ -24,12 +25,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.auth import get_current_user
 from app.services.sendgrid import send_raw_email
-from app.services.sms import send_sms
+from app.services.sms import send_sms_async
 from app.services.tickets_reminder import (
     TOUR_TYPES, make_token, confirm_url, build_sms, build_email, build_staff_email,
 )
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 STAFF_EMAIL = "confirmations@nationalparkexpress.com"
 
@@ -68,29 +70,69 @@ async def _do_send(d: dict, send_type: str, db: AsyncSession) -> dict:
     sms_label  = tour_cfg.get("sms_label") or tour_cfg.get("label", "")
     email_addr = d.get("customer_email") or d.get("email", "")
     svc_date   = d.get("service_date", "")
+    phone      = d.get("phone", "")
 
     rid      = await _insert_record(db, d)
     token    = make_token(rid, email_addr, svc_date)
     form_url = confirm_url(token, send_type)
 
     sms_ok, email_ok = False, False
+
     if send_type in ("sms", "combined"):
-        r      = send_sms(d.get("phone", ""), build_sms(d, d.get("tour_type", ""), form_url))
-        sms_ok = r.get("success", False)
+        if phone:
+            r = await send_sms_async(
+                phone,
+                build_sms(d, d.get("tour_type", ""), form_url),
+                module="tickets_reminder",
+            )
+            sms_ok = r.get("success", False)
+            if not sms_ok:
+                logger.error(
+                    f"[tickets_reminder] SMS failed — phone={phone} "
+                    f"chd={d.get('chd_number','')} error={r.get('error','unknown')}"
+                )
+            else:
+                logger.info(
+                    f"[tickets_reminder] SMS sent — phone={phone} "
+                    f"chd={d.get('chd_number','')} sid={r.get('sid','')}"
+                )
+        else:
+            logger.warning(f"[tickets_reminder] SMS skipped — no phone for chd={d.get('chd_number','')}")
+
     if send_type in ("email", "combined") and email_addr:
-        subj     = f"Tickets Reminder — {sms_label} on " + (
-            datetime.strptime(svc_date, "%Y-%m-%d").strftime("%B %-d, %Y") if svc_date else "")
-        email_ok = await send_raw_email(email_addr, "Guest", subj, build_email(d, d.get("tour_type", ""), svc_date, form_url))
+        try:
+            subj = f"Tickets Reminder — {sms_label} on " + (
+                datetime.strptime(svc_date, "%Y-%m-%d").strftime("%B %-d, %Y") if svc_date else "")
+            email_ok = await send_raw_email(
+                email_addr, "Guest", subj,
+                build_email(d, d.get("tour_type", ""), svc_date, form_url),
+            )
+            if not email_ok:
+                logger.error(
+                    f"[tickets_reminder] Email failed — email={email_addr} "
+                    f"chd={d.get('chd_number','')}"
+                )
+        except Exception as e:
+            logger.error(
+                f"[tickets_reminder] Email exception — email={email_addr} "
+                f"chd={d.get('chd_number','')} error={e}"
+            )
 
     sms_st = "sent" if sms_ok else ("failed" if send_type in ("sms", "combined") else "")
     em_st  = "sent" if email_ok else ("failed" if send_type in ("email", "combined") else "")
+
     await db.execute(
         text("UPDATE tickets_reminders SET sms_status=:s, email_status=:e WHERE id=:id"),
         {"s": sms_st, "e": em_st, "id": rid},
     )
     await db.commit()
-    return {"record_id": rid, "sms_ok": sms_ok, "email_ok": email_ok,
-            "name": f"{d.get('first_name','')} {d.get('last_name','')}".strip()}
+
+    return {
+        "record_id": rid,
+        "sms_ok":    sms_ok,
+        "email_ok":  email_ok,
+        "name":      f"{d.get('first_name','')} {d.get('last_name','')}".strip(),
+    }
 
 
 # ── POST /send-single ─────────────────────────────────────────────────────────
