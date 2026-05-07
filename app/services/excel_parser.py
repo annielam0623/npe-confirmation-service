@@ -21,7 +21,7 @@ COL_ALIASES: dict[str, list[str]] = {
     "pickup_time":     ["pickup time", "pick-up time", "pick up time"],
     "pickup_location": ["pickup location", "pick-up location", "pick up location"],
     "driver":          ["driver"],
-    "vehicle_no":      ["vehicle#", "vehicle #", "vehicle number"],
+    "vehicle_no":      ["vehicle#", "vehicle #", "vehicle number", "bus#", "bus #", "bus number"],
     "tour_date":       ["tour date", "service date", "date"],
     "checkin_time":    ["check-in time", "checkin time", "check in time"],
     "tour_time":       ["tour time"],
