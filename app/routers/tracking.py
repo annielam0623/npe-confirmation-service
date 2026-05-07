@@ -223,3 +223,5 @@ async def tracking_checkin(
         "agent": agent_name,
     })
     return RedirectResponse(f"/tracking?{params}", status_code=303)
+
+
