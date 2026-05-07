@@ -5,6 +5,7 @@ Supports: tour_confirmation, morning_pickup, tickets_reminder
 """
 from __future__ import annotations
 import io
+from datetime import date, timedelta
 from zipfile import ZipFile
 import xml.etree.ElementTree as ET
 
@@ -47,17 +48,45 @@ def _col_letter_to_index(col: str) -> int:
     return idx - 1
 
 
+def _excel_serial_to_date(val: str) -> str:
+    """
+    Convert Excel date serial number → 'YYYY-MM-DD'.
+    Excel epoch is 1899-12-30. Excel incorrectly treats 1900 as a leap year,
+    so serial numbers >= 60 need a -1 adjustment.
+    Returns original string if conversion fails.
+    """
+    try:
+        f = float(val)
+        n = int(f)
+        if n >= 60:
+            n -= 1  # correct for Excel's 1900 leap year bug
+        d = date(1899, 12, 31) + timedelta(days=n)
+        return d.strftime("%Y-%m-%d")
+    except (ValueError, TypeError):
+        return val
+
+
 def _excel_time_to_str(val: str) -> str:
-    """Convert Excel time serial fraction → '4:55 AM'"""
+    """
+    Convert Excel numeric value:
+    - If 0 < f < 1        → time fraction  → 'H:MM AM/PM'  (e.g. 0.486 → '11:40 AM')
+    - If 1 <= f <= 109572 → date serial    → 'YYYY-MM-DD'   (e.g. 46152 → '2026-05-10')
+                            (109572 = year 2199, safely excludes phone numbers / confirmation#)
+    - Otherwise           → return as-is (phone numbers, large IDs, etc.)
+    """
     try:
         f = float(val)
         if 0 < f < 1:
+            # Time fraction
             mins = round(f * 24 * 60)
             h = (mins // 60) % 24
             m = mins % 60
             period = "PM" if h >= 12 else "AM"
             h12 = h % 12 or 12
             return f"{h12}:{m:02d} {period}"
+        elif 40000 <= f <= 109572:
+            # Date serial (year ~2009 ~ 2199); lower bound excludes small numbers like pax count
+            return _excel_serial_to_date(val)
     except (ValueError, TypeError):
         pass
     return val
@@ -100,9 +129,13 @@ def _parse_sheet(zf: ZipFile, shared: list[str]) -> list[dict[int, str]]:
             val = (v_el.text or "") if v_el is not None else ""
 
             if cell_type == "s":
+                # Shared string — look up in shared strings table
                 val = shared[int(val)] if val and int(val) < len(shared) else ""
             elif cell_type in ("", "n"):
+                # Numeric value (or formula with cached numeric result)
+                # Could be date serial (>=1) or time fraction (0<x<1)
                 val = _excel_time_to_str(val)
+            # cell_type == "str" means inline string from formula result — keep val as-is
 
             rd[ci] = val
         if rd:
