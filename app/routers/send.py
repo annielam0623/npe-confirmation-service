@@ -200,6 +200,7 @@ async def send_tour_confirmation(
             email_status = "sent"
         except Exception as e:
             email_status = f"failed: {e}"
+            logger.error(f"[tour_confirmation] Email failed — {email} error={e}")
         await _update_email_status(db, booking_id, email_status)
 
         # Send SMS
@@ -309,6 +310,7 @@ async def send_morning_pickup(
                email_status = "sent"
             except Exception as e:
                email_status = f"failed: {e}"
+               logger.error(f"[tour_confirmation] Email failed — {email} error={e}")
             await _update_email_status(db, booking_id, email_status)
 
         await _log_send(db, {
@@ -402,6 +404,7 @@ async def send_tickets_reminder(
                 email_status = "sent"
             except Exception as e:
                 email_status = f"failed: {e}"
+                logger.error(f"[tour_confirmation] Email failed — {email} error={e}")
             await _update_email_status(db, booking_id, email_status)
 
         # SMS
