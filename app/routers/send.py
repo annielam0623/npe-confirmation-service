@@ -196,11 +196,11 @@ async def send_tour_confirmation(
         subject      = f"Tour Confirmation & Lunch Selection – {_fmt_date(tour_date)}"
 
         try:
-            await send_email(...)
-            email_status = "sent"
+           await send_email(email, f"{first} {row['last_name']}", subject, email_html)
+           email_status = "sent"
         except Exception as e:
-            email_status = f"failed: {e}"
-            logger.error(f"[tour_confirmation] Email failed — {email} error={e}")
+           email_status = f"failed: {e}"
+           logger.error(f"[tour_confirmation] Email failed — {email} error={e}")
         await _update_email_status(db, booking_id, email_status)
 
         # Send SMS
@@ -306,7 +306,7 @@ async def send_morning_pickup(
             email_html   = mp.build_email(row)
             subject      = mp.email_subject(row)
             try:
-               await send_email(...)
+               await send_email(email, f"{first} {row['last_name']}", subject, email_html)
                email_status = "sent"
             except Exception as e:
                email_status = f"failed: {e}"
@@ -400,11 +400,11 @@ async def send_tickets_reminder(
             email_html   = tix.build_email(row, tour_type, service_date, form_url)
             subject      = f"Tickets Reminder – {tix.TOUR_TYPES[tour_type]['label']} – {_fmt_date(service_date)}"
             try:
-                await send_email(...)
-                email_status = "sent"
+               await send_email(email, f"{first} {row['last_name']}", subject, email_html)
+               email_status = "sent"
             except Exception as e:
-                email_status = f"failed: {e}"
-                logger.error(f"[tour_confirmation] Email failed — {email} error={e}")
+               email_status = f"failed: {e}"
+               logger.error(f"[tour_confirmation] Email failed — {email} error={e}")
             await _update_email_status(db, booking_id, email_status)
 
         # SMS
