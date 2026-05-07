@@ -35,7 +35,7 @@ LA = ZoneInfo("America/Los_Angeles")
 # Tracking window: 4:00 AM – 7:00 AM LA time (matches WordPress)
 
 TRACKING_WINDOW_START = (4, 0)   # 4:00 AM
-TRACKING_WINDOW_END   = (7, 0)   # 7:00 AM
+TRACKING_WINDOW_END   = (19, 0)  # 7:00 PM
 
 VANS: dict[str, str] = {
     "768":  "https://cloud.samsara.com/o/7070/fleet/viewer/hBJOM3WXRp5zRit3mk6Z",
