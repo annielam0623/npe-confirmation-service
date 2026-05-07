@@ -54,7 +54,24 @@ TOUR_TYPES: dict[str, dict] = {
             {"label": "Sign the required waiver form",
              "url": "https://fareharbor.com/waivers?shortname=tsebighanilini&bookingUuid=4487ab4e-7d05-4cea-860b-b7da6ab47df6&source=copy-link"},
             {"label": "Pay the permit fee using the provided payment link",
-             "url": "https://fareharbor.com/embeds/book/navajonationparks/items/691331/calendar/2026/01/"},
+             "url": "https://fareharbor.com/embeds/book/navajonationparks/items/691331/calendar/2026/01/",
+              "note":  "For all guests, please keep your payment receipt for check-in. Same-day Lower Antelope or Canyon X receipts can waive the Upper Antelope permit fee. If we supplied your tickets, we can provide the receipt — just let us know."},
+        ],
+    },
+     "upper_antelope_brenda_no_fee": {
+        "label":            "Upper Antelope Canyon – Brenda (Tse Bighanilini Tours)",
+        "sms_label":        "Upper Antelope Canyon Tour",
+        "abbr":             "U-BR",
+        "checkin_location": "Tse Bighanilini Tours, Highway 98, Milepost 299.8, Page, AZ 86040 (Between 299 and 300)",
+        "maps_url":         "https://maps.app.goo.gl/kcixg7Hee9WMMt3h8",
+        "location_photo":   "https://maps.app.goo.gl/3meJhQqfCAAt9Ayp7",
+        "extra_notes": [
+            "Car seats are required for children under 4. Visitors must provide their own car seat or booster seat.",
+            "Antelope Canyon does not allow any bags on the walking tour. Please leave them in your vehicle.",
+        ],
+        "prepare_steps": [
+            {"label": "Sign the required waiver form",
+             "url": "https://fareharbor.com/waivers?shortname=tsebighanilini&bookingUuid=4487ab4e-7d05-4cea-860b-b7da6ab47df6&source=copy-link"},
         ],
     },
     "upper_antelope_aact": {
