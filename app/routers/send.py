@@ -22,7 +22,7 @@ from app.database import get_db
 from app.auth import get_current_user
 from app.services.excel_parser import parse_excel
 from app.services.sendgrid import send_raw_email as send_email
-from app.services.sms import send_sms
+from app.services.sms import send_sms_async
 from app.services import tour_confirmation as tc
 from app.services import morning_pickup as mp
 from app.services import tickets_reminder as tix
@@ -38,14 +38,17 @@ def _to_date(d: str) -> date:
     return datetime.strptime(d, "%Y-%m-%d").date()
 
 
+def _fmt_date(date_str: str) -> str:
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%d").strftime("%B %-d, %Y")
+    except ValueError:
+        return date_str
+
+
 # ═══════════════════════════════════════════════════════════
 # Helper — insert or update booking record, return row id
 # ═══════════════════════════════════════════════════════════
 async def _upsert_booking(db: AsyncSession, data: dict) -> int:
-    """
-    Insert booking if not exists (match on order_number + tour_date + module).
-    Update if exists. Returns the row id.
-    """
     existing = await db.execute(text("""
         SELECT id FROM bookings
         WHERE order_number = :order_number
@@ -152,17 +155,17 @@ async def send_tour_confirmation(
 
         # Upsert booking
         booking_data = {
-            "order_number":   order_num,
-            "first_name":     first,
-            "last_name":      row["last_name"],
-            "customer_email": email,
-            "phone":          phone,
-            "quantities":     int(row.get("quantities") or 1),
-            "pickup_time":    row["pickup_time"],
+            "order_number":    order_num,
+            "first_name":      first,
+            "last_name":       row["last_name"],
+            "customer_email":  email,
+            "phone":           phone,
+            "quantities":      int(row.get("quantities") or 1),
+            "pickup_time":     row["pickup_time"],
             "pickup_location": row["pickup_location"],
-            "tour_date":      _to_date(tour_date),
-            "tour_type":      tour_type,
-            "module":         "tour_confirmation",
+            "tour_date":       _to_date(tour_date),
+            "tour_type":       tour_type,
+            "module":          "tour_confirmation",
         }
         booking_id = await _upsert_booking(db, booking_data)
 
@@ -186,12 +189,12 @@ async def send_tour_confirmation(
         pickup_instruction = loc_row[1] if loc_row else ''
 
         # Build & send email
-        email_html = tc.build_email(row, tour_type, tour_date, email_url,
-                                    pickup_instruction=pickup_instruction,
-                                    pickup_photo_url=pickup_photo_url,
-                                    pickup_photo_label=f"{ploc} Pickup location - click here for detail")
-        subject    = f"Tour Confirmation & Lunch Selection – {_fmt_date(tour_date)}"
-        email_res  = await send_email(email, f"{first} {row['last_name']}", subject, email_html)
+        email_html   = tc.build_email(row, tour_type, tour_date, email_url,
+                                      pickup_instruction=pickup_instruction,
+                                      pickup_photo_url=pickup_photo_url,
+                                      pickup_photo_label=f"{ploc} Pickup location - click here for detail")
+        subject      = f"Tour Confirmation & Lunch Selection – {_fmt_date(tour_date)}"
+        email_res    = await send_email(email, f"{first} {row['last_name']}", subject, email_html)
         email_status = "sent" if email_res["success"] else f"failed: {email_res.get('error','')}"
         await _update_email_status(db, booking_id, email_status)
 
@@ -200,12 +203,13 @@ async def send_tour_confirmation(
         sms_sid    = ""
         if phone:
             sms_body = tc.build_sms(first, tour_type, tour_date, sms_url)
-            sms_res  = send_sms(phone, sms_body, module="tour_confirmation")
+            sms_res  = await send_sms_async(phone, sms_body, module="tour_confirmation")
             if sms_res["success"]:
                 sms_sid    = sms_res.get("sid", "")
                 sms_status = f"sent:{sms_sid}"
             else:
                 sms_status = f"failed: {sms_res.get('error','')}"
+                logger.error(f"[tour_confirmation] SMS failed — phone={phone} order={order_num} error={sms_res.get('error','')}")
             await _update_sms_status(db, booking_id, sms_status)
 
         # Log
@@ -231,10 +235,10 @@ async def send_tour_confirmation(
             "sms_status":   sms_status,
         })
 
-        await asyncio.sleep(0.3)  # rate-limit
+        await asyncio.sleep(0.3)
 
     await db.commit()
-    sent  = sum(1 for r in results if r.get("email_status", "").startswith("sent"))
+    sent = sum(1 for r in results if r.get("email_status", "").startswith("sent"))
     return {"total": len(rows), "sent": sent, "results": results}
 
 
@@ -284,9 +288,11 @@ async def send_morning_pickup(
 
         # SMS
         sms_body   = mp.build_sms(row)
-        sms_res    = send_sms(phone, sms_body, module="morning_pickup")
+        sms_res    = await send_sms_async(phone, sms_body, module="morning_pickup")
         sms_sid    = sms_res.get("sid", "") if sms_res["success"] else ""
         sms_status = f"sent:{sms_sid}" if sms_res["success"] else f"failed: {sms_res.get('error','')}"
+        if not sms_res["success"]:
+            logger.error(f"[morning_pickup] SMS failed — phone={phone} order={order_num} error={sms_res.get('error','')}")
         await _update_sms_status(db, booking_id, sms_status)
 
         # Email (optional — only if column present)
@@ -350,7 +356,6 @@ async def send_tickets_reminder(
     results = []
 
     for row in rows:
-        # tickets use CHD# as order_number
         order_num = row["order_number"]
         email     = row["email"]
         phone     = row["phone"]
@@ -393,10 +398,12 @@ async def send_tickets_reminder(
         sms_status = ""
         sms_sid    = ""
         if phone:
-            sms_body   = tix.build_sms(row, tour_type, sms_url)
-            sms_res    = send_sms(phone, sms_body, module="tickets_reminder")
+            sms_body = tix.build_sms(row, tour_type, sms_url)
+            sms_res  = await send_sms_async(phone, sms_body, module="tickets_reminder")
             sms_sid    = sms_res.get("sid", "") if sms_res["success"] else ""
             sms_status = f"sent:{sms_sid}" if sms_res["success"] else f"failed: {sms_res.get('error','')}"
+            if not sms_res["success"]:
+                logger.error(f"[tickets_reminder] SMS failed — phone={phone} order={order_num} error={sms_res.get('error','')}")
             await _update_sms_status(db, booking_id, sms_status)
 
         await _log_send(db, {
@@ -472,13 +479,3 @@ async def sms_status_webhook(
     await db.commit()
     logger.info("SMS callback: %s → %s", sid, status)
     return JSONResponse({"ok": True})
-
-
-# ═══════════════════════════════════════════════════════════
-# Helper
-# ═══════════════════════════════════════════════════════════
-def _fmt_date(date_str: str) -> str:
-    try:
-        return datetime.strptime(date_str, "%Y-%m-%d").strftime("%B %-d, %Y")
-    except ValueError:
-        return date_str

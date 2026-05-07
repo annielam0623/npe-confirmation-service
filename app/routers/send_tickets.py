@@ -37,7 +37,18 @@ STAFF_EMAIL = "confirmations@nationalparkexpress.com"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+def _parse_date(date_str: str):
+    """Convert 'YYYY-MM-DD' string to datetime.date for asyncpg."""
+    if not date_str:
+        return None
+    try:
+        return datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
 async def _insert_record(db: AsyncSession, d: dict) -> int:
+    sd_raw = d.get("service_date", "")
     result = await db.execute(
         text("""INSERT INTO tickets_reminders
                (chd_number,confirmation_no,first_name,last_name,customer_email,
@@ -52,7 +63,7 @@ async def _insert_record(db: AsyncSession, d: dict) -> int:
             "ln":  d.get("last_name", ""),
             "em":  d.get("customer_email") or d.get("email", ""),
             "ph":  d.get("phone", ""),
-            "sd":  d.get("service_date", ""),
+            "sd":  _parse_date(sd_raw),
             "tt":  d.get("tour_type", ""),
             "ci":  d.get("checkin_time", ""),
             "ti":  d.get("tour_time", ""),
@@ -200,6 +211,7 @@ async def tour_types(_=Depends(get_current_user)):
 async def log(date: str = "", db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
     if not date:
         date = datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
+    date_obj = _parse_date(date)
     result = await db.execute(
         text("""SELECT id, chd_number, confirmation_no, first_name, last_name,
                        tour_type, service_date, checkin_time, tour_time, no_of_pax,
@@ -208,7 +220,7 @@ async def log(date: str = "", db: AsyncSession = Depends(get_db), _=Depends(get_
                 FROM tickets_reminders
                 WHERE service_date = :date
                 ORDER BY last_name ASC"""),
-        {"date": date},
+        {"date": date_obj},
     )
     return [
         {
@@ -257,7 +269,7 @@ async def update_status(request: Request, db: AsyncSession = Depends(get_db), _=
         raise HTTPException(status_code=400, detail="Invalid confirmation value")
     await db.execute(
         text("UPDATE tickets_reminders SET confirmation=:c WHERE chd_number=:chd AND service_date=:date"),
-        {"c": confirmation, "chd": body.get("chd_number", ""), "date": body.get("service_date", "")},
+        {"c": confirmation, "chd": body.get("chd_number", ""), "date": _parse_date(body.get("service_date", ""))},
     )
     await db.commit()
     return {"ok": True}
