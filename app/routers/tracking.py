@@ -92,9 +92,11 @@ def _window_status(now_la: datetime) -> str:
 
 
 async def _already_checked_in(db: AsyncSession, order_number: str, today: str) -> bool:
-    """Check if this order has already checked in during today's 4AM–4PM window."""
     if not order_number or order_number == "N/A":
         return False
+    from datetime import datetime
+    window_start = datetime.strptime(f"{today} 04:00:00", "%Y-%m-%d %H:%M:%S").replace(tzinfo=LA)
+    window_end   = datetime.strptime(f"{today} 16:00:00", "%Y-%m-%d %H:%M:%S").replace(tzinfo=LA)
     result = await db.execute(
         text("""
             SELECT id FROM checkin_log
@@ -104,8 +106,8 @@ async def _already_checked_in(db: AsyncSession, order_number: str, today: str) -
         """),
         {
             "order":        order_number,
-            "window_start": f"{today} 04:00:00-07",
-            "window_end":   f"{today} 16:00:00-07",
+            "window_start": window_start,
+            "window_end":   window_end,
         },
     )
     return result.first() is not None
