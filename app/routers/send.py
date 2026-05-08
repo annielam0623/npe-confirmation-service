@@ -71,6 +71,8 @@ async def _upsert_booking(db: AsyncSession, data: dict) -> int:
                 pickup_time      = :pickup_time,
                 pickup_location  = :pickup_location,
                 tour_type        = :tour_type,
+                driver           = :driver,
+                vehicle_no       = :vehicle_no,
                 token_created    = NOW(),
                 email_status     = 'pending',
                 sms_status       = 'pending',
@@ -84,11 +86,13 @@ async def _upsert_booking(db: AsyncSession, data: dict) -> int:
         INSERT INTO bookings
             (order_number, first_name, last_name, customer_email, phone,
              quantities, pickup_time, pickup_location, tour_date, tour_type,
+             driver, vehicle_no,
              module, booking_type, confirmation, token_created, email_status, sms_status,
              created_at, updated_at)
         VALUES
             (:order_number, :first_name, :last_name, :customer_email, :phone,
              :quantities, :pickup_time, :pickup_location, :tour_date, :tour_type,
+             :driver, :vehicle_no,
              :module, :booking_type, 'pending', NOW(), 'pending', 'pending',
              NOW(), NOW())
         RETURNING id
@@ -287,6 +291,8 @@ async def send_morning_pickup(
             "pickup_location": row["pickup_location"],
             "tour_date":       _to_date(today),
             "tour_type":       "",
+            "driver":          row.get("driver", ""),
+            "vehicle_no":      row.get("vehicle_no", ""),
             "module":          "morning_pickup",
         }
         booking_id = await _upsert_booking(db, booking_data)

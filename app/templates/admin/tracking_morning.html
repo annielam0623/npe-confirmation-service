@@ -170,6 +170,7 @@
             <td>Order #</td>
             <td>Name</td>
             <td>Phone</td>
+            <td>PAX</td>
             <td>Bus #</td>
             <td>Driver</td>
             <td>Pickup Time</td>
@@ -180,7 +181,7 @@
           </tr>
         </thead>
         <tbody id="track-tbody">
-          <tr><td colspan="10" style="padding:28px;text-align:center;color:#4a6a8a;">Loading…</td></tr>
+          <tr><td colspan="11" style="padding:28px;text-align:center;color:#4a6a8a;">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -217,7 +218,7 @@ function filterDriver(driver, el) {
 
 async function loadData() {
   document.getElementById('track-tbody').innerHTML =
-    '<tr><td colspan="10" style="padding:28px;text-align:center;color:#4a6a8a;">Loading…</td></tr>';
+    '<tr><td colspan="11" style="padding:28px;text-align:center;color:#4a6a8a;">Loading…</td></tr>';
 
   try {
     const res = await fetch(`/api/notifications/morning-pickup/tracking?date=${currentDate}`);
@@ -227,7 +228,7 @@ async function loadData() {
     applyFilter();
   } catch(e) {
     document.getElementById('track-tbody').innerHTML =
-      '<tr><td colspan="10" style="padding:28px;text-align:center;color:#4a6a8a;">Failed to load.</td></tr>';
+      '<tr><td colspan="11" style="padding:28px;text-align:center;color:#4a6a8a;">Failed to load.</td></tr>';
   }
 }
 
@@ -258,7 +259,7 @@ function applyFilter() {
 
   const tbody = document.getElementById('track-tbody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="10" style="padding:28px;text-align:center;color:#4a6a8a;">No records found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" style="padding:28px;text-align:center;color:#4a6a8a;">No records found.</td></tr>';
     return;
   }
 
@@ -269,6 +270,7 @@ function applyFilter() {
       <td style="color:#5ba3d9;font-weight:600;">${r.order_number || '—'}</td>
       <td>${r.name || '—'}</td>
       <td style="font-size:12px;color:#a0c0e0;">${r.phone || '—'}</td>
+      <td style="text-align:center;font-weight:600;">${r.quantities || '—'}</td>
       <td style="font-weight:600;">${r.vehicle_no || '—'}</td>
       <td>${r.driver || '—'}</td>
       <td style="font-weight:600;">${r.pickup_time || '—'}</td>

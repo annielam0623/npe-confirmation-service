@@ -247,7 +247,7 @@ async def tracking_morning_pickup(
     result = await db.execute(text("""
         SELECT
             b.id, b.order_number, b.first_name, b.last_name,
-            b.phone, b.pickup_time, b.pickup_location,
+            b.phone, b.quantities, b.pickup_time, b.pickup_location,
             b.tour_date, b.sms_status,
             b.driver, b.vehicle_no,
             c.checkin_time
@@ -267,6 +267,7 @@ async def tracking_morning_pickup(
                 "order_number":    r["order_number"],
                 "name":            f"{r['first_name']} {r['last_name']}".strip(),
                 "phone":           r["phone"] or "",
+                "quantities":      r["quantities"] or 0,
                 "pickup_time":     r["pickup_time"] or "",
                 "pickup_location": r["pickup_location"] or "",
                 "driver":          r["driver"] or "",
