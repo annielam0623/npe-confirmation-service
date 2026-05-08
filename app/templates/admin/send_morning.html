@@ -126,12 +126,12 @@ table.preview-tbl {
   </div>
   <div style="margin-bottom:20px;">
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-    <label class="stype-btn active" id="lbl-combined" onclick="setSendType('combined')">
-          <input type="radio" name="send_type" value="combined" checked style="display:none;">
+    <label class="stype-btn" id="lbl-combined" onclick="setSendType('combined')">
+          <input type="radio" name="send_type" value="combined" style="display:none;">
           <span class="stype-icon">✉️📱</span> Both (SMS + Email)
     </label>
-    <label class="stype-btn stype-sms" id="lbl-sms" onclick="setSendType('sms')">
-          <input type="radio" name="send_type" value="sms" style="display:none;">
+    <label class="stype-btn stype-sms active" id="lbl-sms" onclick="setSendType('sms')">
+          <input type="radio" name="send_type" value="sms" checked style="display:none;">
           <span class="stype-icon">📱</span> SMS Only
     </label>
     <label class="stype-btn stype-email" id="lbl-email" onclick="setSendType('email')">
@@ -141,7 +141,7 @@ table.preview-tbl {
       </div>
     <div style="display:flex;gap:10px;align-items:center;margin-top:10px;">
       <button class="btn-send" id="btn-confirm-send" data-base="Send to All" onclick="confirmSend()">
-        ✉️ Send to All (SMS + Email)
+        📱 Send to All (SMS Only)
       </button>
       <button class="btn" onclick="resetForm()">↩ Start Over</button>
       <span id="send-err" style="font-size:12px;color:#A32D2D;margin-left:4px;"></span>
@@ -305,8 +305,8 @@ function resetForm() {
   currentFile = null;
   const btn = document.getElementById('btn-confirm-send');
   if (btn) { btn.disabled = false; btn.innerHTML = '✉️ Send to All (SMS + Email)'; }
-  document.querySelector('input[name="send_type"][value="combined"]').checked = true;
-  setSendType('combined');
+  document.querySelector('input[name="send_type"][value="sms"]').checked = true;
+  setSendType('sms');
 }
 </script>
 {% endblock %}

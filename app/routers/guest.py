@@ -134,12 +134,27 @@ def _render(booking, tour_config: dict, error_msg: str = "",
     qty        = int(booking.quantities or 1)
     has_lunch  = tour_config.get("has_lunch", False)
     has_beef   = tour_config.get("has_beef", False)
-    already    = booking.submitted_at and booking.confirmation != "pending"
-    hide_yes   = booking.confirmation in ("yes", "modify_req")
-    modify_locked = (
-        booking.submitted_at and
-        (datetime.now() - booking.submitted_at).total_seconds() < 43200
-    ) if booking.submitted_at else False
+    already       = booking.submitted_at and booking.confirmation != "pending"
+    # v4.17.14: YES locked only when already YES; modify_req state can still click YES to cancel
+    yes_locked    = booking.confirmation == "yes"
+    is_modify_req = booking.confirmation == "modify_req"
+    # v4.17.14: Modify locked based on pickup_time (12h before pickup), not submitted_at
+    modify_locked = False
+    if booking.pickup_time and booking.tour_date:
+        pickup_str = f"{booking.tour_date.isoformat()} {booking.pickup_time}"
+        for fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%d %I:%M %p", "%Y-%m-%d %H:%M:%S"):
+            try:
+                pickup_dt = datetime.strptime(pickup_str, fmt)
+                from datetime import timedelta
+                if datetime.now() >= pickup_dt - timedelta(hours=12):
+                    modify_locked = True
+                break
+            except ValueError:
+                continue
+    # v4.17.14: Count modify submissions for 3-attempt limit
+    modify_count    = (booking.notes_history or "").count("] Modify requested")
+    modify_maxed    = modify_count >= 3
+    modify_disabled = modify_locked or modify_maxed
 
     # Pickup box
     ploc = booking.pickup_location or ""
@@ -174,23 +189,33 @@ def _render(booking, tour_config: dict, error_msg: str = "",
     if already:
         banners += '<div class="gf-info">Response already submitted. You can update it below.</div>'
 
-    # YES button
-    if not hide_yes:
-        yes_btn = f"""<label class="gf-yn yes">
-          <input type="radio" name="confirmation" value="yes"
-            {'checked' if booking.confirmation == 'yes' else ''} required onchange="onYN(this)">
-          <span class="gf-yn-icon">✅</span>
-          <span class="gf-yn-label">YES<br><small>I'm attending</small></span>
-        </label>"""
-    else:
+    # v4.17.14: YES button states
+    if yes_locked:
         yes_btn = """<div class="gf-yn yes" style="opacity:0.5;cursor:not-allowed;border-color:#27ae60;background:#f0fff4;">
           <span class="gf-yn-icon">✅</span>
           <span class="gf-yn-label">YES<br><small>Already confirmed</small></span>
         </div>"""
+    elif is_modify_req:
+        yes_btn = """<label class="gf-yn yes" style="border-color:#e67e22;">
+          <input type="radio" name="confirmation" value="yes" onchange="onYN(this)">
+          <span class="gf-yn-icon">✅</span>
+          <span class="gf-yn-label">YES<br><small style="color:#e67e22;">Cancel date change &amp; confirm original date</small></span>
+        </label>"""
+    else:
+        yes_btn = """<label class="gf-yn yes">
+          <input type="radio" name="confirmation" value="yes" onchange="onYN(this)">
+          <span class="gf-yn-icon">✅</span>
+          <span class="gf-yn-label">YES<br><small>I'm attending</small></span>
+        </label>"""
 
-    modify_style    = "cursor:not-allowed;opacity:0.5;" if modify_locked else ""
-    modify_disabled = "disabled" if modify_locked else ""
-    modify_sub      = "Locked (within 12h)" if modify_locked else "my booking"
+    modify_style_attr = "cursor:not-allowed;opacity:0.5;" if modify_disabled else ""
+    modify_dis_attr   = "disabled" if modify_disabled else ""
+    if modify_locked:
+        modify_sub = "Locked (within 12h)"
+    elif modify_maxed:
+        modify_sub = "Max requests reached"
+    else:
+        modify_sub = f"my booking ({3 - modify_count} left)"
 
     # Lunch section
     lunch_html = ""
@@ -228,7 +253,36 @@ def _render(booking, tour_config: dict, error_msg: str = "",
     <li>Vehicles are air-conditioned; in extreme heat, cooling may take a moment.</li>
     <li>You may bring small items like personal fans or ice packs.</li>"""
 
-    tomorrow = (date_type.today().__class__.fromordinal(date_type.today().toordinal() + 1)).isoformat()
+    # v4.17.14: min date = today + 1 day (current time + 24h)
+    from datetime import timedelta
+    tomorrow = (datetime.now(LA) + timedelta(days=1)).strftime("%Y-%m-%d")
+
+    # v4.17.14: Build notes display block (yellow bg, lunch diff coloring)
+    last_note = (booking.notes or "").strip()
+    if last_note:
+        import re as _re2
+        note_display = last_note.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        # Try to colorize lunch changes: "Lunch updated: T×N V×N B×N (was T×N V×N B×N)"
+        m = _re2.search(r'Lunch updated: T×(\d+) V×(\d+) B×(\d+) \(was T×(\d+) V×(\d+) B×(\d+)\)', last_note)
+        if m:
+            nt,nv,nb,pt,pv,pb = m.group(1),m.group(2),m.group(3),m.group(4),m.group(5),m.group(6)
+            def _fmt(label, new_val, prev_val):
+                if new_val == "0" and prev_val != "0":
+                    return f"<span style='color:#aaa;'>{label}×{new_val}</span>"
+                if new_val != prev_val:
+                    return f"<span style='color:#c0392b;font-weight:500;'>{label}×{new_val}</span>"
+                return f"{label}×{new_val}"
+            colored = "Lunch updated: " + _fmt("T",nt,pt) + " " + _fmt("V",nv,pv) + " " + _fmt("B",nb,pb)
+            colored += f" (was T×{pt} V×{pv} B×{pb})"
+            prefix_m = _re2.match(r'^(\[.*?\]\s*)', last_note)
+            prefix = prefix_m.group(1).replace("&","&amp;").replace("<","&lt;").replace(">","&gt;") if prefix_m else ""
+            note_display = prefix + colored
+        notes_display_html = f'''<div style="background:#fffbf0;border:1px solid #f0d080;border-radius:8px;padding:12px 16px;margin-bottom:12px;">
+          <div style="font-size:12px;font-weight:bold;color:#8a6000;margin-bottom:4px;">📝 Your last update</div>
+          <div style="font-size:13px;color:#8a6000;">{note_display}</div>
+        </div>'''
+    else:
+        notes_display_html = ""
 
     js = f"""
 var partySize={qty},hasLunch={'true' if has_lunch else 'false'};
@@ -237,7 +291,7 @@ function onModify(el){{if(hasLunch){{var ls=document.getElementById('lunch-secti
 function openDateModal(){{document.getElementById('date-modal').style.display='flex';}}
 function closeDateModal(){{document.getElementById('date-modal').style.display='none';var inp=document.getElementById('reschedule-date-input');if(!inp.value){{document.querySelectorAll('input[name="confirmation"]').forEach(function(r){{r.checked=false;}});document.getElementById('reschedule-section').style.display='none';if(hasLunch){{var ls=document.getElementById('lunch-section');if(ls)ls.style.display='none';}}}}}}
 function confirmDate(){{var p=document.getElementById('modal-date-picker');if(!p.value){{alert('Please select a date.');return;}}document.getElementById('reschedule-date-input').value=p.value;document.getElementById('reschedule-display').textContent=p.value;document.getElementById('reschedule-selected').style.display='block';document.getElementById('reschedule-prompt').style.display='none';document.getElementById('date-modal').style.display='none';}}
-document.querySelector('form').addEventListener('submit',function(e){{var c=document.querySelector('input[name="confirmation"]:checked');if(!c){{e.preventDefault();alert('Please select YES or Modify.');return;}}if(c.value==='modify_req'){{var d=document.getElementById('reschedule-date-input').value;if(!d){{e.preventDefault();openDateModal();return;}}}}}});
+var isYesConfirmed={'true' if yes_locked else 'false'};document.querySelector('form').addEventListener('submit',function(e){{var c=document.querySelector('input[name="confirmation"]:checked');if(!c&&!isYesConfirmed){{e.preventDefault();alert('Please select YES or Modify.');return;}}if(c&&c.value==='modify_req'){{var d=document.getElementById('reschedule-date-input').value;if(!d){{e.preventDefault();openDateModal();return;}}}}}});
 function adj(t,d){{var el=document.getElementById('c-'+t),cur=parseInt(el.value)||0,tot=totL();var nv=cur+d;if(nv<0)return;if(d>0&&tot>=partySize)return;el.value=nv;updT();}}
 function totL(){{var t=(parseInt(document.getElementById('c-turkey')?.value)||0)+(parseInt(document.getElementById('c-veggie')?.value)||0);var b=document.getElementById('c-beef');if(b)t+=parseInt(b.value)||0;return t;}}
 function updT(){{var t=totL(),el=document.getElementById('ltotal');if(el){{el.textContent=t;el.style.color=t===partySize?'#27ae60':'#e74c3c';}}}}
@@ -271,15 +325,15 @@ var ck=document.querySelector('input[name="confirmation"]:checked');if(ck){{if(c
         <div class="gf-section">
           <div style="background:#e8f4fd;border-left:4px solid #1a3a5c;border-radius:6px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#1a3a5c;">
             <p style="margin:0 0 8px;"><strong>Confirm Your Tour</strong><br>Click <strong>YES</strong> to confirm, then select lunch and click <strong>Submit Confirmation</strong>.</p>
-            <p style="margin:0 0 8px;"><strong>Request a Date Change</strong><br>Click <strong>Modify</strong> and choose your preferred new date.</p>
+            <p style="margin:0 0 8px;"><strong>Request a Date Change</strong><br>If you would like to change your tour date, click <strong>Modify</strong> — you do not need to click YES first. Choose your preferred new date and click <strong>Submit Confirmation</strong>. Our reservations team will contact you as soon as possible to confirm availability.</p>
             <p style="margin:0;"><strong>Important:</strong> Your reservation is only finalized after you click <strong>Submit Confirmation</strong>.</p>
           </div>
           <div class="gf-yn-row">
             {yes_btn}
-            <label class="gf-yn no" style="{modify_style}">
+            <label class="gf-yn no" style="{modify_style_attr}">
               <input type="radio" name="confirmation" value="modify_req"
-                {'checked' if booking.confirmation == 'modify_req' else ''}
-                {modify_disabled} onchange="onModify(this)">
+                {'checked' if is_modify_req else ''}
+                {modify_dis_attr} onchange="onModify(this)">
               <span class="gf-yn-icon">✏️</span>
               <span class="gf-yn-label">Modify<br><small>{modify_sub}</small></span>
             </label>
@@ -309,6 +363,7 @@ var ck=document.querySelector('input[name="confirmation"]:checked');if(ck){{if(c
             <p style="margin:0 0 8px;">Please confirm that the following phone number is correct: <strong>{booking.phone or 'Not on file'}</strong></p>
             <p style="margin:0;">If this number is incorrect, kindly provide the correct number in the Notes section below.</p>
           </div>
+          {notes_display_html}
           <h2>📝 Notes <span class="gf-opt">(optional)</span></h2>
           <textarea name="notes" rows="3" placeholder="Special requests, dietary notes...">{booking.notes or ''}</textarea>
         </div>
@@ -475,10 +530,41 @@ async def guest_confirm_submit(
     qty         = int(booking.quantities or 1)
     has_lunch   = tour_config.get("has_lunch", False)
 
+    # v4.17.14: Compute pickup-based modify_locked and modify_count server-side
+    _mod_locked = False
+    if booking.pickup_time and booking.tour_date:
+        _pu_str = f"{booking.tour_date.isoformat()} {booking.pickup_time}"
+        for _fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%d %I:%M %p", "%Y-%m-%d %H:%M:%S"):
+            try:
+                from datetime import timedelta as _td
+                _pu_dt = datetime.strptime(_pu_str, _fmt)
+                if datetime.now() >= _pu_dt - _td(hours=12):
+                    _mod_locked = True
+                break
+            except ValueError:
+                continue
+    _modify_count = (booking.notes_history or "").count("] Modify requested")
+
+    # v4.17.14: Already-YES guest submits without radio — treat as lunch update
+    is_yes_confirmed = booking.confirmation == "yes"
+    if is_yes_confirmed and not confirmation:
+        confirmation = "yes"
+
     # Validation
     error_msg = ""
-    if confirmation not in ("yes", "modify_req"):
+    ts = datetime.now(LA).strftime("%Y-%m-%d %H:%M")
+    if not confirmation:
         error_msg = "Please select YES or Modify."
+    elif confirmation not in ("yes", "modify_req"):
+        error_msg = "Please select YES or Modify."
+    elif confirmation == "yes" and is_yes_confirmed and _mod_locked:
+        error_msg = "Lunch selection is locked within 12 hours of your pickup time."
+    elif confirmation == "modify_req" and _mod_locked:
+        error_msg = "The Modify option is no longer available within 12 hours of your pickup time."
+    elif confirmation == "modify_req" and _modify_count >= 3:
+        error_msg = "You have reached the maximum number of date change requests (3). Please contact us at reservations@nationalparkexpress.com or call 702-948-4190."
+    elif confirmation == "modify_req" and not reschedule_date:
+        error_msg = "Please select a new tour date for your Modify request."
     elif confirmation == "yes" and has_lunch and (lunch_turkey + lunch_veggie + lunch_beef) != qty:
         error_msg = f"Lunch total must equal your party size of {qty}."
 
@@ -487,19 +573,33 @@ async def guest_confirm_submit(
         return _render(booking, tour_config, error_msg=error_msg,
                        pickup_instruction=pu_inst, pickup_photo_url=pu_photo, pickup_photo_label=pu_label)
 
-    # Build notes/history
+    # v4.17.14: Build notes/history with full logging for every action
     new_count   = int(booking.submission_count or 0) + 1
-    final_notes = notes
-    new_history = booking.notes_history or ""
+    new_history = (booking.notes_history or "").strip()
 
     if confirmation == "modify_req":
-        ts    = datetime.now(LA).strftime("%Y-%m-%d %H:%M")
         entry = (
             f"[{ts}] Modify requested"
             + (f": {reschedule_date}" if reschedule_date else "")
             + (f" — {notes}" if notes else "")
         )
         final_notes = entry
+        new_history = (entry + "\n" + new_history).strip() if new_history else entry
+    elif confirmation == "yes" and booking.confirmation == "modify_req":
+        # Cancel modify_req — log it
+        entry = f"[{ts}] Date change request cancelled. Confirmed original tour date." + (f" — {notes}" if notes else "")
+        final_notes = entry
+        new_history = (entry + "\n" + new_history).strip() if new_history else entry
+    elif confirmation == "yes" and is_yes_confirmed:
+        # Lunch update — log with diff
+        pt = int(booking.lunch_turkey or 0); pv = int(booking.lunch_veggie or 0); pb = int(booking.lunch_beef or 0)
+        entry = f"[{ts}] Lunch updated: T×{lunch_turkey} V×{lunch_veggie} B×{lunch_beef} (was T×{pt} V×{pv} B×{pb})" + (f" — {notes}" if notes else "")
+        final_notes = entry
+        new_history = (entry + "\n" + new_history).strip() if new_history else entry
+    else:
+        # First YES
+        entry = f"[{ts}] Confirmed YES." + (f" — {notes}" if notes else "")
+        final_notes = notes  # keep plain guest note as notes field for first YES
         new_history = (entry + "\n" + new_history).strip() if new_history else entry
 
     # Persist
