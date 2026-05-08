@@ -250,13 +250,13 @@ async def tracking_morning_pickup(
             b.phone, b.pickup_time, b.pickup_location,
             b.tour_date, b.sms_status,
             b.driver, b.vehicle_no,
-            c.checkin_time, c.checkin_status
+            c.checkin_time
         FROM bookings b
         LEFT JOIN checkin_log c ON c.order_number = b.order_number
             AND DATE(c.checkin_time) = :tour_date
         WHERE b.tour_date = :tour_date
           AND b.module    = 'morning_pickup'
-        ORDER BY b.pickup_time ASC
+        ORDER BY c.checkin_time DESC NULLS LAST, b.pickup_time ASC
     """), {"tour_date": _to_date(date)})
 
     rows = result.mappings().all()
@@ -272,7 +272,7 @@ async def tracking_morning_pickup(
                 "driver":          r["driver"] or "",
                 "vehicle_no":      r["vehicle_no"] or "",
                 "sms_status":      r["sms_status"] or "",
-                "checkin_status":  r["checkin_status"] or "pending",
+                "checkin_status":  "checked_in" if r["checkin_time"] else "pending",
                 "checkin_time":    r["checkin_time"].isoformat() if r["checkin_time"] else None,
             }
             for r in rows
