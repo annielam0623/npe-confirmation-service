@@ -493,23 +493,15 @@
       </a>
 
       <!-- Activities -->
-      <div class="nav-group-label" style="margin-top: 8px;">Activities</div>
-      <a href="/admin/activities/order-log" class="nav-item sub {% if active_page == 'order_log' %}active{% endif %}">
-        <span class="dot"></span>Order Log
-      </a>
-      <a href="/admin/notifications/send-log" class="nav-item sub {% if active_page == 'send_log' %}active{% endif %}">
-        <span class="dot"></span>Send Log
-      </a>
-
-      {% if current_user and current_user.role == 'admin' %}
-      <div class="nav-group" style="margin-top: auto;">
-        <div class="nav-group-label">Settings</div>
-        <a href="/admin/settings" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
-          General
+      <!-- Activities -->
+      <div class="nav-group">
+        <div class="nav-group-label">Activities</div>
+        <a href="/admin/activities/order-log" class="nav-item sub {% if active_page == 'order_log' %}active{% endif %}">
+          <span class="dot"></span>Order Log
         </a>
-        <a href="/admin/settings/pickup-locations"
-          class="nav-item {% if active_page == 'pickup_locations' %}active{% endif %}">
-          📍 Pickup Locations
+        <a href="/admin/notifications/send-log"
+          class="nav-item sub {% if active_page == 'send_log' %}active{% endif %}">
+          <span class="dot"></span>Send Log
         </a>
       </div>
       {% endif %}
