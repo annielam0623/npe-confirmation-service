@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+{% set active_page = "orders" %}
+{% include "admin/base.html" %}
+
+<body>
+      <div class="layout">
+            {% include "admin/sidebar.html" %}
+            <main class="main-content">
+                  <div class="page-header">
+                        <h1>📦 Orders</h1>
+                  </div>
+
+                  <!-- Stats cards -->
+                  <div class="stats-row" id="stats-row">
+                        <div class="stat-card" onclick="setEventFilter('')" id="card-all">
+                              <div class="num" id="stat-all">—</div>
+                              <div class="lbl">All Events</div>
+                        </div>
+                        <div class="stat-card" onclick="setEventFilter('booking_created')" id="card-created">
+                              <div class="num" id="stat-created">—</div>
+                              <div class="lbl">Created</div>
+                        </div>
+                        <div class="stat-card" onclick="setEventFilter('booking_updated')" id="card-updated">
+                              <div class="num" id="stat-updated">—</div>
+                              <div class="lbl">Updated</div>
+                        </div>
+                  </div>
+
+                  <!-- Filters -->
+                  <div class="filter-bar">
+                        <label>Date <input type="date" id="f-date" onchange="loadData()"></label>
+                        <label>Order # <input type="text" id="f-order" placeholder="CHD..."
+                                    onchange="loadData()"></label>
+                        <label>Event
+                              <select id="f-event" onchange="loadData()">
+                                    <option value="">All</option>
+                                    <option value="booking_created">Booking Created</option>
+                                    <option value="booking_updated">Booking Updated</option>
+                              </select>
+                        </label>
+                        <button onclick="resetFilters()">Reset</button>
+                        <span id="total-count" style="margin-left:auto;font-size:12px;color:#888;"></span>
+                  </div>
+
+                  <!-- Table -->
+                  <div class="log-table-wrap">
+                        <table class="log-table">
+                              <thead>
+                                    <tr>
+                                          <th style="width:140px">Time</th>
+                                          <th style="width:110px">Order #</th>
+                                          <th style="width:150px">Event</th>
+                                          <th>Detail</th>
+                                          <th style="width:80px">By</th>
+                                    </tr>
+                              </thead>
+                              <tbody id="log-body">
+                                    <tr>
+                                          <td colspan="5" style="text-align:center;color:#aaa;padding:40px">Loading...
+                                          </td>
+                                    </tr>
+                              </tbody>
+                        </table>
+                  </div>
+
+                  <!-- Pagination -->
+                  <div class="pagination" id="pagination"></div>
+            </main>
+      </div>
+
+      <style>
+            .stats-row {
+                  display: flex;
+                  gap: 10px;
+                  margin-bottom: 16px;
+                  flex-wrap: wrap;
+            }
+
+            .stat-card {
+                  background: #fff;
+                  border: 0.5px solid rgba(0, 0, 0, 0.1);
+                  border-radius: 10px;
+                  padding: 10px 20px;
+                  text-align: center;
+                  min-width: 100px;
+                  cursor: pointer;
+                  transition: border-color .15s;
+            }
+
+            .stat-card:hover {
+                  border-color: #185FA5;
+            }
+
+            .stat-card.active {
+                  border-color: #185FA5;
+                  background: #EBF3FC;
+            }
+
+            .stat-card .num {
+                  font-size: 22px;
+                  font-weight: 700;
+                  color: #1a1a1a;
+            }
+
+            .stat-card .lbl {
+                  font-size: 11px;
+                  color: #aaa;
+                  margin-top: 2px;
+            }
+
+            .filter-bar {
+                  display: flex;
+                  gap: 12px;
+                  align-items: center;
+                  flex-wrap: wrap;
+                  margin-bottom: 14px;
+                  background: #fff;
+                  border: 0.5px solid rgba(0, 0, 0, 0.1);
+                  border-radius: 10px;
+                  padding: 12px 16px;
+            }
+
+            .filter-bar label {
+                  font-size: 12px;
+                  color: #555;
+                  display: flex;
+                  flex-direction: column;
+                  gap: 3px;
+            }
+
+            .filter-bar input,
+            .filter-bar select {
+                  height: 30px;
+                  border: 0.5px solid rgba(0, 0, 0, 0.2);
+                  border-radius: 6px;
+                  padding: 0 8px;
+                  font-size: 12px;
+                  font-family: inherit;
+            }
+
+            .filter-bar button {
+                  height: 30px;
+                  padding: 0 14px;
+                  border-radius: 6px;
+                  border: 0.5px solid rgba(0, 0, 0, 0.2);
+                  background: #fff;
+                  font-size: 12px;
+                  cursor: pointer;
+            }
+
+            .filter-bar button:hover {
+                  background: #f5f5f3;
+            }
+
+            .log-table-wrap {
+                  background: #fff;
+                  border: 0.5px solid rgba(0, 0, 0, 0.1);
+                  border-radius: 10px;
+                  overflow: hidden;
+            }
+
+            .log-table {
+                  width: 100%;
+                  border-collapse: collapse;
+                  font-size: 12px;
+            }
+
+            .log-table th {
+                  background: #f9f9f8;
+                  padding: 8px 12px;
+                  text-align: left;
+                  font-size: 11px;
+                  color: #888;
+                  border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+                  font-weight: 500;
+            }
+
+            .log-table td {
+                  padding: 9px 12px;
+                  border-bottom: 0.5px solid rgba(0, 0, 0, 0.05);
+                  vertical-align: top;
+            }
+
+            .log-table tr:last-child td {
+                  border-bottom: none;
+            }
+
+            .log-table tr:hover td {
+                  background: #fafafa;
+            }
+
+            .ev-tag {
+                  display: inline-block;
+                  padding: 2px 8px;
+                  border-radius: 4px;
+                  font-size: 11px;
+                  font-weight: 500;
+            }
+
+            .order-link {
+                  color: #185FA5;
+                  font-weight: 600;
+                  font-family: monospace;
+                  font-size: 12px;
+            }
+
+            .pagination {
+                  display: flex;
+                  gap: 6px;
+                  margin-top: 12px;
+                  justify-content: center;
+                  flex-wrap: wrap;
+            }
+
+            .page-btn {
+                  padding: 4px 10px;
+                  border-radius: 6px;
+                  border: 0.5px solid rgba(0, 0, 0, 0.15);
+                  background: #fff;
+                  font-size: 12px;
+                  cursor: pointer;
+            }
+
+            .page-btn.active {
+                  background: #185FA5;
+                  color: #fff;
+                  border-color: #185FA5;
+            }
+      </style>
+
+      <script>
+            let currentPage = 1;
+            let activeEventFilter = '';
+            const PAGE_SIZE = 50;
+
+            const today = new Date().toISOString().slice(0, 10);
+            document.getElementById('f-date').value = today;
+
+            function setEventFilter(val) {
+                  activeEventFilter = val;
+                  document.getElementById('f-event').value = val;
+                  // Update card highlight
+                  ['all', 'created', 'updated'].forEach(k => {
+                        document.getElementById(`card-${k}`).classList.remove('active');
+                  });
+                  const map = { '': 'all', 'booking_created': 'created', 'booking_updated': 'updated' };
+                  document.getElementById(`card-${map[val]}`).classList.add('active');
+                  currentPage = 1;
+                  loadData();
+            }
+
+            function resetFilters() {
+                  document.getElementById('f-date').value = today;
+                  document.getElementById('f-order').value = '';
+                  setEventFilter('');
+            }
+
+            async function loadData() {
+                  const date = document.getElementById('f-date').value;
+                  const order = document.getElementById('f-order').value.trim();
+                  const event = document.getElementById('f-event').value;
+
+                  // Sync card highlight with select
+                  activeEventFilter = event;
+                  ['all', 'created', 'updated'].forEach(k => document.getElementById(`card-${k}`).classList.remove('active'));
+                  const map = { '': 'all', 'booking_created': 'created', 'booking_updated': 'updated' };
+                  document.getElementById(`card-${map[event] || 'all'}`).classList.add('active');
+
+                  const params = new URLSearchParams({ page: currentPage, page_size: PAGE_SIZE });
+                  if (date) params.set('date', date);
+                  if (order) params.set('order_number', order);
+                  if (event) params.set('event_type', event);
+
+                  const res = await fetch(`/api/operations/orders?${params}`);
+                  const data = await res.json();
+
+                  // Stats
+                  const total = data.total || 0;
+                  const created = data.stats?.booking_created || 0;
+                  const updated = data.stats?.booking_updated || 0;
+                  document.getElementById('stat-all').textContent = total;
+                  document.getElementById('stat-created').textContent = created;
+                  document.getElementById('stat-updated').textContent = updated;
+                  document.getElementById('total-count').textContent = `${total} records`;
+
+                  // Rows
+                  const tbody = document.getElementById('log-body');
+                  if (!data.records?.length) {
+                        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#aaa;padding:40px">No records found.</td></tr>`;
+                        document.getElementById('pagination').innerHTML = '';
+                        return;
+                  }
+
+                  tbody.innerHTML = data.records.map(r => `
+      <tr>
+        <td style="color:#888;white-space:nowrap;">${r.created_at}</td>
+        <td><span class="order-link">${r.order_number || '—'}</span></td>
+        <td><span class="ev-tag" style="background:${r.event_color}22;color:${r.event_color}">${r.event_label}</span></td>
+        <td style="color:#555;">${r.detail || '—'}</td>
+        <td style="color:#aaa;font-size:11px;">${r.actor}</td>
+      </tr>
+    `).join('');
+
+                  // Pagination
+                  const totalPages = Math.ceil(total / PAGE_SIZE);
+                  const pag = document.getElementById('pagination');
+                  if (totalPages <= 1) { pag.innerHTML = ''; return; }
+                  pag.innerHTML = Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+                        .map(p => `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`)
+                        .join('');
+            }
+
+            function goPage(p) {
+                  currentPage = p;
+                  loadData();
+            }
+
+            // Init
+            document.getElementById('card-all').classList.add('active');
+            loadData();
+      </script>
+</body>
+
+</html>

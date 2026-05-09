@@ -1,7 +1,7 @@
 """
-Order Log API
-GET  /admin/activities/order-log          — HTML page
-GET  /api/activities/order-log            — JSON data
+Orders Log API (System/Rezdy events)
+GET  /admin/operations/orders   — HTML page
+GET  /api/operations/orders     — JSON data
 """
 from datetime import datetime, date as date_type
 from typing import Optional
@@ -21,76 +21,53 @@ templates = Jinja2Templates(directory="app/templates")
 LA = ZoneInfo("America/Los_Angeles")
 
 EVENT_LABELS = {
-    "booking_created":        "Booking Created",
-    "booking_updated":        "Booking Updated",
-    "booking_handled":        "Marked as Handled",
-    "status_changed":         "Status Changed",
-    "guest_confirmed":        "Guest Confirmed",
-    "guest_modify_requested": "Modify Requested",
-    "lunch_selected":         "Lunch Updated",
-    "mtlv_qty_selected":      "MTLV Qty Selected",
-    "mtlv_ticket_sent":       "MTLV Ticket Sent",
-    "action_taken":           "Action Taken",
+    "booking_created": "Booking Created",
+    "booking_updated": "Booking Updated",
 }
 
 EVENT_COLORS = {
-    "booking_created":        "#185FA5",
-    "booking_updated":        "#5f5e5a",
-    "booking_handled":        "#3B6D11",
-    "status_changed":         "#534AB7",
-    "guest_confirmed":        "#3B6D11",
-    "guest_modify_requested": "#BA7517",
-    "lunch_selected":         "#3B6D11",
-    "mtlv_qty_selected":      "#7B1FA2",
-    "mtlv_ticket_sent":       "#7B1FA2",
-    "action_taken":           "#A32D2D",
+    "booking_created": "#185FA5",
+    "booking_updated": "#5f5e5a",
 }
 
 
-@router.get("/admin/activities/order-log", response_class=HTMLResponse)
-async def order_log_page(
+@router.get("/admin/operations/orders", response_class=HTMLResponse)
+async def orders_page(
     request: Request,
     current_user=Depends(get_current_user),
 ):
     today = datetime.now(LA).strftime("%Y-%m-%d")
-    return templates.TemplateResponse("admin/order_log.html", {
+    return templates.TemplateResponse("admin/orders.html", {
         "request":      request,
         "current_user": current_user,
-        "active_page":  "order_log",
+        "active_page":  "orders",
         "today":        today,
     })
 
 
-@router.get("/api/activities/order-log")
-async def order_log_api(
+@router.get("/api/operations/orders")
+async def orders_api(
     date:         Optional[str] = Query(None),
     event_type:   Optional[str] = Query(None),
-    actor_type:   Optional[str] = Query(None),
     order_number: Optional[str] = Query(None),
     page:         int           = Query(1, ge=1),
     page_size:    int           = Query(50, ge=1, le=200),
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    ffilters = ["actor_type != 'system'"]
+    filters = ["actor_type = 'system'"]
     params  = {}
 
     if date:
         try:
-           parsed_date = date_type.fromisoformat(date)
-           filters.append("DATE(created_at AT TIME ZONE 'America/Los_Angeles') = :date")
-           params["date"] = parsed_date
+            parsed_date = date_type.fromisoformat(date)
+            filters.append("DATE(created_at AT TIME ZONE 'America/Los_Angeles') = :date")
+            params["date"] = parsed_date
         except ValueError:
-           pass
-    if parsed_date:
-        filters.append("DATE(created_at AT TIME ZONE 'America/Los_Angeles') = :date")
-        params["date"] = parsed_date
+            pass
     if event_type:
         filters.append("event_type = :event_type")
         params["event_type"] = event_type
-    if actor_type:
-        filters.append("actor_type = :actor_type")
-        params["actor_type"] = actor_type
     if order_number:
         filters.append("order_number ILIKE :order_number")
         params["order_number"] = f"%{order_number}%"
@@ -117,7 +94,7 @@ async def order_log_api(
     )
     rows = rows_res.mappings().all()
 
-    # Stats
+    # Stats — all / created / updated
     stats_res = await db.execute(
         text(f"""
             SELECT event_type, COUNT(*) as cnt
@@ -141,7 +118,6 @@ async def order_log_api(
             "event_color":  EVENT_COLORS.get(r["event_type"], "#888"),
             "detail":       r["detail"] or "",
             "actor":        r["actor"] or "—",
-            "actor_type":   r["actor_type"] or "—",
             "created_at":   created_la.strftime("%-m/%-d/%Y %-I:%M %p") if created_la else "—",
         })
 
