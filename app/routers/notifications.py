@@ -362,7 +362,7 @@ async def get_send_log(
             parsed_date = date_type.fromisoformat(date)
             conditions.append("DATE(sent_at) = :date")
             params["date"] = parsed_date
-    except ValueError:
+        except ValueError:
            pass
     if module:
         conditions.append("module = :module")
