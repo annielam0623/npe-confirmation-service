@@ -195,7 +195,8 @@ async def tracking_tour_confirmation(
             b.email_status, b.sms_status, b.confirmation,
             b.lunch_turkey, b.lunch_veggie, b.lunch_beef,
             b.submitted_at, b.notes, b.notes_history,
-            b.submission_count
+            b.submission_count,
+            b.mtlv_eligible, b.mtlv_qty, b.mtlv_ticket_status
         FROM bookings b
         WHERE b.tour_date = :tour_date
           AND b.module    = 'tour_confirmation'
@@ -232,6 +233,9 @@ async def tracking_tour_confirmation(
                 "notes_history":       r["notes_history"] or "",
                 "submission_count":    r["submission_count"] or 0,
                 "submitted_at":        _to_la_str(r["submitted_at"]),
+                "mtlv_eligible":       bool(r["mtlv_eligible"]) if r["mtlv_eligible"] is not None else False,
+                "mtlv_qty":            r["mtlv_qty"],           # None = not replied yet
+                "mtlv_ticket_status":  r["mtlv_ticket_status"], # None / "pending_send" / "sent"
             }
             for r in rows
         ],
