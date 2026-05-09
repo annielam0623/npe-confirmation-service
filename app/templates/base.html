@@ -493,7 +493,6 @@
       </a>
 
       <!-- Activities -->
-      <!-- Activities -->
       <div class="nav-group">
         <div class="nav-group-label">Activities</div>
         <a href="/admin/activities/order-log" class="nav-item sub {% if active_page == 'order_log' %}active{% endif %}">
@@ -503,6 +502,11 @@
           class="nav-item sub {% if active_page == 'send_log' %}active{% endif %}">
           <span class="dot"></span>Send Log
         </a>
+      </div>
+
+      {% if current_user and current_user.role == 'admin' %}
+      <div class="nav-group" style="margin-top: auto;">
+        ...Settings...
       </div>
       {% endif %}
   </nav>
