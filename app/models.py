@@ -176,7 +176,12 @@ class Booking(Base):
     # Promotion
     has_promotion = Column(Boolean, default=False)
     promotion_id  = Column(Integer, ForeignKey("promotions.id"), nullable=True)
-    mtlv_promo    = Column(String(10), nullable=True)     # "YES" or null from Excel
+    mtlv_promo    = Column(String(10), nullable=True)     # "YES" / "Eligible" / null from Excel
+
+    # MTLV (Madame Tussauds) — Eligible flow
+    mtlv_eligible      = Column(Boolean, default=False)   # True when mtlv_promo == "Eligible"
+    mtlv_qty           = Column(Integer, nullable=True)   # Guest-selected qty (null = not replied)
+    mtlv_ticket_status = Column(String(20), nullable=True)  # null / "pending_send" / "sent"
 
     # Lunch (bus_tour with lunch)
     lunch_turkey = Column(Integer, default=0)

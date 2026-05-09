@@ -398,6 +398,34 @@ async def update_lunch(
     return {"ok": True, "lunch_turkey": turkey, "lunch_veggie": veggie, "lunch_beef": beef}
 
 
+@router.put("/{booking_id}/mtlv-ticket-status")
+async def update_mtlv_ticket_status(
+    booking_id: int,
+    payload: dict,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Update MTLV ticket send status. Values: pending_send | sent"""
+    from zoneinfo import ZoneInfo
+    LA = ZoneInfo("America/Los_Angeles")
+
+    result = await db.execute(select(Booking).where(Booking.id == booking_id))
+    booking = result.scalar_one_or_none()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+    if not getattr(booking, "mtlv_eligible", False):
+        raise HTTPException(status_code=400, detail="Booking is not MTLV eligible")
+
+    new_status = (payload.get("mtlv_ticket_status") or "").lower()
+    if new_status not in ("pending_send", "sent"):
+        raise HTTPException(status_code=400, detail="Invalid status. Use pending_send or sent.")
+
+    booking.mtlv_ticket_status = new_status
+    booking.updated_at = datetime.now(ZoneInfo("America/Los_Angeles")).replace(tzinfo=None)
+    await db.commit()
+    return {"ok": True, "mtlv_ticket_status": booking.mtlv_ticket_status}
+
+
 @router.delete("/{booking_id}/handle")
 async def unhandle_booking(
     booking_id: int,

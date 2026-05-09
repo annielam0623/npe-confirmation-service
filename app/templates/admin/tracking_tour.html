@@ -108,6 +108,12 @@
   .modal-save-btn { flex: 1; background: #3B6D11; color: #fff; border: none; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
   .modal-save-btn:hover { background: #2d5409; }
   .modal-cancel-btn { flex: 1; background: #f5f5f3; color: #555; border: 0.5px solid rgba(0,0,0,0.15); padding: 10px; border-radius: 8px; font-size: 14px; cursor: pointer; }
+
+  .sp-mtlv-pending { background: #E6F1FB; color: #185FA5; }
+  .sp-mtlv-num     { background: #ede7f6; color: #512da8; font-weight: 700; }
+  .tkt-select { font-size: 11px; font-weight: 600; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 6px; padding: 2px 4px; background: #fff; cursor: pointer; outline: none; color: #185FA5; }
+  .tkt-select.v-sent { color: #3B6D11; }
+  .tkt-select:focus { border-color: #512da8; }
 </style>
 </head>
 <body>
@@ -164,10 +170,11 @@
           <td>Guest Name</td><td>Phone</td><td>Party</td>
           <td>📧 Email</td><td>📱 SMS</td>
           <td>🦃 T</td><td>🥗 V</td><td>🥩 B</td>
+          <td>🏛️ MTLV</td><td>🎟️ Tickets</td>
           <td>Notes</td><td>Submitted</td>
         </tr></thead>
         <tbody id="track-tbody">
-          <tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>
+          <tr><td colspan="16" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -236,7 +243,7 @@ function filterType(type, el) {
 }
 
 async function loadData() {
-  document.getElementById('track-tbody').innerHTML='<tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
+  document.getElementById('track-tbody').innerHTML='<tr><td colspan="16" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
   try {
     const res=await fetch(`/api/notifications/tour-confirmation/tracking?date=${currentDate}`);
     const data=await res.json();
@@ -244,7 +251,7 @@ async function loadData() {
     buildPills();
     applyFilter();
   } catch(e) {
-    document.getElementById('track-tbody').innerHTML='<tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
+    document.getElementById('track-tbody').innerHTML='<tr><td colspan="16" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
   }
 }
 
@@ -303,7 +310,7 @@ function applyFilter() {
 
 function renderTable(rows) {
   const tbody=document.getElementById('track-tbody');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="14" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';return;}
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="16" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';return;}
 
   tbody.innerHTML=rows.map(r=>{
     const conf=r.confirmation_status||'pending';
@@ -347,6 +354,26 @@ function renderTable(rows) {
       notesCell=`<div class="notes-cell"><span class="notes-text" id="nt-${r.id}" onclick="toggleNote(${r.id})" title="Click to expand">${escHtml(display)}</span></div>`;
     }
 
+    // MTLV cells
+    let mtlvCell='<span style="color:#ccc;">—</span>';
+    let ticketsCell='<span style="color:#ccc;">—</span>';
+    if(r.mtlv_eligible){
+      if(r.mtlv_qty===null||r.mtlv_qty===undefined){
+        // Guest has not replied yet
+        mtlvCell='<span class="sp sp-mtlv-pending">Pending</span>';
+        ticketsCell='<span style="color:#aaa;font-size:11px;">Pending</span>';
+      } else {
+        // Guest replied with a number
+        mtlvCell=`<span class="sp sp-mtlv-num">🎫 ${r.mtlv_qty}</span>`;
+        const tktStatus=r.mtlv_ticket_status||'pending_send';
+        const isSent=tktStatus==='sent';
+        ticketsCell=`<select class="tkt-select${isSent?' v-sent':''}" data-id="${r.id}" onchange="saveMtlvTicketStatus(this)">
+          <option value="pending_send" ${!isSent?'selected':''}>Pending</option>
+          <option value="sent" ${isSent?'selected':''}>Sent</option>
+        </select>`;
+      }
+    }
+
     return `<tr data-id="${r.id}">
       <td style="color:#3B6D11;font-weight:600;white-space:nowrap;">${r.order_number||'—'}</td>
       <td>${statusCell}</td>
@@ -360,6 +387,8 @@ function renderTable(rows) {
       <td style="text-align:center;">${tCell}</td>
       <td style="text-align:center;">${vCell}</td>
       <td style="text-align:center;">${bCell}</td>
+      <td style="text-align:center;">${mtlvCell}</td>
+      <td style="text-align:center;">${ticketsCell}</td>
       <td>${notesCell}</td>
       <td style="font-size:11px;white-space:nowrap;color:#888;">${r.submitted_at||'—'}</td>
     </tr>`;
@@ -445,6 +474,27 @@ async function saveLunch() {
     applyFilter();
   } else {
     alert('Failed to save. Please try again.');
+  }
+}
+
+// ── MTLV ticket status ────────────────────────────────────────────────────────
+async function saveMtlvTicketStatus(sel) {
+  const id=sel.dataset.id;
+  const status=sel.value;
+  const res=await fetch(`/api/bookings/${id}/mtlv-ticket-status`,{
+    method:'PUT',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({mtlv_ticket_status:status}),
+  });
+  if(res.ok){
+    const row=allRows.find(r=>r.id===parseInt(id));
+    if(row) row.mtlv_ticket_status=status;
+    sel.className=`tkt-select${status==='sent'?' v-sent':''}`;
+  } else {
+    alert('Failed to update ticket status. Please try again.');
+    // revert
+    const row=allRows.find(r=>r.id===parseInt(id));
+    sel.value=row?.mtlv_ticket_status||'pending_send';
   }
 }
 

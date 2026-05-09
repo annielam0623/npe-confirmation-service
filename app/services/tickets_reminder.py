@@ -457,7 +457,7 @@ def render_form(row: dict, cfg: dict, token: str, error_msg: str = "", already: 
       </div>"""
 
     error_html   = f'<div class="gf-error">{escape(error_msg)}</div>' if error_msg else ""
-    already_html = '<div class="gf-info">✅ Your booking has been confirmed. You may add notes below and click Submit to update.</div>' if already else ""
+    already_html = '<div class="gf-info">If you have any questions, please leave a message in the Notes section below and click Submit to update. Our customer service team will contact you as soon as possible.</div>' if already else ""
 
     return f"""<!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">

@@ -90,6 +90,13 @@ body{background:#f0f4f8;font-family:"Helvetica Neue",Arial,sans-serif;color:#333
 .gf-card.gf-thanks{text-align:center;padding:40px 30px;}
 .gf-thanks h1{color:#1a3a5c;margin-bottom:12px;}
 .gf-thanks p{color:#555;margin-bottom:8px;line-height:1.7;}
+.gf-mtlv-box{background:#f5f0ff;border:1.5px solid #b39ddb;border-radius:12px;padding:16px 18px;margin-top:4px;}
+.gf-mtlv-title{font-size:14px;font-weight:bold;color:#512da8;margin-bottom:4px;}
+.gf-mtlv-hint{font-size:12px;color:#7e57c2;margin-bottom:12px;}
+.gf-mtlv-counter{display:flex;align-items:center;gap:10px;}
+.gf-mtlv-counter button{width:34px;height:34px;border:1.5px solid #b39ddb;border-radius:8px;background:#ede7f6;font-size:20px;line-height:1;cursor:pointer;color:#512da8;font-weight:bold;}
+.gf-mtlv-counter button:hover{background:#d1c4e9;}
+.gf-mtlv-counter input{width:44px;text-align:center;border:1.5px solid #b39ddb;border-radius:8px;padding:4px;font-size:18px;font-weight:bold;color:#512da8;background:#fff;}
 @media(max-width:440px){.gf-lunch-grid{grid-template-columns:1fr 1fr;}.gf-yn-row{flex-direction:column;}}"""
 
 
@@ -128,12 +135,13 @@ def _thanks(booking) -> HTMLResponse:
 
 def _render(booking, tour_config: dict, error_msg: str = "",
             pickup_instruction: str = "", pickup_photo_url: str = "", pickup_photo_label: str = "") -> HTMLResponse:
-    from datetime import date as date_type
     tour_date  = booking.tour_date
     date_fmt   = tour_date.strftime("%A, %B %-d, %Y") if tour_date else "—"
     qty        = int(booking.quantities or 1)
     has_lunch  = tour_config.get("has_lunch", False)
     has_beef   = tour_config.get("has_beef", False)
+    mtlv_eligible = bool(getattr(booking, "mtlv_eligible", False))
+    mtlv_qty_val  = getattr(booking, "mtlv_qty", None)  # None = not yet replied
     already       = booking.submitted_at and booking.confirmation != "pending"
     # v4.17.14: YES locked only when already YES; modify_req state can still click YES to cancel
     yes_locked    = booking.confirmation == "yes"
@@ -253,6 +261,23 @@ def _render(booking, tour_config: dict, error_msg: str = "",
     <li>Vehicles are air-conditioned; in extreme heat, cooling may take a moment.</li>
     <li>You may bring small items like personal fans or ice packs.</li>"""
 
+    # MTLV — Madame Tussauds ticket selection (only when mtlv_eligible)
+    mtlv_html = ""
+    if mtlv_eligible:
+        current_mtlv = int(mtlv_qty_val) if mtlv_qty_val is not None else 0
+        mtlv_html = f"""<div class="gf-section">
+          <div class="gf-mtlv-box">
+            <div class="gf-mtlv-title">🏛️ Madame Tussauds Las Vegas Ticket</div>
+            <div class="gf-mtlv-hint">Your package includes the option to add Madame Tussauds tickets. Please select the number of tickets for your party (0–{qty}). Enter 0 if you do not need any tickets.</div>
+            <div class="gf-mtlv-counter">
+              <button type="button" onclick="adjMtlv(-1)">−</button>
+              <input type="number" name="mtlv_qty" id="c-mtlv" value="{current_mtlv}" min="0" max="{qty}" readonly>
+              <button type="button" onclick="adjMtlv(1)">+</button>
+              <span style="font-size:13px;color:#7e57c2;margin-left:6px;">/ {qty} guests</span>
+            </div>
+          </div>
+        </div>"""
+
     # v4.17.14: min date = today + 1 day (current time + 24h)
     from datetime import timedelta
     tomorrow = (datetime.now(LA) + timedelta(days=1)).strftime("%Y-%m-%d")
@@ -296,7 +321,8 @@ function adj(t,d){{var el=document.getElementById('c-'+t),cur=parseInt(el.value)
 function totL(){{var t=(parseInt(document.getElementById('c-turkey')?.value)||0)+(parseInt(document.getElementById('c-veggie')?.value)||0);var b=document.getElementById('c-beef');if(b)t+=parseInt(b.value)||0;return t;}}
 function updT(){{var t=totL(),el=document.getElementById('ltotal');if(el){{el.textContent=t;el.style.color=t===partySize?'#27ae60':'#e74c3c';}}}}
 if(hasLunch)updT();
-var ck=document.querySelector('input[name="confirmation"]:checked');if(ck){{if(ck.value==='modify_req')onModify(ck);else onYN(ck);}}"""
+var ck=document.querySelector('input[name="confirmation"]:checked');if(ck){{if(ck.value==='modify_req')onModify(ck);else onYN(ck);}}
+function adjMtlv(d){{var el=document.getElementById('c-mtlv');if(!el)return;var cur=parseInt(el.value)||0,nv=cur+d;if(nv<0||nv>{qty})return;el.value=nv;}}"""
 
     body = f"""<div class="gf-wrap"><div class="gf-card">
       <div class="gf-header">
@@ -351,6 +377,8 @@ var ck=document.querySelector('input[name="confirmation"]:checked');if(ck){{if(c
         </div>
 
         {lunch_html}
+
+        {mtlv_html}
 
         <div class="gf-reminders">
           <div class="gf-box-title">📌 Important Reminders</div>
@@ -517,6 +545,7 @@ async def guest_confirm_submit(
     reschedule_date: str = Form(default=""),
     notes:           str = Form(default=""),
     src:             str = Form(default="email"),
+    mtlv_qty:        int = Form(default=0),
 ):
     if npe_submit != "1":
         return _expired()
@@ -611,6 +640,14 @@ async def guest_confirm_submit(
     booking.notes_history    = new_history
     booking.submitted_at     = datetime.now(LA).replace(tzinfo=None)
     booking.submission_count = new_count
+
+    # MTLV — only write if eligible
+    if getattr(booking, "mtlv_eligible", False):
+        clamped = max(0, min(int(mtlv_qty), int(booking.quantities or 1)))
+        booking.mtlv_qty = clamped
+        # Auto-set ticket status to pending_send on first reply; don't overwrite if already sent
+        if getattr(booking, "mtlv_ticket_status", None) != "sent":
+            booking.mtlv_ticket_status = "pending_send"
     
 
     await db.commit()
