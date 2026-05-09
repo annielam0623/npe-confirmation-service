@@ -357,13 +357,13 @@ async def get_send_log(
     params: dict = {}
 
     if date:
-    try:
-        from datetime import date as date_type
-        parsed_date = date_type.fromisoformat(date)
-        conditions.append("DATE(sent_at) = :date")
-        params["date"] = parsed_date
+        try:
+            from datetime import date as date_type
+            parsed_date = date_type.fromisoformat(date)
+            conditions.append("DATE(sent_at) = :date")
+            params["date"] = parsed_date
     except ValueError:
-        pass
+           pass
     if module:
         conditions.append("module = :module")
         params["module"] = module
