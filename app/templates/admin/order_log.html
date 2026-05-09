@@ -102,42 +102,43 @@ font-size: 12px; cursor: pointer; background: #fff; color: #555;
 
 <!-- Filters -->
 <div class="filter-bar">
-      <div>
-            <label>Date</label>
-            <input type="date" id="f-date" value="{{ today }}">
-      </div>
-      <div>
-            <label>Order #</label>
-            <input type="text" id="f-order" placeholder="CHD..." style="width:120px;">
-      </div>
-      <div>
-            <label>Event</label>
-            <select id="f-event">
-                  <option value="">All</option>
-                  <option value="booking_created">Booking Created</option>
-                  <option value="booking_updated">Booking Updated</option>
-                  <option value="booking_handled">Marked as Handled</option>
-                  <option value="status_changed">Status Changed</option>
-                  <option value="guest_confirmed">Guest Confirmed</option>
-                  <option value="guest_modify_requested">Modify Requested</option>
-                  <option value="lunch_selected">Lunch Updated</option>
-                  <option value="mtlv_qty_selected">MTLV Qty Selected</option>
-                  <option value="mtlv_ticket_sent">MTLV Ticket Sent</option>
-                  <option value="action_taken">Action Taken</option>
-            </select>
-      </div>
-      <div>
-            <label>By</label>
-            <select id="f-actor">
-                  <option value="">All</option>
-                  <option value="staff">Staff</option>
-                  <option value="guest">Guest</option>
-                  <option value="system">System</option>
-            </select>
-      </div>
-      <button class="btn-filter" onclick="loadLog()">Filter</button>
-      <button class="btn-reset" onclick="resetFilters()">Reset</button>
-      <span class="records-count" id="records-count">— records</span>
+  <div>
+    <label>Date</label>
+    <input type="date" id="f-date" value="{{ today }}">
+  </div>
+  <div>
+    <label>Order #</label>
+    <input type="text" id="f-order" placeholder="CHD..." style="width:120px;">
+  </div>
+  <div>
+    <label>Module</label>
+    <select id="f-module">
+      <option value="">All</option>
+      <option value="tour_confirmation">Tour Confirmation</option>
+      <option value="morning_pickup">Morning Pickup</option>
+      <option value="tickets_reminder">Tickets Reminder</option>
+    </select>
+  </div>
+  <div>
+    <label>Channel</label>
+    <select id="f-channel">
+      <option value="">All</option>
+      <option value="EMAIL">Email</option>
+      <option value="SMS">SMS</option>
+    </select>
+  </div>
+  <div>
+    <label>Status</label>
+    <select id="f-status">
+      <option value="">All</option>
+      <option value="sent">Sent</option>
+      <option value="delivered">Delivered</option>
+      <option value="failed">Failed</option>
+    </select>
+  </div>
+  <button class="btn-filter" onclick="loadLog()">Filter</button>
+  <button class="btn-reset" onclick="resetFilters()">Reset</button>
+  <span class="records-count" id="records-count">— records</span>
 </div>
 
 <!-- Table -->
@@ -171,95 +172,106 @@ font-size: 12px; cursor: pointer; background: #fff; color: #555;
 
 {% block scripts %}
 <script>
-      let currentPage = 1;
-      const PAGE_SIZE = 50;
+  let currentPage = 1;
+  const PAGE_SIZE = 50;
 
-      async function loadLog(page) {
-            if (page) currentPage = page;
+  async function loadLog(page) {
+    if (page) currentPage = page;
 
-            const date = document.getElementById('f-date').value;
-            const order = document.getElementById('f-order').value.trim();
-            const event = document.getElementById('f-event').value;
-            const actor = document.getElementById('f-actor').value;
+    const date    = document.getElementById('f-date').value;
+    const order   = document.getElementById('f-order').value.trim();
+    const module  = document.getElementById('f-module').value;
+    const channel = document.getElementById('f-channel').value;
+    const status  = document.getElementById('f-status').value;
 
-            document.getElementById('log-tbody').innerHTML =
-                  '<tr><td colspan="6" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
+    document.getElementById('log-tbody').innerHTML =
+      '<tr><td colspan="7" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
 
-            const qs = new URLSearchParams({
-                  ...(date && { date }),
-                  ...(order && { order_number: order }),
-                  ...(event && { event_type: event }),
-                  ...(actor && { actor_type: actor }),
-                  page: currentPage,
-                  page_size: PAGE_SIZE,
-            });
+    const qs = new URLSearchParams({
+      ...(date    && { date }),
+      ...(order   && { order_number: order }),
+      ...(module  && { module }),
+      ...(channel && { channel }),
+      ...(status  && { status }),
+      page:      currentPage,
+      page_size: PAGE_SIZE,
+    });
 
-            try {
-                  const res = await fetch(`/api/activities/order-log?${qs}`);
-                  const data = await res.json();
-                  renderRows(data.records || []);
-                  renderStats(data.total || 0, data.stats || {});
-                  renderPagination(data.total || 0);
-                  document.getElementById('records-count').textContent = `${data.total || 0} records`;
-            } catch (e) {
-                  document.getElementById('log-tbody').innerHTML =
-                        '<tr><td colspan="6" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
-            }
-      }
+    try {
+      const res  = await fetch(`/api/notifications/send-log?${qs}`);
+      const data = await res.json();
+      renderRows(data.rows || []);
+      renderStats(data.stats || {});
+      renderPagination(data.total || 0);
+      document.getElementById('records-count').textContent = `${data.total || 0} records`;
+    } catch (e) {
+      document.getElementById('log-tbody').innerHTML =
+        '<tr><td colspan="7" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
+    }
+  }
 
-      function renderRows(records) {
-            const tbody = document.getElementById('log-tbody');
-            if (!records.length) {
-                  tbody.innerHTML = '<tr><td colspan="6" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';
-                  return;
-            }
-            tbody.innerHTML = records.map(r => `<tr>
-    <td style="white-space:nowrap;font-size:11px;color:#888;">${r.created_at}</td>
-    <td style="font-family:monospace;font-size:12px;color:#378ADD;font-weight:500;">${r.order_number}</td>
-    <td>
-      <span class="event-badge" style="background:${r.event_color}18;color:${r.event_color};">
-        ${r.event_label}
-      </span>
-    </td>
-    <td style="font-size:12px;color:#555;max-width:300px;">${r.detail}</td>
-    <td style="font-size:12px;color:#444;">${r.actor}</td>
-    <td><span class="actor-badge ${r.actor_type}">${r.actor_type}</span></td>
-  </tr>`).join('');
-      }
+  function renderRows(rows) {
+    const tbody = document.getElementById('log-tbody');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';
+      return;
+    }
+    const moduleLabel = {
+      'tour_confirmation': '✅ Tour Conf',
+      'morning_pickup':    '🌅 Morning P/U',
+      'tickets_reminder':  '🎟️ Tickets',
+    };
+    tbody.innerHTML = rows.map(r => {
+      const emailCls = r.email_status?.includes('sent') || r.email_status?.includes('delivered')
+        ? 'status-sent' : r.email_status?.includes('failed') ? 'status-failed' : 'status-none';
+      const smsCls = r.sms_status?.includes('delivered') ? 'status-sent'
+        : r.sms_status?.includes('sent') || r.sms_status?.includes('queued') ? 'status-queued'
+        : r.sms_status?.includes('failed') || r.sms_status?.includes('undelivered') ? 'status-failed'
+        : 'status-none';
+      const sentAt = r.sent_at ? new Date(r.sent_at).toLocaleString('en-US', {
+        timeZone: 'America/Los_Angeles',
+        month: 'numeric', day: 'numeric', year: 'numeric',
+        hour: 'numeric', minute: '2-digit', hour12: true
+      }) : '—';
+      return `<tr>
+        <td style="white-space:nowrap;font-size:11px;color:#888;">${sentAt}</td>
+        <td style="font-size:11px;">${moduleLabel[r.module] || r.module}</td>
+        <td style="font-family:monospace;font-size:12px;color:#378ADD;font-weight:500;">${r.order_number || '—'}</td>
+        <td style="font-size:12px;">${r.first_name || ''} ${r.last_name || ''}</td>
+        <td><span class="status-badge ${emailCls}">${r.email_status || '—'}</span></td>
+        <td><span class="status-badge ${smsCls}">${r.sms_status || '—'}</span></td>
+        <td style="font-size:11px;color:#888;">${r.sent_by || '—'}</td>
+      </tr>`;
+    }).join('');
+  }
 
-      function renderStats(total, stats) {
-            document.getElementById('stat-total').textContent = total;
+  function renderStats(stats) {
+    document.getElementById('stat-total').textContent      = stats.total || 0;
+    document.getElementById('stat-tour').textContent       = stats.tour_confirmation || 0;
+    document.getElementById('stat-morning').textContent    = stats.morning_pickup || 0;
+    document.getElementById('stat-tickets').textContent    = stats.tickets_reminder || 0;
+  }
 
-            const guestEvents = ['guest_confirmed', 'guest_modify_requested', 'lunch_selected', 'mtlv_qty_selected'];
-            const staffEvents = ['status_changed', 'booking_handled', 'mtlv_ticket_sent', 'action_taken'];
-            const systemEvents = ['booking_created', 'booking_updated'];
+  function renderPagination(total) {
+    const pages = Math.ceil(total / PAGE_SIZE);
+    const pag = document.getElementById('pagination');
+    if (pages <= 1) { pag.innerHTML = ''; return; }
+    let html = `<span class="page-info">Page ${currentPage} of ${pages}</span>`;
+    if (currentPage > 1)   html += `<button class="page-btn" onclick="loadLog(${currentPage - 1})">← Prev</button>`;
+    if (currentPage < pages) html += `<button class="page-btn" onclick="loadLog(${currentPage + 1})">Next →</button>`;
+    pag.innerHTML = html;
+  }
 
-            const sum = (keys) => keys.reduce((a, k) => a + (stats[k] || 0), 0);
-            document.getElementById('stat-guest').textContent = sum(guestEvents);
-            document.getElementById('stat-staff').textContent = sum(staffEvents);
-            document.getElementById('stat-system').textContent = sum(systemEvents);
-      }
+  function resetFilters() {
+    document.getElementById('f-order').value   = '';
+    document.getElementById('f-module').value  = '';
+    document.getElementById('f-channel').value = '';
+    document.getElementById('f-status').value  = '';
+    currentPage = 1;
+    loadLog();
+  }
 
-      function renderPagination(total) {
-            const pages = Math.ceil(total / PAGE_SIZE);
-            const pag = document.getElementById('pagination');
-            if (pages <= 1) { pag.innerHTML = ''; return; }
-
-            let html = `<span class="page-info">Page ${currentPage} of ${pages}</span>`;
-            if (currentPage > 1) html += `<button class="page-btn" onclick="loadLog(${currentPage - 1})">← Prev</button>`;
-            if (currentPage < pages) html += `<button class="page-btn" onclick="loadLog(${currentPage + 1})">Next →</button>`;
-            pag.innerHTML = html;
-      }
-
-      function resetFilters() {
-            document.getElementById('f-order').value = '';
-            document.getElementById('f-event').value = '';
-            document.getElementById('f-actor').value = '';
-            currentPage = 1;
-            loadLog();
-      }
-
-      // Init
-      loadLog();
+  // Init
+  loadLog();
 </script>
 {% endblock %}
