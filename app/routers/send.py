@@ -60,6 +60,9 @@ async def _upsert_booking(db: AsyncSession, data: dict) -> int:
            "module":       data["module"]})
     row = existing.fetchone()
 
+    driver     = data.get("driver")
+    vehicle_no = data.get("vehicle_no")
+
     if row:
         await db.execute(text("""
             UPDATE bookings SET
@@ -73,12 +76,13 @@ async def _upsert_booking(db: AsyncSession, data: dict) -> int:
                 tour_type        = :tour_type,
                 driver           = :driver,
                 vehicle_no       = :vehicle_no,
+                mtlv_eligible    = :mtlv_eligible,
                 token_created    = NOW(),
                 email_status     = 'pending',
                 sms_status       = 'pending',
                 updated_at       = NOW()
             WHERE id = :id
-        """), {**data, "id": row.id})
+        """), {**data, "driver": driver, "vehicle_no": vehicle_no, "id": row.id})
         return row.id
 
     booking_type = "self_drive" if data.get("module") == "tickets_reminder" else "bus_tour"
@@ -86,17 +90,17 @@ async def _upsert_booking(db: AsyncSession, data: dict) -> int:
         INSERT INTO bookings
             (order_number, first_name, last_name, customer_email, phone,
              quantities, pickup_time, pickup_location, tour_date, tour_type,
-             driver, vehicle_no,
+             driver, vehicle_no, mtlv_eligible,
              module, booking_type, confirmation, token_created, email_status, sms_status,
              created_at, updated_at)
         VALUES
             (:order_number, :first_name, :last_name, :customer_email, :phone,
              :quantities, :pickup_time, :pickup_location, :tour_date, :tour_type,
-             :driver, :vehicle_no,
+             :driver, :vehicle_no, :mtlv_eligible,
              :module, :booking_type, 'pending', NOW(), 'pending', 'pending',
              NOW(), NOW())
         RETURNING id
-    """), {**data, "booking_type": booking_type})
+    """), {**data, "driver": driver, "vehicle_no": vehicle_no, "booking_type": booking_type})
     return result.fetchone().id
 
 
@@ -170,6 +174,7 @@ async def send_tour_confirmation(
             "tour_date":       _to_date(tour_date),
             "tour_type":       tour_type,
             "module":          "tour_confirmation",
+            "mtlv_eligible":   (row.get("mtlv_promo") or "").strip().upper() == "ELIGIBLE",
         }
         booking_id = await _upsert_booking(db, booking_data)
 
@@ -294,6 +299,7 @@ async def send_morning_pickup(
             "driver":          row.get("driver", ""),
             "vehicle_no":      row.get("vehicle_no", ""),
             "module":          "morning_pickup",
+            "mtlv_eligible":   False,
         }
         booking_id = await _upsert_booking(db, booking_data)
 
@@ -396,6 +402,7 @@ async def send_tickets_reminder(
             "tour_date":       _to_date(service_date),
             "tour_type":       tour_type,
             "module":          "tickets_reminder",
+            "mtlv_eligible":   False,
         }
         booking_id = await _upsert_booking(db, booking_data)
 
