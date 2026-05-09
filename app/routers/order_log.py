@@ -72,7 +72,7 @@ async def order_log_api(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    ffilters = ["actor_type != 'system'"]
+    filters = ["actor_type != 'system'"]
     params  = {}
 
     if date:
