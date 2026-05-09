@@ -3,7 +3,7 @@ Order Log API
 GET  /admin/activities/order-log          — HTML page
 GET  /api/activities/order-log            — JSON data
 """
-from datetime import datetime
+from datetime import datetime, date as date_type
 from typing import Optional
 from zoneinfo import ZoneInfo
 
@@ -76,8 +76,13 @@ async def order_log_api(
     params  = {}
 
     if date:
+        try:
+            parsed_date = date_type.fromisoformat(date)  # 字符串 → date 对象
+        except ValueError:
+         parsed_date = None
+    if parsed_date:
         filters.append("DATE(created_at AT TIME ZONE 'America/Los_Angeles') = :date")
-        params["date"] = date
+        params["date"] = parsed_date
     if event_type:
         filters.append("event_type = :event_type")
         params["event_type"] = event_type
