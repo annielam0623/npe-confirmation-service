@@ -21,17 +21,33 @@ from app.auth import get_current_user
 from app.models import Booking, BookingStatus, DismissedBooking
 
 router = APIRouter()
-async def _log_activity(db: AsyncSession, order_number: str, event_type: str, detail: str, actor: str, actor_type: str):
-    await db.execute(text("""
-        INSERT INTO activity_log (order_number, event_type, detail, actor, actor_type)
-        VALUES (:order_number, :event_type, :detail, :actor, :actor_type)
-    """), {
-        "order_number": order_number,
-        "event_type":   event_type,
-        "detail":       detail,
-        "actor":        actor,
-        "actor_type":   actor_type,
-    })
+async def _log_activity(
+    db: AsyncSession,
+    order_number: str,
+    event_type: str,
+    detail: str,
+    actor: str,
+    actor_type: str,
+):
+    try:
+        from zoneinfo import ZoneInfo
+        now_la = datetime.now(ZoneInfo("America/Los_Angeles")).replace(tzinfo=None)
+        await db.execute(text("""
+            INSERT INTO activity_log
+                (order_number, event_type, detail, actor, actor_type, created_at)
+            VALUES
+                (:order_number, :event_type, :detail, :actor, :actor_type, :created_at)
+        """), {
+            "order_number": order_number,
+            "event_type":   event_type,
+            "detail":       detail,
+            "actor":        actor,
+            "actor_type":   actor_type,
+            "created_at":   now_la,
+        })
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).error(f"_log_activity failed: {e}")
 
 # ─── Status groupings ─────────────────────────────────────────────────────────
 
