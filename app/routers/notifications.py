@@ -196,7 +196,7 @@ async def tracking_tour_confirmation(
             b.lunch_turkey, b.lunch_veggie, b.lunch_beef,
             b.submitted_at, b.notes, b.notes_history,
             b.submission_count,
-            b.mtlv_eligible, b.mtlv_qty, b.mtlv_ticket_status
+            b.mtlv_eligible, b.mtlv_qty, b.mtlv_ticket_status,
             b.action_taken_by
         FROM bookings b
         WHERE b.tour_date = :tour_date
