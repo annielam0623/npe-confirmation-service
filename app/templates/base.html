@@ -193,9 +193,24 @@
       color: #BA7517;
     }
 
-    < !-- Activities --><div class="nav-group-label" style="margin-top: 8px;">Activities</div><a href="/admin/activities/order-log"
-    class="nav-item sub {% if active_page == 'order_log' %}active{% endif %}"><span class="dot"></span>Order Log </a><a href="/admin/notifications/send-log"
-    class="nav-item sub {% if active_page == 'send_log' %}active{% endif %}"><span class="dot"></span>Send Log </a>
+    /* ── Send Log (bold) ─────────────────────────────────── */
+    .nav-item.send-log {
+      font-weight: 700;
+      font-size: 13px;
+      color: #1a1a1a;
+      margin-top: 4px;
+      border-top: 0.5px solid rgba(0, 0, 0, 0.07);
+      padding-top: 10px;
+    }
+
+    .nav-item.send-log:hover {
+      background: #f5f5f3;
+    }
+
+    .nav-item.send-log.active {
+      border-left: 2px solid #1a1a1a;
+      background: #f5f5f3;
+    }
 
     /* ── Main ────────────────────────────────────────────── */
     .main {
@@ -477,25 +492,27 @@
         <span class="dot"></span>Utilities
       </a>
 
-      <!-- Send Log -->
-      <a href="/admin/notifications/send-log"
-        class="nav-item send-log {% if active_page == 'send_log' %}active{% endif %}">
-        📋 Send Log
+      <!-- Activities -->
+      <div class="nav-group-label" style="margin-top: 8px;">Activities</div>
+      <a href="/admin/activities/order-log" class="nav-item sub {% if active_page == 'order_log' %}active{% endif %}">
+        <span class="dot"></span>Order Log
       </a>
-    </div>
+      <a href="/admin/notifications/send-log" class="nav-item sub {% if active_page == 'send_log' %}active{% endif %}">
+        <span class="dot"></span>Send Log
+      </a>
 
-    {% if current_user and current_user.role == 'admin' %}
-    <div class="nav-group" style="margin-top: auto;">
-      <div class="nav-group-label">Settings</div>
-      <a href="/admin/settings" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
-        General
-      </a>
-      <a href="/admin/settings/pickup-locations"
-        class="nav-item {% if active_page == 'pickup_locations' %}active{% endif %}">
-        📍 Pickup Locations
-      </a>
-    </div>
-    {% endif %}
+      {% if current_user and current_user.role == 'admin' %}
+      <div class="nav-group" style="margin-top: auto;">
+        <div class="nav-group-label">Settings</div>
+        <a href="/admin/settings" class="nav-item {% if active_page == 'settings' %}active{% endif %}">
+          General
+        </a>
+        <a href="/admin/settings/pickup-locations"
+          class="nav-item {% if active_page == 'pickup_locations' %}active{% endif %}">
+          📍 Pickup Locations
+        </a>
+      </div>
+      {% endif %}
   </nav>
 
   <div class="main">
