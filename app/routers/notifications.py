@@ -357,8 +357,13 @@ async def get_send_log(
     params: dict = {}
 
     if date:
+    try:
+        from datetime import date as date_type
+        parsed_date = date_type.fromisoformat(date)
         conditions.append("DATE(sent_at) = :date")
-        params["date"] = date
+        params["date"] = parsed_date
+    except ValueError:
+        pass
     if module:
         conditions.append("module = :module")
         params["module"] = module
@@ -385,7 +390,7 @@ async def get_send_log(
     rows_res = await db.execute(text(f"""
         SELECT id, sent_at, module, order_number, first_name, last_name,
                email, phone, tour_date, tour_type,
-               email_status, sms_status, sms_sid, error_msg，sent_by
+               email_status, sms_status, sms_sid, error_msg, sent_by
         FROM send_log
         WHERE {where}
         ORDER BY sent_at DESC
@@ -431,7 +436,6 @@ async def get_send_log(
                 "sms_status":   r["sms_status"],
                 "error_msg":    r["error_msg"],
                 "sent_by":      r["sent_by"],
-                "action_taken_by": r["action_taken_by"] or "",
             }
             for r in rows
         ],
