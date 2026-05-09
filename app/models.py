@@ -209,6 +209,10 @@ class Booking(Base):
     sms_sent_at   = Column(DateTime, nullable=True)
     sms_status    = Column(String(200), default="")
 
+    # Take Action
+    action_taken_by = Column(String(100), nullable=True)
+    action_taken_at = Column(DateTime, nullable=True)
+
     # Timestamps
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
@@ -339,3 +343,16 @@ class AdminUser(Base):
     is_active       = Column(Boolean, default=True)
     role = Column(String(20), nullable=False, default="staff")
     created_at      = Column(DateTime, server_default=func.now())
+
+# ─── Activity Log ─────────────────────────────────────────────────────────────
+
+class ActivityLog(Base):
+    __tablename__ = "activity_log"
+
+    id           = Column(Integer, primary_key=True, index=True)
+    order_number = Column(String(50), nullable=False, index=True)
+    event_type   = Column(String(50), nullable=False)
+    detail       = Column(Text, nullable=True)
+    actor        = Column(String(100), nullable=True)
+    actor_type   = Column(String(20), nullable=True)  # 'staff' / 'guest' / 'system'
+    created_at   = Column(DateTime, server_default=func.now(), index=True)

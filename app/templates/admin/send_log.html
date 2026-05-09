@@ -6,60 +6,60 @@
 /* Stats row */
 .stats-row { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
 .stat-card {
-  background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
-  border-radius: 10px; padding: 12px 20px; text-align: center; min-width: 100px;
+background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+border-radius: 10px; padding: 12px 20px; text-align: center; min-width: 100px;
 }
 .stat-card .num { font-size: 22px; font-weight: 700; }
 .stat-card .lbl { font-size: 11px; color: #aaa; margin-top: 2px; }
-.stat-card.tour    .num { color: #3B6D11; }
+.stat-card.tour .num { color: #3B6D11; }
 .stat-card.morning .num { color: #185FA5; }
 .stat-card.tickets .num { color: #BA7517; }
-.stat-card.total   .num { color: #1a1a1a; }
+.stat-card.total .num { color: #1a1a1a; }
 
 /* Filter bar */
 .filter-bar {
-  display: flex; gap: 10px; align-items: center;
-  margin-bottom: 16px; flex-wrap: wrap;
-  background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
-  border-radius: 10px; padding: 12px 16px;
+display: flex; gap: 10px; align-items: center;
+margin-bottom: 16px; flex-wrap: wrap;
+background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+border-radius: 10px; padding: 12px 16px;
 }
 .filter-bar label { font-size: 12px; color: #888; margin-right: 4px; }
 .filter-bar input[type="date"],
 .filter-bar select {
-  padding: 6px 10px; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 7px;
-  font-size: 13px; background: #fff; font-family: inherit;
+padding: 6px 10px; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 7px;
+font-size: 13px; background: #fff; font-family: inherit;
 }
 .filter-bar input[type="date"]:focus,
 .filter-bar select:focus { outline: none; border-color: #1a1a1a; }
 .btn-filter {
-  background: #1a1a1a; color: #fff; border: none;
-  padding: 7px 16px; border-radius: 7px; font-size: 12px;
-  font-weight: 600; cursor: pointer;
+background: #1a1a1a; color: #fff; border: none;
+padding: 7px 16px; border-radius: 7px; font-size: 12px;
+font-weight: 600; cursor: pointer;
 }
 .btn-filter:hover { background: #333; }
 .btn-reset {
-  background: #fff; color: #888; border: 0.5px solid rgba(0,0,0,0.15);
-  padding: 7px 14px; border-radius: 7px; font-size: 12px; cursor: pointer;
+background: #fff; color: #888; border: 0.5px solid rgba(0,0,0,0.15);
+padding: 7px 14px; border-radius: 7px; font-size: 12px; cursor: pointer;
 }
 .records-count { font-size: 12px; color: #aaa; margin-left: auto; }
 
 /* Table */
 .table-card {
-  background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
-  border-radius: 12px; overflow: hidden;
+background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+border-radius: 12px; overflow: hidden;
 }
 .table-header {
-  padding: 10px 16px; background: #f9f9f7;
-  border-bottom: 0.5px solid rgba(0,0,0,0.08);
-  display: flex; align-items: center; justify-content: space-between;
+padding: 10px 16px; background: #f9f9f7;
+border-bottom: 0.5px solid rgba(0,0,0,0.08);
+display: flex; align-items: center; justify-content: space-between;
 }
 .table-header span { font-size: 13px; font-weight: 600; }
 
 table.log-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
 .log-tbl thead td {
-  padding: 8px 10px; font-size: 11px; font-weight: 600; color: #999;
-  background: #f9f9f7; border-bottom: 0.5px solid rgba(0,0,0,0.08);
-  white-space: nowrap;
+padding: 8px 10px; font-size: 11px; font-weight: 600; color: #999;
+background: #f9f9f7; border-bottom: 0.5px solid rgba(0,0,0,0.08);
+white-space: nowrap;
 }
 .log-tbl tbody tr { border-bottom: 0.5px solid rgba(0,0,0,0.06); }
 .log-tbl tbody tr:last-child { border-bottom: none; }
@@ -68,41 +68,84 @@ table.log-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
 
 /* Module badge */
 .mod-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;
+display: inline-flex; align-items: center; gap: 5px;
+padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;
 }
-.mod-tour    { background: #EAF3DE; color: #3B6D11; }
+.mod-tour { background: #EAF3DE; color: #3B6D11; }
 .mod-morning { background: #E6F1FB; color: #185FA5; }
 .mod-tickets { background: #FAEEDA; color: #BA7517; }
 
 /* Status */
 .sp { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
-.sp-ok   { background: #EAF3DE; color: #3B6D11; }
+.sp-ok { background: #EAF3DE; color: #3B6D11; }
 .sp-fail { background: #FCEBEB; color: #A32D2D; }
 .sp-skip { background: #f1efe8; color: #5f5e5a; }
-.sp-del  { background: #EAF3DE; color: #3B6D11; }
+.sp-del { background: #EAF3DE; color: #3B6D11; }
 .sp-sent { background: #EEEDFE; color: #534AB7; }
-.sp-und  { background: #FCEBEB; color: #A32D2D; }
+.sp-und { background: #FCEBEB; color: #A32D2D; }
 .sp-pend { background: #E6F1FB; color: #185FA5; }
 
 /* Pagination */
 .pagination { display: flex; gap: 6px; align-items: center; margin-top: 14px; }
 .page-btn {
-  padding: 4px 10px; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 6px;
-  font-size: 12px; cursor: pointer; background: #fff; color: #555;
+padding: 4px 10px; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 6px;
+font-size: 12px; cursor: pointer; background: #fff; color: #555;
 }
 .page-btn:hover { background: #f5f5f3; }
 .page-btn.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
 .page-info { font-size: 12px; color: #aaa; }
+
+/* Error section */
+.error-section {
+margin-top: 24px;
+background: #fff8f8;
+border: 0.5px solid rgba(163,45,45,0.2);
+border-radius: 12px;
+overflow: hidden;
+}
+.error-section-header {
+padding: 10px 16px;
+background: #FCEBEB;
+border-bottom: 0.5px solid rgba(163,45,45,0.15);
+display: flex; align-items: center; gap: 8px;
+}
+.error-section-header span { font-size: 13px; font-weight: 600; color: #A32D2D; }
+.err-count {
+background: #A32D2D; color: #fff;
+font-size: 11px; font-weight: 700;
+padding: 1px 7px; border-radius: 10px;
+}
+table.err-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.err-tbl thead td {
+padding: 8px 12px; font-size: 11px; font-weight: 600; color: #999;
+background: #fff8f8; border-bottom: 0.5px solid rgba(163,45,45,0.1);
+white-space: nowrap;
+}
+.err-tbl tbody tr { border-bottom: 0.5px solid rgba(163,45,45,0.08); }
+.err-tbl tbody tr:last-child { border-bottom: none; }
+.err-tbl tbody td { padding: 8px 12px; color: #444; vertical-align: top; }
+.err-msg { color: #A32D2D; font-size: 11px; line-height: 1.4; }
 {% endblock %}
 
 {% block content %}
 <!-- Stats -->
 <div class="stats-row" id="stats-row">
-  <div class="stat-card total"><div class="num" id="stat-total">—</div><div class="lbl">Total Sent</div></div>
-  <div class="stat-card tour"><div class="num" id="stat-tour">—</div><div class="lbl">Tour Conf</div></div>
-  <div class="stat-card morning"><div class="num" id="stat-morning">—</div><div class="lbl">Morning P/U</div></div>
-  <div class="stat-card tickets"><div class="num" id="stat-tickets">—</div><div class="lbl">Tickets</div></div>
+  <div class="stat-card total">
+    <div class="num" id="stat-total">—</div>
+    <div class="lbl">Total Sent</div>
+  </div>
+  <div class="stat-card tour">
+    <div class="num" id="stat-tour">—</div>
+    <div class="lbl">Tour Conf</div>
+  </div>
+  <div class="stat-card morning">
+    <div class="num" id="stat-morning">—</div>
+    <div class="lbl">Morning P/U</div>
+  </div>
+  <div class="stat-card tickets">
+    <div class="num" id="stat-tickets">—</div>
+    <div class="lbl">Tickets</div>
+  </div>
 </div>
 
 <!-- Filters -->
@@ -162,11 +205,13 @@ table.log-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
           <td>Tour Type</td>
           <td>📧 Email</td>
           <td>📱 SMS</td>
-          <td>Error</td>
+          <td>By</td>
         </tr>
       </thead>
       <tbody id="log-tbody">
-        <tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>
+        <tr>
+          <td colspan="10" style="padding:24px;text-align:center;color:#ccc;">Loading…</td>
+        </tr>
       </tbody>
     </table>
   </div>
@@ -174,136 +219,192 @@ table.log-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
 
 <!-- Pagination -->
 <div class="pagination" id="pagination"></div>
+
+<!-- Error Section — only shown when errors exist -->
+<div class="error-section" id="error-section" style="display:none;">
+  <div class="error-section-header">
+    <span>⚠️ Errors</span>
+    <span class="err-count" id="err-count">0</span>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="err-tbl">
+      <thead>
+        <tr>
+          <td>Sent At</td>
+          <td>Module</td>
+          <td>Order #</td>
+          <td>Name</td>
+          <td>Channel</td>
+          <td>Error</td>
+        </tr>
+      </thead>
+      <tbody id="err-tbody"></tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-let currentPage = 1;
-const PAGE_SIZE = 50;
+  let currentPage = 1;
+  const PAGE_SIZE = 50;
 
-const MODULE_LABELS = {
-  tour_confirmation: '🟢 Tour Conf',
-  morning_pickup:    '🔵 Morning P/U',
-  tickets_reminder:  '🟠 Tickets',
-};
-const MODULE_CLS = {
-  tour_confirmation: 'mod-tour',
-  morning_pickup:    'mod-morning',
-  tickets_reminder:  'mod-tickets',
-};
+  const MODULE_LABELS = {
+    tour_confirmation: '🟢 Tour Conf',
+    morning_pickup: '🔵 Morning P/U',
+    tickets_reminder: '🟠 Tickets',
+  };
+  const MODULE_CLS = {
+    tour_confirmation: 'mod-tour',
+    morning_pickup: 'mod-morning',
+    tickets_reminder: 'mod-tickets',
+  };
 
-async function loadLog(page) {
-  if (page) currentPage = page;
-  const date    = document.getElementById('f-date').value;
-  const module  = document.getElementById('f-module').value;
-  const type    = document.getElementById('f-type').value;
-  const status  = document.getElementById('f-status').value;
+  async function loadLog(page) {
+    if (page) currentPage = page;
+    const date = document.getElementById('f-date').value;
+    const module = document.getElementById('f-module').value;
+    const type = document.getElementById('f-type').value;
+    const status = document.getElementById('f-status').value;
 
-  document.getElementById('log-tbody').innerHTML =
-    '<tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
-
-  const qs = new URLSearchParams({
-    ...(date   && {date}),
-    ...(module && {module}),
-    ...(type   && {channel: type}),
-    ...(status && {status}),
-    page: currentPage,
-    page_size: PAGE_SIZE,
-  });
-
-  try {
-    const res  = await fetch(`/api/notifications/send-log?${qs}`);
-    const data = await res.json();
-    renderRows(data.rows || []);
-    renderStats(data.stats || {});
-    renderPagination(data.total || 0);
-    document.getElementById('records-count').textContent = `${data.total || 0} records`;
-  } catch(e) {
     document.getElementById('log-tbody').innerHTML =
-      '<tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
-  }
-}
+      '<tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
 
-function renderRows(rows) {
-  const tbody = document.getElementById('log-tbody');
-  if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';
-    return;
-  }
-  tbody.innerHTML = rows.map(r => {
-    const modCls = MODULE_CLS[r.module] || '';
-    const modLbl = MODULE_LABELS[r.module] || r.module;
-    const emailCls = r.email_status?.startsWith('sent') ? 'sp-ok' : r.email_status?.startsWith('failed') ? 'sp-fail' : 'sp-pend';
-    const smsCls   = smsStatusClass(r.sms_status);
-    const smsLbl   = smsLabel(r.sms_status);
-    const sentAt   = r.sent_at ? new Date(r.sent_at).toLocaleString('en-US',{month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
+    const qs = new URLSearchParams({
+      ...(date && { date }),
+      ...(module && { module }),
+      ...(type && { channel: type }),
+      ...(status && { status }),
+      page: currentPage,
+      page_size: PAGE_SIZE,
+    });
 
-    return `<tr>
+    try {
+      const res = await fetch(`/api/notifications/send-log?${qs}`);
+      const data = await res.json();
+      renderRows(data.rows || []);
+      renderStats(data.stats || {});
+      renderPagination(data.total || 0);
+      renderErrors(data.rows || []);
+      document.getElementById('records-count').textContent = `${data.total || 0} records`;
+    } catch (e) {
+      document.getElementById('log-tbody').innerHTML =
+        '<tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
+    }
+  }
+
+  function renderRows(rows) {
+    const tbody = document.getElementById('log-tbody');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => {
+      const modCls = MODULE_CLS[r.module] || '';
+      const modLbl = MODULE_LABELS[r.module] || r.module;
+      const emailCls = r.email_status?.startsWith('sent') ? 'sp-ok' : r.email_status?.startsWith('failed') ? 'sp-fail' : 'sp-pend';
+      const smsCls = smsStatusClass(r.sms_status);
+      const smsLbl = smsLabel(r.sms_status);
+      const sentAt = r.sent_at ? new Date(r.sent_at).toLocaleString('en-US', { month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
+      const sentBy = r.sent_by || '—';
+
+      return `<tr>
       <td style="white-space:nowrap;font-size:11px;">${sentAt}</td>
       <td><span class="mod-badge ${modCls}">${modLbl}</span></td>
-      <td style="color:#378ADD;font-weight:500;">${r.order_number||'—'}</td>
-      <td>${r.first_name||''} ${r.last_name||''}</td>
-      <td style="font-size:11px;">${r.phone||''}<br>${r.email||''}</td>
-      <td style="white-space:nowrap;">${r.tour_date||'—'}</td>
-      <td style="font-size:11px;">${r.tour_type||'—'}</td>
-      <td>${r.email_status ? `<span class="sp ${emailCls}">${r.email_status.startsWith('sent')?'Sent':r.email_status.startsWith('failed')?'Failed':'—'}</span>` : '<span style="color:#ccc">—</span>'}</td>
+      <td style="color:#378ADD;font-weight:500;">${r.order_number || '—'}</td>
+      <td>${r.first_name || ''} ${r.last_name || ''}</td>
+      <td style="font-size:11px;">${r.phone || ''}<br>${r.email || ''}</td>
+      <td style="white-space:nowrap;">${r.tour_date || '—'}</td>
+      <td style="font-size:11px;">${r.tour_type || '—'}</td>
+      <td>${r.email_status ? `<span class="sp ${emailCls}">${r.email_status.startsWith('sent') ? 'Sent' : r.email_status.startsWith('failed') ? 'Failed' : '—'}</span>` : '<span style="color:#ccc">—</span>'}</td>
       <td>${r.sms_status ? `<span class="sp ${smsCls}">${smsLbl}</span>` : '<span style="color:#ccc">—</span>'}</td>
-      <td style="font-size:11px;color:#A32D2D;max-width:160px;overflow:hidden;text-overflow:ellipsis;">${r.error_msg||''}</td>
+      <td style="font-size:11px;color:#888;white-space:nowrap;">${sentBy}</td>
     </tr>`;
-  }).join('');
-}
+    }).join('');
+  }
 
-function renderStats(stats) {
-  document.getElementById('stat-total').textContent   = stats.total   || 0;
-  document.getElementById('stat-tour').textContent    = stats.tour_confirmation || 0;
-  document.getElementById('stat-morning').textContent = stats.morning_pickup    || 0;
-  document.getElementById('stat-tickets').textContent = stats.tickets_reminder  || 0;
-}
+  function renderErrors(rows) {
+    const errRows = rows.filter(r => r.error_msg && r.error_msg.trim());
+    const section = document.getElementById('error-section');
 
-function renderPagination(total) {
-  const pages = Math.ceil(total / PAGE_SIZE);
-  const pag   = document.getElementById('pagination');
-  if (pages <= 1) { pag.innerHTML = ''; return; }
+    if (!errRows.length) {
+      section.style.display = 'none';
+      return;
+    }
 
-  let html = `<span class="page-info">Page ${currentPage} of ${pages}</span>`;
-  if (currentPage > 1)  html += `<button class="page-btn" onclick="loadLog(${currentPage-1})">← Prev</button>`;
-  if (currentPage < pages) html += `<button class="page-btn" onclick="loadLog(${currentPage+1})">Next →</button>`;
-  pag.innerHTML = html;
-}
+    section.style.display = 'block';
+    document.getElementById('err-count').textContent = errRows.length;
 
-function resetFilters() {
-  document.getElementById('f-module').value = '';
-  document.getElementById('f-type').value   = '';
-  document.getElementById('f-status').value = '';
-  currentPage = 1;
+    document.getElementById('err-tbody').innerHTML = errRows.map(r => {
+      const sentAt = r.sent_at ? new Date(r.sent_at).toLocaleString('en-US', { month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
+      const modCls = MODULE_CLS[r.module] || '';
+      const modLbl = MODULE_LABELS[r.module] || r.module;
+      const channels = [];
+      if (r.email_status === 'failed') channels.push('📧 Email');
+      if (r.sms_status === 'failed' || r.sms_status === 'undelivered') channels.push('📱 SMS');
+      return `<tr>
+      <td style="white-space:nowrap;font-size:11px;">${sentAt}</td>
+      <td><span class="mod-badge ${modCls}">${modLbl}</span></td>
+      <td style="color:#378ADD;font-weight:500;">${r.order_number || '—'}</td>
+      <td>${r.first_name || ''} ${r.last_name || ''}</td>
+      <td style="font-size:11px;">${channels.join(', ') || '—'}</td>
+      <td class="err-msg">${r.error_msg}</td>
+    </tr>`;
+    }).join('');
+  }
+
+  function renderStats(stats) {
+    document.getElementById('stat-total').textContent = stats.total || 0;
+    document.getElementById('stat-tour').textContent = stats.tour_confirmation || 0;
+    document.getElementById('stat-morning').textContent = stats.morning_pickup || 0;
+    document.getElementById('stat-tickets').textContent = stats.tickets_reminder || 0;
+  }
+
+  function renderPagination(total) {
+    const pages = Math.ceil(total / PAGE_SIZE);
+    const pag = document.getElementById('pagination');
+    if (pages <= 1) { pag.innerHTML = ''; return; }
+
+    let html = `<span class="page-info">Page ${currentPage} of ${pages}</span>`;
+    if (currentPage > 1) html += `<button class="page-btn" onclick="loadLog(${currentPage - 1})">← Prev</button>`;
+    if (currentPage < pages) html += `<button class="page-btn" onclick="loadLog(${currentPage + 1})">Next →</button>`;
+    pag.innerHTML = html;
+  }
+
+  function resetFilters() {
+    document.getElementById('f-module').value = '';
+    document.getElementById('f-type').value = '';
+    document.getElementById('f-status').value = '';
+    currentPage = 1;
+    loadLog();
+  }
+
+  function exportLog() {
+    const date = document.getElementById('f-date').value;
+    const module = document.getElementById('f-module').value;
+    const type = document.getElementById('f-type').value;
+    const qs = new URLSearchParams({ ...(date && { date }), ...(module && { module }), ...(type && { channel: type }) });
+    location.href = `/api/notifications/send-log/export?${qs}`;
+  }
+
+  function smsStatusClass(s) {
+    if (!s) return 'sp-pend';
+    if (s.includes('delivered')) return 'sp-del';
+    if (s.includes('sent')) return 'sp-sent';
+    if (s.includes('undelivered') || s.includes('failed')) return 'sp-und';
+    return 'sp-pend';
+  }
+
+  function smsLabel(s) {
+    if (!s) return '—';
+    if (s.includes('delivered')) return 'Delivered';
+    if (s.includes('sent')) return 'Sent';
+    if (s.includes('undelivered')) return 'Undelivered';
+    if (s.includes('failed')) return 'Failed';
+    return s;
+  }
+
+  // Init
   loadLog();
-}
-
-function exportLog() {
-  const date   = document.getElementById('f-date').value;
-  const module = document.getElementById('f-module').value;
-  const type   = document.getElementById('f-type').value;
-  const qs = new URLSearchParams({...(date&&{date}), ...(module&&{module}), ...(type&&{channel:type})});
-  location.href = `/api/notifications/send-log/export?${qs}`;
-}
-
-function smsStatusClass(s) {
-  if (!s) return 'sp-pend';
-  if (s.includes('delivered'))  return 'sp-del';
-  if (s.includes('sent'))       return 'sp-sent';
-  if (s.includes('undelivered')||s.includes('failed')) return 'sp-und';
-  return 'sp-pend';
-}
-function smsLabel(s) {
-  if (!s) return '—';
-  if (s.includes('delivered'))  return 'Delivered';
-  if (s.includes('sent'))       return 'Sent';
-  if (s.includes('undelivered'))return 'Undelivered';
-  if (s.includes('failed'))     return 'Failed';
-  return s;
-}
-
-// Init
-loadLog();
 </script>
 {% endblock %}

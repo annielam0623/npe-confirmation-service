@@ -649,8 +649,49 @@ async def guest_confirm_submit(
         if getattr(booking, "mtlv_ticket_status", None) != "sent":
             booking.mtlv_ticket_status = "pending_send"
     
-
     await db.commit()
+    
+    # Activity log
+    try:
+        _activity_detail = ""
+        _event_type = ""
+        if confirmation == "modify_req":
+            _event_type = "guest_modify_requested"
+            _activity_detail = f"Modify requested: {reschedule_date}" + (f" — {notes}" if notes else "")
+        elif confirmation == "yes" and is_yes_confirmed and has_lunch:
+            _event_type = "lunch_selected"
+            _activity_detail = f"Lunch updated: Turkey×{lunch_turkey} Veggie×{lunch_veggie} Beef×{lunch_beef}"
+        else:
+            _event_type = "guest_confirmed"
+            _activity_detail = "Guest confirmed YES" + (f" — {notes}" if notes else "")
+
+        await db.execute(_sql_text("""
+            INSERT INTO activity_log (order_number, event_type, detail, actor, actor_type)
+            VALUES (:order_number, :event_type, :detail, :actor, :actor_type)
+        """), {
+            "order_number": booking.order_number,
+            "event_type":   _event_type,
+            "detail":       _activity_detail,
+            "actor":        booking.first_name,
+            "actor_type":   "guest",
+        })
+
+        # MTLV qty if eligible
+        if getattr(booking, "mtlv_eligible", False) and mtlv_qty > 0:
+            await db.execute(_sql_text("""
+                INSERT INTO activity_log (order_number, event_type, detail, actor, actor_type)
+                VALUES (:order_number, :event_type, :detail, :actor, :actor_type)
+            """), {
+                "order_number": booking.order_number,
+                "event_type":   "mtlv_qty_selected",
+                "detail":       f"MTLV ticket qty selected: {mtlv_qty}",
+                "actor":        booking.first_name,
+                "actor_type":   "guest",
+            })
+
+        await db.commit()
+    except Exception as exc:
+        print(f"[guest] activity log failed: {exc}")
     await db.refresh(booking)
 
     # Staff notification (best-effort, don't block response)

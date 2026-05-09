@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+{% block title %}Order Log — NPE{% endblock %}
+{% block page_title %}Order Log{% endblock %}
+
+{% block extra_styles %}
+.stats-row { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+.stat-card {
+background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+border-radius: 10px; padding: 12px 20px; text-align: center; min-width: 100px;
+}
+.stat-card .num { font-size: 22px; font-weight: 700; color: #1a1a1a; }
+.stat-card .lbl { font-size: 11px; color: #aaa; margin-top: 2px; }
+
+.filter-bar {
+display: flex; gap: 10px; align-items: center;
+margin-bottom: 16px; flex-wrap: wrap;
+background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+border-radius: 10px; padding: 12px 16px;
+}
+.filter-bar label { font-size: 12px; color: #888; margin-right: 4px; }
+.filter-bar input, .filter-bar select {
+padding: 6px 10px; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 7px;
+font-size: 13px; background: #fff; font-family: inherit;
+}
+.filter-bar input:focus, .filter-bar select:focus { outline: none; border-color: #1a1a1a; }
+.btn-filter {
+background: #1a1a1a; color: #fff; border: none;
+padding: 7px 16px; border-radius: 7px; font-size: 12px;
+font-weight: 600; cursor: pointer;
+}
+.btn-filter:hover { background: #333; }
+.btn-reset {
+background: #fff; color: #888; border: 0.5px solid rgba(0,0,0,0.15);
+padding: 7px 14px; border-radius: 7px; font-size: 12px; cursor: pointer;
+}
+.records-count { font-size: 12px; color: #aaa; margin-left: auto; }
+
+.table-card {
+background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+border-radius: 12px; overflow: hidden;
+}
+.table-header {
+padding: 10px 16px; background: #f9f9f7;
+border-bottom: 0.5px solid rgba(0,0,0,0.08);
+display: flex; align-items: center; justify-content: space-between;
+}
+.table-header span { font-size: 13px; font-weight: 600; }
+
+table.log-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.log-tbl thead td {
+padding: 8px 12px; font-size: 11px; font-weight: 600; color: #999;
+background: #f9f9f7; border-bottom: 0.5px solid rgba(0,0,0,0.08);
+white-space: nowrap;
+}
+.log-tbl tbody tr { border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+.log-tbl tbody tr:last-child { border-bottom: none; }
+.log-tbl tbody tr:hover { background: #fafaf8; }
+.log-tbl tbody td { padding: 8px 12px; color: #444; vertical-align: middle; }
+
+.event-badge {
+display: inline-block; padding: 2px 8px;
+border-radius: 10px; font-size: 11px; font-weight: 600;
+}
+.actor-badge {
+display: inline-block; padding: 2px 7px;
+border-radius: 6px; font-size: 11px;
+background: #f1efe8; color: #5f5e5a;
+}
+.actor-badge.staff { background: #E6F1FB; color: #185FA5; }
+.actor-badge.guest { background: #EAF3DE; color: #3B6D11; }
+.actor-badge.system { background: #EEEDFE; color: #534AB7; }
+
+.pagination { display: flex; gap: 6px; align-items: center; margin-top: 14px; }
+.page-btn {
+padding: 4px 10px; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 6px;
+font-size: 12px; cursor: pointer; background: #fff; color: #555;
+}
+.page-btn:hover { background: #f5f5f3; }
+.page-info { font-size: 12px; color: #aaa; }
+{% endblock %}
+
+{% block content %}
+<!-- Stats -->
+<div class="stats-row" id="stats-row">
+      <div class="stat-card">
+            <div class="num" id="stat-total">—</div>
+            <div class="lbl">Total Events</div>
+      </div>
+      <div class="stat-card">
+            <div class="num" id="stat-guest">—</div>
+            <div class="lbl">Guest Actions</div>
+      </div>
+      <div class="stat-card">
+            <div class="num" id="stat-staff">—</div>
+            <div class="lbl">Staff Actions</div>
+      </div>
+      <div class="stat-card">
+            <div class="num" id="stat-system">—</div>
+            <div class="lbl">System Events</div>
+      </div>
+</div>
+
+<!-- Filters -->
+<div class="filter-bar">
+      <div>
+            <label>Date</label>
+            <input type="date" id="f-date" value="{{ today }}">
+      </div>
+      <div>
+            <label>Order #</label>
+            <input type="text" id="f-order" placeholder="CHD..." style="width:120px;">
+      </div>
+      <div>
+            <label>Event</label>
+            <select id="f-event">
+                  <option value="">All</option>
+                  <option value="booking_created">Booking Created</option>
+                  <option value="booking_updated">Booking Updated</option>
+                  <option value="booking_handled">Marked as Handled</option>
+                  <option value="status_changed">Status Changed</option>
+                  <option value="guest_confirmed">Guest Confirmed</option>
+                  <option value="guest_modify_requested">Modify Requested</option>
+                  <option value="lunch_selected">Lunch Updated</option>
+                  <option value="mtlv_qty_selected">MTLV Qty Selected</option>
+                  <option value="mtlv_ticket_sent">MTLV Ticket Sent</option>
+                  <option value="action_taken">Action Taken</option>
+            </select>
+      </div>
+      <div>
+            <label>By</label>
+            <select id="f-actor">
+                  <option value="">All</option>
+                  <option value="staff">Staff</option>
+                  <option value="guest">Guest</option>
+                  <option value="system">System</option>
+            </select>
+      </div>
+      <button class="btn-filter" onclick="loadLog()">Filter</button>
+      <button class="btn-reset" onclick="resetFilters()">Reset</button>
+      <span class="records-count" id="records-count">— records</span>
+</div>
+
+<!-- Table -->
+<div class="table-card">
+      <div class="table-header">
+            <span>📒 Order Log</span>
+      </div>
+      <div style="overflow-x:auto;">
+            <table class="log-tbl">
+                  <thead>
+                        <tr>
+                              <td>Time</td>
+                              <td>Order #</td>
+                              <td>Event</td>
+                              <td>Detail</td>
+                              <td>By</td>
+                              <td>Type</td>
+                        </tr>
+                  </thead>
+                  <tbody id="log-tbody">
+                        <tr>
+                              <td colspan="6" style="padding:24px;text-align:center;color:#ccc;">Loading…</td>
+                        </tr>
+                  </tbody>
+            </table>
+      </div>
+</div>
+
+<div class="pagination" id="pagination"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+      let currentPage = 1;
+      const PAGE_SIZE = 50;
+
+      async function loadLog(page) {
+            if (page) currentPage = page;
+
+            const date = document.getElementById('f-date').value;
+            const order = document.getElementById('f-order').value.trim();
+            const event = document.getElementById('f-event').value;
+            const actor = document.getElementById('f-actor').value;
+
+            document.getElementById('log-tbody').innerHTML =
+                  '<tr><td colspan="6" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
+
+            const qs = new URLSearchParams({
+                  ...(date && { date }),
+                  ...(order && { order_number: order }),
+                  ...(event && { event_type: event }),
+                  ...(actor && { actor_type: actor }),
+                  page: currentPage,
+                  page_size: PAGE_SIZE,
+            });
+
+            try {
+                  const res = await fetch(`/api/activities/order-log?${qs}`);
+                  const data = await res.json();
+                  renderRows(data.records || []);
+                  renderStats(data.total || 0, data.stats || {});
+                  renderPagination(data.total || 0);
+                  document.getElementById('records-count').textContent = `${data.total || 0} records`;
+            } catch (e) {
+                  document.getElementById('log-tbody').innerHTML =
+                        '<tr><td colspan="6" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
+            }
+      }
+
+      function renderRows(records) {
+            const tbody = document.getElementById('log-tbody');
+            if (!records.length) {
+                  tbody.innerHTML = '<tr><td colspan="6" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';
+                  return;
+            }
+            tbody.innerHTML = records.map(r => `<tr>
+    <td style="white-space:nowrap;font-size:11px;color:#888;">${r.created_at}</td>
+    <td style="font-family:monospace;font-size:12px;color:#378ADD;font-weight:500;">${r.order_number}</td>
+    <td>
+      <span class="event-badge" style="background:${r.event_color}18;color:${r.event_color};">
+        ${r.event_label}
+      </span>
+    </td>
+    <td style="font-size:12px;color:#555;max-width:300px;">${r.detail}</td>
+    <td style="font-size:12px;color:#444;">${r.actor}</td>
+    <td><span class="actor-badge ${r.actor_type}">${r.actor_type}</span></td>
+  </tr>`).join('');
+      }
+
+      function renderStats(total, stats) {
+            document.getElementById('stat-total').textContent = total;
+
+            const guestEvents = ['guest_confirmed', 'guest_modify_requested', 'lunch_selected', 'mtlv_qty_selected'];
+            const staffEvents = ['status_changed', 'booking_handled', 'mtlv_ticket_sent', 'action_taken'];
+            const systemEvents = ['booking_created', 'booking_updated'];
+
+            const sum = (keys) => keys.reduce((a, k) => a + (stats[k] || 0), 0);
+            document.getElementById('stat-guest').textContent = sum(guestEvents);
+            document.getElementById('stat-staff').textContent = sum(staffEvents);
+            document.getElementById('stat-system').textContent = sum(systemEvents);
+      }
+
+      function renderPagination(total) {
+            const pages = Math.ceil(total / PAGE_SIZE);
+            const pag = document.getElementById('pagination');
+            if (pages <= 1) { pag.innerHTML = ''; return; }
+
+            let html = `<span class="page-info">Page ${currentPage} of ${pages}</span>`;
+            if (currentPage > 1) html += `<button class="page-btn" onclick="loadLog(${currentPage - 1})">← Prev</button>`;
+            if (currentPage < pages) html += `<button class="page-btn" onclick="loadLog(${currentPage + 1})">Next →</button>`;
+            pag.innerHTML = html;
+      }
+
+      function resetFilters() {
+            document.getElementById('f-order').value = '';
+            document.getElementById('f-event').value = '';
+            document.getElementById('f-actor').value = '';
+            currentPage = 1;
+            loadLog();
+      }
+
+      // Init
+      loadLog();
+</script>
+{% endblock %}

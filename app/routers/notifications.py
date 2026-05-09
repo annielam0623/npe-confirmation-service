@@ -197,6 +197,7 @@ async def tracking_tour_confirmation(
             b.submitted_at, b.notes, b.notes_history,
             b.submission_count,
             b.mtlv_eligible, b.mtlv_qty, b.mtlv_ticket_status
+            b.action_taken_by
         FROM bookings b
         WHERE b.tour_date = :tour_date
           AND b.module    = 'tour_confirmation'
@@ -236,6 +237,7 @@ async def tracking_tour_confirmation(
                 "mtlv_eligible":       bool(r["mtlv_eligible"]) if r["mtlv_eligible"] is not None else False,
                 "mtlv_qty":            r["mtlv_qty"],           # None = not replied yet
                 "mtlv_ticket_status":  r["mtlv_ticket_status"], # None / "pending_send" / "sent"
+                "action_taken_by": r["action_taken_by"] or "",
             }
             for r in rows
         ],
@@ -279,6 +281,7 @@ async def tracking_morning_pickup(
                 "sms_status":      r["sms_status"] or "",
                 "checkin_status":  "checked_in" if r["checkin_time"] else "pending",
                 "checkin_time":    r["checkin_time"].isoformat() if r["checkin_time"] else None,
+                "action_taken_by": r["action_taken_by"] or "",
             }
             for r in rows
         ],
@@ -301,6 +304,7 @@ async def tracking_tickets_reminder(
             b.tour_time,
             b.email_status, b.sms_status,
             b.confirmation, b.submitted_at
+            b.action_taken_by
         FROM bookings b
         WHERE b.tour_date = :tour_date
           AND b.module    = 'tickets_reminder'
@@ -326,6 +330,7 @@ async def tracking_tickets_reminder(
                 "sms_status":          r["sms_status"] or "",
                 "confirmation_status": r["confirmation"] or "pending",
                 "submitted_at":        r["submitted_at"].isoformat() if r["submitted_at"] else None,
+                "action_taken_by":     r["action_taken_by"] or "",
             }
             for r in rows
         ],
@@ -379,7 +384,7 @@ async def get_send_log(
     rows_res = await db.execute(text(f"""
         SELECT id, sent_at, module, order_number, first_name, last_name,
                email, phone, tour_date, tour_type,
-               email_status, sms_status, sms_sid, error_msg
+               email_status, sms_status, sms_sid, error_msg，sent_by
         FROM send_log
         WHERE {where}
         ORDER BY sent_at DESC
@@ -424,6 +429,8 @@ async def get_send_log(
                 "email_status": r["email_status"],
                 "sms_status":   r["sms_status"],
                 "error_msg":    r["error_msg"],
+                "sent_by":      r["sent_by"],
+                "action_taken_by": r["action_taken_by"] or "",
             }
             for r in rows
         ],
@@ -447,7 +454,7 @@ async def export_send_log(
     res = await db.execute(text(f"""
         SELECT sent_at, module, order_number, first_name, last_name,
                email, phone, tour_date, tour_type,
-               email_status, sms_status, error_msg
+               email_status, sms_status, error_msg, sent_by
         FROM send_log WHERE {where} ORDER BY sent_at DESC
     """), params)
     rows = res.all()
@@ -456,11 +463,11 @@ async def export_send_log(
     writer = csv.writer(output)
     writer.writerow(["Sent At","Module","Order#","First Name","Last Name",
                      "Email","Phone","Tour Date","Tour Type",
-                     "Email Status","SMS Status","Error"])
+                     "Email Status","SMS Status","Error","sent_by"])
     for r in rows:
         writer.writerow([
             r[0], r[1], r[2], r[3], r[4],
-            r[5], r[6], r[7], r[8], r[9], r[10], r[11],
+            r[5], r[6], r[7], r[8], r[9], r[10], r[11], r[12],
         ])
     output.seek(0)
     filename = f"send_log_{date or 'all'}.csv"

@@ -350,7 +350,16 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
             existing.status = BookingStatus.pending
 
         print(f"[webhook] updated booking id={existing.id}")
-
+        await db.execute(_text("""
+    INSERT INTO activity_log (order_number, event_type, detail, actor, actor_type)
+    VALUES (:order_number, :event_type, :detail, :actor, :actor_type)
+"""), {
+    "order_number": order_number,
+    "event_type":   "booking_updated",
+    "detail":       f"Rezdy updated booking — status: {fields.get('rezdy_status', '')}",
+    "actor":        "rezdy",
+    "actor_type":   "system",
+})
     else:
         # Insert new booking
         booking = Booking(
@@ -380,6 +389,16 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
         )
         db.add(booking)
         print(f"[webhook] created new booking order={order_number}")
+        await db.execute(_text("""
+    INSERT INTO activity_log (order_number, event_type, detail, actor, actor_type)
+    VALUES (:order_number, :event_type, :detail, :actor, :actor_type)
+"""), {
+    "order_number": order_number,
+    "event_type":   "booking_created",
+    "detail":       f"New booking from Rezdy — {fields.get('product_name', '')}",
+    "actor":        "rezdy",
+    "actor_type":   "system",
+})
 
     await db.commit()
     return {"status": "ok", "order_number": order_number}

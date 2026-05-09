@@ -125,7 +125,7 @@ async def _log_send(db: AsyncSession, data: dict):
         VALUES
             (:module, :order_number, :first_name, :last_name, :email, :phone,
              :tour_date, :tour_type, :email_status, :sms_status,
-             :sms_sid, :email_message_id, :error_msg, NOW())
+             :sms_sid, :email_message_id, :error_msg, :sent_by, NOW())
     """), data)
 
 
@@ -138,7 +138,7 @@ async def send_tour_confirmation(
     tour_type: str        = Form(...),
     tour_date: str        = Form(...),   # YYYY-MM-DD
     db:        AsyncSession = Depends(get_db),
-    _user = Depends(get_current_user),
+    user = Depends(get_current_user),
 ):
     if tour_type not in tc.TOUR_TYPES:
         raise HTTPException(400, f"Unknown tour_type: {tour_type}")
@@ -243,6 +243,7 @@ async def send_tour_confirmation(
             "sms_sid":          sms_sid,
             "email_message_id": email_message_id,
             "error_msg":        "" if email_status.startswith("sent") else email_status,
+            "sent_by":          user.username,
         })
         results.append({
             "order":        order_num,
@@ -264,7 +265,7 @@ async def send_tour_confirmation(
 async def send_morning_pickup(
     file: UploadFile = File(...),
     db:   AsyncSession = Depends(get_db),
-    _user = Depends(get_current_user),
+    user = Depends(get_current_user),
 ):
     file_bytes = await file.read()
     parsed = parse_excel(file_bytes, "morning_pickup")
@@ -341,6 +342,7 @@ async def send_morning_pickup(
             "sms_sid":          sms_sid,
             "email_message_id": email_message_id,
             "error_msg":        "" if sms_status.startswith("sent") else sms_status,
+            "sent_by":          user.username,
         })
 
         results.append({
@@ -366,7 +368,7 @@ async def send_tickets_reminder(
     tour_type:    str        = Form(...),
     service_date: str        = Form(...),   # YYYY-MM-DD
     db:           AsyncSession = Depends(get_db),
-    _user = Depends(get_current_user),
+    user = Depends(get_current_user),
 ):
     if tour_type not in tix.TOUR_TYPES:
         raise HTTPException(400, f"Unknown tour_type: {tour_type}")
@@ -451,6 +453,7 @@ async def send_tickets_reminder(
             "sms_sid":          sms_sid,
             "email_message_id": email_message_id,
             "error_msg":        "",
+            "sent_by":          user.username,
         })
 
         results.append({

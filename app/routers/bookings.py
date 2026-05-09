@@ -14,12 +14,24 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
 from sqlalchemy import select, and_, or_, not_
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import text
 
 from app.database import get_db
 from app.auth import get_current_user
 from app.models import Booking, BookingStatus, DismissedBooking
 
 router = APIRouter()
+async def _log_activity(db: AsyncSession, order_number: str, event_type: str, detail: str, actor: str, actor_type: str):
+    await db.execute(text("""
+        INSERT INTO activity_log (order_number, event_type, detail, actor, actor_type)
+        VALUES (:order_number, :event_type, :detail, :actor, :actor_type)
+    """), {
+        "order_number": order_number,
+        "event_type":   event_type,
+        "detail":       detail,
+        "actor":        actor,
+        "actor_type":   actor_type,
+    })
 
 # ─── Status groupings ─────────────────────────────────────────────────────────
 
@@ -306,6 +318,13 @@ async def handle_booking(
     booking.handled_by = current_user.username
     booking.handled_at = datetime.utcnow()
     booking.updated_at = datetime.utcnow()
+    await _log_activity(db,
+    order_number = booking.order_number,
+    event_type   = "booking_handled",
+    detail       = "Marked as handled",
+    actor        = current_user.username,
+    actor_type   = "staff",
+)
     await db.commit()
 
     return {
@@ -357,6 +376,13 @@ async def update_confirmation(
         booking.lunch_veggie = int(payload.get("lunch_veggie") or 0)
         booking.lunch_beef   = int(payload.get("lunch_beef")   or 0)
 
+    await _log_activity(db,
+    order_number = booking.order_number,
+    event_type   = "status_changed",
+    detail       = f"Status changed to {new_conf}",
+    actor        = current_user.username,
+    actor_type   = "staff",
+)
     await db.commit()
     return {
         "ok":           True,
@@ -422,6 +448,13 @@ async def update_mtlv_ticket_status(
 
     booking.mtlv_ticket_status = new_status
     booking.updated_at = datetime.now(ZoneInfo("America/Los_Angeles")).replace(tzinfo=None)
+    await _log_activity(db,
+    order_number = booking.order_number,
+    event_type   = "mtlv_ticket_sent",
+    detail       = f"MTLV ticket status set to {new_status}",
+    actor        = current_user.username,
+    actor_type   = "staff",
+)
     await db.commit()
     return {"ok": True, "mtlv_ticket_status": booking.mtlv_ticket_status}
 
@@ -443,3 +476,38 @@ async def unhandle_booking(
     booking.updated_at = datetime.utcnow()
     await db.commit()
     return {"ok": True}
+
+# take action on Notes
+@router.put("/{booking_id}/take-action")
+async def take_action(
+    booking_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
+    """Mark notes as actioned — records who took action and when."""
+    from zoneinfo import ZoneInfo
+    LA = ZoneInfo("America/Los_Angeles")
+
+    result = await db.execute(select(Booking).where(Booking.id == booking_id))
+    booking = result.scalar_one_or_none()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+
+    booking.action_taken_by = current_user.username
+    booking.action_taken_at = datetime.now(LA).replace(tzinfo=None)
+    booking.updated_at      = datetime.now(LA).replace(tzinfo=None)
+
+    await _log_activity(db,
+        order_number = booking.order_number,
+        event_type   = "action_taken",
+        detail       = f"Took action on: {booking.notes or ''}",
+        actor        = current_user.username,
+        actor_type   = "staff",
+    )
+
+    await db.commit()
+    return {
+        "ok":              True,
+        "action_taken_by": booking.action_taken_by,
+        "action_taken_at": booking.action_taken_at.isoformat(),
+    }
