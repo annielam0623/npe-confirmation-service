@@ -285,7 +285,6 @@ white-space: nowrap;
       renderRows(data.rows || []);
       renderStats(data.stats || {});
       renderPagination(data.total || 0);
-      renderErrors(data.rows || []);
       document.getElementById('records-count').textContent = `${data.total || 0} records`;
     } catch (e) {
       document.getElementById('log-tbody').innerHTML =
