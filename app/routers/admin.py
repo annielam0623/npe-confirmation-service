@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.auth import get_current_user
 from app.models import Booking, BookingType
-from app.models import User
+from app.models import AdminUser
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -441,7 +441,7 @@ async def notif_send_log(
 async def coming_soon(
     request: Request,
     module: str = "Coming Soon",
-    current_user = Depends(get_current_user),
+    current_user: AdminUser = Depends(get_current_user),
 ):
     return templates.TemplateResponse("admin/coming_soon.html", {
         "request": request,
