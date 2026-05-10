@@ -200,6 +200,26 @@ font-size: 12px; cursor: pointer; background: #fff; color: #555;
     }
   }
 
+ function renderRows(records) {
+   const tbody = document.getElementById('log-tbody');
+    if (!records.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';
+    return;
+  }
+   tbody.innerHTML = records.map(r => `<tr>
+    <td style="white-space:nowrap;font-size:11px;color:#888;">${r.created_at}</td>
+    <td style="font-family:monospace;font-size:12px;color:#378ADD;font-weight:500;">${r.order_number}</td>
+    <td>
+      <span class="event-badge" style="background:${r.event_color}18;color:${r.event_color};">
+        ${r.event_label}
+      </span>
+    </td>
+    <td style="font-size:12px;color:#555;max-width:300px;">${r.detail}</td>
+    <td style="font-size:12px;color:#444;">${r.actor}</td>
+    <td><span class="actor-badge ${r.actor_type}">${r.actor_type}</span></td>
+   </tr>`).join('');
+}
+  
   function renderStats(total, stats) {
     document.getElementById('stat-total').textContent = total;
     const guestEvents = ['guest_confirmed', 'guest_modify_requested', 'lunch_selected', 'mtlv_qty_selected'];
