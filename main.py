@@ -12,7 +12,7 @@ from app.routers import send_tickets             # tickets reminder 发送 API
 from app.routers import tracking                 # Morning Pickup guest tracking page
 from app.routers import order_log
 from app.routers import orders
-
+from app.routers import users
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -41,6 +41,7 @@ app.include_router(pickup_locations.router, prefix="/api/pickup-locations",   ta
 app.include_router(tracking.router,                                           tags=["tracking"])
 app.include_router(order_log.router)
 app.include_router(orders.router)
+app.include_router(users.router)
 
 @app.get("/")
 def home():

@@ -12,7 +12,7 @@ from sqlalchemy import select, func, and_
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.auth import get_current_user
+from app.auth import require_staff, require_admin
 from app.models import Booking, BookingType
 from app.models import AdminUser
 
@@ -91,7 +91,7 @@ async def dashboard(
     request: Request,
     offset: int = Query(0),
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     today = date.today()
     # Show 14 days centred around today (offset shifts the window)
@@ -121,7 +121,7 @@ async def dashboard(
 async def forecast(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     today = date.today()
     dates = [datetime.combine(today + timedelta(days=i), datetime.min.time())
@@ -148,7 +148,7 @@ async def manifests(
     tab: str = Query("tour"),
     pill: str = Query("all"),
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     if selected_date:
         try:
@@ -195,7 +195,7 @@ async def dispatch(
     request: Request,
     selected_date: str = Query(None),
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     if selected_date:
         try:
@@ -235,7 +235,7 @@ async def logs(
     log_type: str,
     selected_date: str = Query(None),
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     log_type_map = {
         "tour-confirmation":  ("log_tour",    "Tour Confirmation Log"),
@@ -291,10 +291,8 @@ async def logs(
 async def settings(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_admin),
 ):
-    if current_user.role != "admin":
-        return RedirectResponse(url="/admin/dashboard", status_code=302)
 
     from app.models import Manifest, Setting
     manifests_result = await db.execute(select(Manifest).order_by(Manifest.sort_order))
@@ -318,7 +316,7 @@ async def settings(
 @router.get("/notifications/tour-confirmation/send", response_class=HTMLResponse)
 async def notif_tour_send(
     request: Request,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     return templates.TemplateResponse("admin/send_tour.html", {
         "request": request,
@@ -330,7 +328,7 @@ async def notif_tour_send(
 @router.get("/notifications/tour-confirmation/tracking", response_class=HTMLResponse)
 async def notif_tour_tracking(
     request: Request,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     return templates.TemplateResponse("admin/tracking_tour.html", {
         "request": request,
@@ -342,7 +340,7 @@ async def notif_tour_tracking(
 @router.get("/notifications/tour-confirmation/utilities", response_class=HTMLResponse)
 async def notif_tour_utilities(
     request: Request,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     return templates.TemplateResponse("admin/utilities_tour.html", {
         "request": request,
@@ -354,7 +352,7 @@ async def notif_tour_utilities(
 @router.get("/notifications/morning-pickup/send", response_class=HTMLResponse)
 async def notif_morning_send(
     request: Request,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     return templates.TemplateResponse("admin/send_morning.html", {
         "request": request,
@@ -366,7 +364,7 @@ async def notif_morning_send(
 @router.get("/notifications/morning-pickup/tracking", response_class=HTMLResponse)
 async def notif_morning_tracking(
     request: Request,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     return templates.TemplateResponse("admin/tracking_morning.html", {
         "request": request,
@@ -378,7 +376,7 @@ async def notif_morning_tracking(
 @router.get("/notifications/morning-pickup/utilities", response_class=HTMLResponse)
 async def notif_morning_utilities(
     request: Request,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     return templates.TemplateResponse("admin/utilities_morning.html", {
         "request": request,
@@ -390,7 +388,7 @@ async def notif_morning_utilities(
 @router.get("/notifications/tickets-reminder/send", response_class=HTMLResponse)
 async def notif_tickets_send(
     request: Request,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     return templates.TemplateResponse("admin/send_tickets.html", {
         "request": request,
@@ -402,7 +400,7 @@ async def notif_tickets_send(
 @router.get("/notifications/tickets-reminder/tracking", response_class=HTMLResponse)
 async def notif_tickets_tracking(
     request: Request,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     return templates.TemplateResponse("admin/tracking_tickets.html", {
         "request": request,
@@ -414,7 +412,7 @@ async def notif_tickets_tracking(
 @router.get("/notifications/tickets-reminder/utilities", response_class=HTMLResponse)
 async def notif_tickets_utilities(
     request: Request,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     return templates.TemplateResponse("admin/utilities_tickets.html", {
         "request": request,
@@ -426,7 +424,7 @@ async def notif_tickets_utilities(
 @router.get("/notifications/send-log", response_class=HTMLResponse)
 async def notif_send_log(
     request: Request,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     today = date.today().strftime("%Y-%m-%d")
     return templates.TemplateResponse("admin/send_log.html", {
@@ -441,7 +439,7 @@ async def notif_send_log(
 async def coming_soon(
     request: Request,
     module: str = "Coming Soon",
-    current_user: AdminUser = Depends(get_current_user),
+    current_user: AdminUser = Depends(require_staff),
 ):
     return templates.TemplateResponse("admin/coming_soon.html", {
         "request": request,
@@ -455,10 +453,8 @@ async def coming_soon(
 @router.get("/settings/pickup-locations", response_class=HTMLResponse)
 async def settings_pickup_locations(
     request: Request,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_admin),
 ):
-    if current_user.role != "admin":
-        return RedirectResponse(url="/admin/dashboard", status_code=302)
     return templates.TemplateResponse("admin/pickup_locations.html", {
         "request": request,
         "current_user": current_user,

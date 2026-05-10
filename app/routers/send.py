@@ -19,7 +19,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
 from app.database import get_db
-from app.auth import get_current_user
+from app.auth import require_staff
 from app.services.excel_parser import parse_excel
 from app.services.sendgrid import send_raw_email as send_email
 from app.services.sms import send_sms_async
@@ -138,7 +138,7 @@ async def send_tour_confirmation(
     tour_type: str        = Form(...),
     tour_date: str        = Form(...),   # YYYY-MM-DD
     db:        AsyncSession = Depends(get_db),
-    user = Depends(get_current_user),
+    user = Depends(require_staff),
 ):
     if tour_type not in tc.TOUR_TYPES:
         raise HTTPException(400, f"Unknown tour_type: {tour_type}")
@@ -265,7 +265,7 @@ async def send_tour_confirmation(
 async def send_morning_pickup(
     file: UploadFile = File(...),
     db:   AsyncSession = Depends(get_db),
-    user = Depends(get_current_user),
+    user = Depends(require_staff),
 ):
     file_bytes = await file.read()
     parsed = parse_excel(file_bytes, "morning_pickup")
@@ -368,7 +368,7 @@ async def send_tickets_reminder(
     tour_type:    str        = Form(...),
     service_date: str        = Form(...),   # YYYY-MM-DD
     db:           AsyncSession = Depends(get_db),
-    user = Depends(get_current_user),
+    user = Depends(require_staff),
 ):
     if tour_type not in tix.TOUR_TYPES:
         raise HTTPException(400, f"Unknown tour_type: {tour_type}")

@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
 from app.database import get_db
-from app.auth import get_current_user
+from app.auth import require_staff
 from app.models import Booking, BookingStatus, DismissedBooking
 
 router = APIRouter()
@@ -159,7 +159,7 @@ async def list_bookings(
     product_code: Optional[str] = Query(None),
     show_dismissed: bool = Query(False),
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     """
     Returns bookings in two sections:
@@ -218,7 +218,7 @@ async def list_bookings(
 async def booking_stats(
     tour_date: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     """Counts for dashboard badges and pill counts."""
     filters = []
@@ -272,7 +272,7 @@ async def update_confirmation_no(
     booking_id: int,
     payload: ConfirmationNoUpdate,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     """Inline edit — save confirmation_no on blur/Enter."""
     result = await db.execute(select(Booking).where(Booking.id == booking_id))
@@ -291,7 +291,7 @@ async def dismiss_booking(
     booking_id: int,
     payload: DismissRequest,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     """Remove booking from Action Required (soft dismiss)."""
     result = await db.execute(select(Booking).where(Booking.id == booking_id))
@@ -320,7 +320,7 @@ async def dismiss_booking(
 async def handle_booking(
     booking_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     """
     Mark booking as handled — moves it from Action Required to normal list.
@@ -355,7 +355,7 @@ async def update_confirmation(
     booking_id: int,
     payload: dict,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     """
     Update confirmation status + optional lunch counts.
@@ -414,7 +414,7 @@ async def update_lunch(
     booking_id: int,
     payload: dict,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     """Update lunch counts for a YES booking."""
     from zoneinfo import ZoneInfo
@@ -445,7 +445,7 @@ async def update_mtlv_ticket_status(
     booking_id: int,
     payload: dict,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     """Update MTLV ticket send status. Values: pending_send | sent"""
     from zoneinfo import ZoneInfo
@@ -479,7 +479,7 @@ async def update_mtlv_ticket_status(
 async def unhandle_booking(
     booking_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     """Undo handle — puts booking back into Action Required."""
     result = await db.execute(select(Booking).where(Booking.id == booking_id))
@@ -498,7 +498,7 @@ async def unhandle_booking(
 async def take_action(
     booking_id: int,
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     """Mark notes as actioned — records who took action and when."""
     from zoneinfo import ZoneInfo

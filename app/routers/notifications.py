@@ -45,7 +45,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.auth import get_current_user
+from app.auth import require_staff
 from app.services.excel_parser import parse_excel
 from app.services import tour_confirmation as tc
 from app.services import morning_pickup as mp
@@ -82,7 +82,7 @@ async def preview_tour_confirmation(
     tour_type: str   = Form(...),
     tour_date: str   = Form(...),
     db: AsyncSession = Depends(get_db),
-    _user = Depends(get_current_user),
+    _user = Depends(require_staff),
 ):
     if tour_type not in tc.TOUR_TYPES:
         raise HTTPException(400, f"Unknown tour_type: {tour_type}")
@@ -119,7 +119,7 @@ async def preview_tour_confirmation(
 async def preview_morning_pickup(
     file: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
-    _user = Depends(get_current_user),
+    _user = Depends(require_staff),
 ):
     file_bytes = await file.read()
     parsed = parse_excel(file_bytes, "morning_pickup")
@@ -149,7 +149,7 @@ async def preview_tickets_reminder(
     tour_type: str      = Form(...),
     service_date: str   = Form(...),
     db: AsyncSession    = Depends(get_db),
-    _user = Depends(get_current_user),
+    _user = Depends(require_staff),
 ):
     if tour_type not in tix.TOUR_TYPES:
         raise HTTPException(400, f"Unknown tour_type: {tour_type}")
@@ -184,7 +184,7 @@ async def preview_tickets_reminder(
 async def tracking_tour_confirmation(
     date: str = Query(...),
     db: AsyncSession = Depends(get_db),
-    _user = Depends(get_current_user),
+    _user = Depends(require_staff),
 ):
     result = await db.execute(text("""
         SELECT
@@ -249,7 +249,7 @@ async def tracking_tour_confirmation(
 async def tracking_morning_pickup(
     date: str = Query(...),
     db: AsyncSession = Depends(get_db),
-    _user = Depends(get_current_user),
+    _user = Depends(require_staff),
 ):
     result = await db.execute(text("""
         SELECT
@@ -293,7 +293,7 @@ async def tracking_morning_pickup(
 async def tracking_tickets_reminder(
     date: str = Query(...),
     db: AsyncSession = Depends(get_db),
-    _user = Depends(get_current_user),
+    _user = Depends(require_staff),
 ):
     result = await db.execute(text("""
         SELECT
@@ -351,7 +351,7 @@ async def get_send_log(
     page:      int = Query(1),
     page_size: int = Query(50),
     db: AsyncSession = Depends(get_db),
-    _user = Depends(get_current_user),
+    _user = Depends(require_staff),
 ):
     conditions = ["1=1"]
     params: dict = {}
@@ -448,7 +448,7 @@ async def export_send_log(
     module: Optional[str] = Query(None),
     channel: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
-    _user = Depends(get_current_user),
+    _user = Depends(require_staff),
 ):
     conditions = ["1=1"]
     params: dict = {}
@@ -492,7 +492,7 @@ async def lookup_booking(
     module_name: str,
     order: str = Query(...),
     db: AsyncSession = Depends(get_db),
-    _user = Depends(get_current_user),
+    _user = Depends(require_staff),
 ):
     module_map = {
         "tour-confirmation": "tour_confirmation",
@@ -522,7 +522,7 @@ async def resend_booking(
     module_name: str,
     payload: dict,
     db: AsyncSession = Depends(get_db),
-    _user = Depends(get_current_user),
+    _user = Depends(require_staff),
 ):
     module_map = {
         "tour-confirmation": "tour_confirmation",
@@ -591,7 +591,7 @@ async def resend_booking(
 async def module_stats(
     module_name: str,
     db: AsyncSession = Depends(get_db),
-    _user = Depends(get_current_user),
+    _user = Depends(require_staff),
 ):
     module_map = {
         "tour-confirmation": "tour_confirmation",
@@ -622,7 +622,7 @@ async def delete_by_date(
     module_name: str,
     payload: dict,
     db: AsyncSession = Depends(get_db),
-    current_user = Depends(get_current_user),
+    current_user = Depends(require_staff),
 ):
     if current_user.role != "admin":
         raise HTTPException(403, "Admin only")
@@ -662,7 +662,7 @@ async def export_module(
     to:    Optional[str] = Query(None),
     type:  Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
-    _user = Depends(get_current_user),
+    _user = Depends(require_staff),
 ):
     module_map = {
         "tour-confirmation": "tour_confirmation",
