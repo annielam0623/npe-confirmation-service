@@ -285,6 +285,7 @@ white-space: nowrap;
       renderRows(data.rows || []);
       renderStats(data.stats || {});
       renderPagination(data.total || 0);
+      renderErrors(data.rows || []); 
       document.getElementById('records-count').textContent = `${data.total || 0} records`;
     } catch (e) {
       document.getElementById('log-tbody').innerHTML =
@@ -304,7 +305,7 @@ white-space: nowrap;
       const emailCls = r.email_status?.startsWith('sent') ? 'sp-ok' : r.email_status?.startsWith('failed') ? 'sp-fail' : 'sp-pend';
       const smsCls = smsStatusClass(r.sms_status);
       const smsLbl = smsLabel(r.sms_status);
-      const sentAt = r.sent_at ? new Date(r.sent_at).toLocaleString('en-US', { month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
+      const sentAt = r.sent_at ? new Date(r.sent_at).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'numeric', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) : '—';
       const sentBy = r.sent_by || '—';
 
       return `<tr>
@@ -371,6 +372,7 @@ white-space: nowrap;
   }
 
   function resetFilters() {
+    document.getElementById('f-date').value = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
     document.getElementById('f-module').value = '';
     document.getElementById('f-type').value = '';
     document.getElementById('f-status').value = '';
@@ -404,6 +406,8 @@ white-space: nowrap;
   }
 
   // Init
+  document.getElementById('f-date').value = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+  loadLog();
   loadLog();
 </script>
 {% endblock %}
