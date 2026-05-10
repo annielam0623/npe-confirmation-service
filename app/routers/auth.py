@@ -1,126 +1,73 @@
 """
-app/auth.py
-JWT authentication, cookie handling, role-based access control.
-Roles: admin (full access) | staff (ops access, no Settings/Users)
+app/routers/auth.py
+Login / logout routes.
+All auth utility functions live in app/auth.py.
 """
 
-from datetime import datetime, timedelta
-from typing import Optional
-
-from fastapi import Depends, HTTPException, Request, status
-from fastapi.responses import RedirectResponse
-from jose import JWTError, jwt
-from passlib.context import CryptContext
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.templating import Jinja2Templates
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models import AdminUser
+from app.auth import (
+    COOKIE_NAME,
+    TOKEN_EXPIRE_HOURS,
+    authenticate_user,
+    create_access_token,
+    decode_token,
+)
 
-# ── Config ────────────────────────────────────────────────────────────────────
-SECRET_KEY  = "npe-secret-key-change-in-prod"   # TODO: move to env var
-ALGORITHM   = "HS256"
-COOKIE_NAME = "npe_token"
-
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-# ── Password helpers ──────────────────────────────────────────────────────────
-def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+router = APIRouter()
+templates = Jinja2Templates(directory="app/templates")
 
 
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
-
-
-# ── JWT helpers ───────────────────────────────────────────────────────────────
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(hours=12))
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-
-def decode_token(token: str) -> Optional[dict]:
-    try:
-        return jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-    except JWTError:
-        return None
-
-
-# ── Current user from cookie ──────────────────────────────────────────────────
-def get_current_user(request: Request, db: Session = Depends(get_db)) -> Optional[AdminUser]:
+# ── GET /auth/login ───────────────────────────────────────────────────────────
+@router.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
     token = request.cookies.get(COOKIE_NAME)
-    if not token:
-        return None
-    payload = decode_token(token)
-    if not payload:
-        return None
-    username = payload.get("sub")
-    if not username:
-        return None
-    user = db.query(AdminUser).filter(AdminUser.username == username).first()
-    if not user:
-        return None
-    # Deactivated accounts are rejected at cookie level
-    if not user.is_active:
-        return None
-    return user
+    if token and decode_token(token):
+        return RedirectResponse(url="/admin/dashboard", status_code=302)
+    registered = request.query_params.get("registered") == "1"
+    return templates.TemplateResponse(
+        "login.html",
+        {"request": request, "error": None, "registered": registered},
+    )
 
 
-# ── Dependency: any authenticated user (admin or active staff) ────────────────
-def require_login(
+# ── POST /auth/login ──────────────────────────────────────────────────────────
+@router.post("/login", response_class=HTMLResponse)
+async def login_submit(
     request: Request,
-    db: Session = Depends(get_db),
-) -> AdminUser:
-    user = get_current_user(request, db)
+    db: AsyncSession = Depends(get_db),
+):
+    form = await request.form()
+    username = str(form.get("username", "")).strip()
+    password = str(form.get("password", ""))
+
+    user = await authenticate_user(username, password, db)
     if not user:
-        raise HTTPException(
-            status_code=status.HTTP_302_FOUND,
-            headers={"Location": "/admin/login"},
+        return templates.TemplateResponse(
+            "login.html",
+            {"request": request, "error": "Invalid username or password", "registered": False},
+            status_code=400,
         )
-    return user
+
+    token = create_access_token({"sub": user.username, "role": user.role})
+    response = RedirectResponse(url="/admin/dashboard", status_code=302)
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=token,
+        httponly=True,
+        max_age=TOKEN_EXPIRE_HOURS * 3600,
+        samesite="lax",
+    )
+    return response
 
 
-# ── Dependency: staff or admin (all ops pages) ────────────────────────────────
-def require_staff(
-    request: Request,
-    db: Session = Depends(get_db),
-) -> AdminUser:
-    user = get_current_user(request, db)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_302_FOUND,
-            headers={"Location": "/admin/login"},
-        )
-    if user.role not in ("admin", "staff"):
-        raise HTTPException(status_code=403, detail="Access denied")
-    return user
-
-
-# ── Dependency: admin only (Settings, Users) ──────────────────────────────────
-def require_admin(
-    request: Request,
-    db: Session = Depends(get_db),
-) -> AdminUser:
-    user = get_current_user(request, db)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_302_FOUND,
-            headers={"Location": "/admin/login"},
-        )
-    if user.role != "admin":
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return user
-
-
-# ── Login helper (used by login route) ───────────────────────────────────────
-def authenticate_user(username: str, password: str, db: Session) -> Optional[AdminUser]:
-    user = db.query(AdminUser).filter(AdminUser.username == username).first()
-    if not user:
-        return None
-    if not verify_password(password, user.password_hash):
-        return None
-    if not user.is_active:
-        return None   # Deactivated — silently reject
-    return user
+# ── GET /auth/logout ──────────────────────────────────────────────────────────
+@router.get("/logout")
+async def logout():
+    response = RedirectResponse(url="/auth/login", status_code=302)
+    response.delete_cookie(COOKIE_NAME)
+    return response

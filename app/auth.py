@@ -1,6 +1,6 @@
 """
 app/auth.py
-JWT authentication, cookie handling, role-based access control.
+JWT utility functions + role-based access control dependencies.
 Roles: admin (full access) | staff (ops access, no Settings/Users)
 """
 
@@ -17,9 +17,10 @@ from app.database import get_db
 from app.models import AdminUser
 
 # ── Config ────────────────────────────────────────────────────────────────────
-SECRET_KEY  = "npe-secret-key-change-in-prod"   # TODO: move to env var
-ALGORITHM   = "HS256"
-COOKIE_NAME = "npe_token"
+SECRET_KEY         = "npe-secret-key-change-in-prod"   # TODO: move to env var
+ALGORITHM          = "HS256"
+COOKIE_NAME        = "npe_token"
+TOKEN_EXPIRE_HOURS = 12
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -36,7 +37,7 @@ def verify_password(plain: str, hashed: str) -> bool:
 # ── JWT helpers ───────────────────────────────────────────────────────────────
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
     to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(hours=12))
+    expire = datetime.utcnow() + (expires_delta or timedelta(hours=TOKEN_EXPIRE_HOURS))
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
@@ -62,9 +63,7 @@ async def get_current_user(
     username = payload.get("sub")
     if not username:
         return None
-    result = await db.execute(
-        select(AdminUser).where(AdminUser.username == username)
-    )
+    result = await db.execute(select(AdminUser).where(AdminUser.username == username))
     user = result.scalar_one_or_none()
     if not user:
         return None
@@ -73,7 +72,7 @@ async def get_current_user(
     return user
 
 
-# ── Dependency: any authenticated user (admin or active staff) ────────────────
+# ── Dependency: require any logged-in user ────────────────────────────────────
 async def require_login(
     request: Request,
     db: AsyncSession = Depends(get_db),
@@ -82,7 +81,7 @@ async def require_login(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_302_FOUND,
-            headers={"Location": "/admin/login"},
+            headers={"Location": "/auth/login"},
         )
     return user
 
@@ -96,7 +95,7 @@ async def require_staff(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_302_FOUND,
-            headers={"Location": "/admin/login"},
+            headers={"Location": "/auth/login"},
         )
     if user.role not in ("admin", "staff"):
         raise HTTPException(status_code=403, detail="Access denied")
@@ -112,22 +111,20 @@ async def require_admin(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_302_FOUND,
-            headers={"Location": "/admin/login"},
+            headers={"Location": "/auth/login"},
         )
     if user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
     return user
 
 
-# ── Login helper (used by app/routers/auth.py login route) ───────────────────
+# ── Login helper (used by app/routers/auth.py) ────────────────────────────────
 async def authenticate_user(
     username: str,
     password: str,
     db: AsyncSession,
 ) -> Optional[AdminUser]:
-    result = await db.execute(
-        select(AdminUser).where(AdminUser.username == username)
-    )
+    result = await db.execute(select(AdminUser).where(AdminUser.username == username))
     user = result.scalar_one_or_none()
     if not user:
         return None
