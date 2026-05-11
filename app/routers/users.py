@@ -190,4 +190,4 @@ async def register_submit(
     user.is_active = True
     await db.commit()
 
-    return RedirectResponse("/admin/login?registered=1", status_code=303)
+    return RedirectResponse("/auth/login?registered=1", status_code=303)
