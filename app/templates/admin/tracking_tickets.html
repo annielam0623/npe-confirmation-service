@@ -263,7 +263,7 @@ function renderTable(){
                : r.sms_status==='failed' ? '<span class="badge-fail">&#10007; Failed</span>'
                : '<span class="badge-none">—</span>';
     var subT = r.submitted_at
-      ? new Date(r.submitted_at + 'Z').toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'})
+      ? new Date(r.submitted_at).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'})
       : '—';
     var notes = e(r.reschedule_notes||'');
     var conf  = r.confirmation||'pending';
