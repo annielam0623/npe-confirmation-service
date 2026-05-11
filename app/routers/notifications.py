@@ -616,6 +616,30 @@ async def module_stats(
     row = res.fetchone()
     return {"total": row[0], "today": row[1], "this_month": row[2]}
 
+@router.get("/{module_name}/dates-with-records")
+async def dates_with_records(
+    module_name: str,
+    db: AsyncSession = Depends(get_db),
+    _user = Depends(require_staff),
+):
+    module_map = {
+        "tour-confirmation": "tour_confirmation",
+        "morning-pickup":    "morning_pickup",
+        "tickets-reminder":  "tickets_reminder",
+    }
+    module = module_map.get(module_name)
+    if not module:
+        raise HTTPException(404)
+
+    res = await db.execute(text("""
+        SELECT tour_date, COUNT(*) as cnt
+        FROM bookings
+        WHERE module = :module
+        GROUP BY tour_date
+        ORDER BY tour_date DESC
+    """), {"module": module})
+    rows = res.fetchall()
+    return [{"date": str(r[0]), "count": r[1]} for r in rows]
 
 @router.post("/{module_name}/delete-by-date")
 async def delete_by_date(
