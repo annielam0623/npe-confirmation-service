@@ -44,7 +44,7 @@
                           background:{% if user.role=='admin' %}#1a6b3c{% else %}#3b82f6{% endif %};
                           color:#fff;display:flex;align-items:center;justify-content:center;
                           font-weight:700;font-size:15px;flex-shrink:0;">
-                {{ user.username[0].upper() if not is_pending else '?' }}
+                {{ user.initials if user.initials else user.username[0].upper() if not is_pending else '?' }}
               </div>
               <div>
                 <div style="font-weight:600;font-size:14px;color:#1a1a2e;">

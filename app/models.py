@@ -348,6 +348,7 @@ class AdminUser(Base):
     invite_token    = Column(String(64),  nullable=True,  default=None)
     invite_used     = Column(Boolean,     nullable=False,  default=True)
     created_by      = Column(String(50),  nullable=True,  default=None)
+    initials        = Column(String(10), nullable=False, default="")
 
 # ─── Activity Log ─────────────────────────────────────────────────────────────
 

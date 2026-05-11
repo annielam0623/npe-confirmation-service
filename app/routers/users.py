@@ -151,6 +151,7 @@ async def register_submit(
     token: str,
     request: Request,
     username: str = Form(...),
+    initials: str = Form(...), 
     password: str = Form(...),
     confirm_password: str = Form(...),
     db: AsyncSession = Depends(get_db),
@@ -185,6 +186,7 @@ async def register_submit(
         )
 
     user.username = username.strip()
+    user.initials = initials.upper().strip() 
     user.hashed_password = hash_password(password)
     user.invite_used = True
     user.is_active = True

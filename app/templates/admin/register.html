@@ -111,6 +111,21 @@
     border-radius: 2px;
     transition: width .3s, background .3s;
   }
+
+  .initials-preview {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: #3b82f6;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    margin-left: 10px;
+    vertical-align: middle;
+    letter-spacing: 0.5px;
+  }
 </style>
 </head>
 <body>
@@ -131,6 +146,18 @@
       <input type="text" id="username" name="username" required
              autocomplete="username" placeholder="e.g. sarah_ops" minlength="3">
       <div class="hint">Minimum 3 characters, no spaces.</div>
+    </div>
+
+    <div class="form-group">
+      <label for="initials">
+        Initials
+        <span class="initials-preview" id="initialsPreview">??</span>
+      </label>
+      <input type="text" id="initials" name="initials" required
+             placeholder="e.g. SL" maxlength="4"
+             oninput="updatePreview(this.value)"
+             style="text-transform:uppercase;">
+      <div class="hint">First & last name initials — e.g. Sarah Lee → SL</div>
     </div>
 
     <div class="form-group">
@@ -156,6 +183,12 @@
 </div>
 
 <script>
+function updatePreview(val) {
+  const clean = val.replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 4);
+  document.getElementById('initialsPreview').textContent = clean || '??';
+  document.getElementById('initials').value = clean;
+}
+
 function checkStrength(val) {
   const fill = document.getElementById('strengthFill');
   let score = 0;
