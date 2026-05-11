@@ -583,7 +583,7 @@ async def resend_booking(
     return {"success": True, "message": " | ".join(results)}
 
 
-# ══════════════════════════════════════════════════════════════════════════════
+# # ══════════════════════════════════════════════════════════════════════════════
 # STATS & DELETE (Utilities)
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -607,14 +607,15 @@ async def module_stats(
 
     res = await db.execute(text("""
         SELECT
-            COUNT(*)                                          AS total,
-            COUNT(*) FILTER (WHERE tour_date = :today)       AS today,
-            COUNT(*) FILTER (WHERE TO_CHAR(tour_date,'YYYY-MM') = :month) AS this_month
-        FROM bookings
+            COUNT(*)                                                        AS total,
+            COUNT(*) FILTER (WHERE tour_date = :today)                     AS today,
+            COUNT(*) FILTER (WHERE TO_CHAR(tour_date,'YYYY-MM') = :month)  AS this_month
+        FROM send_log
         WHERE module = :module
     """), {"module": module, "today": today, "month": month})
     row = res.fetchone()
     return {"total": row[0], "today": row[1], "this_month": row[2]}
+
 
 @router.get("/{module_name}/dates-with-records")
 async def dates_with_records(
@@ -633,13 +634,14 @@ async def dates_with_records(
 
     res = await db.execute(text("""
         SELECT tour_date, COUNT(*) as cnt
-        FROM bookings
+        FROM send_log
         WHERE module = :module
         GROUP BY tour_date
         ORDER BY tour_date DESC
     """), {"module": module})
     rows = res.fetchall()
     return [{"date": str(r[0]), "count": r[1]} for r in rows]
+
 
 @router.post("/{module_name}/delete-by-date")
 async def delete_by_date(
@@ -661,17 +663,13 @@ async def delete_by_date(
     if not module or not tour_date:
         raise HTTPException(400, "Missing module or tour_date")
 
-    res = await db.execute(text("""
-        DELETE FROM bookings
-        WHERE module = :module AND tour_date = :tour_date
-    """), {"module": module, "tour_date": _to_date(tour_date)})
     await db.execute(text("""
         DELETE FROM send_log
         WHERE module = :module AND tour_date = :tour_date
     """), {"module": module, "tour_date": _to_date(tour_date)})
     await db.commit()
 
-    return {"success": True, "message": f"Deleted records for {tour_date}"}
+    return {"success": True, "message": f"Deleted send records for {tour_date}"}
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -714,19 +712,82 @@ async def export_module(
     where = " AND ".join(conditions)
     res = await db.execute(text(f"""
         SELECT order_number, first_name, last_name,
-               customer_email, phone, quantities,
-               pickup_time, pickup_location, tour_date, tour_type,
-               email_status, sms_status, confirmation, submitted_at
-        FROM bookings WHERE {where}
+               email, phone, tour_date, tour_type,
+               email_status, sms_status, sent_by, sent_at
+        FROM send_log WHERE {where}
         ORDER BY tour_date ASC, last_name ASC
     """), params)
     rows = res.all()
 
     output = io.StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Order#","First Name","Last Name","Email","Phone","Qty",
-                     "Pickup Time","Pickup Location","Tour Date","Tour Type",
-                     "Email Status","SMS Status","Confirmation","Submitted At"])
+    writer.writerow(["Order#", "First Name", "Last Name", "Email", "Phone",
+                     "Tour Date", "Tour Type", "Email Status", "SMS Status",
+                     "Sent By", "Sent At"])
+    for r in rows:
+        writer.writerow(list(r))
+    output.seek(0)
+
+    label = date or (f"{from_}_to_{to}" if from_ else "all")
+    filename = f"{module_name}_{label}.csv"
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+══════════════════════════════════════════════════════════════════════════════
+# EXPORT (Utilities)
+# ══════════════════════════════════════════════════════════════════════════════
+
+@router.get("/{module_name}/export")
+async def export_module(
+    module_name: str,
+    date:  Optional[str] = Query(None),
+    from_: Optional[str] = Query(None, alias="from"),
+    to:    Optional[str] = Query(None),
+    type:  Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    _user = Depends(require_staff),
+):
+    module_map = {
+        "tour-confirmation": "tour_confirmation",
+        "morning-pickup":    "morning_pickup",
+        "tickets-reminder":  "tickets_reminder",
+    }
+    module = module_map.get(module_name)
+    if not module:
+        raise HTTPException(404)
+
+    conditions = ["module = :module"]
+    params: dict = {"module": module}
+
+    if date:
+        conditions.append("tour_date = :date")
+        params["date"] = date
+    elif from_ and to:
+        conditions.append("tour_date BETWEEN :from_ AND :to")
+        params["from_"] = from_
+        params["to"]    = to
+    if type and type != "all":
+        conditions.append("tour_type = :type")
+        params["type"] = type
+
+    where = " AND ".join(conditions)
+    res = await db.execute(text(f"""
+        SELECT order_number, first_name, last_name,
+               email, phone, tour_date, tour_type,
+               email_status, sms_status, sent_by, sent_at
+        FROM send_log WHERE {where}
+        ORDER BY tour_date ASC, last_name ASC
+    """), params)
+    rows = res.all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Order#", "First Name", "Last Name", "Email", "Phone",
+                     "Tour Date", "Tour Type", "Email Status", "SMS Status",
+                     "Sent By", "Sent At"])
     for r in rows:
         writer.writerow(list(r))
     output.seek(0)

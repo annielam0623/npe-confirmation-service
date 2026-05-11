@@ -277,7 +277,7 @@ function applyFilter() {
       <td style="font-size:12px;">${r.pickup_location || '—'}</td>
       <td><span class="sp ${smsCls}">${smsLabel(r.sms_status)}</span></td>
       <td><span class="sp ${checkinCls}">${r.checkin_status === 'checked_in' ? '✓ Checked In' : '⏳ Pending'}</span></td>
-      <td style="font-size:11px;color:#7a9bbe;">${r.checkin_time ? new Date(r.submitted_at).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}) : '—'}</td>
+      <td style="font-size:11px;color:#7a9bbe;">${r.submitted_at ? new Date(r.submitted_at).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}): '—'}</td>
     </tr>`;
   }).join('');
 }
