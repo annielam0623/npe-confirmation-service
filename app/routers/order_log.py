@@ -14,7 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
 from app.database import get_db
-from app.auth import get_current_user
+from app.auth import require_staff
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -50,7 +50,7 @@ EVENT_COLORS = {
 @router.get("/admin/activities/order-log", response_class=HTMLResponse)
 async def order_log_page(
     request: Request,
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
 ):
     today = datetime.now(LA).strftime("%Y-%m-%d")
     return templates.TemplateResponse("admin/order_log.html", {
@@ -69,7 +69,7 @@ async def order_log_api(
     order_number: Optional[str] = Query(None),
     page:         int           = Query(1, ge=1),
     page_size:    int           = Query(50, ge=1, le=200),
-    current_user=Depends(get_current_user),
+    current_user=Depends(require_staff),
     db: AsyncSession = Depends(get_db),
 ):
     filters = ["actor_type != 'system'"]
@@ -77,14 +77,11 @@ async def order_log_api(
 
     if date:
         try:
-           parsed_date = date_type.fromisoformat(date)
-           filters.append("DATE(created_at AT TIME ZONE 'America/Los_Angeles') = :date")
-           params["date"] = parsed_date
+            parsed_date = date_type.fromisoformat(date)
+            filters.append("DATE(created_at AT TIME ZONE 'America/Los_Angeles') = :date")
+            params["date"] = parsed_date
         except ValueError:
-           pass
-    if parsed_date:
-        filters.append("DATE(created_at AT TIME ZONE 'America/Los_Angeles') = :date")
-        params["date"] = parsed_date
+            pass
     if event_type:
         filters.append("event_type = :event_type")
         params["event_type"] = event_type
