@@ -55,7 +55,7 @@ async def generate_invite(
 
     placeholder = AdminUser(
         username=f"__pending_{token[:8]}",
-        password_hash="",
+        hashed_password="",
         role="staff",
         invite_token=token,
         invite_used=False,
@@ -185,7 +185,7 @@ async def register_submit(
         )
 
     user.username = username.strip()
-    user.password_hash = hash_password(password)
+    user.hashed_password = hash_password(password)
     user.invite_used = True
     user.is_active = True
     await db.commit()
