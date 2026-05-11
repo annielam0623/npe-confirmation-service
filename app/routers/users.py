@@ -7,8 +7,7 @@ Admin only (except /register/{token} which is public).
 
 import secrets
 import os
-print("CWD:", os.getcwd())
-print("Templates dir exists:", os.path.exists("app/templates/admin/base.html"))
+
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -22,7 +21,8 @@ from app.models import AdminUser
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
-
+print("CWD:", os.getcwd())
+print("Templates dir exists:", os.path.exists("app/templates/admin/base.html"))
 
 # ── GET /admin/settings/users ─────────────────────────────────────────────────
 @router.get("/admin/settings/users", response_class=HTMLResponse)
