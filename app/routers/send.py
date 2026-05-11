@@ -121,7 +121,7 @@ async def _log_send(db: AsyncSession, data: dict):
         INSERT INTO send_log
             (module, order_number, first_name, last_name, email, phone,
              tour_date, tour_type, email_status, sms_status,
-             sms_sid, email_message_id, error_msg, sent_at)
+             sms_sid, email_message_id, error_msg, sent_by, sent_at)
         VALUES
             (:module, :order_number, :first_name, :last_name, :email, :phone,
              :tour_date, :tour_type, :email_status, :sms_status,
