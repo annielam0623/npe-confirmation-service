@@ -148,7 +148,7 @@ async def manifests(
     tab: str = Query("tour"),
     pill: str = Query("all"),
     db: AsyncSession = Depends(get_db),
-    current_user=Depends(require_staff),
+    current_user=Depends(require_admin),
 ):
     if selected_date:
         try:
