@@ -456,8 +456,8 @@ async def tix_confirm_get(request: Request, db: AsyncSession = Depends(get_db)):
                          SET confirmation='yes', submitted_at=:ts,
                              submission_count=:c, source=:s
                          WHERE id=:id"""),
-            {"ts": datetime.now(LA).replace(tzinfo=None),
-             "c": new_count, "s": src, "id": row["id"]},
+            {"ts": datetime.now(timezone.utc),
+              "c": new_count, "s": src, "id": row["id"]},
         )
         await db.commit()
         result = await db.execute(
