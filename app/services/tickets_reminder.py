@@ -254,7 +254,7 @@ def build_email(row: dict, tour_type: str, service_date: str, form_url: str) -> 
     last       = row.get("last_name", "")
     chd        = row.get("chd_number") or row.get("order_number", "")
     cfm        = row.get("confirmation_no", "")
-    pax        = row.get("quantities", "1")
+    pax        = row.get("no_of_pax") or row.get("quantities") or "1"
     checkin    = row.get("checkin_time", "")
     tour_time  = row.get("tour_time", "")
     checkin_loc = cfg.get("checkin_location", "")
