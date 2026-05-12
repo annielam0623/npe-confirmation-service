@@ -121,7 +121,7 @@ async def _log_send(db: AsyncSession, data: dict):
         INSERT INTO send_log
             (module, order_number, first_name, last_name, email, phone,
              tour_date, tour_type, email_status, sms_status,
-             sms_sid, email_message_id, error_msg, sent_at)
+             sms_sid, email_message_id, error_msg, sent_by, sent_at)
         VALUES
             (:module, :order_number, :first_name, :last_name, :email, :phone,
              :tour_date, :tour_type, :email_status, :sms_status,
@@ -256,6 +256,130 @@ async def send_tour_confirmation(
     await db.commit()
     sent = sum(1 for r in results if r.get("email_status", "").startswith("sent"))
     return {"total": len(rows), "sent": sent, "results": results}
+
+# ═══════════════════════════════════════════════════════════
+# POST /send/tour-confirmation-bulk  (JSON guest list)
+# ═══════════════════════════════════════════════════════════
+@router.post("/send/tour-confirmation-bulk")
+async def send_tour_confirmation_bulk(
+    request: Request,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_staff),
+):
+    body      = await request.json()
+    tour_type = body.get("tour_type", "")
+    tour_date = body.get("tour_date", "")
+    send_type = body.get("send_type", "combined")
+    guests    = body.get("guests", [])
+
+    if tour_type not in tc.TOUR_TYPES:
+        raise HTTPException(400, f"Unknown tour_type: {tour_type}")
+
+    results = []
+
+    for row in guests:
+        order_num = row.get("order_number", "")
+        email     = row.get("customer_email", "")
+        phone     = row.get("phone", "")
+        first     = row.get("first_name", "")
+        last      = row.get("last_name", "")
+
+        if not email and send_type in ("email", "combined"):
+            results.append({"order": order_num, "name": f"{first} {last}", "email_status": "skipped", "sms_status": ""})
+            continue
+
+        booking_data = {
+            "order_number":    order_num,
+            "first_name":      first,
+            "last_name":       last,
+            "customer_email":  email,
+            "phone":           phone,
+            "quantities":      int(row.get("quantities") or 1),
+            "pickup_time":     row.get("pickup_time", ""),
+            "pickup_location": row.get("pickup_location", ""),
+            "tour_date":       _to_date(tour_date),
+            "tour_type":       tour_type,
+            "module":          "tour_confirmation",
+            "mtlv_eligible":   row.get("mtlv_eligible", False),
+        }
+        booking_id = await _upsert_booking(db, booking_data)
+
+        token     = tc.make_token(booking_id, email, tour_date)
+        email_url = tc.confirm_url(token, src="email")
+        sms_url   = tc.confirm_url(token, src="sms")
+
+        await db.execute(text(
+            "UPDATE bookings SET confirm_token = :token WHERE id = :id"
+        ), {"token": token, "id": booking_id})
+
+        ploc = row.get("pickup_location", "")
+        loc_res = await db.execute(text(
+            "SELECT photo_url, instruction FROM pickup_locations WHERE hotel_name ILIKE :name LIMIT 1"
+        ), {"name": f"%{ploc}%"})
+        loc_row = loc_res.fetchone()
+        pickup_photo_url   = loc_row[0] if loc_row else ""
+        pickup_instruction = loc_row[1] if loc_row else ""
+
+        email_status = ""
+        email_message_id = ""
+        if send_type in ("email", "combined") and email:
+            email_html = tc.build_email(row, tour_type, tour_date, email_url,
+                                        pickup_instruction=pickup_instruction,
+                                        pickup_photo_url=pickup_photo_url,
+                                        pickup_photo_label=f"{ploc} Pickup location - click here for detail")
+            subject = f"Tour Confirmation & Lunch Selection – {_fmt_date(tour_date)}"
+            try:
+                email_res        = await send_email(email, f"{first} {last}", subject, email_html)
+                email_message_id = email_res.get("message_id", "") if isinstance(email_res, dict) else ""
+                email_status     = "sent"
+            except Exception as e:
+                email_status = f"failed: {e}"
+                logger.error(f"[tour_confirmation] Email failed — {email} error={e}")
+            await _update_email_status(db, booking_id, email_status)
+
+        sms_status = ""
+        sms_sid    = ""
+        if send_type in ("sms", "combined") and phone:
+            sms_body = tc.build_sms(first, tour_type, tour_date, sms_url)
+            sms_res  = await send_sms_async(phone, sms_body, module="tour_confirmation")
+            if sms_res["success"]:
+                sms_sid    = sms_res.get("sid", "")
+                sms_status = f"sent:{sms_sid}"
+            else:
+                sms_status = f"failed: {sms_res.get('error','')}"
+                logger.error(f"[tour_confirmation] SMS failed — phone={phone} order={order_num}")
+            await _update_sms_status(db, booking_id, sms_status)
+
+        await _log_send(db, {
+            "module":           "tour_confirmation",
+            "order_number":     order_num,
+            "first_name":       first,
+            "last_name":        last,
+            "email":            email,
+            "phone":            phone,
+            "tour_date":        _to_date(tour_date),
+            "tour_type":        tour_type,
+            "email_status":     email_status,
+            "sms_status":       sms_status,
+            "sms_sid":          sms_sid,
+            "email_message_id": email_message_id,
+            "error_msg":        "" if email_status.startswith("sent") else email_status,
+            "sent_by":          user.username,
+        })
+
+        results.append({
+            "order":        order_num,
+            "name":         f"{first} {last}",
+            "email_status": email_status,
+            "sms_status":   sms_status,
+        })
+
+        await asyncio.sleep(0.3)
+
+    await db.commit()
+    sent = sum(1 for r in results if r.get("email_status", "").startswith("sent"))
+    return {"total": len(guests), "sent": sent, "results": results}
+
 
 
 # ═══════════════════════════════════════════════════════════

@@ -111,6 +111,24 @@
     border-radius: 2px;
     transition: width .3s, background .3s;
   }
+<<<<<<< HEAD
+=======
+
+  .initials-preview {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: #3b82f6;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    margin-left: 10px;
+    vertical-align: middle;
+    letter-spacing: 0.5px;
+  }
+>>>>>>> 31776d93b67c1246853519776b70f76931ae553e
 </style>
 </head>
 <body>
@@ -134,6 +152,21 @@
     </div>
 
     <div class="form-group">
+<<<<<<< HEAD
+=======
+      <label for="initials">
+        Initials
+        <span class="initials-preview" id="initialsPreview">??</span>
+      </label>
+      <input type="text" id="initials" name="initials" required
+             placeholder="e.g. SL" maxlength="4"
+             oninput="updatePreview(this.value)"
+             style="text-transform:uppercase;">
+      <div class="hint">First & last name initials — e.g. Sarah Lee → SL</div>
+    </div>
+
+    <div class="form-group">
+>>>>>>> 31776d93b67c1246853519776b70f76931ae553e
       <label for="password">Password</label>
       <input type="password" id="password" name="password" required
              autocomplete="new-password" placeholder="At least 8 characters" minlength="8"
@@ -156,6 +189,15 @@
 </div>
 
 <script>
+<<<<<<< HEAD
+=======
+function updatePreview(val) {
+  const clean = val.replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 4);
+  document.getElementById('initialsPreview').textContent = clean || '??';
+  document.getElementById('initials').value = clean;
+}
+
+>>>>>>> 31776d93b67c1246853519776b70f76931ae553e
 function checkStrength(val) {
   const fill = document.getElementById('strengthFill');
   let score = 0;

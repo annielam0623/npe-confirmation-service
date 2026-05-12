@@ -6,29 +6,33 @@ Admin only (except /register/{token} which is public).
 """
 
 import secrets
-from datetime import datetime
+import os
+
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
-from app.auth import hash_password, require_admin, require_login
+from app.auth import hash_password, require_admin
 from app.database import get_db
 from app.models import AdminUser
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
-
+print("CWD:", os.getcwd())
+print("Templates dir exists:", os.path.exists("app/templates/admin/base.html"))
 
 # ── GET /admin/settings/users ─────────────────────────────────────────────────
 @router.get("/admin/settings/users", response_class=HTMLResponse)
-def settings_users_page(
+async def settings_users_page(
     request: Request,
     current_user: AdminUser = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    users = db.query(AdminUser).order_by(AdminUser.id).all()
+    result = await db.execute(select(AdminUser).order_by(AdminUser.id))
+    users = result.scalars().all()
     return templates.TemplateResponse(
         "admin/settings_users.html",
         {
@@ -42,25 +46,24 @@ def settings_users_page(
 
 # ── POST /admin/settings/users/invite ─────────────────────────────────────────
 @router.post("/admin/settings/users/invite")
-def generate_invite(
+async def generate_invite(
     request: Request,
     current_user: AdminUser = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
     token = secrets.token_urlsafe(32)
 
-    # Store a placeholder user row with the token (no username/password yet)
     placeholder = AdminUser(
         username=f"__pending_{token[:8]}",
-        password_hash="",
+        hashed_password="",
         role="staff",
         invite_token=token,
         invite_used=False,
-        is_active=False,           # becomes True after registration
+        is_active=False,
         created_by=current_user.username,
     )
     db.add(placeholder)
-    db.commit()
+    await db.commit()
 
     base_url = str(request.base_url).rstrip("/")
     invite_url = f"{base_url}/register/{token}"
@@ -69,64 +72,70 @@ def generate_invite(
 
 # ── POST /admin/settings/users/{user_id}/deactivate ──────────────────────────
 @router.post("/admin/settings/users/{user_id}/deactivate")
-def deactivate_user(
+async def deactivate_user(
     user_id: int,
     current_user: AdminUser = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    user = db.query(AdminUser).filter(AdminUser.id == user_id).first()
+    result = await db.execute(select(AdminUser).filter(AdminUser.id == user_id))
+    user = result.scalars().first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if user.username == current_user.username:
         raise HTTPException(status_code=400, detail="Cannot deactivate yourself")
     user.is_active = False
-    db.commit()
+    await db.commit()
     return JSONResponse({"ok": True})
 
 
 # ── POST /admin/settings/users/{user_id}/reactivate ──────────────────────────
 @router.post("/admin/settings/users/{user_id}/reactivate")
-def reactivate_user(
+async def reactivate_user(
     user_id: int,
     current_user: AdminUser = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    user = db.query(AdminUser).filter(AdminUser.id == user_id).first()
+    result = await db.execute(select(AdminUser).filter(AdminUser.id == user_id))
+    user = result.scalars().first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     user.is_active = True
-    db.commit()
+    await db.commit()
     return JSONResponse({"ok": True})
 
 
 # ── DELETE /admin/settings/users/{user_id} ────────────────────────────────────
 @router.delete("/admin/settings/users/{user_id}")
-def delete_user(
+async def delete_user(
     user_id: int,
     current_user: AdminUser = Depends(require_admin),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    user = db.query(AdminUser).filter(AdminUser.id == user_id).first()
+    result = await db.execute(select(AdminUser).filter(AdminUser.id == user_id))
+    user = result.scalars().first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     if user.username == current_user.username:
         raise HTTPException(status_code=400, detail="Cannot delete yourself")
-    db.delete(user)
-    db.commit()
+    await db.delete(user)
+    await db.commit()
     return JSONResponse({"ok": True})
 
 
 # ── GET /register/{token} — public registration page ─────────────────────────
 @router.get("/register/{token}", response_class=HTMLResponse)
-def register_page(
+async def register_page(
     token: str,
     request: Request,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    user = db.query(AdminUser).filter(
-        AdminUser.invite_token == token,
-        AdminUser.invite_used == False,
-    ).first()
+    result = await db.execute(
+        select(AdminUser).filter(
+            AdminUser.invite_token == token,
+            AdminUser.invite_used == False,
+        )
+    )
+    user = result.scalars().first()
     if not user:
         return HTMLResponse("<h2>This invite link is invalid or has already been used.</h2>", status_code=400)
 
@@ -138,22 +147,25 @@ def register_page(
 
 # ── POST /register/{token} — complete registration ────────────────────────────
 @router.post("/register/{token}", response_class=HTMLResponse)
-def register_submit(
+async def register_submit(
     token: str,
     request: Request,
     username: str = Form(...),
+    initials: str = Form(...), 
     password: str = Form(...),
     confirm_password: str = Form(...),
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ):
-    user = db.query(AdminUser).filter(
-        AdminUser.invite_token == token,
-        AdminUser.invite_used == False,
-    ).first()
+    result = await db.execute(
+        select(AdminUser).filter(
+            AdminUser.invite_token == token,
+            AdminUser.invite_used == False,
+        )
+    )
+    user = result.scalars().first()
     if not user:
         return HTMLResponse("<h2>This invite link is invalid or has already been used.</h2>", status_code=400)
 
-    # Validation
     error = None
     if len(username.strip()) < 3:
         error = "Username must be at least 3 characters."
@@ -162,7 +174,8 @@ def register_submit(
     elif len(password) < 8:
         error = "Password must be at least 8 characters."
     else:
-        existing = db.query(AdminUser).filter(AdminUser.username == username).first()
+        dup = await db.execute(select(AdminUser).filter(AdminUser.username == username))
+        existing = dup.scalars().first()
         if existing and existing.id != user.id:
             error = "That username is already taken. Please choose another."
 
@@ -172,11 +185,11 @@ def register_submit(
             {"request": request, "token": token, "error": error},
         )
 
-    # Activate the account
     user.username = username.strip()
-    user.password_hash = hash_password(password)
+    user.initials = initials.upper().strip() 
+    user.hashed_password = hash_password(password)
     user.invite_used = True
     user.is_active = True
-    db.commit()
+    await db.commit()
 
-    return RedirectResponse("/admin/login?registered=1", status_code=303)
+    return RedirectResponse("/auth/login?registered=1", status_code=303)

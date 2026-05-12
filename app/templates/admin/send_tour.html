@@ -165,6 +165,7 @@ table.preview-tbl {
             <td>Pickup Time</td>
             <td>Pickup Location</td>
             <td>Note</td>
+            <td>Send?</td>
           </tr>
         </thead>
         <tbody id="preview-tbody"></tbody>
@@ -304,6 +305,7 @@ function showPreview(data) {
       <td>${r.pickup_time}</td>
       <td>${r.pickup_location}</td>
       <td>${r.duplicate ? '<span class="dup-badge">Duplicate</span>' : ''}</td>
+      <td>${r.duplicate ? `<label style="font-size:11px;color:#BA7517;cursor:pointer;display:flex;align-items:center;gap:4px;"><input type="checkbox" data-order="${r.order_number}" class="ignore-dup"> Send anyway</label>` : ''}</td>
     </tr>`).join('');
 
   document.getElementById('step-form').classList.add('hidden');
@@ -318,15 +320,30 @@ async function confirmSend() {
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Sending…';
 
-  const file = document.getElementById('excel-file').files[0];
-  const fd = new FormData();
-  fd.append('file', file);
-  fd.append('tour_type', currentTourType);
-  fd.append('tour_date', currentTourDate);
-  fd.append('send_type', sendType);
+  const ignoredDups = new Set(
+    [...document.querySelectorAll('.ignore-dup:checked')].map(el => el.dataset.order)
+  );
+
+  const guests = (parsedRows || [])
+    .filter(r => !r.duplicate || ignoredDups.has(r.order_number))
+    .map(r => ({
+      order_number:    r.order_number,
+      first_name:      (r.name || '').split(' ')[0] || '',
+      last_name:       (r.name || '').split(' ').slice(1).join(' ') || '',
+      customer_email:  r.email || '',
+      phone:           r.phone || '',
+      quantities:      r.quantities || 1,
+      pickup_time:     r.pickup_time || '',
+      pickup_location: r.pickup_location || '',
+      mtlv_eligible:   false,
+    }));
 
   try {
-    const res = await fetch('/send/tour-confirmation', { method: 'POST', body: fd });
+    const res = await fetch('/send/tour-confirmation-bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tour_type: currentTourType, tour_date: currentTourDate, send_type: sendType, guests })
+    });
     const data = await res.json();
     if (!res.ok) { errEl.textContent = data.detail || 'Send failed.'; btn.disabled = false; btn.innerHTML = '✉️ Send to All'; return; }
     showResults(data);

@@ -91,14 +91,9 @@
 <!-- Delete records -->
 <div class="util-card">
   <h3>🗑 Delete Records by Date</h3>
-  <p>Permanently delete all tour confirmation send records for a specific date. This cannot be undone.</p>
-  <div class="form-row">
-    <div class="form-group">
-      <label>Tour Date</label>
-      <input type="date" id="delete-date">
-    </div>
-    <button class="btn-danger-action" onclick="deleteRecords()">Delete</button>
-  </div>
+  <p>Select a date to permanently delete all send records for that date. This cannot be undone.</p>
+  <button class="btn-action" onclick="loadDates()">Show Available Dates</button>
+  <div id="dates-list" style="margin-top:12px;"></div>
   <div id="delete-result" class="result-msg"></div>
 </div>
 
@@ -156,11 +151,41 @@ async function resend(id, channel) {
   el.innerHTML = `<span class="${data.success ? 'result-ok' : 'result-fail'}">${data.message || (data.success ? 'Sent!' : 'Failed.')}</span>`;
 }
 
-async function deleteRecords() {
-  const date = document.getElementById('delete-date').value;
-  if (!date) { alert('Please select a date.'); return; }
-  if (!confirm(`Delete ALL tour confirmation records for ${date}? This cannot be undone.`)) return;
-  const res  = await fetch(`/api/notifications/tickets-reminder/delete-by-date`, {
+async function loadDates() {
+  const el = document.getElementById('dates-list');
+  el.innerHTML = '<span style="font-size:12px;color:#888;">Loading…</span>';
+  const res  = await fetch('/api/notifications/tickets-reminder/dates-with-records');
+  const data = await res.json();
+  if (!data.length) {
+    el.innerHTML = '<span style="font-size:12px;color:#888;">No records found.</span>';
+    return;
+  }
+  el.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;">
+      <thead>
+        <tr style="background:#f9f9f7;border-bottom:1px solid #e5e7eb;">
+          <td style="padding:8px 12px;font-size:11px;font-weight:600;color:#999;">Date</td>
+          <td style="padding:8px 12px;font-size:11px;font-weight:600;color:#999;">Records</td>
+          <td style="padding:8px 12px;"></td>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.map(d => `
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:8px 12px;font-weight:600;">${d.date}</td>
+            <td style="padding:8px 12px;color:#666;">${d.count} record(s)</td>
+            <td style="padding:8px 12px;">
+              <button class="btn-danger-action" style="font-size:12px;padding:5px 14px;"
+                onclick="deleteRecords('${d.date}')">Delete</button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function deleteRecords(date) {
+  if (!confirm(`Delete ALL tickets reminder records for ${date}? This cannot be undone.`)) return;
+  const res  = await fetch('/api/notifications/tickets-reminder/delete-by-date', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({tour_date: date}),
@@ -168,6 +193,7 @@ async function deleteRecords() {
   const data = await res.json();
   const el   = document.getElementById('delete-result');
   el.innerHTML = `<span class="${data.success ? 'result-ok' : 'result-fail'}">${data.message || 'Done.'}</span>`;
+  if (data.success) loadDates();
 }
 
 async function loadStats() {

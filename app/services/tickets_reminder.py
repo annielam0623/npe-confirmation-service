@@ -15,7 +15,7 @@ import hashlib
 import hmac
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 _LA = ZoneInfo("America/Los_Angeles")
@@ -195,7 +195,7 @@ def make_token(record_id: int, email: str, service_date: str) -> str:
         expires = int(time.time()) + 7 * 86400
     payload = f"{record_id}|{email}|{expires}"
     sig = hmac.new(SECRET_KEY.encode(), payload.encode(), hashlib.sha256).hexdigest()
-    return base64.b64encode(f"{record_id}:{expires}:{sig}".encode()).decode()
+    return base64.urlsafe_b64encode(f"{record_id}:{expires}:{sig}".encode()).decode()
 
 
 def confirm_url(token: str, src: str = "email") -> str:
@@ -206,7 +206,7 @@ async def verify_token(token: str, db) -> tuple[str | None, dict | None]:
     if not token:
         return "invalid", None
     try:
-        raw = base64.b64decode(token.encode()).decode()
+        raw = base64.urlsafe_b64decode(token.encode()).decode()
         record_id_str, expires_str, sig = raw.split(":", 2)
         record_id = int(record_id_str)
         expires   = int(expires_str)

@@ -11,8 +11,8 @@ POST /update-notes
 POST /update-status
 """
 
+import asyncio
 import logging
-import time
 from datetime import datetime
 
 from zoneinfo import ZoneInfo
@@ -75,7 +75,20 @@ async def _insert_record(db: AsyncSession, d: dict) -> int:
     return rid
 
 
-async def _do_send(d: dict, send_type: str, db: AsyncSession) -> dict:
+async def _log_send(db: AsyncSession, data: dict):
+    await db.execute(text("""
+        INSERT INTO send_log
+            (module, order_number, first_name, last_name, email, phone,
+             tour_date, tour_type, email_status, sms_status,
+             sms_sid, email_message_id, error_msg, sent_by, sent_at)
+        VALUES
+            (:module, :order_number, :first_name, :last_name, :email, :phone,
+             :tour_date, :tour_type, :email_status, :sms_status,
+             :sms_sid, :email_message_id, :error_msg, :sent_by, NOW())
+    """), data)
+
+
+async def _do_send(d: dict, send_type: str, db: AsyncSession, sent_by: str = "") -> dict:
     tour_cfg   = TOUR_TYPES.get(d.get("tour_type", ""), next(iter(TOUR_TYPES.values())))
     sms_label  = tour_cfg.get("sms_label") or tour_cfg.get("label", "")
     email_addr = d.get("customer_email") or d.get("email", "")
@@ -87,6 +100,7 @@ async def _do_send(d: dict, send_type: str, db: AsyncSession) -> dict:
     form_url = confirm_url(token, send_type)
 
     sms_ok, email_ok = False, False
+    sms_sid = ""
 
     if send_type in ("sms", "combined"):
         if phone:
@@ -95,7 +109,8 @@ async def _do_send(d: dict, send_type: str, db: AsyncSession) -> dict:
                 build_sms(d, d.get("tour_type", ""), form_url),
                 module="tickets_reminder",
             )
-            sms_ok = r.get("success", False)
+            sms_ok  = r.get("success", False)
+            sms_sid = r.get("sid", "") if sms_ok else ""
             if not sms_ok:
                 logger.error(
                     f"[tickets_reminder] SMS failed — phone={phone} "
@@ -104,7 +119,7 @@ async def _do_send(d: dict, send_type: str, db: AsyncSession) -> dict:
             else:
                 logger.info(
                     f"[tickets_reminder] SMS sent — phone={phone} "
-                    f"chd={d.get('chd_number','')} sid={r.get('sid','')}"
+                    f"chd={d.get('chd_number','')} sid={sms_sid}"
                 )
         else:
             logger.warning(
@@ -137,13 +152,32 @@ async def _do_send(d: dict, send_type: str, db: AsyncSession) -> dict:
         text("UPDATE tickets_reminders SET sms_status=:s, email_status=:e WHERE id=:id"),
         {"s": sms_st, "e": em_st, "id": rid},
     )
+
+    # ── Write to send_log ─────────────────────────────────────────────────
+    await _log_send(db, {
+        "module":           "tickets_reminder",
+        "order_number":     d.get("chd_number") or d.get("order_number", ""),
+        "first_name":       d.get("first_name", ""),
+        "last_name":        d.get("last_name", ""),
+        "email":            email_addr,
+        "phone":            phone,
+        "tour_date":        _parse_date(svc_date),
+        "tour_type":        d.get("tour_type", ""),
+        "email_status":     em_st,
+        "sms_status":       sms_st,
+        "sms_sid":          sms_sid,
+        "email_message_id": "",
+        "error_msg":        "" if (sms_ok or email_ok) else f"sms={sms_st} email={em_st}",
+        "sent_by":          sent_by,
+    })
+
     await db.commit()
 
     return {
-        "record_id": rid,
-        "sms_ok":    sms_ok,
-        "email_ok":  email_ok,
-        "name":      f"{d.get('first_name','')} {d.get('last_name','')}".strip(),
+        "record_id":  rid,
+        "sms_ok":     sms_ok,
+        "email_ok":   email_ok,
+        "name":       f"{d.get('first_name','')} {d.get('last_name','')}".strip(),
         "chd_number": d.get("chd_number") or d.get("order_number", ""),
     }
 
@@ -153,11 +187,11 @@ async def _do_send(d: dict, send_type: str, db: AsyncSession) -> dict:
 async def send_single(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_user),
+    user=Depends(get_current_user),
 ):
     d         = await request.json()
     send_type = d.get("send_type", "combined")
-    return await _do_send(d, send_type, db)
+    return await _do_send(d, send_type, db, sent_by=user.username)
 
 
 # ── POST /send-bulk ───────────────────────────────────────────────────────────
@@ -165,24 +199,24 @@ async def send_single(
 async def send_bulk(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_user),
+    user=Depends(get_current_user),
 ):
     body      = await request.json()
     send_type = body.get("send_type", "combined")
     guests    = body.get("guests", [])
     results   = []
     for g in guests:
-        results.append(await _do_send(g, send_type, db))
-        time.sleep(0.3)
+        results.append(await _do_send(g, send_type, db, sent_by=user.username))
+        await asyncio.sleep(0.3)
     return {"sent": len(results), "results": results}
 
 
 # ── POST /check-duplicates ────────────────────────────────────────────────────
 @router.post("/check-duplicates")
 async def check_duplicates(
-    manifest:     UploadFile = File(None),
-    db:           AsyncSession = Depends(get_db),
-    _=Depends(get_current_user),
+    manifest: UploadFile = File(None),
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_user),
 ):
     """
     Parse the uploaded Excel manifest, check for duplicates in tickets_reminders,
@@ -230,7 +264,7 @@ async def check_duplicates(
 
 # ── GET /tour-types ───────────────────────────────────────────────────────────
 @router.get("/tour-types")
-async def tour_types(_=Depends(get_current_user)):
+async def tour_types(user=Depends(get_current_user)):
     return [{"key": k, "label": v["label"], "abbr": v["abbr"]} for k, v in TOUR_TYPES.items()]
 
 
@@ -239,7 +273,7 @@ async def tour_types(_=Depends(get_current_user)):
 async def log(
     date: str = "",
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_user),
+    user=Depends(get_current_user),
 ):
     if not date:
         date = datetime.now(ZoneInfo("America/Los_Angeles")).strftime("%Y-%m-%d")
@@ -251,7 +285,7 @@ async def log(
                        submission_count, email_status, sms_status
                 FROM tickets_reminders
                 WHERE service_date = :date
-                ORDER BY last_name ASC"""),
+                ORDER BY submitted_at DESC NULLS LAST, last_name ASC"""),
         {"date": date_obj},
     )
     return [
@@ -282,7 +316,7 @@ async def log(
 async def update_notes(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_user),
+    user=Depends(get_current_user),
 ):
     body = await request.json()
     rid  = int(body.get("id", 0))
@@ -301,7 +335,7 @@ async def update_notes(
 async def update_status(
     request: Request,
     db: AsyncSession = Depends(get_db),
-    _=Depends(get_current_user),
+    user=Depends(get_current_user),
 ):
     body         = await request.json()
     confirmation = str(body.get("confirmation", ""))

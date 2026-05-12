@@ -152,7 +152,7 @@ table.preview-tbl {
           <tr>
             <td>CHD#</td><td>Confirmation#</td><td>Name</td>
             <td>Phone</td><td>Email</td><td>Qty</td>
-            <td>Check-in Time</td><td>Tour Time</td><td>Note</td>
+            <td>Check-in Time</td><td>Tour Time</td><td>Note</td><td>Send?</td>
           </tr>
         </thead>
         <tbody id="preview-tbody"></tbody>
@@ -286,6 +286,7 @@ function showPreview(data) {
       <td>${r.checkin_time}</td>
       <td>${r.tour_time}</td>
       <td>${r.duplicate ? '<span class="dup-badge">Duplicate</span>' : ''}</td>
+      <td>${r.duplicate ? `<label style="font-size:11px;color:#BA7517;cursor:pointer;display:flex;align-items:center;gap:4px;"><input type="checkbox" data-order="${r.order_number}" class="ignore-dup"> Send anyway</label>` : ''}</td>
     </tr>`).join('');
 
   document.getElementById('step-form').classList.add('hidden');
@@ -299,9 +300,13 @@ async function confirmSend() {
   errEl.textContent = '';
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Sending…';
+  
+   const ignoredDups = new Set(
+    [...document.querySelectorAll('.ignore-dup:checked')].map(el => el.dataset.order)
+  );
 
   const guests = (previewRows || [])
-    .filter(r => !r.duplicate)
+    .filter(r => !r.duplicate || ignoredDups.has(r.order_number))
     .map(r => ({
       chd_number:      r.order_number,
       confirmation_no: r.confirmation_no || '',
