@@ -15,7 +15,7 @@ import hashlib
 import hmac
 import os
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 _LA = ZoneInfo("America/Los_Angeles")

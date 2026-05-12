@@ -251,7 +251,7 @@ async def log(
                        submission_count, email_status, sms_status
                 FROM tickets_reminders
                 WHERE service_date = :date
-                ORDER BY last_name ASC"""),
+                ORDER BY submitted_at DESC NULLS LAST, last_name ASC"""),
         {"date": date_obj},
     )
     return [
