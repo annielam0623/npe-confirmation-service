@@ -71,7 +71,6 @@ async def _insert_record(db: AsyncSession, d: dict) -> int:
         },
     )
     rid = result.fetchone()[0]
-    await db.commit()
     return rid
 
 
