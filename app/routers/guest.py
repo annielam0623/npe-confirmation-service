@@ -5,7 +5,7 @@ GET  /confirm/{token}  — show form
 POST /confirm/{token}  — handle submission
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse
