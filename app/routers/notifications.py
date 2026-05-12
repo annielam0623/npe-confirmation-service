@@ -192,13 +192,24 @@ async def tracking_tour_confirmation(
             b.customer_email AS email, b.phone,
             b.quantities, b.pickup_time, b.pickup_location,
             b.tour_date, b.tour_type,
-            b.email_status, b.sms_status, b.confirmation,
+            b.email_status,
+            COALESCE(sl.sms_status, b.sms_status) AS sms_status,
+            b.confirmation,
             b.lunch_turkey, b.lunch_veggie, b.lunch_beef,
             b.submitted_at, b.notes, b.notes_history,
             b.submission_count,
             b.mtlv_eligible, b.mtlv_qty, b.mtlv_ticket_status,
             b.action_taken_by
         FROM bookings b
+        LEFT JOIN LATERAL (
+            SELECT sms_status
+            FROM send_log
+            WHERE order_number = b.order_number
+              AND module = 'tour_confirmation'
+              AND sms_sid IS NOT NULL AND sms_sid != ''
+            ORDER BY sent_at DESC
+            LIMIT 1
+        ) sl ON true
         WHERE b.tour_date = :tour_date
           AND b.module    = 'tour_confirmation'
         ORDER BY b.submitted_at DESC NULLS LAST, b.last_name ASC
@@ -236,9 +247,9 @@ async def tracking_tour_confirmation(
                 "submission_count":    r["submission_count"] or 0,
                 "submitted_at":        _to_la_str(r["submitted_at"]),
                 "mtlv_eligible":       bool(r["mtlv_eligible"]) if r["mtlv_eligible"] is not None else False,
-                "mtlv_qty":            r["mtlv_qty"],           # None = not replied yet
-                "mtlv_ticket_status":  r["mtlv_ticket_status"], # None / "pending_send" / "sent"
-                "action_taken_by": r["action_taken_by"] or "",
+                "mtlv_qty":            r["mtlv_qty"],
+                "mtlv_ticket_status":  r["mtlv_ticket_status"],
+                "action_taken_by":     r["action_taken_by"] or "",
             }
             for r in rows
         ],
@@ -255,10 +266,20 @@ async def tracking_morning_pickup(
         SELECT
             b.id, b.order_number, b.first_name, b.last_name,
             b.phone, b.quantities, b.pickup_time, b.pickup_location,
-            b.tour_date, b.sms_status,
-            b.driver, b.vehicle_no,
+            b.tour_date, b.driver, b.vehicle_no,
+            b.action_taken_by,
+            COALESCE(sl.sms_status, b.sms_status) AS sms_status,
             c.checkin_time
         FROM bookings b
+        LEFT JOIN LATERAL (
+            SELECT sms_status
+            FROM send_log
+            WHERE order_number = b.order_number
+              AND module = 'morning_pickup'
+              AND sms_sid IS NOT NULL AND sms_sid != ''
+            ORDER BY sent_at DESC
+            LIMIT 1
+        ) sl ON true
         LEFT JOIN checkin_log c ON c.order_number = b.order_number
             AND DATE(c.checkin_time) = :tour_date
         WHERE b.tour_date = :tour_date
@@ -303,10 +324,20 @@ async def tracking_tickets_reminder(
             b.quantities, b.tour_date, b.tour_type,
             b.pickup_time AS checkin_time,
             b.tour_time,
-            b.email_status, b.sms_status,
-            b.confirmation, b.submitted_at
+            b.email_status,
+            COALESCE(sl.sms_status, b.sms_status) AS sms_status,
+            b.confirmation, b.submitted_at,
             b.action_taken_by
         FROM bookings b
+        LEFT JOIN LATERAL (
+            SELECT sms_status
+            FROM send_log
+            WHERE order_number = b.order_number
+              AND module = 'tickets_reminder'
+              AND sms_sid IS NOT NULL AND sms_sid != ''
+            ORDER BY sent_at DESC
+            LIMIT 1
+        ) sl ON true
         WHERE b.tour_date = :tour_date
           AND b.module    = 'tickets_reminder'
         ORDER BY b.last_name ASC
@@ -336,6 +367,7 @@ async def tracking_tickets_reminder(
             for r in rows
         ],
     }
+
 
 
 # ══════════════════════════════════════════════════════════════════════════════
