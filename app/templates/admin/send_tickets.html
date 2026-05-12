@@ -30,7 +30,7 @@
 
 .preview-card {
   background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
-  border-radius: 12px; overflow: hidden; margin-bottom: 20px; max-width: 960px;
+  border-radius: 12px; overflow: hidden; margin-bottom: 20px; width: 100%;
 }
 .preview-header {
   padding: 12px 16px; background: #FAEEDA;
@@ -39,8 +39,9 @@
 }
 .preview-header span { font-size: 13px; font-weight: 600; color: #BA7517; }
 
+.tbl-wrap { overflow-x: auto; width: 100%; }
 table.preview-tbl {
-  width: 100%; border-collapse: collapse; font-size: 12px;
+  width: auto; min-width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap;
 }
 .preview-tbl thead td {
   padding: 8px 10px; font-size: 11px; font-weight: 600;
@@ -52,10 +53,14 @@ table.preview-tbl {
 .preview-tbl tbody td { padding: 8px 10px; color: #444; }
 .preview-tbl tbody tr.dup-row { background: #fff8e1; }
 .dup-badge { font-size:10px; background:#FAEEDA; color:#BA7517; padding:2px 6px; border-radius:6px; }
+.select-all-wrap {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: #BA7517; font-weight: 600; cursor: pointer;
+}
 
 .result-card {
   background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
-  border-radius: 12px; padding: 20px; max-width: 960px; margin-bottom: 20px;
+  border-radius: 12px; padding: 20px; width: 100%; margin-bottom: 20px;
 }
 .result-summary { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
 .result-stat { background: #f5f5f3; border-radius: 8px; padding: 10px 18px; text-align: center; }
@@ -76,7 +81,6 @@ table.preview-tbl {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .hidden { display: none !important; }
-/* ── Send type selector ──────────────────────────── */
 .stype-btn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 7px 16px; border-radius: 7px; font-size: 13px;
@@ -146,13 +150,19 @@ table.preview-tbl {
       <span>✅ Preview — <span id="preview-count">0</span> bookings</span>
       <span style="font-size:12px;color:#888;" id="preview-meta"></span>
     </div>
-    <div style="overflow-x:auto;">
+    <div class="tbl-wrap">
       <table class="preview-tbl">
         <thead>
           <tr>
             <td>CHD#</td><td>Confirmation#</td><td>Name</td>
             <td>Phone</td><td>Email</td><td>Qty</td>
-            <td>Check-in Time</td><td>Tour Time</td><td>Note</td><td>Send?</td>
+            <td>Check-in Time</td><td>Tour Time</td><td>Note</td>
+            <td>
+              <div class="select-all-wrap">
+                <input type="checkbox" id="select-all-dups" onchange="toggleAllDups(this.checked)">
+                <label for="select-all-dups" style="cursor:pointer;">Send anyway (all)</label>
+              </div>
+            </td>
           </tr>
         </thead>
         <tbody id="preview-tbody"></tbody>
@@ -203,7 +213,7 @@ table.preview-tbl {
         <div class="num" id="res-total">0</div><div class="lbl">Total</div>
       </div>
     </div>
-    <div style="overflow-x:auto;">
+    <div class="tbl-wrap">
       <table class="preview-tbl">
         <thead>
           <tr><td>CHD#</td><td>Name</td><td>Email Status</td><td>SMS Status</td></tr>
@@ -228,6 +238,10 @@ function setSendType(val) {
   const icons  = { combined: '✉️', sms: '📱', email: '📧' };
   const btn = document.getElementById('btn-confirm-send');
   if (btn) btn.innerHTML = icons[val] + ' ' + (btn.dataset.base || 'Send') + ' (' + labels[val] + ')';
+}
+
+function toggleAllDups(checked) {
+  document.querySelectorAll('.ignore-dup').forEach(cb => cb.checked = checked);
 }
 
 let currentFile = null;
@@ -275,6 +289,11 @@ function showPreview(data) {
   document.getElementById('preview-meta-bar').textContent = metaText;
   document.getElementById('preview-meta-bar').style.color = dups > 0 ? '#BA7517' : '#3B6D11';
 
+  // Show/hide select-all header checkbox
+  const selectAllWrap = document.getElementById('select-all-dups').closest('.select-all-wrap');
+  selectAllWrap.style.display = dups > 0 ? 'flex' : 'none';
+  document.getElementById('select-all-dups').checked = false;
+
   document.getElementById('preview-tbody').innerHTML = rows.map(r => `
     <tr class="${r.duplicate ? 'dup-row' : ''}">
       <td>${r.order_number}</td>
@@ -300,8 +319,8 @@ async function confirmSend() {
   errEl.textContent = '';
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Sending…';
-  
-   const ignoredDups = new Set(
+
+  const ignoredDups = new Set(
     [...document.querySelectorAll('.ignore-dup:checked')].map(el => el.dataset.order)
   );
 

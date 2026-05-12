@@ -28,7 +28,7 @@
 /* Preview */
 .preview-card {
   background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
-  border-radius: 12px; overflow: hidden; margin-bottom: 20px; max-width: 900px;
+  border-radius: 12px; overflow: hidden; margin-bottom: 20px; width: 100%;
 }
 .preview-header {
   padding: 12px 16px; background: #E6F1FB;
@@ -44,8 +44,9 @@
   font-size: 12px; font-weight: 600; color: #185FA5;
 }
 
+.tbl-wrap { overflow-x: auto; width: 100%; }
 table.preview-tbl {
-  width: 100%; border-collapse: collapse; font-size: 12px;
+  width: auto; min-width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap;
 }
 .preview-tbl thead td {
   padding: 8px 10px; font-size: 11px; font-weight: 600;
@@ -59,7 +60,7 @@ table.preview-tbl {
 /* Result stats */
 .result-card {
   background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
-  border-radius: 12px; padding: 20px; max-width: 900px; margin-bottom: 20px;
+  border-radius: 12px; padding: 20px; width: 100%; margin-bottom: 20px;
 }
 .result-summary { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
 .result-stat { background: #f5f5f3; border-radius: 8px; padding: 10px 18px; text-align: center; }
@@ -80,7 +81,7 @@ table.preview-tbl {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .hidden { display: none !important; }
-/* ── Send type selector ──────────────────────────── */
+
 .stype-btn {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 7px 16px; border-radius: 7px; font-size: 13px;
@@ -126,19 +127,19 @@ table.preview-tbl {
   </div>
   <div style="margin-bottom:20px;">
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-    <label class="stype-btn" id="lbl-combined" onclick="setSendType('combined')">
-          <input type="radio" name="send_type" value="combined" style="display:none;">
-          <span class="stype-icon">✉️📱</span> Both (SMS + Email)
-    </label>
-    <label class="stype-btn stype-sms active" id="lbl-sms" onclick="setSendType('sms')">
-          <input type="radio" name="send_type" value="sms" checked style="display:none;">
-          <span class="stype-icon">📱</span> SMS Only
-    </label>
-    <label class="stype-btn stype-email" id="lbl-email" onclick="setSendType('email')">
-          <input type="radio" name="send_type" value="email" style="display:none;">
-          <span class="stype-icon">📧</span> Email Only
-    </label>
-      </div>
+      <label class="stype-btn" id="lbl-combined" onclick="setSendType('combined')">
+        <input type="radio" name="send_type" value="combined" style="display:none;">
+        <span class="stype-icon">✉️📱</span> Both (SMS + Email)
+      </label>
+      <label class="stype-btn stype-sms active" id="lbl-sms" onclick="setSendType('sms')">
+        <input type="radio" name="send_type" value="sms" checked style="display:none;">
+        <span class="stype-icon">📱</span> SMS Only
+      </label>
+      <label class="stype-btn stype-email" id="lbl-email" onclick="setSendType('email')">
+        <input type="radio" name="send_type" value="email" style="display:none;">
+        <span class="stype-icon">📧</span> Email Only
+      </label>
+    </div>
     <div style="display:flex;gap:10px;align-items:center;margin-top:10px;">
       <button class="btn-send" id="btn-confirm-send" data-base="Send to All" onclick="confirmSend()">
         📱 Send to All (SMS Only)
@@ -164,7 +165,7 @@ table.preview-tbl {
         <div class="num" id="res-total">0</div><div class="lbl">Total</div>
       </div>
     </div>
-    <div style="overflow-x:auto;">
+    <div class="tbl-wrap">
       <table class="preview-tbl">
         <thead>
           <tr><td>Order #</td><td>Name</td><td>Phone</td><td>Pickup Time</td><td>SMS Status</td></tr>
@@ -228,23 +229,25 @@ function showPreview(data) {
   const container = document.getElementById('preview-groups');
   container.innerHTML = Object.entries(groups).map(([loc, grpRows]) => `
     <div class="loc-group-header">📍 ${loc} — ${grpRows.length} booking(s)</div>
-    <table class="preview-tbl">
-      <thead><tr>
-        <td>Order #</td><td>Name</td><td>Phone</td>
-        <td>Pickup Time</td><td>Driver</td><td>Vehicle #</td>
-      </tr></thead>
-      <tbody>
-        ${grpRows.map(r => `
-          <tr>
-            <td>${r.order_number}</td>
-            <td>${r.name}</td>
-            <td style="font-size:11px;">${r.phone}</td>
-            <td>${r.pickup_time}</td>
-            <td>${r.driver || '—'}</td>
-            <td>${r.vehicle_no || '—'}</td>
-          </tr>`).join('')}
-      </tbody>
-    </table>`).join('');
+    <div class="tbl-wrap">
+      <table class="preview-tbl">
+        <thead><tr>
+          <td>Order #</td><td>Name</td><td>Phone</td>
+          <td>Pickup Time</td><td>Driver</td><td>Vehicle #</td>
+        </tr></thead>
+        <tbody>
+          ${grpRows.map(r => `
+            <tr>
+              <td>${r.order_number}</td>
+              <td>${r.name}</td>
+              <td style="font-size:11px;">${r.phone}</td>
+              <td>${r.pickup_time}</td>
+              <td>${r.driver || '—'}</td>
+              <td>${r.vehicle_no || '—'}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`).join('');
 
   document.getElementById('step-form').classList.add('hidden');
   document.getElementById('step-preview').classList.remove('hidden');
@@ -279,7 +282,7 @@ function showResults(data) {
   const sent   = results.filter(r => (r.sms_status||'').startsWith('sent')).length;
   const failed = results.filter(r => (r.sms_status||'').startsWith('failed')).length;
 
-  document.getElementById('res-sent').textContent  = sent;
+  document.getElementById('res-sent').textContent   = sent;
   document.getElementById('res-failed').textContent = failed;
   document.getElementById('res-total').textContent  = data.total;
 
