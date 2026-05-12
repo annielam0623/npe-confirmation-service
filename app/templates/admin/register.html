@@ -111,8 +111,6 @@
     border-radius: 2px;
     transition: width .3s, background .3s;
   }
-<<<<<<< HEAD
-=======
 
   .initials-preview {
     display: inline-flex;
@@ -128,7 +126,6 @@
     vertical-align: middle;
     letter-spacing: 0.5px;
   }
->>>>>>> 31776d93b67c1246853519776b70f76931ae553e
 </style>
 </head>
 <body>
@@ -152,8 +149,6 @@
     </div>
 
     <div class="form-group">
-<<<<<<< HEAD
-=======
       <label for="initials">
         Initials
         <span class="initials-preview" id="initialsPreview">??</span>
@@ -166,7 +161,6 @@
     </div>
 
     <div class="form-group">
->>>>>>> 31776d93b67c1246853519776b70f76931ae553e
       <label for="password">Password</label>
       <input type="password" id="password" name="password" required
              autocomplete="new-password" placeholder="At least 8 characters" minlength="8"
@@ -189,15 +183,12 @@
 </div>
 
 <script>
-<<<<<<< HEAD
-=======
 function updatePreview(val) {
   const clean = val.replace(/[^A-Za-z]/g, '').toUpperCase().slice(0, 4);
   document.getElementById('initialsPreview').textContent = clean || '??';
   document.getElementById('initials').value = clean;
 }
 
->>>>>>> 31776d93b67c1246853519776b70f76931ae553e
 function checkStrength(val) {
   const fill = document.getElementById('strengthFill');
   let score = 0;
