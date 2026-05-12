@@ -33,16 +33,27 @@
 .preview-header {
   padding: 12px 16px; background: #E6F1FB;
   border-bottom: 0.5px solid rgba(0,0,0,0.08);
-  display: flex; align-items: center; justify-content: space-between;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
 .preview-header span { font-size: 13px; font-weight: 600; color: #185FA5; }
 
 /* Location group header */
 .loc-group-header {
-  padding: 7px 12px; background: #f0f6fd;
+  padding: 8px 12px; background: #f0f6fd;
   border-bottom: 0.5px solid rgba(0,0,0,0.06);
-  font-size: 12px; font-weight: 600; color: #185FA5;
+  display: flex; align-items: center; gap: 10px;
 }
+.loc-group-title {
+  font-size: 12px; font-weight: 600; color: #185FA5; flex: 1;
+}
+/* Location toggle button */
+.loc-toggle-btn {
+  font-size: 11px; padding: 3px 10px; border-radius: 5px; border: 0.5px solid #185FA5;
+  color: #185FA5; background: #fff; cursor: pointer; white-space: nowrap;
+  transition: background 0.12s, color 0.12s;
+}
+.loc-toggle-btn:hover { background: #E6F1FB; }
+.loc-toggle-btn.all-unchecked { border-color: #aaa; color: #aaa; background: #fff; }
 
 .tbl-wrap { overflow-x: auto; width: 100%; }
 table.preview-tbl {
@@ -53,9 +64,30 @@ table.preview-tbl {
   color: #999; background: #f9f9f7;
   border-bottom: 0.5px solid rgba(0,0,0,0.08);
 }
-.preview-tbl tbody tr { border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+.preview-tbl thead td.col-cb { width: 36px; text-align: center; }
+.preview-tbl tbody tr { border-bottom: 0.5px solid rgba(0,0,0,0.06); transition: background 0.1s; }
 .preview-tbl tbody tr:last-child { border-bottom: none; }
+.preview-tbl tbody tr.row-unchecked { background: #fafafa; opacity: 0.55; }
 .preview-tbl tbody td { padding: 8px 10px; color: #444; }
+.preview-tbl tbody td.col-cb { text-align: center; }
+
+/* Row checkbox */
+.row-cb { width: 15px; height: 15px; cursor: pointer; accent-color: #185FA5; }
+
+/* Selection bar */
+.sel-bar {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 16px; background: #f5f9ff;
+  border-bottom: 0.5px solid rgba(0,0,0,0.06);
+  font-size: 12px; color: #555;
+}
+.sel-bar-count { font-weight: 600; color: #185FA5; }
+.sel-bar-btn {
+  font-size: 11px; padding: 3px 10px; border-radius: 5px;
+  border: 0.5px solid rgba(0,0,0,0.15); background: #fff;
+  cursor: pointer; color: #555;
+}
+.sel-bar-btn:hover { background: #f0f0f0; }
 
 /* Result stats */
 .result-card {
@@ -66,7 +98,8 @@ table.preview-tbl {
 .result-stat { background: #f5f5f3; border-radius: 8px; padding: 10px 18px; text-align: center; }
 .result-stat .num { font-size: 22px; font-weight: 700; }
 .result-stat .lbl { font-size: 11px; color: #888; margin-top: 2px; }
-.result-stat.ok .num   { color: #185FA5; }
+.result-stat.ok   .num { color: #185FA5; }
+.result-stat.skip .num { color: #BA7517; }
 .result-stat.fail .num { color: #A32D2D; }
 
 .status-ok   { color: #185FA5; font-weight: 500; }
@@ -93,7 +126,6 @@ table.preview-tbl {
 .stype-btn.stype-sms.active  { border-color: #185FA5; background: #E6F1FB; color: #185FA5; font-weight: 600; }
 .stype-btn.stype-email.active{ border-color: #BA7517; background: #FAEEDA; color: #BA7517; font-weight: 600; }
 .stype-icon { font-size: 14px; }
-
 {% endblock %}
 
 {% block content %}
@@ -121,10 +153,15 @@ table.preview-tbl {
   <div class="preview-card">
     <div class="preview-header">
       <span>🚌 Preview — <span id="preview-count">0</span> bookings</span>
-      <span style="font-size:12px;color:#888;" id="preview-meta"></span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;color:#888;">Selected: <span id="sel-count" style="font-weight:600;color:#185FA5;">0</span></span>
+        <button class="sel-bar-btn" onclick="selectAll(true)">Select all</button>
+        <button class="sel-bar-btn" onclick="selectAll(false)">Deselect all</button>
+      </div>
     </div>
     <div id="preview-groups"></div>
   </div>
+
   <div style="margin-bottom:20px;">
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
       <label class="stype-btn" id="lbl-combined" onclick="setSendType('combined')">
@@ -141,8 +178,8 @@ table.preview-tbl {
       </label>
     </div>
     <div style="display:flex;gap:10px;align-items:center;margin-top:10px;">
-      <button class="btn-send" id="btn-confirm-send" data-base="Send to All" onclick="confirmSend()">
-        📱 Send to All (SMS Only)
+      <button class="btn-send" id="btn-confirm-send" onclick="confirmSend()">
+        📱 Send to Selected (SMS Only)
       </button>
       <button class="btn" onclick="resetForm()">↩ Start Over</button>
       <span id="send-err" style="font-size:12px;color:#A32D2D;margin-left:4px;"></span>
@@ -156,7 +193,10 @@ table.preview-tbl {
     <h2 style="font-size:15px;font-weight:600;margin-bottom:16px;">📬 Send Results</h2>
     <div class="result-summary">
       <div class="result-stat ok">
-        <div class="num" id="res-sent">0</div><div class="lbl">SMS Sent</div>
+        <div class="num" id="res-sent">0</div><div class="lbl">Sent</div>
+      </div>
+      <div class="result-stat skip">
+        <div class="num" id="res-skipped">0</div><div class="lbl">Skipped</div>
       </div>
       <div class="result-stat fail">
         <div class="num" id="res-failed">0</div><div class="lbl">Failed</div>
@@ -168,7 +208,10 @@ table.preview-tbl {
     <div class="tbl-wrap">
       <table class="preview-tbl">
         <thead>
-          <tr><td>Order #</td><td>Name</td><td>Phone</td><td>Pickup Time</td><td>SMS Status</td></tr>
+          <tr>
+            <td>Order #</td><td>Name</td><td>Phone</td>
+            <td>Pickup Time</td><td>SMS Status</td><td>Email Status</td>
+          </tr>
         </thead>
         <tbody id="result-tbody"></tbody>
       </table>
@@ -180,7 +223,12 @@ table.preview-tbl {
 
 {% block scripts %}
 <script>
+/* ── state ── */
+let currentFile = null;
+let allRows = [];        // full parsed row list from preview
+let checkedOrders = new Set();   // order_number strings currently checked
 
+/* ── send type ── */
 function setSendType(val) {
   document.querySelector(`input[name="send_type"][value="${val}"]`).checked = true;
   ['combined','sms','email'].forEach(v => {
@@ -189,11 +237,16 @@ function setSendType(val) {
   const labels = { combined: 'SMS + Email', sms: 'SMS Only', email: 'Email Only' };
   const icons  = { combined: '✉️', sms: '📱', email: '📧' };
   const btn = document.getElementById('btn-confirm-send');
-  if (btn) btn.innerHTML = icons[val] + ' ' + (btn.dataset.base || 'Send') + ' (' + labels[val] + ')';
+  const selN = checkedOrders.size;
+  if (btn) btn.innerHTML = `${icons[val]} Send to Selected (${labels[val]}) — ${selN} order${selN !== 1 ? 's' : ''}`;
 }
 
-let currentFile = null;
+function refreshSendBtn() {
+  const val = document.querySelector('input[name="send_type"]:checked')?.value || 'sms';
+  setSendType(val);
+}
 
+/* ── upload ── */
 async function uploadPreview() {
   const file = document.getElementById('excel-file').files[0];
   const errEl = document.getElementById('upload-err');
@@ -203,7 +256,6 @@ async function uploadPreview() {
 
   const fd = new FormData();
   fd.append('file', file);
-
   try {
     const res = await fetch('/api/notifications/morning-pickup/preview', { method: 'POST', body: fd });
     const data = await res.json();
@@ -214,91 +266,212 @@ async function uploadPreview() {
   }
 }
 
+/* ── preview render ── */
 function showPreview(data) {
-  const rows = data.rows;
-  document.getElementById('preview-count').textContent = rows.length;
+  allRows = data.rows;
+  checkedOrders = new Set(allRows.map(r => r.order_number));  // default: all checked
+
+  document.getElementById('preview-count').textContent = allRows.length;
 
   // Group by pickup_location
   const groups = {};
-  rows.forEach(r => {
+  allRows.forEach(r => {
     const loc = r.pickup_location || 'Unknown';
     if (!groups[loc]) groups[loc] = [];
     groups[loc].push(r);
   });
 
   const container = document.getElementById('preview-groups');
-  container.innerHTML = Object.entries(groups).map(([loc, grpRows]) => `
-    <div class="loc-group-header">📍 ${loc} — ${grpRows.length} booking(s)</div>
-    <div class="tbl-wrap">
-      <table class="preview-tbl">
-        <thead><tr>
-          <td>Order #</td><td>Name</td><td>Phone</td>
-          <td>Pickup Time</td><td>Driver</td><td>Vehicle #</td>
-        </tr></thead>
-        <tbody>
-          ${grpRows.map(r => `
-            <tr>
-              <td>${r.order_number}</td>
-              <td>${r.name}</td>
-              <td style="font-size:11px;">${r.phone}</td>
-              <td>${r.pickup_time}</td>
-              <td>${r.driver || '—'}</td>
-              <td>${r.vehicle_no || '—'}</td>
-            </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>`).join('');
+  container.innerHTML = Object.entries(groups).map(([loc, grpRows]) => {
+    const locId = 'loc-' + loc.replace(/\W+/g, '_');
+    const rowsHtml = grpRows.map(r => `
+      <tr id="row-${r.order_number}" class="">
+        <td class="col-cb">
+          <input type="checkbox" class="row-cb" data-order="${r.order_number}" data-loc="${locId}"
+            checked onchange="onRowCheck(this)">
+        </td>
+        <td>${r.order_number}</td>
+        <td>${r.name}</td>
+        <td style="font-size:11px;">${r.phone}</td>
+        <td>${r.pickup_time}</td>
+        <td>${r.driver || '—'}</td>
+        <td>${r.vehicle_no || '—'}</td>
+      </tr>`).join('');
 
+    return `
+      <div class="loc-group-header" id="${locId}-header">
+        <span class="loc-group-title">📍 ${loc} — <span id="${locId}-cnt">${grpRows.length}</span> booking(s)</span>
+        <button class="loc-toggle-btn" id="${locId}-btn" onclick="toggleLocation('${locId}', ${JSON.stringify(grpRows.map(r => r.order_number))})">
+          Deselect all
+        </button>
+      </div>
+      <div class="tbl-wrap">
+        <table class="preview-tbl">
+          <thead><tr>
+            <td class="col-cb"></td>
+            <td>Order #</td><td>Name</td><td>Phone</td>
+            <td>Pickup Time</td><td>Driver</td><td>Vehicle #</td>
+          </tr></thead>
+          <tbody id="${locId}-tbody">${rowsHtml}</tbody>
+        </table>
+      </div>`;
+  }).join('');
+
+  updateSelCount();
   document.getElementById('step-form').classList.add('hidden');
   document.getElementById('step-preview').classList.remove('hidden');
+  refreshSendBtn();
 }
 
+/* ── checkbox handlers ── */
+function onRowCheck(cb) {
+  const order = cb.dataset.order;
+  const locId = cb.dataset.loc;
+  if (cb.checked) {
+    checkedOrders.add(order);
+    document.getElementById('row-' + order)?.classList.remove('row-unchecked');
+  } else {
+    checkedOrders.delete(order);
+    document.getElementById('row-' + order)?.classList.add('row-unchecked');
+  }
+  updateLocBtn(locId);
+  updateSelCount();
+  refreshSendBtn();
+}
+
+function toggleLocation(locId, orderNums) {
+  // Check if any in this group are currently checked
+  const anyChecked = orderNums.some(o => checkedOrders.has(o));
+  const newState = !anyChecked;  // if any checked → uncheck all; if none checked → check all
+
+  orderNums.forEach(o => {
+    const cb = document.querySelector(`.row-cb[data-order="${o}"]`);
+    if (cb) { cb.checked = newState; }
+    if (newState) {
+      checkedOrders.add(o);
+      document.getElementById('row-' + o)?.classList.remove('row-unchecked');
+    } else {
+      checkedOrders.delete(o);
+      document.getElementById('row-' + o)?.classList.add('row-unchecked');
+    }
+  });
+  updateLocBtn(locId);
+  updateSelCount();
+  refreshSendBtn();
+}
+
+function updateLocBtn(locId) {
+  const cbs = document.querySelectorAll(`.row-cb[data-loc="${locId}"]`);
+  const btn = document.getElementById(locId + '-btn');
+  if (!btn) return;
+  const total = cbs.length;
+  const checked = [...cbs].filter(c => c.checked).length;
+  if (checked === 0) {
+    btn.textContent = 'Select all';
+    btn.classList.add('all-unchecked');
+  } else if (checked === total) {
+    btn.textContent = 'Deselect all';
+    btn.classList.remove('all-unchecked');
+  } else {
+    btn.textContent = `${checked}/${total} selected`;
+    btn.classList.remove('all-unchecked');
+  }
+  // Update the count badge
+  const cntEl = document.getElementById(locId + '-cnt');
+  if (cntEl) cntEl.textContent = checked + (checked !== total ? `/${total}` : '');
+}
+
+function updateSelCount() {
+  document.getElementById('sel-count').textContent = checkedOrders.size;
+}
+
+function selectAll(state) {
+  allRows.forEach(r => {
+    const cb = document.querySelector(`.row-cb[data-order="${r.order_number}"]`);
+    if (cb) cb.checked = state;
+    if (state) {
+      checkedOrders.add(r.order_number);
+      document.getElementById('row-' + r.order_number)?.classList.remove('row-unchecked');
+    } else {
+      checkedOrders.delete(r.order_number);
+      document.getElementById('row-' + r.order_number)?.classList.add('row-unchecked');
+    }
+  });
+  // Update all location buttons
+  const allLocIds = new Set([...document.querySelectorAll('.row-cb')].map(c => c.dataset.loc));
+  allLocIds.forEach(updateLocBtn);
+  updateSelCount();
+  refreshSendBtn();
+}
+
+/* ── send ── */
 async function confirmSend() {
   const btn = document.getElementById('btn-confirm-send');
   const errEl = document.getElementById('send-err');
   const sendType = document.querySelector('input[name="send_type"]:checked').value;
   errEl.textContent = '';
+
+  if (checkedOrders.size === 0) {
+    errEl.textContent = 'No orders selected. Please select at least one.';
+    return;
+  }
+
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Sending…';
 
   const fd = new FormData();
   fd.append('file', currentFile);
   fd.append('send_type', sendType);
+  // Pass selected order numbers as JSON string
+  fd.append('selected_orders', JSON.stringify([...checkedOrders]));
 
   try {
     const res = await fetch('/send/morning-pickup', { method: 'POST', body: fd });
     const data = await res.json();
-    if (!res.ok) { errEl.textContent = data.detail || 'Send failed.'; btn.disabled = false; btn.innerHTML = '📱 Send SMS to All'; return; }
+    if (!res.ok) {
+      errEl.textContent = data.detail || 'Send failed.';
+      btn.disabled = false;
+      refreshSendBtn();
+      return;
+    }
     showResults(data);
   } catch(e) {
     errEl.textContent = 'Network error.';
     btn.disabled = false;
-    btn.innerHTML = '📱 Send SMS to All';
+    refreshSendBtn();
   }
 }
 
+/* ── results ── */
 function showResults(data) {
   const results = data.results;
-  const sent   = results.filter(r => (r.sms_status||'').startsWith('sent')).length;
-  const failed = results.filter(r => (r.sms_status||'').startsWith('failed')).length;
+  const sent    = results.filter(r => (r.sms_status||r.email_status||'').includes('sent')).length;
+  const failed  = results.filter(r => (r.sms_status||r.email_status||'').includes('failed')).length;
+  const skipped = results.filter(r => r.skipped).length;
 
-  document.getElementById('res-sent').textContent   = sent;
-  document.getElementById('res-failed').textContent = failed;
-  document.getElementById('res-total').textContent  = data.total;
+  document.getElementById('res-sent').textContent    = sent;
+  document.getElementById('res-failed').textContent  = failed;
+  document.getElementById('res-skipped').textContent = skipped;
+  document.getElementById('res-total').textContent   = data.total;
 
-  document.getElementById('result-tbody').innerHTML = results.map(r => `
-    <tr>
-      <td>${r.order}</td><td>${r.name||''}</td><td style="font-size:11px;">${r.phone||''}</td>
+  document.getElementById('result-tbody').innerHTML = results.map(r => {
+    const smsClass   = r.skipped ? 'status-skip' : (r.sms_status||'').includes('sent') ? 'status-ok' : r.sms_status ? 'status-fail' : '';
+    const emailClass = r.skipped ? 'status-skip' : (r.email_status||'').includes('sent') ? 'status-ok' : r.email_status ? 'status-fail' : '';
+    return `<tr>
+      <td>${r.order}</td>
+      <td>${r.name||''}</td>
+      <td style="font-size:11px;">${r.phone||''}</td>
       <td>${r.pickup_time||''}</td>
-      <td class="${(r.sms_status||'').startsWith('sent') ? 'status-ok' : 'status-fail'}">
-        ${r.sms_status || '—'}
-      </td>
-    </tr>`).join('');
+      <td class="${smsClass}">${r.skipped ? 'skipped' : (r.sms_status || '—')}</td>
+      <td class="${emailClass}">${r.skipped ? 'skipped' : (r.email_status || '—')}</td>
+    </tr>`;
+  }).join('');
 
   document.getElementById('step-preview').classList.add('hidden');
   document.getElementById('step-result').classList.remove('hidden');
 }
 
+/* ── reset ── */
 function resetForm() {
   document.getElementById('step-form').classList.remove('hidden');
   document.getElementById('step-preview').classList.add('hidden');
@@ -306,9 +479,8 @@ function resetForm() {
   document.getElementById('excel-file').value = '';
   document.getElementById('upload-err').textContent = '';
   currentFile = null;
-  const btn = document.getElementById('btn-confirm-send');
-  if (btn) { btn.disabled = false; btn.innerHTML = '✉️ Send to All (SMS + Email)'; }
-  document.querySelector('input[name="send_type"][value="sms"]').checked = true;
+  allRows = [];
+  checkedOrders = new Set();
   setSendType('sms');
 }
 </script>

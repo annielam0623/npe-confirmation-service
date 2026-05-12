@@ -385,103 +385,106 @@ async def send_tour_confirmation_bulk(
 # ═══════════════════════════════════════════════════════════
 # POST /send/morning-pickup
 # ═══════════════════════════════════════════════════════════
-@router.post("/send/morning-pickup")
+@router.post("/morning-pickup")
 async def send_morning_pickup(
     file: UploadFile = File(...),
-    db:   AsyncSession = Depends(get_db),
-    user = Depends(require_staff),
+    send_type: str = Form("sms"),
+    selected_orders: Optional[str] = Form(None),   # ← NEW: JSON array string
+    user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
 ):
-    file_bytes = await file.read()
-    parsed = parse_excel(file_bytes, "morning_pickup")
-    if "error" in parsed:
-        raise HTTPException(400, parsed["error"])
+    contents = await file.read()
+    parse_result = excel_parser.parse(contents, "morning_pickup")
+    if "error" in parse_result:
+        raise HTTPException(status_code=400, detail=parse_result["error"])
 
-    rows    = parsed["rows"]
+    rows = parse_result["rows"]
+
+    # ── Filter to selected orders ──────────────────────────────────────────
+    if selected_orders:
+        try:
+            order_set = set(json.loads(selected_orders))
+        except (ValueError, TypeError):
+            order_set = None
+    else:
+        order_set = None  # None = send all (backwards-compatible)
+
     results = []
-    today   = datetime.now().strftime("%Y-%m-%d")
+    sent_count = 0
+    failed_count = 0
+    skipped_count = 0
 
     for row in rows:
-        order_num = row["order_number"]
-        email     = row.get("email", "")
-        phone     = row["phone"]
-        first     = row["first_name"]
+        order_num = row.get("order_number", "")
 
-        if not phone:
-            results.append({"order": order_num, "status": "skipped", "reason": "no phone"})
+        # Mark skipped if not in selected set
+        if order_set is not None and order_num not in order_set:
+            results.append({
+                "order":        order_num,
+                "name":         row.get("name", ""),
+                "phone":        row.get("phone", ""),
+                "pickup_time":  row.get("pickup_time", ""),
+                "sms_status":   "",
+                "email_status": "",
+                "skipped":      True,
+            })
+            skipped_count += 1
             continue
 
-        booking_data = {
-            "order_number":    order_num,
-            "first_name":      first,
-            "last_name":       row["last_name"],
-            "customer_email":  email,
-            "phone":           phone,
-            "quantities":      int(row.get("quantities") or 1),
-            "pickup_time":     row["pickup_time"],
-            "pickup_location": row["pickup_location"],
-            "tour_date":       _to_date(today),
-            "tour_type":       "",
-            "driver":          row.get("driver", ""),
-            "vehicle_no":      row.get("vehicle_no", ""),
-            "module":          "morning_pickup",
-            "mtlv_eligible":   False,
-        }
-        booking_id = await _upsert_booking(db, booking_data)
+        # ── Send SMS ──────────────────────────────────────────────────────
+        sms_status = ""
+        if send_type in ("sms", "combined"):
+            sms_body = morning_pickup.build_sms(row)
+            sms_ok = await sms.send(row.get("phone", ""), sms_body)
+            sms_status = "sent" if sms_ok else "failed"
 
-        # SMS
-        sms_body   = mp.build_sms(row)
-        sms_res    = await send_sms_async(phone, sms_body, module="morning_pickup")
-        sms_sid    = sms_res.get("sid", "") if sms_res["success"] else ""
-        sms_status = f"sent:{sms_sid}" if sms_res["success"] else f"failed: {sms_res.get('error','')}"
-        if not sms_res["success"]:
-            logger.error(f"[morning_pickup] SMS failed — phone={phone} order={order_num} error={sms_res.get('error','')}")
-        await _update_sms_status(db, booking_id, sms_status)
+        # ── Send Email ────────────────────────────────────────────────────
+        email_status = ""
+        if send_type in ("email", "combined") and row.get("email"):
+            email_html = morning_pickup.build_email(row)
+            subject    = morning_pickup.email_subject(row)
+            email_ok   = await mailer.send(row["email"], subject, email_html)
+            email_status = "sent" if email_ok else "failed"
 
-        # Email (optional — only if column present)
-        email_status     = ""
-        email_message_id = ""
-        if email:
-            email_html = mp.build_email(row)
-            subject    = mp.email_subject(row)
-            try:
-                email_res        = await send_email(email, f"{first} {row['last_name']}", subject, email_html)
-                email_message_id = email_res.get("message_id", "") if isinstance(email_res, dict) else ""
-                email_status     = "sent"
-            except Exception as e:
-                email_status = f"failed: {e}"
-                logger.error(f"[morning_pickup] Email failed — {email} error={e}")
-            await _update_email_status(db, booking_id, email_status)
+        # ── Log to send_log ───────────────────────────────────────────────
+        await _log_send(
+            db=db,
+            module="morning_pickup",
+            send_type=send_type,
+            order_number=order_num,
+            customer_name=row.get("name", ""),
+            email=row.get("email", ""),
+            phone=row.get("phone", ""),
+            pickup_time=row.get("pickup_time", ""),
+            driver=row.get("driver", ""),
+            vehicle_no=row.get("vehicle_no", ""),
+            sms_status=sms_status,
+            email_status=email_status,
+            sent_by=user.username,
+        )
 
-        await _log_send(db, {
-            "module":           "morning_pickup",
-            "order_number":     order_num,
-            "first_name":       first,
-            "last_name":        row["last_name"],
-            "email":            email,
-            "phone":            phone,
-            "tour_date":        _to_date(today),
-            "tour_type":        "",
-            "email_status":     email_status,
-            "sms_status":       sms_status,
-            "sms_sid":          sms_sid,
-            "email_message_id": email_message_id,
-            "error_msg":        "" if sms_status.startswith("sent") else sms_status,
-            "sent_by":          user.username,
-        })
+        if "sent" in (sms_status + email_status):
+            sent_count += 1
+        elif "failed" in (sms_status + email_status):
+            failed_count += 1
 
         results.append({
             "order":        order_num,
-            "name":         row.get("name", first),
+            "name":         row.get("name", ""),
+            "phone":        row.get("phone", ""),
+            "pickup_time":  row.get("pickup_time", ""),
             "sms_status":   sms_status,
             "email_status": email_status,
+            "skipped":      False,
         })
 
-        await asyncio.sleep(0.3)
-
-    await db.commit()
-    sent = sum(1 for r in results if r.get("sms_status", "").startswith("sent"))
-    return {"total": len(rows), "sent": sent, "results": results}
-
+    return {
+        "total":         len(rows),
+        "sent":          sent_count,
+        "failed":        failed_count,
+        "skipped":       skipped_count,
+        "results":       results,
+    }
 
 # ═══════════════════════════════════════════════════════════
 # POST /send/tickets-reminder
