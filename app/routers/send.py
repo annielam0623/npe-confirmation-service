@@ -132,9 +132,9 @@ async def _log_send(db: AsyncSession, data: dict):
                  :tour_date, :tour_type, :email_status, :sms_status,
                  :sms_sid, :email_message_id, :error_msg, :sent_by, :sent_at)
         """), {**data, "sent_at": datetime.now(LA)})
+        await db.commit()
     except Exception as e:
         logger.error(f"[_log_send] failed for {data.get('order_number')}: {e}")
-        await db.rollback()
 
 
 # ═══════════════════════════════════════════════════════════
@@ -499,7 +499,6 @@ async def send_morning_pickup(
             "skipped":      False,
         })
 
-    await db.commit()
     return {
         "total":         len(rows),
         "sent":          sent_count,
