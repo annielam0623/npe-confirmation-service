@@ -11,7 +11,8 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime, date
-from typing import Annotated
+from typing import Annotated, Optional
+import json
 
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
@@ -19,13 +20,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 
 from app.database import get_db
-from app.auth import require_staff
+from app.auth import require_staff, get_current_user
 from app.services.excel_parser import parse_excel
 from app.services.sendgrid import send_raw_email as send_email
 from app.services.sms import send_sms_async
 from app.services import tour_confirmation as tc
 from app.services import morning_pickup as mp
+from app.services import morning_pickup as morning_pickup
 from app.services import tickets_reminder as tix
+from app.services import excel_parser
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
