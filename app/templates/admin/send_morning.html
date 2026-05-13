@@ -284,9 +284,14 @@ function showPreview(data) {
     groups[loc].push(r);
   });
 
+  // Store location → order numbers map separately (avoids Jinja2 brace conflict in onclick)
+  window._locOrders = {};
+
   const container = document.getElementById('preview-groups');
   container.innerHTML = Object.entries(groups).map(([loc, grpRows]) => {
     const locId = 'loc-' + loc.replace(/\W+/g, '_');
+    window._locOrders[locId] = grpRows.map(r => r.order_number);
+
     const rowsHtml = grpRows.map(r => `
       <tr id="row-${r.order_number}" class="">
         <td class="col-cb">
@@ -304,7 +309,7 @@ function showPreview(data) {
     return `
       <div class="loc-group-header" id="${locId}-header">
         <span class="loc-group-title">📍 ${loc} — <span id="${locId}-cnt">${grpRows.length}</span> booking(s)</span>
-        <button class="loc-toggle-btn" id="${locId}-btn" onclick="toggleLocation('${locId}', ${JSON.stringify(grpRows.map(r => r.order_number))})">
+        <button class="loc-toggle-btn" id="${locId}-btn" onclick="toggleLocation('${locId}')">
           Deselect all
         </button>
       </div>
@@ -342,7 +347,8 @@ function onRowCheck(cb) {
   refreshSendBtn();
 }
 
-function toggleLocation(locId, orderNums) {
+function toggleLocation(locId) {
+  const orderNums = window._locOrders[locId] || [];
   // Check if any in this group are currently checked
   const anyChecked = orderNums.some(o => checkedOrders.has(o));
   const newState = !anyChecked;  // if any checked → uncheck all; if none checked → check all
