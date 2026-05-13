@@ -121,16 +121,20 @@ async def _update_sms_status(db: AsyncSession, booking_id: int, status: str):
 
 
 async def _log_send(db: AsyncSession, data: dict):
-    await db.execute(text("""
-        INSERT INTO send_log
-            (module, order_number, first_name, last_name, email, phone,
-             tour_date, tour_type, email_status, sms_status,
-             sms_sid, email_message_id, error_msg, sent_by, sent_at)
-        VALUES
-            (:module, :order_number, :first_name, :last_name, :email, :phone,
-             :tour_date, :tour_type, :email_status, :sms_status,
-             :sms_sid, :email_message_id, :error_msg, :sent_by, :sent_at)
-    """), {**data, "sent_at": datetime.now(LA)})
+    try:
+        await db.execute(text("""
+            INSERT INTO send_log
+                (module, order_number, first_name, last_name, email, phone,
+                 tour_date, tour_type, email_status, sms_status,
+                 sms_sid, email_message_id, error_msg, sent_by, sent_at)
+            VALUES
+                (:module, :order_number, :first_name, :last_name, :email, :phone,
+                 :tour_date, :tour_type, :email_status, :sms_status,
+                 :sms_sid, :email_message_id, :error_msg, :sent_by, :sent_at)
+        """), {**data, "sent_at": datetime.now(LA)})
+    except Exception as e:
+        logger.error(f"[_log_send] failed for {data.get('order_number')}: {e}")
+        await db.rollback()
 
 
 # ═══════════════════════════════════════════════════════════
