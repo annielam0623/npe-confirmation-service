@@ -27,6 +27,7 @@ COL_ALIASES: dict[str, list[str]] = {
     "tour_time":       ["tour time"],
     "tour_location":   ["tour location", "meeting location"],
     "mtlv_promo":      ["mtlv promo", "mtlv", "mtlv promotion"],
+    "agent_name": ["agent name", "agent", "agentname"],
 }
 
 REQUIRED_COLS: dict[str, list[str]] = {
@@ -246,6 +247,7 @@ def parse_excel(file_bytes: bytes, module: str) -> dict:
             "tour_time":       get(row, "tour_time"),
             "tour_location":   get(row, "tour_location"),
             "mtlv_promo":      get(row, "mtlv_promo"),
+            "agent_name": get(row, "agent_name"),
         })
 
     if not rows:

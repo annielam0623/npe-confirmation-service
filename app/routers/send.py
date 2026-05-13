@@ -126,11 +126,12 @@ async def _log_send(db: AsyncSession, data: dict):
             INSERT INTO send_log
                 (module, order_number, first_name, last_name, email, phone,
                  tour_date, tour_type, email_status, sms_status,
-                 sms_sid, email_message_id, error_msg, sent_by, sent_at)
+                 sms_sid, email_message_id, error_msg, sent_by, sent_at, agent_name)
             VALUES
                 (:module, :order_number, :first_name, :last_name, :email, :phone,
                  :tour_date, :tour_type, :email_status, :sms_status,
-                 :sms_sid, :email_message_id, :error_msg, :sent_by, :sent_at)
+                 :sms_sid, :email_message_id, :error_msg, :sent_by, :sent_at,
+                 :agent_name)
         """), {**data, "sent_at": datetime.now(LA)})
         await db.commit()
     except Exception as e:
@@ -252,6 +253,7 @@ async def send_tour_confirmation(
             "email_message_id": email_message_id,
             "error_msg":        "" if email_status.startswith("sent") else email_status,
             "sent_by":          user.username,
+            "agent_name":       "",
         })
         results.append({
             "order":        order_num,
@@ -373,6 +375,7 @@ async def send_tour_confirmation_bulk(
             "email_message_id": email_message_id,
             "error_msg":        "" if email_status.startswith("sent") else email_status,
             "sent_by":          user.username,
+            "agent_name":       "",
         })
 
         results.append({
@@ -444,8 +447,8 @@ async def send_morning_pickup(
         booking_data = {
             "module":          "morning_pickup",
             "order_number":    order_num,
-            "first_name":      row.get("first_name", ""),
-            "last_name":       row.get("last_name", ""),
+            "first_name":      row.get("name", ""),
+            "last_name":       "",
             "customer_email":  row.get("email", ""),
             "phone":           row.get("phone", ""),
             "quantities":      int(row.get("quantities") or 1),
@@ -492,8 +495,8 @@ async def send_morning_pickup(
         await _log_send(db, {
             "module":           "morning_pickup",
             "order_number":     order_num,
-            "first_name":       row.get("name", "").split()[0] if row.get("name") else "",
-            "last_name":        " ".join(row.get("name", "").split()[1:]) if row.get("name") else "",
+            "first_name":       row.get("name", ""),
+            "last_name":        "",
             "email":            row.get("email", ""),
             "phone":            row.get("phone", ""),
             "tour_date":        _to_date(today_la),
@@ -504,6 +507,7 @@ async def send_morning_pickup(
             "email_message_id": email_message_id,
             "error_msg":        "",
             "sent_by":          user.username,
+            "agent_name":       row.get("agent_name", ""),
         })
 
         if "sent" in (sms_status + email_status):
@@ -624,6 +628,7 @@ async def send_tickets_reminder(
             "email_message_id": email_message_id,
             "error_msg":        "",
             "sent_by":          user.username,
+            "agent_name":       "",
         })
 
         results.append({

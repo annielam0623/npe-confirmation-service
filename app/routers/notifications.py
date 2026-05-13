@@ -272,7 +272,7 @@ async def tracking_morning_pickup(
             c.checkin_time
         FROM bookings b
         LEFT JOIN LATERAL (
-            SELECT sms_status
+            SELECT sms_status, agent_name
             FROM send_log
             WHERE order_number = b.order_number
               AND module = 'morning_pickup'
@@ -304,6 +304,7 @@ async def tracking_morning_pickup(
                 "checkin_status":  "checked_in" if r["checkin_time"] else "pending",
                 "checkin_time":    r["checkin_time"].isoformat() if r["checkin_time"] else None,
                 "action_taken_by": r["action_taken_by"] or "",
+                "agent_name":      r["agent_name"] or "",
             }
             for r in rows
         ],
