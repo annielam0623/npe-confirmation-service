@@ -391,7 +391,7 @@ async def get_send_log(
         try:
             from datetime import date as date_type
             parsed_date = date_type.fromisoformat(date)
-            conditions.append("DATE(sent_at) = :date")
+            conditions.append("DATE(sent_at AT TIME ZONE 'America/Los_Angeles') = :date")
             params["date"] = parsed_date
         except ValueError:
            pass

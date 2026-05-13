@@ -13,6 +13,7 @@ import logging
 from datetime import datetime, date
 from typing import Annotated, Optional
 import json
+from zoneinfo import ZoneInfo
 
 from fastapi import APIRouter, Depends, File, Form, Request, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
@@ -32,7 +33,7 @@ from app.services import excel_parser
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
+LA = ZoneInfo("America/Los_Angeles")
 
 def _to_date(d: str) -> date:
     """Convert YYYY-MM-DD string to Python date object for asyncpg."""
@@ -128,8 +129,8 @@ async def _log_send(db: AsyncSession, data: dict):
         VALUES
             (:module, :order_number, :first_name, :last_name, :email, :phone,
              :tour_date, :tour_type, :email_status, :sms_status,
-             :sms_sid, :email_message_id, :error_msg, :sent_by, NOW())
-    """), data)
+             :sms_sid, :email_message_id, :error_msg, :sent_by, :sent_at)
+    """), {**data, "sent_at": datetime.now(LA)})
 
 
 # ═══════════════════════════════════════════════════════════
