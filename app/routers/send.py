@@ -494,6 +494,7 @@ async def send_morning_pickup(
             "skipped":      False,
         })
 
+    await db.commit()
     return {
         "total":         len(rows),
         "sent":          sent_count,
