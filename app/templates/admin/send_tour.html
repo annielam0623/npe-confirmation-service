@@ -347,14 +347,14 @@ async function confirmSend() {
     .filter(r => !r.duplicate || ignoredDups.has(r.order_number))
     .map(r => ({
       order_number:    r.order_number,
-      first_name:      (r.name || '').split(' ')[0] || '',
-      last_name:       (r.name || '').split(' ').slice(1).join(' ') || '',
+      first_name:      r.first_name || (r.name || '').split(' ')[0] || '',
+      last_name:       r.last_name  || (r.name || '').split(' ').slice(1).join(' ') || '',
       customer_email:  r.email || '',
       phone:           r.phone || '',
       quantities:      r.quantities || 1,
       pickup_time:     r.pickup_time || '',
       pickup_location: r.pickup_location || '',
-      mtlv_eligible:   false,
+      mtlv_eligible:   (r.mtlv_promo || '').trim().toUpperCase() === 'ELIGIBLE',
     }));
 
   try {
