@@ -439,6 +439,27 @@ async def send_morning_pickup(
             skipped_count += 1
             continue
 
+# ── Upsert booking ────────────────────────────────────────────────
+        today_la = datetime.now(LA).date().isoformat()
+        booking_data = {
+            "module":          "morning_pickup",
+            "order_number":    order_num,
+            "first_name":      row.get("first_name", ""),
+            "last_name":       row.get("last_name", ""),
+            "customer_email":  row.get("email", ""),
+            "phone":           row.get("phone", ""),
+            "quantities":      int(row.get("quantities") or 1),
+            "pickup_time":     row.get("pickup_time", ""),
+            "pickup_location": row.get("pickup_location", ""),
+            "tour_date":       _to_date(today_la),
+            "tour_type":       "",
+            "driver":          row.get("driver", ""),
+            "vehicle_no":      row.get("vehicle_no", ""),
+            "mtlv_eligible":   False,
+        }
+        booking_id = await _upsert_booking(db, booking_data)
+
+
         # ── Send SMS ──────────────────────────────────────────────────────
         sms_status = ""
         sms_sid    = ""
@@ -448,6 +469,7 @@ async def send_morning_pickup(
             if sms_res["success"]:
                 sms_sid    = sms_res.get("sid", "")
                 sms_status = f"sent:{sms_sid}"
+                await _update_sms_status(db, booking_id, sms_status)
             else:
                 sms_status = f"failed: {sms_res.get('error', '')}"
                 logger.error(f"[morning_pickup] SMS failed — phone={row.get('phone')} order={order_num} error={sms_res.get('error','')}")
@@ -474,7 +496,7 @@ async def send_morning_pickup(
             "last_name":        " ".join(row.get("name", "").split()[1:]) if row.get("name") else "",
             "email":            row.get("email", ""),
             "phone":            row.get("phone", ""),
-            "tour_date":        None,
+            "tour_date":        _to_date(today_la),
             "tour_type":        "",
             "email_status":     email_status,
             "sms_status":       sms_status,
