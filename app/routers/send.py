@@ -388,16 +388,16 @@ async def send_tour_confirmation_bulk(
 # ═══════════════════════════════════════════════════════════
 # POST /send/morning-pickup
 # ═══════════════════════════════════════════════════════════
-@router.post("/morning-pickup")
+@router.post("/send/morning-pickup")
 async def send_morning_pickup(
     file: UploadFile = File(...),
     send_type: str = Form("sms"),
-    selected_orders: Optional[str] = Form(None),   # ← NEW: JSON array string
-    user=Depends(get_current_user),
+    selected_orders: Optional[str] = Form(None),
     db: AsyncSession = Depends(get_db),
+    user = Depends(require_staff),
 ):
     contents = await file.read()
-    parse_result = excel_parser.parse(contents, "morning_pickup")
+    parse_result = parse_excel(contents, "morning_pickup")
     if "error" in parse_result:
         raise HTTPException(status_code=400, detail=parse_result["error"])
 
@@ -436,35 +436,48 @@ async def send_morning_pickup(
 
         # ── Send SMS ──────────────────────────────────────────────────────
         sms_status = ""
+        sms_sid    = ""
         if send_type in ("sms", "combined"):
             sms_body = morning_pickup.build_sms(row)
-            sms_ok = await sms.send(row.get("phone", ""), sms_body)
-            sms_status = "sent" if sms_ok else "failed"
+            sms_res  = await send_sms_async(row.get("phone", ""), sms_body, module="morning_pickup")
+            if sms_res["success"]:
+                sms_sid    = sms_res.get("sid", "")
+                sms_status = f"sent:{sms_sid}"
+            else:
+                sms_status = f"failed: {sms_res.get('error', '')}"
+                logger.error(f"[morning_pickup] SMS failed — phone={row.get('phone')} order={order_num} error={sms_res.get('error','')}")
 
         # ── Send Email ────────────────────────────────────────────────────
-        email_status = ""
+        email_status     = ""
+        email_message_id = ""
         if send_type in ("email", "combined") and row.get("email"):
             email_html = morning_pickup.build_email(row)
             subject    = morning_pickup.email_subject(row)
-            email_ok   = await mailer.send(row["email"], subject, email_html)
-            email_status = "sent" if email_ok else "failed"
+            try:
+                email_res        = await send_email(row["email"], row.get("name", ""), subject, email_html)
+                email_message_id = email_res.get("message_id", "") if isinstance(email_res, dict) else ""
+                email_status     = "sent"
+            except Exception as e:
+                email_status = f"failed: {e}"
+                logger.error(f"[morning_pickup] Email failed — {row.get('email')} error={e}")
 
         # ── Log to send_log ───────────────────────────────────────────────
-        await _log_send(
-            db=db,
-            module="morning_pickup",
-            send_type=send_type,
-            order_number=order_num,
-            customer_name=row.get("name", ""),
-            email=row.get("email", ""),
-            phone=row.get("phone", ""),
-            pickup_time=row.get("pickup_time", ""),
-            driver=row.get("driver", ""),
-            vehicle_no=row.get("vehicle_no", ""),
-            sms_status=sms_status,
-            email_status=email_status,
-            sent_by=user.username,
-        )
+        await _log_send(db, {
+            "module":           "morning_pickup",
+            "order_number":     order_num,
+            "first_name":       row.get("name", "").split()[0] if row.get("name") else "",
+            "last_name":        " ".join(row.get("name", "").split()[1:]) if row.get("name") else "",
+            "email":            row.get("email", ""),
+            "phone":            row.get("phone", ""),
+            "tour_date":        None,
+            "tour_type":        "",
+            "email_status":     email_status,
+            "sms_status":       sms_status,
+            "sms_sid":          sms_sid,
+            "email_message_id": email_message_id,
+            "error_msg":        "",
+            "sent_by":          user.username,
+        })
 
         if "sent" in (sms_status + email_status):
             sent_count += 1
