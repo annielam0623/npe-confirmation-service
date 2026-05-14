@@ -176,12 +176,13 @@
             <td>Pickup Time</td>
             <td>Pickup Location</td>
             <td>SMS Status</td>
+            <td>Agent</td>
             <td>Check-in</td>
             <td>Check-in Time</td>
           </tr>
         </thead>
         <tbody id="track-tbody">
-          <tr><td colspan="11" style="padding:28px;text-align:center;color:#4a6a8a;">Loading…</td></tr>
+          <tr><td colspan="12" style="padding:28px;text-align:center;color:#4a6a8a;">Loading…</td></tr>
         </tbody>
       </table>
     </div>
@@ -190,7 +191,7 @@
 
 <script>
 const params = new URLSearchParams(location.search);
-let currentDate = params.get('date') || new Date().toISOString().split('T')[0];
+let currentDate = params.get('date') || new Date().toLocaleDateString('en-CA', {timeZone: 'America/Los_Angeles'});
 let currentDriver = 'all';
 let allRows = [];
 
@@ -204,7 +205,7 @@ function changeDate(d) {
   loadData();
 }
 function goToday() {
-  currentDate = new Date().toISOString().split('T')[0];
+  currentDate = new Date().toLocaleDateString('en-CA', {timeZone: 'America/Los_Angeles'});
   document.getElementById('date-display').value = currentDate;
   loadData();
 }
@@ -218,7 +219,7 @@ function filterDriver(driver, el) {
 
 async function loadData() {
   document.getElementById('track-tbody').innerHTML =
-    '<tr><td colspan="11" style="padding:28px;text-align:center;color:#4a6a8a;">Loading…</td></tr>';
+    '<tr><td colspan="12" style="padding:28px;text-align:center;color:#4a6a8a;">Loading…</td></tr>';
 
   try {
     const res = await fetch(`/api/notifications/morning-pickup/tracking?date=${currentDate}`);
@@ -228,7 +229,7 @@ async function loadData() {
     applyFilter();
   } catch(e) {
     document.getElementById('track-tbody').innerHTML =
-      '<tr><td colspan="11" style="padding:28px;text-align:center;color:#4a6a8a;">Failed to load.</td></tr>';
+      '<tr><td colspan="12" style="padding:28px;text-align:center;color:#4a6a8a;">Failed to load.</td></tr>';
   }
 }
 
@@ -259,7 +260,7 @@ function applyFilter() {
 
   const tbody = document.getElementById('track-tbody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="11" style="padding:28px;text-align:center;color:#4a6a8a;">No records found.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" style="padding:28px;text-align:center;color:#4a6a8a;">No records found.</td></tr>';
     return;
   }
 
@@ -276,6 +277,7 @@ function applyFilter() {
       <td style="font-weight:600;">${r.pickup_time || '—'}</td>
       <td style="font-size:12px;">${r.pickup_location || '—'}</td>
       <td><span class="sp ${smsCls}">${smsLabel(r.sms_status)}</span></td>
+      <td style="font-size:12px;color:#a0c0e0;">${r.agent_name || '—'}</td>
       <td><span class="sp ${checkinCls}">${r.checkin_status === 'checked_in' ? '✓ Checked In' : '⏳ Pending'}</span></td>
       <td style="font-size:11px;color:#7a9bbe;">${r.submitted_at ? new Date(r.submitted_at).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}): '—'}</td>
     </tr>`;
