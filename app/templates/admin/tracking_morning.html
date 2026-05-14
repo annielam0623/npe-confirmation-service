@@ -188,6 +188,7 @@ const COL_DEFS = [
   { key: 'pickup_time',    label: 'Pickup Time' },
   { key: 'pickup_location',label: 'Pickup Location' },
   { key: 'sms_status',     label: 'SMS Status' },
+  { key: 'email_status',   label: 'Email Status' },
   { key: 'agent_name',     label: 'Agent' },
   { key: 'checkin_status', label: 'Check-in' },
   { key: 'submitted_at',   label: 'Check-in Time' },
@@ -253,6 +254,10 @@ function renderCell(r, key) {
     case 'sms_status': {
       const cls = smsStatusClass(r.sms_status);
       return `<td><span class="sp ${cls}">${smsLabel(r.sms_status)}</span></td>`;
+    }
+    case 'email_status': {
+      const cls = emailStatusClass(r.email_status);
+      return `<td><span class="sp ${cls}">${emailLabel(r.email_status)}</span></td>`;
     }
     case 'agent_name':
       return `<td style="font-size:12px;color:#a0c0e0;">${r.agent_name||'—'}</td>`;
@@ -410,6 +415,18 @@ function applyFilter() {
   ).join('');
 }
 
+function emailStatusClass(s) {
+  if (!s) return 'sp-pending';
+  if (s.startsWith('sent'))   return 'sp-sent';
+  if (s.includes('failed'))   return 'sp-failed';
+  return 'sp-pending';
+}
+function emailLabel(s) {
+  if (!s) return '—';
+  if (s.startsWith('sent'))   return 'Sent';
+  if (s.includes('failed'))   return 'Failed';
+  return s;
+}
 function smsStatusClass(s) {
   if (!s) return 'sp-pending';
   if (s.includes('delivered'))  return 'sp-delivered';

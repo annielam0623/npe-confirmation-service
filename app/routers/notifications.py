@@ -269,15 +269,15 @@ async def tracking_morning_pickup(
             b.tour_date, b.driver, b.vehicle_no,
             b.action_taken_by,
             COALESCE(sl.sms_status, b.sms_status) AS sms_status,
+            COALESCE(sl.email_status, b.email_status) AS email_status,
             COALESCE(sl.agent_name, '') AS agent_name,
             c.checkin_time
         FROM bookings b
         LEFT JOIN LATERAL (
-            SELECT sms_status, COALESCE(agent_name, '') AS agent_name
+            SELECT sms_status, email_status, COALESCE(agent_name, '') AS agent_name
             FROM send_log
             WHERE order_number = b.order_number
               AND module = 'morning_pickup'
-              AND sms_sid IS NOT NULL AND sms_sid != ''
             ORDER BY sent_at DESC
             LIMIT 1
         ) sl ON true
@@ -302,6 +302,7 @@ async def tracking_morning_pickup(
                 "driver":          r["driver"] or "",
                 "vehicle_no":      r["vehicle_no"] or "",
                 "sms_status":      r["sms_status"] or "",
+                "email_status":    r["email_status"] or "",
                 "checkin_status":  "checked_in" if r["checkin_time"] else "pending",
                 "checkin_time":    r["checkin_time"].isoformat() if r["checkin_time"] else None,
                 "action_taken_by": r["action_taken_by"] or "",
