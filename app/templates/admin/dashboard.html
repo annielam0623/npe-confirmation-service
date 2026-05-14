@@ -1,0 +1,421 @@
+{% extends "base.html" %}
+{% block title %}Home — NPE Operations{% endblock %}
+{% block content %}
+<link href="https://fonts.googleapis.com/css2?family=Product+Sans:wght@400;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ── Daily palettes (Sun=0 … Sat=6) ───────────────────────────────────────── */
+.day-0 { --d1:#4285F4; --d2:#EA4335; --d3:#FBBC05; --d4:#34A853; }
+.day-1 { --d1:#EA4335; --d2:#FBBC05; --d3:#34A853; --d4:#4285F4; }
+.day-2 { --d1:#FBBC05; --d2:#34A853; --d3:#4285F4; --d4:#EA4335; }
+.day-3 { --d1:#34A853; --d2:#4285F4; --d3:#EA4335; --d4:#FBBC05; }
+.day-4 { --d1:#8E44AD; --d2:#E67E22; --d3:#3498DB; --d4:#2ECC71; }
+.day-5 { --d1:#E67E22; --d2:#8E44AD; --d3:#2ECC71; --d4:#3498DB; }
+.day-6 { --d1:#1ABC9C; --d2:#3498DB; --d3:#9B59B6; --d4:#F39C12; }
+
+.dash-wrap {
+  font-family: 'DM Sans', sans-serif;
+  background: #f8f9fa;
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+/* ── Unread banner ─────────────────────────────────────────────────────────── */
+.unread-banner {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border-bottom: 2px solid var(--d1);
+  padding: 12px 32px;
+  font-size: 14px;
+  color: #3c4043;
+  animation: slideDown 0.3s cubic-bezier(.22,1,.36,1);
+}
+.unread-banner.visible { display: flex; }
+@keyframes slideDown {
+  from { opacity:0; transform:translateY(-8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.unread-dot {
+  width:10px; height:10px; border-radius:50%;
+  background: var(--d1); flex-shrink:0;
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0%,100% { transform:scale(1); opacity:1; }
+  50%      { transform:scale(1.4); opacity:.7; }
+}
+.unread-text { flex:1; font-weight:500; }
+.unread-text span { color:var(--d1); font-weight:700; }
+.unread-actions { display:flex; gap:8px; }
+.unread-btn {
+  background:var(--d1); color:#fff; border:none; border-radius:20px;
+  padding:5px 14px; font-size:13px; font-family:'DM Sans',sans-serif;
+  font-weight:500; cursor:pointer; transition:opacity .15s;
+}
+.unread-btn:hover { opacity:.85; }
+.unread-btn.ghost {
+  background:transparent; color:#80868b;
+  border:1px solid #e0e0e0;
+}
+.unread-btn.ghost:hover { background:#f5f5f5; }
+
+/* ── Hero ──────────────────────────────────────────────────────────────────── */
+.hero {
+  display:flex; flex-direction:column; align-items:center;
+  padding:56px 24px 36px; text-align:center;
+}
+.npe-logo {
+  display:flex; align-items:baseline; line-height:1;
+  margin-bottom:10px;
+  animation: logoIn .7s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes logoIn {
+  from { opacity:0; transform:translateY(24px) scale(.94); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+.npe-logo span {
+  font-family:'Product Sans','DM Sans',sans-serif;
+  font-size:88px; font-weight:700; letter-spacing:-3px;
+}
+.npe-logo .l1 { color:var(--d1); }
+.npe-logo .l2 { color:var(--d2); }
+.npe-logo .l3 { color:var(--d3); }
+.npe-wordmark {
+  font-size:12px; font-weight:400; letter-spacing:.2em;
+  text-transform:uppercase; color:#9aa0a6; margin-bottom:28px;
+  animation: fadeUp .7s .12s cubic-bezier(.22,1,.36,1) both;
+}
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.hero-greeting {
+  font-size:21px; font-weight:400; color:#3c4043; margin-bottom:5px;
+  animation: fadeUp .7s .22s cubic-bezier(.22,1,.36,1) both;
+}
+.hero-date {
+  font-size:13px; color:#9aa0a6; margin-bottom:32px;
+  animation: fadeUp .7s .3s cubic-bezier(.22,1,.36,1) both;
+}
+
+/* ── Quick links ───────────────────────────────────────────────────────────── */
+.quick-links {
+  display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
+  animation: fadeUp .7s .38s cubic-bezier(.22,1,.36,1) both;
+}
+.ql-pill {
+  display:flex; align-items:center; gap:7px;
+  background:#fff; border:1px solid #e8eaed; border-radius:24px;
+  padding:8px 16px; font-size:13px; color:#3c4043;
+  text-decoration:none; transition:box-shadow .15s, border-color .15s, transform .1s;
+  font-family:'DM Sans',sans-serif;
+}
+.ql-pill:hover {
+  box-shadow:0 2px 10px rgba(0,0,0,.1);
+  border-color:#c0c0c0; transform:translateY(-1px);
+}
+.ql-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+
+/* ── Board ─────────────────────────────────────────────────────────────────── */
+.board-section {
+  max-width:660px; margin:40px auto 0; padding:0 24px;
+  animation: fadeUp .7s .46s cubic-bezier(.22,1,.36,1) both;
+}
+.board-header {
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:14px;
+}
+.board-label {
+  display:flex; align-items:center; gap:7px;
+  font-size:11px; font-weight:500; color:#9aa0a6;
+  letter-spacing:.08em; text-transform:uppercase;
+}
+.board-label-dot { width:6px; height:6px; border-radius:50%; background:var(--d1); }
+.mark-all-btn {
+  font-size:12px; color:#9aa0a6; background:none; border:none;
+  cursor:pointer; font-family:'DM Sans',sans-serif; padding:0; transition:color .15s;
+}
+.mark-all-btn:hover { color:var(--d1); }
+
+/* ── Compose ───────────────────────────────────────────────────────────────── */
+.compose-wrap {
+  background:#fff; border:1.5px solid #e8eaed; border-radius:28px;
+  padding:10px 14px 10px 16px; display:flex; align-items:center; gap:10px;
+  margin-bottom:14px; transition:border-color .2s, box-shadow .2s;
+}
+.compose-wrap:focus-within {
+  border-color:var(--d1);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--d1) 12%, transparent);
+}
+.compose-avatar {
+  width:30px; height:30px; border-radius:50%; background:var(--d1); color:#fff;
+  font-size:12px; font-weight:700; display:flex; align-items:center;
+  justify-content:center; flex-shrink:0; font-family:'DM Sans',sans-serif;
+}
+.compose-input {
+  flex:1; border:none; outline:none; font-size:14px;
+  color:#3c4043; background:transparent; font-family:'DM Sans',sans-serif;
+}
+.compose-input::placeholder { color:#c5c8cc; }
+.compose-team-select {
+  border:1px solid #e8eaed; border-radius:14px; padding:4px 10px;
+  font-size:12px; color:#5f6368; background:#f8f9fa;
+  font-family:'DM Sans',sans-serif; cursor:pointer; outline:none;
+}
+.compose-send {
+  background:var(--d1); color:#fff; border:none; border-radius:20px;
+  padding:6px 16px; font-size:13px; font-weight:500; cursor:pointer;
+  font-family:'DM Sans',sans-serif; transition:opacity .15s, transform .1s; flex-shrink:0;
+}
+.compose-send:hover  { opacity:.88; }
+.compose-send:active { transform:scale(.97); }
+
+/* ── Message cards ─────────────────────────────────────────────────────────── */
+.msg-list { display:flex; flex-direction:column; gap:8px; }
+.msg-card {
+  background:#fff; border:1px solid #f0f0f0; border-radius:16px;
+  padding:12px 16px; display:flex; gap:11px; align-items:flex-start;
+  transition:border-color .15s; cursor:pointer;
+  animation: msgIn .25s cubic-bezier(.22,1,.36,1) both;
+}
+.msg-card.unread { border-left:3px solid var(--d1); }
+.msg-card:hover  { border-color:#e0e0e0; }
+@keyframes msgIn {
+  from { opacity:0; transform:translateY(6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.msg-avatar {
+  width:30px; height:30px; border-radius:50%; color:#fff;
+  font-size:12px; font-weight:700; display:flex; align-items:center;
+  justify-content:center; flex-shrink:0; font-family:'DM Sans',sans-serif;
+}
+.msg-body { flex:1; min-width:0; }
+.msg-meta {
+  display:flex; align-items:center; gap:7px;
+  margin-bottom:3px; flex-wrap:wrap;
+}
+.msg-author { font-size:13px; font-weight:500; color:#3c4043; }
+.msg-team-tag {
+  font-size:11px; font-weight:500; padding:1px 8px;
+  border-radius:10px; color:#fff;
+}
+.msg-source-tag {
+  font-size:11px; color:#9aa0a6; background:#f1f3f4;
+  padding:1px 7px; border-radius:10px;
+}
+.msg-time { font-size:11px; color:#c5c8cc; margin-left:auto; }
+.msg-text { font-size:14px; color:#5f6368; line-height:1.55; }
+.msg-delete {
+  background:none; border:none; color:#e0e0e0; font-size:18px;
+  cursor:pointer; padding:0 0 0 6px; transition:color .15s;
+  align-self:flex-start; line-height:1;
+}
+.msg-delete:hover { color:#EA4335; }
+.empty-board {
+  text-align:center; padding:40px 20px; color:#c5c8cc; font-size:14px;
+}
+.empty-board .ei { font-size:36px; margin-bottom:8px; }
+</style>
+
+<div class="dash-wrap" id="dashWrap">
+
+  <!-- Unread banner -->
+  <div class="unread-banner" id="unreadBanner">
+    <div class="unread-dot"></div>
+    <div class="unread-text">You have <span id="unreadCount">0</span> new message(s) ~~~</div>
+    <div class="unread-actions">
+      <button class="unread-btn ghost" onclick="markAllRead()">Mark all read</button>
+      <button class="unread-btn" onclick="scrollToBoard()">View</button>
+    </div>
+  </div>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="npe-logo">
+      <span class="l1">N</span><span class="l2">P</span><span class="l3">E</span>
+    </div>
+    <div class="npe-wordmark">National Park Express</div>
+    <div class="hero-greeting" id="greeting"></div>
+    <div class="hero-date"     id="heroDate"></div>
+
+    <div class="quick-links">
+      <a class="ql-pill" href="/admin/manifests">
+        <span class="ql-dot" style="background:var(--d1)"></span>Manifest
+      </a>
+      <a class="ql-pill" href="/admin/notifications/tour">
+        <span class="ql-dot" style="background:var(--d2)"></span>Tour Confirmation
+      </a>
+      <a class="ql-pill" href="/admin/notifications/morning">
+        <span class="ql-dot" style="background:var(--d3)"></span>Morning Pickup
+      </a>
+      <a class="ql-pill" href="/admin/notifications/tickets">
+        <span class="ql-dot" style="background:var(--d4)"></span>Tickets Reminder
+      </a>
+      <a class="ql-pill" href="/admin/order-log">
+        <span class="ql-dot" style="background:#9aa0a6"></span>Order Log
+      </a>
+    </div>
+  </div>
+
+  <!-- Team Board -->
+  <div class="board-section" id="boardSection">
+    <div class="board-header">
+      <div class="board-label">
+        <div class="board-label-dot"></div>
+        Team Board
+      </div>
+      <button class="mark-all-btn" onclick="markAllRead()">Mark all read</button>
+    </div>
+
+    <div class="compose-wrap">
+      <div class="compose-avatar" id="composeAvatar">?</div>
+      <input class="compose-input" id="composeInput"
+             placeholder="Post a message to the team…" maxlength="500" />
+      <select class="compose-team-select" id="composeTeam">
+        <option value="">Everyone</option>
+      </select>
+      <button class="compose-send" onclick="postMessage()">Post</button>
+    </div>
+
+    <div class="msg-list" id="msgList">
+      <div class="empty-board"><div class="ei">🌲</div>Loading…</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const USERNAME  = "{{ current_user.username | capitalize }}";
+const INITIALS  = "{{ current_user.initials or current_user.username[:2] | upper }}";
+const USER_ROLE = "{{ current_user.role }}";
+
+// Day colour
+const day = new Date().getDay();
+document.getElementById('dashWrap').className = `dash-wrap day-${day}`;
+
+// Greeting
+const now  = new Date();
+const hour = now.getHours();
+const greet = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+document.getElementById('greeting').textContent = `${greet}, ${USERNAME} 👋`;
+document.getElementById('heroDate').textContent  = now.toLocaleDateString('en-US',
+  { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+document.getElementById('composeAvatar').textContent = INITIALS;
+
+// Teams
+async function loadTeams() {
+  try {
+    const list = await fetch('/api/teams').then(r => r.json());
+    const sel  = document.getElementById('composeTeam');
+    list.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id; opt.textContent = `@${t.name}`;
+      sel.appendChild(opt);
+    });
+  } catch(e) {}
+}
+
+// Messages
+let messages = [];
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderMessages() {
+  const list = document.getElementById('msgList');
+  if (!messages.length) {
+    list.innerHTML = `<div class="empty-board"><div class="ei">🌲</div>No messages yet — be the first to post!</div>`;
+    return;
+  }
+  list.innerHTML = messages.map(m => {
+    const teamTag = m.team_name
+      ? `<span class="msg-team-tag" style="background:${m.team_color||'#9aa0a6'}">@${esc(m.team_name)}</span>` : '';
+    const srcTag = m.source !== 'manual'
+      ? `<span class="msg-source-tag">${m.source==='guest_note'?'🧳 guest':'💬 staff reply'}</span>` : '';
+    const canDel = m.is_own || USER_ROLE === 'admin';
+    const delBtn = canDel
+      ? `<button class="msg-delete" onclick="event.stopPropagation();deleteMsg(${m.id})">×</button>` : '';
+    return `
+      <div class="msg-card ${m.is_read?'':'unread'}" id="msg-${m.id}" onclick="markRead(${m.id},this)">
+        <div class="msg-avatar" style="background:${m.team_color||'#9aa0a6'}">${esc(m.author_initials||'?')}</div>
+        <div class="msg-body">
+          <div class="msg-meta">
+            <span class="msg-author">${esc(m.author_name||'System')}</span>
+            ${teamTag}${srcTag}
+            <span class="msg-time">${esc(m.created_at)}</span>
+          </div>
+          <div class="msg-text">${esc(m.text)}</div>
+        </div>
+        ${delBtn}
+      </div>`;
+  }).join('');
+}
+
+async function loadMessages() {
+  try {
+    const list = await fetch('/api/messages').then(r => r.json());
+    list.forEach(m => m.is_own = (m.author_name||'').toLowerCase() === USERNAME.toLowerCase());
+    messages = list;
+    renderMessages();
+    updateBanner();
+  } catch(e) {}
+}
+
+function updateBanner() {
+  const n = messages.filter(m => !m.is_read).length;
+  document.getElementById('unreadCount').textContent = n;
+  document.getElementById('unreadBanner').classList.toggle('visible', n > 0);
+}
+
+async function markRead(id, el) {
+  const m = messages.find(x => x.id === id);
+  if (!m || m.is_read) return;
+  m.is_read = true;
+  el.classList.remove('unread');
+  updateBanner();
+  await fetch(`/api/messages/${id}/read`, { method:'POST' });
+}
+
+async function markAllRead() {
+  messages.forEach(m => m.is_read = true);
+  renderMessages(); updateBanner();
+  await fetch('/api/messages/read-all', { method:'POST' });
+}
+
+async function postMessage() {
+  const input = document.getElementById('composeInput');
+  const sel   = document.getElementById('composeTeam');
+  const text  = input.value.trim();
+  if (!text) return;
+  try {
+    const data = await fetch('/api/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ text, team_id: sel.value ? parseInt(sel.value) : null }),
+    }).then(r => r.json());
+    if (data.ok) { input.value = ''; await loadMessages(); }
+  } catch(e) {}
+}
+
+async function deleteMsg(id) {
+  if (!confirm('Delete this message?')) return;
+  await fetch(`/api/messages/${id}`, { method:'DELETE' });
+  messages = messages.filter(m => m.id !== id);
+  renderMessages(); updateBanner();
+}
+
+function scrollToBoard() {
+  document.getElementById('boardSection').scrollIntoView({ behavior:'smooth' });
+}
+
+document.getElementById('composeInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); postMessage(); }
+});
+
+loadTeams();
+loadMessages();
+setInterval(loadMessages, 30000);
+</script>
+{% endblock %}

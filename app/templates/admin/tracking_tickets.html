@@ -64,7 +64,87 @@ td{padding:7px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle;font-s
 tr:hover td{background:#f8f9fa;}
 tr:last-child td{border-bottom:none;}
 
-/* ── Notes ── */
+/* ── Notes cell ── */
+.notes-cell{min-width:120px;max-width:160px;cursor:pointer;}
+.notes-bubble{
+  display:inline-flex;align-items:center;gap:5px;
+  background:#fffbea;border:1px solid #ffc107;border-radius:8px;
+  padding:4px 8px;font-size:12px;color:#856404;
+  max-width:140px;cursor:pointer;transition:background .15s;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.notes-bubble:hover{background:#fff3cd;}
+.notes-bubble .nb-dot{width:6px;height:6px;border-radius:50%;background:#ffc107;flex-shrink:0;}
+.notes-add{
+  color:#ced4da;font-size:18px;cursor:pointer;padding:2px 6px;
+  border-radius:4px;transition:color .15s, background .15s;display:inline-block;
+}
+.notes-add:hover{color:#1a3a5c;background:#f0f2f5;}
+
+/* ── Notes modal ── */
+.notes-modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);
+  z-index:1000;align-items:center;justify-content:center;
+}
+.notes-modal-overlay.open{display:flex;}
+.notes-modal{
+  background:#fff;border-radius:16px;width:480px;max-width:95vw;
+  box-shadow:0 8px 40px rgba(0,0,0,.18);
+  display:flex;flex-direction:column;max-height:80vh;overflow:hidden;
+}
+.nm-header{
+  padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+}
+.nm-title{font-size:14px;font-weight:600;color:#1a3a5c;line-height:1.4;}
+.nm-sub{font-size:12px;color:#6c757d;margin-top:2px;}
+.nm-close{
+  background:none;border:none;font-size:22px;color:#adb5bd;
+  cursor:pointer;line-height:1;padding:0;flex-shrink:0;transition:color .15s;
+}
+.nm-close:hover{color:#495057;}
+.nm-action-row{
+  padding:10px 20px;border-bottom:1px solid #f0f0f0;
+  display:flex;align-items:center;gap:8px;background:#f8f9fa;
+}
+.nm-action-cb{width:15px;height:15px;cursor:pointer;accent-color:#1a3a5c;}
+.nm-action-label{font-size:12px;color:#495057;cursor:pointer;}
+.nm-action-label.done{color:#28a745;font-weight:600;}
+.nm-body{
+  flex:1;overflow-y:auto;padding:16px 20px;
+  display:flex;flex-direction:column;gap:10px;
+}
+.nm-empty{text-align:center;padding:32px;color:#adb5bd;font-size:13px;}
+.nm-msg{display:flex;flex-direction:column;gap:2px;}
+.nm-msg.guest .nm-bubble{
+  background:#e8f4fd;border:1px solid #b3d9f7;border-radius:0 10px 10px 10px;
+  align-self:flex-start;max-width:90%;
+}
+.nm-msg.staff .nm-bubble{
+  background:#f0f9f4;border:1px solid #b7e4c7;border-radius:10px 0 10px 10px;
+  align-self:flex-end;max-width:90%;
+}
+.nm-bubble{padding:8px 12px;font-size:13px;color:#333;line-height:1.5;word-break:break-word;}
+.nm-meta{font-size:11px;color:#adb5bd;padding:0 4px;}
+.nm-msg.staff .nm-meta{text-align:right;}
+.nm-footer{
+  padding:12px 16px;border-top:1px solid #f0f0f0;
+  display:flex;gap:8px;align-items:flex-end;
+}
+.nm-input{
+  flex:1;border:1px solid #dee2e6;border-radius:10px;
+  padding:8px 12px;font-size:13px;font-family:inherit;
+  resize:none;outline:none;line-height:1.5;min-height:38px;
+  max-height:120px;overflow-y:auto;transition:border-color .15s;
+}
+.nm-input:focus{border-color:#1a3a5c;}
+.nm-send{
+  background:#1a3a5c;color:#fff;border:none;border-radius:10px;
+  padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;
+  font-family:inherit;white-space:nowrap;transition:background .15s;flex-shrink:0;
+}
+.nm-send:hover{background:#0f2440;}
+.nm-send:disabled{background:#ced4da;cursor:not-allowed;}
 
 .col-dragging{opacity:0.4!important;background:#c8d8e8!important;}
 .col-drag-over{border-left:2px solid #1a3a5c!important;}
@@ -152,6 +232,33 @@ th.notes-hdr.hdr-dirty{background:#fff3cd !important;color:#856404;}
       <tr><td colspan="14" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>
     </tbody>
   </table>
+</div>
+
+<!-- Notes conversation modal -->
+<div class="notes-modal-overlay" id="notesOverlay" onclick="closeNotesModal(event)">
+  <div class="notes-modal">
+    <div class="nm-header">
+      <div>
+        <div class="nm-title" id="nmTitle">Notes</div>
+        <div class="nm-sub"   id="nmSub"></div>
+      </div>
+      <button class="nm-close" onclick="closeNotesModal(null)">×</button>
+    </div>
+    <div class="nm-action-row">
+      <input type="checkbox" class="nm-action-cb" id="nmActionCb" onchange="toggleAction()">
+      <label class="nm-action-label" id="nmActionLabel" for="nmActionCb">Take Action</label>
+    </div>
+    <div class="nm-body" id="nmBody">
+      <div class="nm-empty">No messages yet.</div>
+    </div>
+    <div class="nm-footer">
+      <textarea class="nm-input" id="nmInput"
+        placeholder="Reply to guest…" rows="1"
+        oninput="autoResizeNmInput(this)"
+        onkeydown="nmInputKey(event)"></textarea>
+      <button class="nm-send" id="nmSendBtn" onclick="sendStaffNote()">Send</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -284,9 +391,11 @@ function renderTable(){
       +'<td>'+e(r.confirmation_no||'—')+'</td>'
       +'<td>'+emB+'</td>'
       +'<td>'+smB+'</td>'
-      +'<td class="notes-cell"><textarea class="notes-input" rows="1"'
-        +' data-orig="'+notes+'"'
-        +' oninput="onNoteInput(this)" onblur="saveNotes(this)">'+notes+'</textarea></td>'
+      +'<td class="notes-cell" onclick="openNotesModal('+r.id+',\''+e(r.chd_number)+'\',\''+e(r.name||'')+'\','+!!(r.reschedule_notes)+','+!!(r.notes_action_taken)+')">'
+        +(r.reschedule_notes
+          ? '<span class="notes-bubble"><span class="nb-dot"></span>'+e((r.reschedule_notes||'').substring(0,30)+((r.reschedule_notes||'').length>30?'…':''))+'</span>'
+          : '<span class="notes-add" title="Add note">+</span>')
+        +'</td>'
       +'<td><select class="s-sel '+conf+'" onchange="saveStatus(this)" data-orig="'+conf+'">'
         +'<option value="yes"'+(conf==='yes'?' selected':'')+'>&#10003; YES</option>'
         +'<option value="pending"'+(conf==='pending'?' selected':'')+'>&#8987; Pending</option>'
@@ -302,33 +411,7 @@ function renderTable(){
 function e(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
 // ── Notes: yellow on edit, header yellow if any unsaved ──
-function onNoteInput(el){
-  el.style.height='auto'; el.style.height=el.scrollHeight+'px';
-  el.classList.toggle('dirty', el.value !== el.getAttribute('data-orig'));
-  document.getElementById('notes-hdr').classList.toggle('hdr-dirty', !!document.querySelector('.notes-input.dirty'));
-}
-
-function autoResize(){
-  document.querySelectorAll('.notes-input').forEach(function(el){
-    el.style.height='auto'; el.style.height=el.scrollHeight+'px';
-  });
-}
-
-function saveNotes(el){
-  if(el.value===el.getAttribute('data-orig')) return;
-  var id = el.closest('tr').getAttribute('data-id');
-  fetch('/api/tickets-reminder/update-notes',{
-    method:'POST', credentials:'include',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({id:parseInt(id), notes:el.value})
-  }).then(function(r){
-    if(r.ok){
-      el.setAttribute('data-orig', el.value);
-      el.classList.remove('dirty');
-      document.getElementById('notes-hdr').classList.toggle('hdr-dirty', !!document.querySelector('.notes-input.dirty'));
-    }
-  });
-}
+function autoResize(){ /* no-op: notes now use modal */ }
 
 function saveStatus(el){
   var row = el.closest('tr');
@@ -359,6 +442,106 @@ function exportCSV(){
 
 goToday();
 setInterval(loadData, 60000);
+
+/* ── Notes modal ─────────────────────────────────────────────────────────── */
+var nmBookingId = null;
+
+function openNotesModal(bookingId, chd, guestName, hasNotes, actionTaken){
+  nmBookingId = bookingId;
+  document.getElementById('nmTitle').textContent   = chd + (guestName ? ' — ' + guestName : '');
+  document.getElementById('nmSub').textContent     = 'Guest conversation';
+  document.getElementById('nmActionCb').checked    = !!actionTaken;
+  document.getElementById('nmActionLabel').textContent = actionTaken ? '✓ Actioned' : 'Take Action';
+  document.getElementById('nmActionLabel').className   = 'nm-action-label' + (actionTaken ? ' done' : '');
+  document.getElementById('nmInput').value = '';
+  document.getElementById('nmBody').innerHTML = '<div class="nm-empty">Loading…</div>';
+  document.getElementById('notesOverlay').classList.add('open');
+  loadNotes(bookingId);
+}
+
+function closeNotesModal(e){
+  if(e && e.target !== document.getElementById('notesOverlay')) return;
+  document.getElementById('notesOverlay').classList.remove('open');
+  nmBookingId = null;
+}
+
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape') closeNotesModal(null);
+});
+
+async function loadNotes(bookingId){
+  try{
+    var r = await fetch('/api/booking-notes/'+bookingId, {credentials:'include'});
+    var notes = await r.json();
+    renderNotes(notes);
+  }catch(err){
+    document.getElementById('nmBody').innerHTML = '<div class="nm-empty">Failed to load.</div>';
+  }
+}
+
+function renderNotes(notes){
+  var body = document.getElementById('nmBody');
+  if(!notes.length){
+    body.innerHTML = '<div class="nm-empty">No messages yet. Start a conversation below.</div>';
+    return;
+  }
+  body.innerHTML = notes.map(function(n){
+    var isStaff = n.author !== 'guest';
+    var cls     = isStaff ? 'staff' : 'guest';
+    var author  = isStaff ? n.author : 'Guest';
+    return '<div class="nm-msg '+cls+'">'
+      +'<div class="nm-bubble">'+esc(n.text)+'</div>'
+      +'<div class="nm-meta">'+esc(author)+' · '+esc(n.created_at)+'</div>'
+      +'</div>';
+  }).join('');
+  body.scrollTop = body.scrollHeight;
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function sendStaffNote(){
+  var text = document.getElementById('nmInput').value.trim();
+  if(!text || !nmBookingId) return;
+  var btn = document.getElementById('nmSendBtn');
+  btn.disabled = true;
+  try{
+    var r = await fetch('/api/booking-notes/'+nmBookingId, {
+      method:'POST', credentials:'include',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({text: text})
+    });
+    if(r.ok){
+      document.getElementById('nmInput').value = '';
+      document.getElementById('nmInput').style.height = '';
+      await loadNotes(nmBookingId);
+      // Refresh row in table to update bubble
+      loadData();
+    }
+  }catch(err){}
+  btn.disabled = false;
+}
+
+async function toggleAction(){
+  if(!nmBookingId) return;
+  var cb    = document.getElementById('nmActionCb');
+  var label = document.getElementById('nmActionLabel');
+  try{
+    await fetch('/api/booking-notes/'+nmBookingId+'/action', {
+      method:'POST', credentials:'include'
+    });
+    label.textContent  = cb.checked ? '✓ Actioned' : 'Take Action';
+    label.className    = 'nm-action-label' + (cb.checked ? ' done' : '');
+  }catch(err){ cb.checked = !cb.checked; }
+}
+
+function autoResizeNmInput(el){
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function nmInputKey(e){
+  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendStaffNote(); }
+}
 
 /* ── Column resize ── */
 

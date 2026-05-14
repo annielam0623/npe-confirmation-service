@@ -363,3 +363,58 @@ class ActivityLog(Base):
     actor        = Column(String(100), nullable=True)
     actor_type   = Column(String(20), nullable=True)  # 'staff' / 'guest' / 'system'
     created_at   = Column(DateTime, server_default=func.now(), index=True)
+
+# ─── Teams ────────────────────────────────────────────────────────────────────
+
+class Team(Base):
+    __tablename__ = "teams"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    name       = Column(String(100), nullable=False)
+    color      = Column(String(20),  nullable=False, default="#4285F4")
+    created_at = Column(DateTime, server_default=func.now())
+
+
+# ─── User-Team (many-to-many) ──────────────────────────────────────────────────
+
+class UserTeam(Base):
+    __tablename__ = "user_teams"
+
+    user_id = Column(Integer, ForeignKey("admin_users.id", ondelete="CASCADE"), primary_key=True)
+    team_id = Column(Integer, ForeignKey("teams.id",       ondelete="CASCADE"), primary_key=True)
+
+
+# ─── Messages (team board) ─────────────────────────────────────────────────────
+
+class Message(Base):
+    __tablename__ = "messages"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    author_id  = Column(Integer, ForeignKey("admin_users.id", ondelete="SET NULL"), nullable=True)
+    team_id    = Column(Integer, ForeignKey("teams.id",       ondelete="SET NULL"), nullable=True)
+    text       = Column(Text,    nullable=False)
+    source     = Column(String(20), nullable=False, default="manual")   # manual | guest_note | staff_note
+    booking_id = Column(Integer, ForeignKey("bookings.id",    ondelete="SET NULL"), nullable=True)
+    created_at = Column(DateTime, server_default=func.now(), index=True)
+
+
+# ─── Message Reads ─────────────────────────────────────────────────────────────
+
+class MessageRead(Base):
+    __tablename__ = "message_reads"
+
+    user_id    = Column(Integer, ForeignKey("admin_users.id", ondelete="CASCADE"), primary_key=True)
+    message_id = Column(Integer, ForeignKey("messages.id",    ondelete="CASCADE"), primary_key=True)
+    read_at    = Column(DateTime, server_default=func.now())
+
+
+# ─── Booking Notes (conversation) ─────────────────────────────────────────────
+
+class BookingNote(Base):
+    __tablename__ = "booking_notes"
+
+    id         = Column(Integer, primary_key=True, index=True)
+    booking_id = Column(Integer, ForeignKey("bookings.id", ondelete="CASCADE"), nullable=False, index=True)
+    author     = Column(String(50), nullable=False)   # 'guest' 或 staff initials e.g. 'AB'
+    text       = Column(Text, nullable=False)
+    created_at = Column(DateTime, server_default=func.now(), index=True)
