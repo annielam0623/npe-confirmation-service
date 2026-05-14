@@ -35,14 +35,7 @@ TOUR_TYPES: dict[str, dict] = {
         "location_photo":   "https://maps.app.goo.gl/DiwJPosKMWNXzrH3A",
         "extra_notes": [
             "★ No children, toddlers or infants (ages 0–5) are permitted due to safety concerns.",
-            "The general guidelines for visiting Antelope Canyon:
-             1.Bottled water is allowed.
-             2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.
-             3.Phones and standard cameras are allowed.
-             4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.
-
-            Please note that rules may vary slightly depending on the canyon and tour operator. 
-            Final instructions will be provided by the guide on site.",
+            "The general guidelines for visiting Antelope Canyon:\n1.Bottled water is allowed.\n2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3.Phones and standard cameras are allowed.\n4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\n\nPlease note that rules may vary slightly depending on the canyon and tour operator. Final instructions will be provided by the guide on site.",
         ],
         "prepare_steps": [],
     },
@@ -55,14 +48,7 @@ TOUR_TYPES: dict[str, dict] = {
         "location_photo":   "https://maps.app.goo.gl/3meJhQqfCAAt9Ayp7",
         "extra_notes": [
             "Car seats are required for children under 4. Visitors must provide their own car seat or booster seat.",
-            "The general guidelines for visiting Antelope Canyon:
-             1.Bottled water is allowed.
-             2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.
-             3.Phones and standard cameras are allowed.
-             4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.
-
-            Please note that rules may vary slightly depending on the canyon and tour operator. 
-            Final instructions will be provided by the guide on site.",
+            "The general guidelines for visiting Antelope Canyon:\n1.Bottled water is allowed.\n2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3.Phones and standard cameras are allowed.\n4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\n\nPlease note that rules may vary slightly depending on the canyon and tour operator. Final instructions will be provided by the guide on site.",
         ],
         "prepare_steps": [
             {"label": "Sign the required waiver form",
@@ -81,14 +67,7 @@ TOUR_TYPES: dict[str, dict] = {
         "location_photo":   "https://maps.app.goo.gl/3meJhQqfCAAt9Ayp7",
         "extra_notes": [
             "Car seats are required for children under 4. Visitors must provide their own car seat or booster seat.",
-            "The general guidelines for visiting Antelope Canyon:
-             1.Bottled water is allowed.
-             2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.
-             3.Phones and standard cameras are allowed.
-             4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.
-
-            Please note that rules may vary slightly depending on the canyon and tour operator. 
-            Final instructions will be provided by the guide on site.",
+            "The general guidelines for visiting Antelope Canyon:\n1.Bottled water is allowed.\n2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3.Phones and standard cameras are allowed.\n4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\n\nPlease note that rules may vary slightly depending on the canyon and tour operator. Final instructions will be provided by the guide on site.",
         ],
         "prepare_steps": [
             {"label": "Sign the required waiver form",
@@ -105,14 +84,7 @@ TOUR_TYPES: dict[str, dict] = {
         "extra_notes": [
             "★ Minimum age 8. Guests must be at least 8 years of age to join the walking tour.",
             "★ Pregnant guests are not permitted to participate due to safety concerns.",
-            "The general guidelines for visiting Antelope Canyon:
-             1.Bottled water is allowed.
-             2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.
-             3.Phones and standard cameras are allowed.
-             4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.
-
-            Please note that rules may vary slightly depending on the canyon and tour operator. 
-            Final instructions will be provided by the guide on site.",
+            "The general guidelines for visiting Antelope Canyon:\n1.Bottled water is allowed.\n2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3.Phones and standard cameras are allowed.\n4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\n\nPlease note that rules may vary slightly depending on the canyon and tour operator. Final instructions will be provided by the guide on site.",
         ],
         "prepare_steps": [],
     },
@@ -147,14 +119,7 @@ TOUR_TYPES: dict[str, dict] = {
             "★ Pregnant guests are not permitted to participate due to safety concerns.",
             "★ These entry reservations are non-refundable.",
             "Prepare for a 2-mile round-trip hike. Bring plenty of water.",
-            "The general guidelines for visiting Antelope Canyon:
-             1.Bottled water is allowed.
-             2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.
-             3.Phones and standard cameras are allowed.
-             4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.
-
-            Please note that rules may vary slightly depending on the canyon and tour operator. 
-            Final instructions will be provided by the guide on site.",
+            "The general guidelines for visiting Antelope Canyon:\n1.Bottled water is allowed.\n2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3.Phones and standard cameras are allowed.\n4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\n\nPlease note that rules may vary slightly depending on the canyon and tour operator. Final instructions will be provided by the guide on site.",
             "If you can't find the check-in location, call: 928-693-9293",
         ],
         "prepare_steps": [
@@ -172,14 +137,7 @@ TOUR_TYPES: dict[str, dict] = {
         "location_photo":   "https://goo.gl/maps/q5tH4CB2LFnNPk2w6",
         "extra_notes": [
             "★ These entry reservations are non-refundable.",
-            "The general guidelines for visiting Antelope Canyon:
-             1.Bottled water is allowed.
-             2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.
-             3.Phones and standard cameras are allowed.
-             4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.
-
-            Please note that rules may vary slightly depending on the canyon and tour operator. 
-            Final instructions will be provided by the guide on site.",
+            "The general guidelines for visiting Antelope Canyon:\n1.Bottled water is allowed.\n2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3.Phones and standard cameras are allowed.\n4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\n\nPlease note that rules may vary slightly depending on the canyon and tour operator. Final instructions will be provided by the guide on site.",
         ],
         "prepare_steps": [],
     },
@@ -192,14 +150,7 @@ TOUR_TYPES: dict[str, dict] = {
         "location_photo":   "https://goo.gl/maps/QJ28NgUR8iSCf9AC7",
         "extra_notes": [
             "★ These entry reservations are non-refundable.",
-            "The general guidelines for visiting Antelope Canyon:
-             1.Bottled water is allowed.
-             2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.
-             3.Phones and standard cameras are allowed.
-             4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.
-
-            Please note that rules may vary slightly depending on the canyon and tour operator. 
-            Final instructions will be provided by the guide on site.",
+            "The general guidelines for visiting Antelope Canyon:\n1.Bottled water is allowed.\n2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3.Phones and standard cameras are allowed.\n4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\n\nPlease note that rules may vary slightly depending on the canyon and tour operator. Final instructions will be provided by the guide on site.",
         ],
         "prepare_steps": [],
     },
@@ -212,14 +163,7 @@ TOUR_TYPES: dict[str, dict] = {
         "location_photo":   "https://goo.gl/maps/FyBq5gGTs9ZcKebu9",
         "extra_notes": [
             "No entry for children who do not have their own car seat for children under 8 years of age, under 4'9\" (145cm), or under 80 lbs (36.3kg).",
-            "The general guidelines for visiting Antelope Canyon:
-             1.Bottled water is allowed.
-             2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.
-             3.Phones and standard cameras are allowed.
-             4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.
-
-            Please note that rules may vary slightly depending on the canyon and tour operator. 
-            Final instructions will be provided by the guide on site.",
+            "The general guidelines for visiting Antelope Canyon:\n1.Bottled water is allowed.\n2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3.Phones and standard cameras are allowed.\n4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\n\nPlease note that rules may vary slightly depending on the canyon and tour operator. Final instructions will be provided by the guide on site.",
         ],
         "prepare_steps": [],
     },
@@ -233,14 +177,7 @@ TOUR_TYPES: dict[str, dict] = {
         "extra_notes": [
             "★ Minimum age 8. Guests must be at least 8 years of age to join the walking tour.",
             "★ Pregnant guests are not permitted to participate due to safety concerns.",
-            "The general guidelines for visiting Antelope Canyon:
-             1.Bottled water is allowed.
-             2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.
-             3.Phones and standard cameras are allowed.
-             4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.
-
-            Please note that rules may vary slightly depending on the canyon and tour operator. 
-            Final instructions will be provided by the guide on site.",
+            "The general guidelines for visiting Antelope Canyon:\n1.Bottled water is allowed.\n2.No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3.Phones and standard cameras are allowed.\n4.Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\n\nPlease note that rules may vary slightly depending on the canyon and tour operator. Final instructions will be provided by the guide on site.",
         ],
         "prepare_steps": [],
     },
