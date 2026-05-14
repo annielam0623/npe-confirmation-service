@@ -33,4 +33,4 @@ async def redirect_short_link(code: str, db: AsyncSession = Depends(get_db)):
             status_code=410,
         )
 
-    return RedirectResponse(url=target, status_code=302)
+    return RedirectResponse(url=target.strip(), status_code=302)

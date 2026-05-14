@@ -45,7 +45,7 @@ async def upsert_short_link(
             updated_at = NOW()
     """), {
         "code":         code,
-        "target_url":   target_url,
+        "target_url":   target_url.strip(),
         "module":       suffix,
         "order_number": order_number,
         "expires_at":   expires_at,
