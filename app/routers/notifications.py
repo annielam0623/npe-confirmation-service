@@ -700,6 +700,12 @@ async def delete_by_date(
         DELETE FROM send_log
         WHERE module = :module AND tour_date = :tour_date
     """), {"module": module, "tour_date": _to_date(tour_date)})
+
+    await db.execute(text("""
+        DELETE FROM bookings
+        WHERE module = :module AND tour_date = :tour_date
+    """), {"module": module, "tour_date": _to_date(tour_date)})
+
     await db.commit()
 
     return {"success": True, "message": f"Deleted send records for {tour_date}"}
