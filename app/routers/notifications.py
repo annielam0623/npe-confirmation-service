@@ -34,8 +34,9 @@ Endpoints:
 
 from __future__ import annotations
 import io
-import csv
 from datetime import date, datetime, timezone, timedelta
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
 from typing import Optional
 from zoneinfo import ZoneInfo
 
@@ -75,6 +76,37 @@ def _to_date(d: str) -> date:
 # ══════════════════════════════════════════════════════════════════════════════
 # PREVIEW endpoints — parse Excel, check duplicates, return rows (no send)
 # ══════════════════════════════════════════════════════════════════════════════
+
+
+def _make_xlsx(headers: list, rows) -> openpyxl.Workbook:
+    """Build a styled xlsx workbook from a list of headers and DB rows."""
+    wb = openpyxl.Workbook()
+    ws = wb.active
+
+    header_font = Font(bold=True, color="FFFFFF")
+    header_fill = PatternFill("solid", fgColor="1A3A5C")
+    header_align = Alignment(horizontal="center", vertical="center")
+
+    for ci, h in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=ci, value=h)
+        cell.font   = header_font
+        cell.fill   = header_fill
+        cell.alignment = header_align
+
+    for ri, row in enumerate(rows, 2):
+        for ci, val in enumerate(row, 1):
+            if hasattr(val, "isoformat"):          # date / datetime
+                val = val.isoformat()
+            elif val is None:
+                val = ""
+            ws.cell(row=ri, column=ci, value=str(val) if not isinstance(val, (int, float)) else val)
+
+    # Auto-width columns
+    for col in ws.columns:
+        max_len = max((len(str(cell.value or "")) for cell in col), default=10)
+        ws.column_dimensions[col[0].column_letter].width = min(max_len + 4, 50)
+
+    return wb
 
 @router.post("/tour-confirmation/preview")
 async def preview_tour_confirmation(
@@ -269,15 +301,15 @@ async def tracking_morning_pickup(
             b.tour_date, b.driver, b.vehicle_no,
             b.action_taken_by,
             COALESCE(sl.sms_status, b.sms_status) AS sms_status,
-            COALESCE(sl.email_status, b.email_status) AS email_status,
             COALESCE(sl.agent_name, '') AS agent_name,
             c.checkin_time
         FROM bookings b
         LEFT JOIN LATERAL (
-            SELECT sms_status, email_status, COALESCE(agent_name, '') AS agent_name
+            SELECT sms_status, COALESCE(agent_name, '') AS agent_name
             FROM send_log
             WHERE order_number = b.order_number
               AND module = 'morning_pickup'
+              AND sms_sid IS NOT NULL AND sms_sid != ''
             ORDER BY sent_at DESC
             LIMIT 1
         ) sl ON true
@@ -302,7 +334,6 @@ async def tracking_morning_pickup(
                 "driver":          r["driver"] or "",
                 "vehicle_no":      r["vehicle_no"] or "",
                 "sms_status":      r["sms_status"] or "",
-                "email_status":    r["email_status"] or "",
                 "checkin_status":  "checked_in" if r["checkin_time"] else "pending",
                 "checkin_time":    r["checkin_time"].isoformat() if r["checkin_time"] else None,
                 "action_taken_by": r["action_taken_by"] or "",
@@ -498,21 +529,17 @@ async def export_send_log(
     """), params)
     rows = res.all()
 
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Sent At","Module","Order#","First Name","Last Name",
-                     "Email","Phone","Tour Date","Tour Type",
-                     "Email Status","SMS Status","Error","sent_by"])
-    for r in rows:
-        writer.writerow([
-            r[0], r[1], r[2], r[3], r[4],
-            r[5], r[6], r[7], r[8], r[9], r[10], r[11], r[12],
-        ])
+    headers = ["Sent At", "Module", "Order #", "First Name", "Last Name",
+               "Email", "Phone", "Tour Date", "Tour Type",
+               "Email Status", "SMS Status", "Error", "Sent By"]
+    wb = _make_xlsx(headers, rows)
+    output = io.BytesIO()
+    wb.save(output)
     output.seek(0)
-    filename = f"send_log_{date or 'all'}.csv"
+    filename = f"send_log_{date or 'all'}.xlsx"
     return StreamingResponse(
         iter([output.getvalue()]),
-        media_type="text/csv",
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
@@ -740,11 +767,11 @@ async def export_module(
 
     if date:
         conditions.append("tour_date = :date")
-        params["date"] = date
+        params["date"] = _to_date(date)
     elif from_ and to:
         conditions.append("tour_date BETWEEN :from_ AND :to")
-        params["from_"] = from_
-        params["to"]    = to
+        params["from_"] = _to_date(from_)
+        params["to"]    = _to_date(to)
     if type and type != "all":
         conditions.append("tour_type = :type")
         params["type"] = type
@@ -759,83 +786,19 @@ async def export_module(
     """), params)
     rows = res.all()
 
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Order#", "First Name", "Last Name", "Email", "Phone",
-                     "Tour Date", "Tour Type", "Email Status", "SMS Status",
-                     "Sent By", "Sent At"])
-    for r in rows:
-        writer.writerow(list(r))
+    col_headers = ["Order #", "First Name", "Last Name", "Email", "Phone",
+                   "Tour Date", "Tour Type", "Email Status", "SMS Status",
+                   "Sent By", "Sent At"]
+    wb = _make_xlsx(col_headers, rows)
+    output = io.BytesIO()
+    wb.save(output)
     output.seek(0)
 
     label = date or (f"{from_}_to_{to}" if from_ else "all")
-    filename = f"{module_name}_{label}.csv"
+    filename = f"{module_name}_{label}.xlsx"
     return StreamingResponse(
         iter([output.getvalue()]),
-        media_type="text/csv",
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f"attachment; filename={filename}"},
     )
 
-# ══════════════════════════════════════════════════════════════════════════════
-# EXPORT (Utilities)
-# ══════════════════════════════════════════════════════════════════════════════
-
-@router.get("/{module_name}/export")
-async def export_module(
-    module_name: str,
-    date:  Optional[str] = Query(None),
-    from_: Optional[str] = Query(None, alias="from"),
-    to:    Optional[str] = Query(None),
-    type:  Optional[str] = Query(None),
-    db: AsyncSession = Depends(get_db),
-    _user = Depends(require_staff),
-):
-    module_map = {
-        "tour-confirmation": "tour_confirmation",
-        "morning-pickup":    "morning_pickup",
-        "tickets-reminder":  "tickets_reminder",
-    }
-    module = module_map.get(module_name)
-    if not module:
-        raise HTTPException(404)
-
-    conditions = ["module = :module"]
-    params: dict = {"module": module}
-
-    if date:
-        conditions.append("tour_date = :date")
-        params["date"] = date
-    elif from_ and to:
-        conditions.append("tour_date BETWEEN :from_ AND :to")
-        params["from_"] = from_
-        params["to"]    = to
-    if type and type != "all":
-        conditions.append("tour_type = :type")
-        params["type"] = type
-
-    where = " AND ".join(conditions)
-    res = await db.execute(text(f"""
-        SELECT order_number, first_name, last_name,
-               email, phone, tour_date, tour_type,
-               email_status, sms_status, sent_by, sent_at
-        FROM send_log WHERE {where}
-        ORDER BY tour_date ASC, last_name ASC
-    """), params)
-    rows = res.all()
-
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Order#", "First Name", "Last Name", "Email", "Phone",
-                     "Tour Date", "Tour Type", "Email Status", "SMS Status",
-                     "Sent By", "Sent At"])
-    for r in rows:
-        writer.writerow(list(r))
-    output.seek(0)
-
-    label = date or (f"{from_}_to_{to}" if from_ else "all")
-    filename = f"{module_name}_{label}.csv"
-    return StreamingResponse(
-        iter([output.getvalue()]),
-        media_type="text/csv",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
-    )
