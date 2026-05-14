@@ -14,6 +14,8 @@
 .btn-filter{background:#1a1a1a;color:#fff;border:none;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;}
 .btn-filter:hover{background:#333;}
 .btn-reset{background:#fff;color:#888;border:0.5px solid rgba(0,0,0,0.15);padding:7px 14px;border-radius:7px;font-size:12px;cursor:pointer;}
+.btn-today{background:#fff;color:#185FA5;border:0.5px solid #185FA5;padding:7px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-weight:600;}
+.btn-today:hover{background:#E6F1FB;}
 .records-count{font-size:12px;color:#aaa;margin-left:auto;}
 .table-card{background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;overflow:hidden;}
 .table-header{padding:10px 16px;background:#f9f9f7;border-bottom:0.5px solid rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;}
@@ -45,7 +47,7 @@ table.log-tbl{width:100%;border-collapse:collapse;font-size:12px;}
 <div class="filter-bar">
   <div>
     <label>Tour Date</label>
-    <input type="date" id="f-date" value="{{ today }}">
+    <input type="date" id="f-date" value="">
   </div>
   <div>
     <label>Order #</label>
@@ -73,6 +75,7 @@ table.log-tbl{width:100%;border-collapse:collapse;font-size:12px;}
       <option value="guest">Guest</option>
     </select>
   </div>
+  <button class="btn-today" onclick="setToday()">Today</button>
   <button class="btn-filter" onclick="loadLog()">Filter</button>
   <button class="btn-reset" onclick="resetFilters()">Reset</button>
   <span class="records-count" id="records-count">— records</span>
@@ -107,6 +110,7 @@ table.log-tbl{width:100%;border-collapse:collapse;font-size:12px;}
 <script>
 let currentPage = 1;
 const PAGE_SIZE = 50;
+const TODAY = '{{ today }}';
 
 async function loadLog(page) {
   if (page) currentPage = page;
@@ -176,8 +180,14 @@ function renderPagination(total) {
   pag.innerHTML = html;
 }
 
+function setToday() {
+  document.getElementById('f-date').value = TODAY;
+  currentPage = 1;
+  loadLog();
+}
+
 function resetFilters() {
-  document.getElementById('f-date').value  = '{{ today }}';
+  document.getElementById('f-date').value  = '';
   document.getElementById('f-order').value = '';
   document.getElementById('f-event').value = '';
   document.getElementById('f-actor').value = '';
