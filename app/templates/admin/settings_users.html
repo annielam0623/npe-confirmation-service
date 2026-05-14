@@ -2,7 +2,7 @@
 {% block title %}Users — Settings{% endblock %}
 
 {% block content %}
-<div style="padding: 28px 32px; max-width: 900px;">
+<div style="padding: 28px 32px; max-width: 1050px;">
 
   <!-- Header -->
   <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:28px;">
@@ -26,6 +26,7 @@
           <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">User</th>
           <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Role</th>
           <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Status</th>
+          <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Teams</th>
           <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Invited By</th>
           <th style="padding:12px 16px;text-align:left;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Joined</th>
           <th style="padding:12px 16px;text-align:center;font-size:12px;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;">Actions</th>
@@ -34,10 +35,11 @@
       <tbody>
         {% for user in users %}
         {% set is_pending = not user.invite_used %}
+        {% set user_team_ids = user_teams_map.get(user.id, []) %}
         <tr id="user-row-{{ user.id }}"
             style="border-bottom:1px solid #f3f4f6;{% if not user.is_active %}opacity:.55;{% endif %}">
 
-          <!-- Avatar + username -->
+          <!-- Avatar + username + display name -->
           <td style="padding:14px 16px;">
             <div style="display:flex;align-items:center;gap:12px;">
               <div style="width:38px;height:38px;border-radius:50%;
@@ -51,12 +53,17 @@
                   {% if is_pending %}
                     <span style="color:#9ca3af;font-style:italic;">Pending registration…</span>
                   {% else %}
-                    {{ user.username }}
+                    {{ user.display_name or user.username }}
                     {% if user.username == current_user.username %}
                       <span style="font-size:11px;color:#9ca3af;">(you)</span>
                     {% endif %}
                   {% endif %}
                 </div>
+                {% if not is_pending %}
+                <div style="font-size:11px;color:#9ca3af;margin-top:1px;">
+                  @{{ user.username }} · {{ user.initials or '—' }}
+                </div>
+                {% endif %}
               </div>
             </div>
           </td>
@@ -86,6 +93,26 @@
             {% endif %}
           </td>
 
+          <!-- Teams -->
+          <td style="padding:14px 16px;">
+            <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center;cursor:pointer;"
+                 onclick="openTeamsModal({{ user.id }}, '{{ (user.display_name or user.username)|e }}', {{ user_team_ids | tojson }})">
+              {% if user_team_ids %}
+                {% for tid in user_team_ids %}
+                  {% if tid in teams_by_id %}
+                  <span style="background:{{ teams_by_id[tid].color }}22;color:{{ teams_by_id[tid].color }};
+                               border:1px solid {{ teams_by_id[tid].color }}55;
+                               padding:2px 9px;border-radius:12px;font-size:12px;font-weight:600;">
+                    {{ teams_by_id[tid].name }}
+                  </span>
+                  {% endif %}
+                {% endfor %}
+              {% else %}
+                <span style="color:#d1d5db;font-size:12px;">+ Add</span>
+              {% endif %}
+            </div>
+          </td>
+
           <!-- Invited by -->
           <td style="padding:14px 16px;font-size:13px;color:#6b7280;">
             {{ user.created_by or '—' }}
@@ -105,7 +132,6 @@
             {% if user.username == current_user.username %}
               <span style="color:#d1d5db;font-size:12px;">—</span>
             {% elif is_pending %}
-              <!-- pending: show copy link + delete -->
               <div style="display:flex;gap:8px;justify-content:center;">
                 <button onclick="copyInviteLink('{{ user.invite_token }}')"
                   title="Copy invite link"
@@ -121,12 +147,20 @@
                 </button>
               </div>
             {% elif user.is_active %}
-              <button onclick="deactivateUser({{ user.id }})"
-                style="background:#fff4e5;border:1px solid #fed7aa;color:#c2410c;
-                       padding:6px 14px;border-radius:6px;font-size:12px;
-                       font-weight:600;cursor:pointer;">
-                Deactivate
-              </button>
+              <div style="display:flex;gap:8px;justify-content:center;">
+                <button onclick="openEditModal({{ user.id }}, '{{ (user.display_name or user.username)|e }}')"
+                  style="background:#f3f4f6;border:1px solid #e5e7eb;color:#374151;
+                         padding:6px 12px;border-radius:6px;font-size:12px;
+                         font-weight:500;cursor:pointer;">
+                  ✏️ Name
+                </button>
+                <button onclick="deactivateUser({{ user.id }})"
+                  style="background:#fff4e5;border:1px solid #fed7aa;color:#c2410c;
+                         padding:6px 14px;border-radius:6px;font-size:12px;
+                         font-weight:600;cursor:pointer;">
+                  Deactivate
+                </button>
+              </div>
             {% else %}
               <div style="display:flex;gap:8px;justify-content:center;">
                 <button onclick="reactivateUser({{ user.id }})"
@@ -162,6 +196,78 @@
   </div>
 </div>
 
+<!-- ── Teams modal ──────────────────────────────────────────────────────────── -->
+<div id="teamsModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);
+     z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;padding:28px 28px;width:420px;
+              box-shadow:0 20px 60px rgba(0,0,0,.2);position:relative;">
+    <button onclick="closeTeamsModal()"
+      style="position:absolute;top:14px;right:16px;background:none;border:none;
+             font-size:20px;cursor:pointer;color:#9ca3af;">✕</button>
+
+    <h3 style="font-size:17px;font-weight:700;color:#1a1a2e;margin:0 0 4px;">Assign Teams</h3>
+    <p id="teamsModalSubtitle" style="font-size:13px;color:#6b7280;margin:0 0 20px;"></p>
+
+    <input type="hidden" id="teamsUserId">
+
+    <div id="teamsCheckboxList" style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px;">
+      {% for t in teams %}
+      <label style="display:flex;align-items:center;gap:12px;cursor:pointer;padding:10px 14px;
+                    border:1px solid #e5e7eb;border-radius:8px;transition:background .1s;"
+             onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
+        <input type="checkbox" class="team-checkbox" value="{{ t.id }}"
+          style="width:16px;height:16px;accent-color:{{ t.color }};cursor:pointer;">
+        <div style="width:10px;height:10px;border-radius:50%;background:{{ t.color }};flex-shrink:0;"></div>
+        <span style="font-size:14px;font-weight:500;color:#1a1a2e;">{{ t.name }}</span>
+      </label>
+      {% endfor %}
+    </div>
+
+    <div id="teamsError" style="color:#c0392b;font-size:13px;margin-bottom:12px;display:none;"></div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="closeTeamsModal()"
+        style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:10px 20px;
+               font-size:14px;cursor:pointer;">Cancel</button>
+      <button onclick="saveTeams()"
+        style="background:#1a3a5c;color:#fff;border:none;border-radius:8px;padding:10px 20px;
+               font-size:14px;font-weight:600;cursor:pointer;">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Edit display name modal ─────────────────────────────────────────────── -->
+<div id="editModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);
+     z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:14px;padding:28px 28px;width:400px;
+              box-shadow:0 20px 60px rgba(0,0,0,.2);position:relative;">
+    <button onclick="closeEditModal()"
+      style="position:absolute;top:14px;right:16px;background:none;border:none;
+             font-size:20px;cursor:pointer;color:#9ca3af;">✕</button>
+
+    <h3 style="font-size:17px;font-weight:700;color:#1a1a2e;margin:0 0 6px;">Edit Display Name</h3>
+    <p style="font-size:13px;color:#6b7280;margin:0 0 20px;">This name is shown in the admin UI. Initials are used as the signature on all actions.</p>
+
+    <input type="hidden" id="editUserId">
+
+    <label style="font-size:13px;font-weight:600;color:#444;display:block;margin-bottom:6px;">Display Name *</label>
+    <input id="editDisplayName" type="text" maxlength="100"
+      style="width:100%;padding:10px 14px;border:1px solid #ddd;border-radius:8px;
+             font-size:14px;box-sizing:border-box;margin-bottom:16px;">
+
+    <div id="editError" style="color:#c0392b;font-size:13px;margin-bottom:12px;display:none;"></div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button onclick="closeEditModal()"
+        style="background:#f5f5f5;border:1px solid #ddd;border-radius:8px;padding:10px 20px;
+               font-size:14px;cursor:pointer;">Cancel</button>
+      <button onclick="saveDisplayName()"
+        style="background:#1a3a5c;color:#fff;border:none;border-radius:8px;padding:10px 20px;
+               font-size:14px;font-weight:600;cursor:pointer;">Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Invite modal ─────────────────────────────────────────────────────────── -->
 <div id="inviteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);
      z-index:1000;align-items:center;justify-content:center;">
@@ -176,7 +282,6 @@
       Generate a one-time registration link. The link does not expire — deactivate the user to revoke access.
     </p>
 
-    <!-- Step 1: generate -->
     <div id="inviteStep1">
       <button onclick="generateInvite()"
         style="width:100%;background:linear-gradient(135deg,#1a6b3c,#27ae60);color:#fff;
@@ -186,7 +291,6 @@
       </button>
     </div>
 
-    <!-- Step 2: show link -->
     <div id="inviteStep2" style="display:none;">
       <label style="font-size:13px;font-weight:600;color:#374151;display:block;margin-bottom:8px;">
         Share this link with the new staff member:
@@ -217,17 +321,16 @@
 <script>
 const BASE = window.location.origin;
 
+// ── Invite ────────────────────────────────────────────────────────────────────
 function openInviteModal() {
   document.getElementById('inviteModal').style.display = 'flex';
   document.getElementById('inviteStep1').style.display = 'block';
   document.getElementById('inviteStep2').style.display = 'none';
 }
-function closeInviteModal() {
-  document.getElementById('inviteModal').style.display = 'none';
-}
+function closeInviteModal() { document.getElementById('inviteModal').style.display = 'none'; }
 
 async function generateInvite() {
-  const res = await fetch('/admin/settings/users/invite', { method: 'POST' });
+  const res  = await fetch('/admin/settings/users/invite', { method: 'POST' });
   const data = await res.json();
   document.getElementById('inviteLinkInput').value = data.invite_url;
   document.getElementById('inviteStep1').style.display = 'none';
@@ -245,10 +348,81 @@ function copyModalLink() {
 }
 
 function copyInviteLink(token) {
-  const url = BASE + '/register/' + token;
-  navigator.clipboard.writeText(url).then(() => alert('Invite link copied to clipboard!'));
+  navigator.clipboard.writeText(BASE + '/register/' + token)
+    .then(() => alert('Invite link copied to clipboard!'));
 }
 
+// ── Teams modal ───────────────────────────────────────────────────────────────
+function openTeamsModal(userId, userName, currentTeamIds) {
+  document.getElementById('teamsUserId').value = userId;
+  document.getElementById('teamsModalSubtitle').textContent = userName;
+  document.getElementById('teamsError').style.display = 'none';
+  document.querySelectorAll('.team-checkbox').forEach(cb => {
+    cb.checked = currentTeamIds.includes(parseInt(cb.value));
+  });
+  document.getElementById('teamsModal').style.display = 'flex';
+}
+function closeTeamsModal() { document.getElementById('teamsModal').style.display = 'none'; }
+
+async function saveTeams() {
+  const userId  = document.getElementById('teamsUserId').value;
+  const teamIds = Array.from(document.querySelectorAll('.team-checkbox:checked'))
+                       .map(cb => parseInt(cb.value));
+  try {
+    const res = await fetch(`/api/users/${userId}/teams`, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({team_ids: teamIds}),
+    });
+    if (res.ok) { closeTeamsModal(); location.reload(); }
+    else {
+      const d = await res.json();
+      document.getElementById('teamsError').textContent = d.detail || 'Error saving.';
+      document.getElementById('teamsError').style.display = 'block';
+    }
+  } catch(e) {
+    document.getElementById('teamsError').textContent = 'Network error.';
+    document.getElementById('teamsError').style.display = 'block';
+  }
+}
+
+// ── Edit display name modal ───────────────────────────────────────────────────
+function openEditModal(userId, currentName) {
+  document.getElementById('editUserId').value = userId;
+  document.getElementById('editDisplayName').value = currentName;
+  document.getElementById('editError').style.display = 'none';
+  document.getElementById('editModal').style.display = 'flex';
+  setTimeout(() => document.getElementById('editDisplayName').focus(), 50);
+}
+function closeEditModal() { document.getElementById('editModal').style.display = 'none'; }
+
+async function saveDisplayName() {
+  const userId = document.getElementById('editUserId').value;
+  const name   = document.getElementById('editDisplayName').value.trim();
+  if (!name) {
+    document.getElementById('editError').textContent = 'Display name cannot be empty.';
+    document.getElementById('editError').style.display = 'block';
+    return;
+  }
+  try {
+    const res = await fetch(`/api/users/${userId}/display-name`, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({display_name: name}),
+    });
+    if (res.ok) { closeEditModal(); location.reload(); }
+    else {
+      const d = await res.json();
+      document.getElementById('editError').textContent = d.detail || 'Error saving.';
+      document.getElementById('editError').style.display = 'block';
+    }
+  } catch(e) {
+    document.getElementById('editError').textContent = 'Network error.';
+    document.getElementById('editError').style.display = 'block';
+  }
+}
+
+// ── User actions ──────────────────────────────────────────────────────────────
 async function deactivateUser(id) {
   if (!confirm('Deactivate this user? They will be logged out immediately and cannot log back in.')) return;
   const res = await fetch(`/admin/settings/users/${id}/deactivate`, { method: 'POST' });
@@ -268,5 +442,12 @@ async function deleteUser(id) {
   if (res.ok) location.reload();
   else alert('Error deleting user.');
 }
+
+// close modals on backdrop click
+['teamsModal','editModal','inviteModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) this.style.display = 'none';
+  });
+});
 </script>
 {% endblock %}

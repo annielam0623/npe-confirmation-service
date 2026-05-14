@@ -16,6 +16,7 @@ from app.routers import users
 from app.routers import shortlink
 from app.routers import booking_notes
 from app.routers import messages
+from app.routers import settings_teams
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -48,6 +49,8 @@ app.include_router(users.router)
 app.include_router(shortlink.router)
 app.include_router(booking_notes.router, tags=["booking_notes"])
 app.include_router(messages.router, tags=["messages"])
+app.include_router(settings_teams.router)
+
 
 @app.get("/")
 def home():

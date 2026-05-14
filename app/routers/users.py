@@ -1,28 +1,30 @@
 """
 app/routers/users.py
 User management: list users, generate invite link, deactivate/reactivate,
-and the public registration page for invited staff.
+team assignment, display name editing, and public registration for invited staff.
 Admin only (except /register/{token} which is public).
 """
 
 import secrets
 import os
 
-
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from pydantic import BaseModel
+from typing import List
 
 from app.auth import hash_password, require_admin
 from app.database import get_db
-from app.models import AdminUser
+from app.models import AdminUser, Team, UserTeam
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 print("CWD:", os.getcwd())
 print("Templates dir exists:", os.path.exists("app/templates/admin/base.html"))
+
 
 # ── GET /admin/settings/users ─────────────────────────────────────────────────
 @router.get("/admin/settings/users", response_class=HTMLResponse)
@@ -33,12 +35,29 @@ async def settings_users_page(
 ):
     result = await db.execute(select(AdminUser).order_by(AdminUser.id))
     users = result.scalars().all()
+
+    # all teams
+    teams_result = await db.execute(select(Team).order_by(Team.id))
+    teams = teams_result.scalars().all()
+
+    # team assignments per user  {user_id: [team_id, ...]}
+    ut_result = await db.execute(select(UserTeam))
+    user_teams_map: dict[int, list[int]] = {}
+    for ut in ut_result.scalars().all():
+        user_teams_map.setdefault(ut.user_id, []).append(ut.team_id)
+
+    # team lookup {team_id: team}
+    teams_by_id = {t.id: t for t in teams}
+
     return templates.TemplateResponse(
         "admin/settings_users.html",
         {
             "request": request,
             "current_user": current_user,
             "users": users,
+            "teams": teams,
+            "user_teams_map": user_teams_map,
+            "teams_by_id": teams_by_id,
             "active_page": "settings_users",
         },
     )
@@ -68,6 +87,61 @@ async def generate_invite(
     base_url = str(request.base_url).rstrip("/")
     invite_url = f"{base_url}/register/{token}"
     return JSONResponse({"invite_url": invite_url})
+
+
+# ── PUT /api/users/{user_id}/teams — replace team assignments ─────────────────
+class TeamAssignment(BaseModel):
+    team_ids: List[int]
+
+@router.put("/api/users/{user_id}/teams")
+async def update_user_teams(
+    user_id: int,
+    payload: TeamAssignment,
+    current_user: AdminUser = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    # verify user exists
+    result = await db.execute(select(AdminUser).filter(AdminUser.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # delete existing assignments
+    existing = await db.execute(select(UserTeam).filter(UserTeam.user_id == user_id))
+    for ut in existing.scalars().all():
+        await db.delete(ut)
+
+    # insert new assignments
+    for team_id in payload.team_ids:
+        db.add(UserTeam(user_id=user_id, team_id=team_id))
+
+    await db.commit()
+    return JSONResponse({"ok": True})
+
+
+# ── PUT /api/users/{user_id}/display-name ─────────────────────────────────────
+class DisplayNameUpdate(BaseModel):
+    display_name: str
+
+@router.put("/api/users/{user_id}/display-name")
+async def update_display_name(
+    user_id: int,
+    payload: DisplayNameUpdate,
+    current_user: AdminUser = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    result = await db.execute(select(AdminUser).filter(AdminUser.id == user_id))
+    user = result.scalars().first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    name = payload.display_name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Display name cannot be empty")
+
+    user.display_name = name
+    await db.commit()
+    return JSONResponse({"ok": True, "display_name": name})
 
 
 # ── POST /admin/settings/users/{user_id}/deactivate ──────────────────────────
@@ -151,7 +225,7 @@ async def register_submit(
     token: str,
     request: Request,
     username: str = Form(...),
-    initials: str = Form(...), 
+    initials: str = Form(...),
     password: str = Form(...),
     confirm_password: str = Form(...),
     db: AsyncSession = Depends(get_db),
@@ -185,11 +259,12 @@ async def register_submit(
             {"request": request, "token": token, "error": error},
         )
 
-    user.username = username.strip()
-    user.initials = initials.upper().strip() 
+    user.username     = username.strip()
+    user.initials     = initials.upper().strip()
+    user.display_name = username.strip()   # default display_name = username
     user.hashed_password = hash_password(password)
-    user.invite_used = True
-    user.is_active = True
+    user.invite_used  = True
+    user.is_active    = True
     await db.commit()
 
     return RedirectResponse("/auth/login?registered=1", status_code=303)
