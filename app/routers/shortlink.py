@@ -4,16 +4,19 @@ GET /c/{code}  →  redirect to target URL
 No auth required — this is a guest-facing endpoint.
 """
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import RedirectResponse, HTMLResponse
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_db
 from app.services.short_links import resolve_short_link
 
 router = APIRouter()
 
 
 @router.get("/c/{code}")
-async def redirect_short_link(code: str):
-    target = resolve_short_link(code)
+async def redirect_short_link(code: str, db: AsyncSession = Depends(get_db)):
+    target = await resolve_short_link(db, code)
 
     if not target:
         return HTMLResponse(

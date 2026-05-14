@@ -11,8 +11,8 @@ Codes:
 
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-from app.database import get_db_connection
 
 LA = ZoneInfo("America/Los_Angeles")
 BASE_URL = "https://confirm.nationalparkexpress.com"
@@ -22,7 +22,8 @@ def _module_suffix(module: str) -> str:
     return {"tour_confirmation": "TC", "ticket_reminder": "TR", "morning_pickup": "MP"}[module]
 
 
-def upsert_short_link(
+async def upsert_short_link(
+    db: AsyncSession,
     order_number: str,
     module: str,          # "tour_confirmation" | "ticket_reminder" | "morning_pickup"
     target_url: str,
@@ -35,36 +36,36 @@ def upsert_short_link(
     suffix = _module_suffix(module)
     code = f"{order_number}-{suffix}"
 
-    with get_db_connection() as conn:
-        conn.execute(text("""
-            INSERT INTO short_links (code, target_url, module, order_number, expires_at, updated_at)
-            VALUES (:code, :target_url, :module, :order_number, :expires_at, NOW())
-            ON CONFLICT (code) DO UPDATE SET
-                target_url = EXCLUDED.target_url,
-                expires_at = EXCLUDED.expires_at,
-                updated_at = NOW()
-        """), {
-            "code": code,
-            "target_url": target_url,
-            "module": suffix,
-            "order_number": order_number,
-            "expires_at": expires_at,
-        })
-        conn.commit()
+    await db.execute(text("""
+        INSERT INTO short_links (code, target_url, module, order_number, expires_at, updated_at)
+        VALUES (:code, :target_url, :module, :order_number, :expires_at, NOW())
+        ON CONFLICT (code) DO UPDATE SET
+            target_url = EXCLUDED.target_url,
+            expires_at = EXCLUDED.expires_at,
+            updated_at = NOW()
+    """), {
+        "code":         code,
+        "target_url":   target_url,
+        "module":       suffix,
+        "order_number": order_number,
+        "expires_at":   expires_at,
+    })
 
     return f"{BASE_URL}/c/{code}"
 
 
-def resolve_short_link(code: str) -> str | None:
+async def resolve_short_link(
+    db: AsyncSession,
+    code: str,
+) -> str | None:
     """
     Look up the target URL for a short code.
     Returns None if not found or expired.
     """
-    with get_db_connection() as conn:
-        row = conn.execute(text("""
-            SELECT target_url, expires_at FROM short_links
-            WHERE code = :code
-        """), {"code": code}).fetchone()
+    row = (await db.execute(text("""
+        SELECT target_url, expires_at FROM short_links
+        WHERE code = :code
+    """), {"code": code})).fetchone()
 
     if not row:
         return None
