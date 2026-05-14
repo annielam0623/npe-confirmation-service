@@ -497,6 +497,9 @@ function resetForm() {
   document.getElementById('step-result').classList.add('hidden');
   document.getElementById('excel-file').value = '';
   document.getElementById('upload-err').textContent = '';
+  document.getElementById('send-err').textContent = '';
+  const btn = document.getElementById('btn-confirm-send');
+  if (btn) { btn.disabled = false; }
   currentFile = null;
   allRows = [];
   checkedOrders = new Set();
