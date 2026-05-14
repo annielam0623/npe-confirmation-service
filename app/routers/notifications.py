@@ -127,18 +127,18 @@ async def preview_morning_pickup(
         raise HTTPException(400, parsed["error"])
 
     rows = parsed["rows"]
-    today = date.today().strftime("%Y-%m-%d")
+    today = datetime.now(LA).date().isoformat()
 
     for row in rows:
         result = await db.execute(text("""
-            SELECT id FROM bookings
+            SELECT id FROM send_log
             WHERE order_number = :order_number
               AND tour_date    = :tour_date
               AND module       = 'morning_pickup'
             LIMIT 1
         """), {"order_number": row["order_number"], "tour_date": _to_date(today)})
         row["duplicate"] = result.fetchone() is not None
-        row["name"] = f"{row['first_name']} {row['last_name']}".strip()
+        row["name"] = row.get("name") or f"{row['first_name']} {row['last_name']}".strip()
 
     return {"total": len(rows), "rows": rows}
 
@@ -269,11 +269,10 @@ async def tracking_morning_pickup(
             b.tour_date, b.driver, b.vehicle_no,
             b.action_taken_by,
             COALESCE(sl.sms_status, b.sms_status) AS sms_status,
-            COALESCE(sl.agent_name, '') AS agent_name,
             c.checkin_time
         FROM bookings b
         LEFT JOIN LATERAL (
-            SELECT sms_status, COALESCE(agent_name, '') AS agent_name
+            SELECT sms_status, agent_name
             FROM send_log
             WHERE order_number = b.order_number
               AND module = 'morning_pickup'

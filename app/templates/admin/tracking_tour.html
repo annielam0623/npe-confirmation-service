@@ -59,7 +59,7 @@
     }
 
     .container {
-      max-width: 1300px;
+      width: 100%;
       margin: 0 auto;
       padding: 20px 24px;
     }
@@ -304,10 +304,21 @@
       color: #3B6D11;
     }
 
+
+    /* Resizable columns */
+    .track-tbl thead td { position: relative; user-select: none; }
+    .col-resizer {
+      position: absolute; right: 0; top: 0; bottom: 0;
+      width: 5px; cursor: col-resize; z-index: 1;
+      background: transparent;
+    }
+    .col-resizer:hover, .col-resizer.active { background: rgba(100,160,220,0.4); }
+
     table.track-tbl {
       width: 100%;
       border-collapse: collapse;
       font-size: 12px;
+      table-layout: fixed;
     }
 
     .track-tbl thead td {
@@ -718,26 +729,26 @@
 
     <div class="table-card">
       <div class="table-header"><span>Confirmation Log</span></div>
-      <div style="overflow-x:auto;">
+      <div>
         <table class="track-tbl">
           <thead>
-            <tr>
-              <td>Order #</td>
-              <td>Status</td>
-              <td>Tour</td>
-              <td>Tour Date</td>
-              <td>Guest Name</td>
-              <td>Phone</td>
-              <td>Party</td>
-              <td>📧 Email</td>
-              <td>📱 SMS</td>
-              <td>🦃 T</td>
-              <td>🥗 V</td>
-              <td>🥩 B</td>
-              <td>🏛️ MTLV</td>
-              <td>🎟️ Tickets</td>
-              <td>Notes</td>
-              <td>Submitted</td>
+            <tr id="thead-row">
+              <td style="width:100px">Order #<div class="col-resizer"></div></td>
+              <td style="width:90px">Status<div class="col-resizer"></div></td>
+              <td style="width:120px">Tour<div class="col-resizer"></div></td>
+              <td style="width:90px">Tour Date<div class="col-resizer"></div></td>
+              <td style="width:120px">Guest Name<div class="col-resizer"></div></td>
+              <td style="width:110px">Phone<div class="col-resizer"></div></td>
+              <td style="width:50px">Party<div class="col-resizer"></div></td>
+              <td style="width:90px">📧 Email<div class="col-resizer"></div></td>
+              <td style="width:90px">📱 SMS<div class="col-resizer"></div></td>
+              <td style="width:40px">🦃 T<div class="col-resizer"></div></td>
+              <td style="width:40px">🥗 V<div class="col-resizer"></div></td>
+              <td style="width:40px">🥩 B<div class="col-resizer"></div></td>
+              <td style="width:55px">🏛️ MTLV<div class="col-resizer"></div></td>
+              <td style="width:65px">🎟️ Tickets<div class="col-resizer"></div></td>
+              <td style="width:150px">Notes<div class="col-resizer"></div></td>
+              <td style="width:100px">Submitted<div class="col-resizer"></div></td>
             </tr>
           </thead>
           <tbody id="track-tbody">

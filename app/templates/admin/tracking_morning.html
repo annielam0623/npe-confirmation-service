@@ -21,7 +21,7 @@
   }
   .back-btn:hover { color: #fff; border-color: rgba(255,255,255,0.3); }
 
-  .container { max-width: 1200px; margin: 0 auto; padding: 20px 24px; }
+  .container { width: 100%; padding: 20px 24px; }
 
   /* Date nav */
   .date-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
@@ -105,6 +105,17 @@
   .track-tbl tbody tr:hover { background: rgba(255,255,255,0.03); }
   .track-tbl tbody td { padding: 10px 12px; color: #c8ddf0; vertical-align: middle; }
 
+
+  /* Resizable columns */
+  .track-tbl thead td { position: relative; user-select: none; }
+  .col-resizer {
+    position: absolute; right: 0; top: 0; bottom: 0;
+    width: 5px; cursor: col-resize; z-index: 1;
+    background: transparent;
+  }
+  .col-resizer:hover, .col-resizer.active { background: rgba(100,160,220,0.4); }
+  table.track-tbl { table-layout: fixed; width: 100%; }
+
   /* Status */
   .sp { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
   .sp-checkedin   { background: rgba(46,204,113,0.15); color: #2ecc71; }
@@ -163,22 +174,22 @@
       <span>Check-in Log</span>
       <span style="font-size:12px;color:#5a7a9a;" id="table-meta"></span>
     </div>
-    <div style="overflow-x:auto;">
+    <div>
       <table class="track-tbl">
         <thead>
-          <tr>
-            <td>Order #</td>
-            <td>Name</td>
-            <td>Phone</td>
-            <td>PAX</td>
-            <td>Bus #</td>
-            <td>Driver</td>
-            <td>Pickup Time</td>
-            <td>Pickup Location</td>
-            <td>SMS Status</td>
-            <td>Agent</td>
-            <td>Check-in</td>
-            <td>Check-in Time</td>
+          <tr id="thead-row">
+            <td style="width:100px">Order #<div class="col-resizer"></div></td>
+            <td style="width:130px">Name<div class="col-resizer"></div></td>
+            <td style="width:120px">Phone<div class="col-resizer"></div></td>
+            <td style="width:55px">PAX<div class="col-resizer"></div></td>
+            <td style="width:65px">Bus #<div class="col-resizer"></div></td>
+            <td style="width:80px">Driver<div class="col-resizer"></div></td>
+            <td style="width:100px">Pickup Time<div class="col-resizer"></div></td>
+            <td style="width:130px">Pickup Location<div class="col-resizer"></div></td>
+            <td style="width:100px">SMS Status<div class="col-resizer"></div></td>
+            <td style="width:110px">Agent<div class="col-resizer"></div></td>
+            <td style="width:100px">Check-in<div class="col-resizer"></div></td>
+            <td style="width:110px">Check-in Time<div class="col-resizer"></div></td>
           </tr>
         </thead>
         <tbody id="track-tbody">
@@ -308,6 +319,39 @@ function exportExcel() {
 
 document.getElementById('date-display').value = currentDate;
 loadData();
+initResizableCols();
+/* ── Column resize ── */
+function initResizableCols() {
+  const ths = document.querySelectorAll('#thead-row td');
+  ths.forEach((th, i) => {
+    const resizer = th.querySelector('.col-resizer');
+    if (!resizer) return;
+    let startX, startW;
+    resizer.addEventListener('mousedown', e => {
+      startX = e.clientX;
+      startW = th.offsetWidth;
+      resizer.classList.add('active');
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+
+      const onMove = e => {
+        const newW = Math.max(40, startW + (e.clientX - startX));
+        th.style.width = newW + 'px';
+      };
+      const onUp = () => {
+        resizer.classList.remove('active');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      e.preventDefault();
+    });
+  });
+}
+
 </script>
 </body>
 </html>

@@ -68,6 +68,8 @@ table.preview-tbl {
 .preview-tbl tbody tr { border-bottom: 0.5px solid rgba(0,0,0,0.06); transition: background 0.1s; }
 .preview-tbl tbody tr:last-child { border-bottom: none; }
 .preview-tbl tbody tr.row-unchecked { background: #fafafa; opacity: 0.55; }
+.preview-tbl tbody tr.dup-row { background: #ddeeff; }
+.dup-badge { font-size: 10px; color: #185FA5; background: #cce4ff; border-radius: 4px; padding: 1px 6px; font-weight: 600; }
 .preview-tbl tbody td { padding: 8px 10px; color: #444; }
 .preview-tbl tbody td.col-cb { text-align: center; }
 
@@ -272,7 +274,7 @@ async function uploadPreview() {
 /* ── preview render ── */
 function showPreview(data) {
   allRows = data.rows;
-  checkedOrders = new Set(allRows.map(r => r.order_number));  // default: all checked
+  checkedOrders = new Set(allRows.filter(r => !r.duplicate).map(r => r.order_number));
 
   document.getElementById('preview-count').textContent = allRows.length;
 
@@ -293,13 +295,13 @@ function showPreview(data) {
     window._locOrders[locId] = grpRows.map(r => r.order_number);
 
     const rowsHtml = grpRows.map(r => `
-      <tr id="row-${r.order_number}" class="">
+      <tr id="row-${r.order_number}" class="${r.duplicate ? 'dup-row' : ''}">
         <td class="col-cb">
           <input type="checkbox" class="row-cb" data-order="${r.order_number}" data-loc="${locId}"
-            checked onchange="onRowCheck(this)">
+            ${r.duplicate ? '' : 'checked'} onchange="onRowCheck(this)">
         </td>
         <td>${r.order_number}</td>
-        <td>${r.name}</td>
+        <td>${r.name} ${r.duplicate ? '<span class="dup-badge">Already sent</span>' : ''}</td>
         <td style="font-size:11px;">${r.phone}</td>
         <td>${r.pickup_time}</td>
         <td>${r.driver || '—'}</td>
@@ -325,6 +327,10 @@ function showPreview(data) {
       </div>`;
   }).join('');
 
+  // Mark duplicate rows as dimmed
+  allRows.filter(r => r.duplicate).forEach(r => {
+    document.getElementById('row-' + r.order_number)?.classList.add('row-unchecked');
+  });
   updateSelCount();
   document.getElementById('step-form').classList.add('hidden');
   document.getElementById('step-preview').classList.remove('hidden');

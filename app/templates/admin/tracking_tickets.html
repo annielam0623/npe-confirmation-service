@@ -56,15 +56,17 @@ body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f0f2f5;color:#333
 /* ── Table ── */
 .records-bar{padding:6px 20px;display:flex;justify-content:space-between;align-items:center;}
 .records-bar span{font-size:12px;color:#6c757d;}
-.table-wrap{padding:0 20px 24px;overflow-x:auto;}
-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);}
+.table-wrap{padding:0 20px 24px;}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);table-layout:fixed;}
 thead tr{background:#e9ecef;}
-th{padding:8px 10px;text-align:left;font-size:12px;font-weight:600;color:#495057;white-space:nowrap;border-bottom:2px solid #dee2e6;}
+th{padding:8px 10px;text-align:left;font-size:12px;font-weight:600;color:#495057;white-space:nowrap;border-bottom:2px solid #dee2e6;position:relative;user-select:none;}
 td{padding:7px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle;font-size:12px;}
 tr:hover td{background:#f8f9fa;}
 tr:last-child td{border-bottom:none;}
 
 /* ── Notes ── */
+.col-resizer{position:absolute;right:0;top:0;bottom:0;width:5px;cursor:col-resize;z-index:1;background:transparent;}
+.col-resizer:hover,.col-resizer.active{background:rgba(26,90,180,0.35);}
 .notes-cell{min-width:140px;max-width:200px;}
 .notes-input{width:100%;border:1px solid transparent;background:transparent;font-size:12px;font-family:inherit;padding:3px 5px;border-radius:4px;resize:none;outline:none;overflow:hidden;line-height:1.4;transition:all .15s;}
 .notes-input:focus{border-color:#ffc107;background:#fffbea;}
@@ -127,21 +129,21 @@ th.notes-hdr.hdr-dirty{background:#fff3cd !important;color:#856404;}
 
 <div class="table-wrap">
   <table>
-    <thead><tr>
-      <th>Tour</th>
-      <th>Service Date</th>
-      <th>CHD#</th>
-      <th>Pax</th>
-      <th>Check-in Time</th>
-      <th>Tour Time</th>
-      <th>Guest Name</th>
-      <th>Phone</th>
-      <th>Confirmation#</th>
-      <th>&#9679; Email</th>
-      <th>&#9632; SMS</th>
-      <th class="notes-hdr" id="notes-hdr">Notes</th>
-      <th>Status</th>
-      <th>Submit Time</th>
+    <thead><tr id="thead-row">
+      <th style="width:120px">Tour<div class="col-resizer"></div></th>
+      <th style="width:90px">Service Date<div class="col-resizer"></div></th>
+      <th style="width:90px">CHD#<div class="col-resizer"></div></th>
+      <th style="width:45px">Pax<div class="col-resizer"></div></th>
+      <th style="width:95px">Check-in Time<div class="col-resizer"></div></th>
+      <th style="width:80px">Tour Time<div class="col-resizer"></div></th>
+      <th style="width:130px">Guest Name<div class="col-resizer"></div></th>
+      <th style="width:110px">Phone<div class="col-resizer"></div></th>
+      <th style="width:100px">Confirmation#<div class="col-resizer"></div></th>
+      <th style="width:80px">&#9679; Email<div class="col-resizer"></div></th>
+      <th style="width:80px">&#9632; SMS<div class="col-resizer"></div></th>
+      <th class="notes-hdr" id="notes-hdr" style="width:160px">Notes<div class="col-resizer"></div></th>
+      <th style="width:80px">Status<div class="col-resizer"></div></th>
+      <th style="width:90px">Submit Time<div class="col-resizer"></div></th>
     </tr></thead>
     <tbody id="tbody">
       <tr><td colspan="14" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>
@@ -353,6 +355,38 @@ function exportCSV(){
 
 goToday();
 setInterval(loadData, 60000);
+
+/* ── Column resize ── */
+function initResizableCols() {
+  const ths = document.querySelectorAll('#thead-row th');
+  ths.forEach(th => {
+    const resizer = th.querySelector('.col-resizer');
+    if (!resizer) return;
+    let startX, startW;
+    resizer.addEventListener('mousedown', e => {
+      startX = e.clientX;
+      startW = th.offsetWidth;
+      resizer.classList.add('active');
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      const onMove = e => {
+        const newW = Math.max(40, startW + (e.clientX - startX));
+        th.style.width = newW + 'px';
+      };
+      const onUp = () => {
+        resizer.classList.remove('active');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      e.preventDefault();
+    });
+  });
+}
+initResizableCols();
 </script>
 </body>
 </html>
