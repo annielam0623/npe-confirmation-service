@@ -30,6 +30,7 @@ from app.services import morning_pickup as mp
 from app.services import morning_pickup as morning_pickup
 from app.services import tickets_reminder as tix
 from app.services import excel_parser
+from app.services.short_links import upsert_short_link
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -188,14 +189,21 @@ async def send_tour_confirmation(
         booking_id = await _upsert_booking(db, booking_data)
 
         # Generate token + URLs
-        token     = tc.make_token(booking_id, email, tour_date)
-        email_url = tc.confirm_url(token, src="email")
-        sms_url   = tc.confirm_url(token, src="sms")
+        token = tc.make_token(booking_id, email, tour_date)
 
         # Store token in bookings.confirm_token so guest.py can look it up
         await db.execute(text(
             "UPDATE bookings SET confirm_token = :token WHERE id = :id"
         ), {"token": token, "id": booking_id})
+
+        # Short link — expires day-before tour at 18:00 LA (same as token)
+        from datetime import time as dtime, timedelta
+        _day_before = _to_date(tour_date) - timedelta(days=1)
+        _tc_expires = datetime.combine(_day_before, dtime(18, 0, 0))
+        email_url = upsert_short_link(order_num, "tour_confirmation",
+                                      tc.confirm_url(token, src="email"), _tc_expires)
+        sms_url   = upsert_short_link(order_num, "tour_confirmation",
+                                      tc.confirm_url(token, src="sms"),   _tc_expires)
 
         # Lookup pickup location photo URL
         ploc = row.get('pickup_location', '')
@@ -314,13 +322,19 @@ async def send_tour_confirmation_bulk(
         }
         booking_id = await _upsert_booking(db, booking_data)
 
-        token     = tc.make_token(booking_id, email, tour_date)
-        email_url = tc.confirm_url(token, src="email")
-        sms_url   = tc.confirm_url(token, src="sms")
+        token = tc.make_token(booking_id, email, tour_date)
 
         await db.execute(text(
             "UPDATE bookings SET confirm_token = :token WHERE id = :id"
         ), {"token": token, "id": booking_id})
+
+        from datetime import time as dtime, timedelta
+        _day_before = _to_date(tour_date) - timedelta(days=1)
+        _tc_expires = datetime.combine(_day_before, dtime(18, 0, 0))
+        email_url = upsert_short_link(order_num, "tour_confirmation",
+                                      tc.confirm_url(token, src="email"), _tc_expires)
+        sms_url   = upsert_short_link(order_num, "tour_confirmation",
+                                      tc.confirm_url(token, src="sms"),   _tc_expires)
 
         ploc = row.get("pickup_location", "")
         loc_res = await db.execute(text(
@@ -463,6 +477,13 @@ async def send_morning_pickup(
         booking_id = await _upsert_booking(db, booking_data)
 
 
+        # ── Build morning pickup short link (hides name/phone from URL) ────
+        from datetime import time as dtime
+        _mp_expires = datetime.combine(datetime.now(LA).date(), dtime(23, 59, 59))
+        _mp_raw_url = morning_pickup.tracking_url(row)
+        _mp_short   = upsert_short_link(order_num, "morning_pickup", _mp_raw_url, _mp_expires)
+        row["tracking_url"] = _mp_short   # morning_pickup.build_sms/build_email reads this key
+
         # ── Send SMS ──────────────────────────────────────────────────────
         sms_status = ""
         sms_sid    = ""
@@ -582,9 +603,15 @@ async def send_tickets_reminder(
         }
         booking_id = await _upsert_booking(db, booking_data)
 
-        token    = tix.make_token(booking_id, email, service_date)
-        form_url = tix.confirm_url(token, src="email")
-        sms_url  = tix.confirm_url(token, src="sms")
+        token = tix.make_token(booking_id, email, service_date)
+
+        from datetime import time as dtime
+        _svc_date   = _to_date(service_date)
+        _tr_expires = datetime.combine(_svc_date, dtime(23, 59, 59))
+        form_url = upsert_short_link(order_num, "ticket_reminder",
+                                     tix.confirm_url(token, src="email"), _tr_expires)
+        sms_url  = upsert_short_link(order_num, "ticket_reminder",
+                                     tix.confirm_url(token, src="sms"),   _tr_expires)
 
         # Email
         email_status     = ""

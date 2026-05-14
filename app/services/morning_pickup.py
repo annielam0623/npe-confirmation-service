@@ -10,6 +10,13 @@ SUPPORT_PHONE = os.environ.get("SUPPORT_PHONE", "702-948-4190")
 
 
 def _tracking_url(row: dict) -> str:
+    """
+    If send.py already injected a short link into row["tracking_url"], use it.
+    Otherwise fall back to building the full URL (name/phone exposed) — used
+    for direct calls outside the send flow.
+    """
+    if row.get("tracking_url"):
+        return row["tracking_url"]
     import urllib.parse
     van = row.get("vehicle_no") or row.get("driver", "")
     base = TRACKING_BASE_URL.rstrip("/")

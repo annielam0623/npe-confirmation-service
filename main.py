@@ -13,6 +13,7 @@ from app.routers import tracking                 # Morning Pickup guest tracking
 from app.routers import order_log
 from app.routers import orders
 from app.routers import users
+from app.routers import shortlink
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -42,6 +43,7 @@ app.include_router(tracking.router,                                           ta
 app.include_router(order_log.router)
 app.include_router(orders.router)
 app.include_router(users.router)
+app.include_router(shortlink.router)
 
 @app.get("/")
 def home():
