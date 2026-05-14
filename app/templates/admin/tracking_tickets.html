@@ -56,8 +56,8 @@ body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f0f2f5;color:#333
 /* ── Table ── */
 .records-bar{padding:6px 20px;display:flex;justify-content:space-between;align-items:center;}
 .records-bar span{font-size:12px;color:#6c757d;}
-.table-wrap{padding:0 20px 24px;}
-table{width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);table-layout:fixed;}
+.table-wrap{padding:0 20px 24px;overflow-x:auto;}
+table{width:max-content;min-width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);table-layout:auto;}
 thead tr{background:#e9ecef;}
 th{padding:8px 10px;text-align:left;font-size:12px;font-weight:600;color:#495057;white-space:nowrap;border-bottom:2px solid #dee2e6;position:relative;user-select:none;}
 td{padding:7px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle;font-size:12px;}
@@ -65,6 +65,10 @@ tr:hover td{background:#f8f9fa;}
 tr:last-child td{border-bottom:none;}
 
 /* ── Notes ── */
+
+.col-dragging{opacity:0.4!important;background:#c8d8e8!important;}
+.col-drag-over{border-left:2px solid #1a3a5c!important;}
+thead th{cursor:grab;}
 .col-resizer{position:absolute;right:0;top:0;bottom:0;width:5px;cursor:col-resize;z-index:1;background:transparent;}
 .col-resizer:hover,.col-resizer.active{background:rgba(26,90,180,0.35);}
 .notes-cell{min-width:140px;max-width:200px;}
@@ -127,8 +131,7 @@ th.notes-hdr.hdr-dirty{background:#fff3cd !important;color:#856404;}
   <span id="rec-label">0 records</span>
 </div>
 
-<div class="table-wrap">
-  <table>
+<div class="table-wrap"><table>
     <thead><tr id="thead-row">
       <th style="width:120px">Tour<div class="col-resizer"></div></th>
       <th style="width:90px">Service Date<div class="col-resizer"></div></th>
@@ -293,6 +296,7 @@ function renderTable(){
   });
   document.getElementById('tbody').innerHTML = html;
   autoResize();
+  setTimeout(function(){ initColDragTkt(); applyColOrderTkt(); }, 0);
 }
 
 function e(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -357,6 +361,76 @@ goToday();
 setInterval(loadData, 60000);
 
 /* ── Column resize ── */
+
+/* ── Column drag reorder ── */
+const COL_ORDER_KEY_TKT = 'npe_tickets_col_order';
+
+function saveColOrderTkt(){
+  var keys = Array.from(document.querySelectorAll('#thead-row th')).map(function(th){return th.dataset.colIdx;});
+  localStorage.setItem(COL_ORDER_KEY_TKT, JSON.stringify(keys));
+}
+
+function applyColOrderTkt(){
+  try{
+    var saved = JSON.parse(localStorage.getItem(COL_ORDER_KEY_TKT));
+    if(!saved||!Array.isArray(saved)) return;
+    var tr = document.getElementById('thead-row');
+    var ths = Array.from(tr.querySelectorAll('th'));
+    if(saved.length !== ths.length) return;
+    saved.forEach(function(idx){
+      var th = ths.find(function(t){return t.dataset.colIdx===idx;});
+      if(th) tr.appendChild(th);
+    });
+    document.querySelectorAll('#tbody tr').forEach(function(row){
+      var cells = Array.from(row.querySelectorAll('td'));
+      if(cells.length !== saved.length) return;
+      saved.forEach(function(idx){
+        var cell = cells[parseInt(idx)];
+        if(cell) row.appendChild(cell);
+      });
+    });
+  }catch(e){}
+}
+
+function initColDragTkt(){
+  var tr = document.getElementById('thead-row');
+  var ths = Array.from(tr.querySelectorAll('th'));
+  ths.forEach(function(th, i){ if(!th.dataset.colIdx) th.dataset.colIdx = String(i); });
+  var dragSrc = null;
+  ths.forEach(function(th){
+    th.draggable = true;
+    th.addEventListener('dragstart', function(e){
+      dragSrc = th; th.classList.add('col-dragging');
+      e.dataTransfer.effectAllowed='move';
+    });
+    th.addEventListener('dragend', function(){
+      th.classList.remove('col-dragging');
+      tr.querySelectorAll('th').forEach(function(t){t.classList.remove('col-drag-over');});
+    });
+    th.addEventListener('dragover', function(e){
+      e.preventDefault();
+      if(th!==dragSrc) th.classList.add('col-drag-over');
+    });
+    th.addEventListener('dragleave', function(){th.classList.remove('col-drag-over');});
+    th.addEventListener('drop', function(e){
+      e.preventDefault(); th.classList.remove('col-drag-over');
+      if(!dragSrc||dragSrc===th) return;
+      var allThs = Array.from(tr.querySelectorAll('th'));
+      var fromI = allThs.indexOf(dragSrc);
+      var toI   = allThs.indexOf(th);
+      if(fromI<toI) tr.insertBefore(dragSrc, th.nextSibling);
+      else tr.insertBefore(dragSrc, th);
+      document.querySelectorAll('#tbody tr').forEach(function(row){
+        var cells = Array.from(row.querySelectorAll('td'));
+        if(cells.length < allThs.length) return;
+        var cell = cells[fromI];
+        if(fromI<toI) row.insertBefore(cell, cells[toI].nextSibling);
+        else row.insertBefore(cell, cells[toI]);
+      });
+      saveColOrderTkt();
+    });
+  });
+}
 function initResizableCols() {
   const ths = document.querySelectorAll('#thead-row th');
   ths.forEach(th => {
@@ -387,6 +461,8 @@ function initResizableCols() {
   });
 }
 initResizableCols();
+initColDragTkt();
+applyColOrderTkt();
 </script>
 </body>
 </html>

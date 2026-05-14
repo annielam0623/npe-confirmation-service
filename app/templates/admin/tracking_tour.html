@@ -305,6 +305,12 @@
     }
 
 
+
+    /* Column drag reorder */
+    .track-tbl thead td { cursor: grab; }
+    .track-tbl thead td.col-dragging { opacity: 0.4; background: #e8f0e0; }
+    .track-tbl thead td.col-drag-over { border-left: 2px solid #3B6D11; }
+
     /* Resizable columns */
     .track-tbl thead td { position: relative; user-select: none; }
     .col-resizer {
@@ -315,10 +321,11 @@
     .col-resizer:hover, .col-resizer.active { background: rgba(100,160,220,0.4); }
 
     table.track-tbl {
-      width: 100%;
+      width: max-content;
+      min-width: 100%;
       border-collapse: collapse;
       font-size: 12px;
-      table-layout: fixed;
+      table-layout: auto;
     }
 
     .track-tbl thead td {
@@ -730,7 +737,7 @@
     <div class="table-card">
       <div class="table-header"><span>Confirmation Log</span></div>
       <div>
-        <table class="track-tbl">
+<div style="overflow-x:auto;"><table class="track-tbl">
           <thead>
             <tr id="thead-row">
               <td style="width:100px">Order #<div class="col-resizer"></div></td>
@@ -812,7 +819,7 @@
       currentDate = dt.toISOString().split('T')[0];
       document.getElementById('date-display').value = currentDate; loadData();
     }
-    function goToday() { currentDate = new Date().toISOString().split('T')[0]; document.getElementById('date-display').value = currentDate; loadData(); }
+    function goToday() { currentDate = new Date().toLocaleDateString('en-CA', {timeZone: 'America/Los_Angeles'}); document.getElementById('date-display').value = currentDate; loadData(); }
     function goTomorrow() { const d = new Date(); d.setDate(d.getDate() + 1); currentDate = d.toISOString().split('T')[0]; document.getElementById('date-display').value = currentDate; loadData(); }
 
     function filterType(type, el) {
@@ -1130,8 +1137,94 @@
       location.href = `/api/notifications/tour-confirmation/export?date=${currentDate}`;
     }
 
+
+    // ── Column drag reorder ──
+    const COL_ORDER_KEY = 'npe_tour_col_order';
+
+    function saveColOrderTour() {
+      const keys = [...document.querySelectorAll('#thead-row td')].map(td => td.dataset.colIdx);
+      localStorage.setItem(COL_ORDER_KEY, JSON.stringify(keys));
+    }
+
+    function applyColOrder() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(COL_ORDER_KEY));
+        if (!saved || !Array.isArray(saved)) return;
+        const tr = document.getElementById('thead-row');
+        const tds = [...tr.querySelectorAll('td')];
+        if (saved.length !== tds.length) return;
+        // reorder thead
+        saved.forEach(idx => {
+          const td = tds.find(t => t.dataset.colIdx === idx);
+          if (td) tr.appendChild(td);
+        });
+        // reorder each tbody row
+        document.querySelectorAll('#track-tbody tr').forEach(row => {
+          const cells = [...row.querySelectorAll('td')];
+          if (cells.length !== saved.length) return;
+          saved.forEach(idx => {
+            const cell = cells.find((_, i) => String(i) === idx);
+            if (cell) row.appendChild(cell);
+          });
+        });
+      } catch(e) {}
+    }
+
+    function initColDragTour() {
+      const tr = document.getElementById('thead-row');
+      const tds = [...tr.querySelectorAll('td')];
+      // Assign index to each td
+      tds.forEach((td, i) => { if (!td.dataset.colIdx) td.dataset.colIdx = String(i); });
+
+      let dragSrc = null;
+      tds.forEach(td => {
+        td.draggable = true;
+        td.addEventListener('dragstart', e => {
+          dragSrc = td;
+          td.classList.add('col-dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        td.addEventListener('dragend', () => {
+          td.classList.remove('col-dragging');
+          tr.querySelectorAll('td').forEach(t => t.classList.remove('col-drag-over'));
+        });
+        td.addEventListener('dragover', e => {
+          e.preventDefault();
+          if (td !== dragSrc) td.classList.add('col-drag-over');
+        });
+        td.addEventListener('dragleave', () => td.classList.remove('col-drag-over'));
+        td.addEventListener('drop', e => {
+          e.preventDefault();
+          td.classList.remove('col-drag-over');
+          if (!dragSrc || dragSrc === td) return;
+
+          // Get current order in DOM
+          const allTds = [...tr.querySelectorAll('td')];
+          const fromI = allTds.indexOf(dragSrc);
+          const toI   = allTds.indexOf(td);
+
+          // Move thead td
+          if (fromI < toI) tr.insertBefore(dragSrc, td.nextSibling);
+          else tr.insertBefore(dragSrc, td);
+
+          // Move each tbody row's cells accordingly
+          document.querySelectorAll('#track-tbody tr').forEach(row => {
+            const cells = [...row.querySelectorAll('td')];
+            if (cells.length < allTds.length) return;
+            const cell = cells[fromI];
+            if (fromI < toI) row.insertBefore(cell, cells[toI].nextSibling);
+            else row.insertBefore(cell, cells[toI]);
+          });
+
+          saveColOrderTour();
+        });
+      });
+    }
+
     document.getElementById('date-display').value = currentDate;
     loadData();
+    // Init col drag after first render handled in renderRows
+    setTimeout(() => { initColDragTour(); applyColOrder(); }, 100);
   </script>
 </body>
 

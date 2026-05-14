@@ -269,10 +269,11 @@ async def tracking_morning_pickup(
             b.tour_date, b.driver, b.vehicle_no,
             b.action_taken_by,
             COALESCE(sl.sms_status, b.sms_status) AS sms_status,
+            COALESCE(sl.agent_name, '') AS agent_name,
             c.checkin_time
         FROM bookings b
         LEFT JOIN LATERAL (
-            SELECT sms_status, agent_name
+            SELECT sms_status, COALESCE(agent_name, '') AS agent_name
             FROM send_log
             WHERE order_number = b.order_number
               AND module = 'morning_pickup'

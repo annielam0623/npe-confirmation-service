@@ -23,7 +23,6 @@
 
   .container { width: 100%; padding: 20px 24px; }
 
-  /* Date nav */
   .date-nav { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; }
   .btn-nav {
     width: 32px; height: 32px; border-radius: 7px;
@@ -36,8 +35,7 @@
     background: #1a2f4a; border: 1px solid rgba(255,255,255,0.15);
     padding: 6px 10px; border-radius: 7px; font-size: 14px; font-weight: 600;
     min-width: 140px; text-align: center; color: #fff;
-    cursor: pointer; outline: none; font-family: inherit;
-    color-scheme: dark;
+    cursor: pointer; outline: none; font-family: inherit; color-scheme: dark;
   }
   .date-display:focus { border-color: #185FA5; }
   .btn {
@@ -52,7 +50,6 @@
   .btn-refresh { background: #1a6b3a; border-color: #1a6b3a; color: #fff; }
   .btn-refresh:hover { background: #145530; }
 
-  /* Driver pills */
   .pills { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
   .pill {
     padding: 4px 14px; border-radius: 20px; font-size: 12px; font-weight: 600;
@@ -61,9 +58,7 @@
   }
   .pill:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
   .pill.active { background: #185FA5; border-color: #185FA5; color: #fff; }
-  .pill .cnt { font-size: 11px; opacity: 0.7; margin-left: 3px; }
 
-  /* Stats */
   .stats-row { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
   .stat-card {
     background: #1a2f4a; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
@@ -74,7 +69,6 @@
   .stat-card.checked-in .num { color: #2ecc71; }
   .stat-card.pending-in .num  { color: #e67e22; }
 
-  /* Filter */
   .filter-bar { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; }
   .filter-bar input {
     padding: 7px 12px; border: 1px solid rgba(255,255,255,0.15); border-radius: 7px;
@@ -93,30 +87,34 @@
     display: flex; align-items: center; justify-content: space-between;
   }
   .table-header span { font-size: 13px; font-weight: 600; color: #7ab3e0; }
+  .table-scroll { overflow-x: auto; }
 
-  table.track-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table.track-tbl {
+    width: max-content; min-width: 100%;
+    border-collapse: collapse; font-size: 13px;
+    table-layout: auto;
+  }
   .track-tbl thead td {
     padding: 9px 12px; font-size: 11px; font-weight: 700; color: #7a9bbe;
     background: #0f2035; border-bottom: 1px solid rgba(255,255,255,0.08);
     white-space: nowrap; text-transform: uppercase; letter-spacing: 0.05em;
+    position: relative; user-select: none;
+    cursor: grab;
   }
+  .track-tbl thead td.dragging { opacity: 0.4; background: #0a1e35; }
+  .track-tbl thead td.drag-over { border-left: 2px solid #5ba3d9; }
   .track-tbl tbody tr { border-bottom: 1px solid rgba(255,255,255,0.05); }
   .track-tbl tbody tr:last-child { border-bottom: none; }
   .track-tbl tbody tr:hover { background: rgba(255,255,255,0.03); }
-  .track-tbl tbody td { padding: 10px 12px; color: #c8ddf0; vertical-align: middle; }
+  .track-tbl tbody td { padding: 10px 12px; color: #c8ddf0; vertical-align: middle; white-space: nowrap; }
 
-
-  /* Resizable columns */
-  .track-tbl thead td { position: relative; user-select: none; }
+  /* Col resizer handle */
   .col-resizer {
     position: absolute; right: 0; top: 0; bottom: 0;
-    width: 5px; cursor: col-resize; z-index: 1;
-    background: transparent;
+    width: 5px; cursor: col-resize; z-index: 2; background: transparent;
   }
-  .col-resizer:hover, .col-resizer.active { background: rgba(100,160,220,0.4); }
-  table.track-tbl { table-layout: fixed; width: 100%; }
+  .col-resizer:hover, .col-resizer.resizing { background: rgba(100,160,220,0.4); }
 
-  /* Status */
   .sp { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 10px; font-size: 11px; font-weight: 600; }
   .sp-checkedin   { background: rgba(46,204,113,0.15); color: #2ecc71; }
   .sp-pending     { background: rgba(230,126,34,0.15);  color: #e67e22; }
@@ -140,7 +138,6 @@
 </div>
 
 <div class="container">
-  <!-- Date nav -->
   <div class="date-nav">
     <button class="btn-nav" onclick="changeDate(-1)">‹</button>
     <input type="date" class="date-display" id="date-display" onchange="onDatePick(this.value)" onclick="try{this.showPicker()}catch(e){}">
@@ -148,50 +145,29 @@
     <button class="btn btn-today" onclick="goToday()">Today</button>
   </div>
 
-  <!-- Driver/Bus# pills -->
   <div class="pills" id="pills-container">
-    <span class="pill active" data-driver="all" onclick="filterDriver('all',this)">
-      All <span class="cnt" id="cnt-all"></span>
-    </span>
+    <span class="pill active" data-driver="all" onclick="filterDriver('all',this)">All</span>
   </div>
 
-  <!-- Stats -->
   <div class="stats-row">
     <div class="stat-card"><div class="num" id="stat-total">—</div><div class="lbl">Total</div></div>
     <div class="stat-card checked-in"><div class="num" id="stat-checkedin">—</div><div class="lbl">Checked In</div></div>
     <div class="stat-card pending-in"><div class="num" id="stat-pending">—</div><div class="lbl">Pending</div></div>
   </div>
 
-  <!-- Filter -->
   <div class="filter-bar">
     <input type="text" id="search-input" placeholder="Search order #, name, phone…" oninput="applyFilter()">
     <span class="records-count" id="records-count">— records</span>
   </div>
 
-  <!-- Table -->
   <div class="table-card">
     <div class="table-header">
       <span>Check-in Log</span>
       <span style="font-size:12px;color:#5a7a9a;" id="table-meta"></span>
     </div>
-    <div>
+    <div class="table-scroll">
       <table class="track-tbl">
-        <thead>
-          <tr id="thead-row">
-            <td style="width:100px">Order #<div class="col-resizer"></div></td>
-            <td style="width:130px">Name<div class="col-resizer"></div></td>
-            <td style="width:120px">Phone<div class="col-resizer"></div></td>
-            <td style="width:55px">PAX<div class="col-resizer"></div></td>
-            <td style="width:65px">Bus #<div class="col-resizer"></div></td>
-            <td style="width:80px">Driver<div class="col-resizer"></div></td>
-            <td style="width:100px">Pickup Time<div class="col-resizer"></div></td>
-            <td style="width:130px">Pickup Location<div class="col-resizer"></div></td>
-            <td style="width:100px">SMS Status<div class="col-resizer"></div></td>
-            <td style="width:110px">Agent<div class="col-resizer"></div></td>
-            <td style="width:100px">Check-in<div class="col-resizer"></div></td>
-            <td style="width:110px">Check-in Time<div class="col-resizer"></div></td>
-          </tr>
-        </thead>
+        <thead><tr id="thead-row"></tr></thead>
         <tbody id="track-tbody">
           <tr><td colspan="12" style="padding:28px;text-align:center;color:#4a6a8a;">Loading…</td></tr>
         </tbody>
@@ -201,13 +177,168 @@
 </div>
 
 <script>
+// ── Column definitions (order = display order, key = data field) ──
+const COL_DEFS = [
+  { key: 'order_number',   label: 'Order #' },
+  { key: 'name',           label: 'Name' },
+  { key: 'phone',          label: 'Phone' },
+  { key: 'quantities',     label: 'PAX' },
+  { key: 'vehicle_no',     label: 'Bus #' },
+  { key: 'driver',         label: 'Driver' },
+  { key: 'pickup_time',    label: 'Pickup Time' },
+  { key: 'pickup_location',label: 'Pickup Location' },
+  { key: 'sms_status',     label: 'SMS Status' },
+  { key: 'agent_name',     label: 'Agent' },
+  { key: 'checkin_status', label: 'Check-in' },
+  { key: 'submitted_at',   label: 'Check-in Time' },
+];
+
+const STORAGE_KEY = 'npe_morning_col_order';
+let colOrder = loadColOrder();
+
+function loadColOrder() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const keys = JSON.parse(saved);
+      // Validate: must contain all keys
+      if (keys.length === COL_DEFS.length && COL_DEFS.every(c => keys.includes(c.key))) return keys;
+    }
+  } catch(e) {}
+  return COL_DEFS.map(c => c.key);
+}
+
+function saveColOrder() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(colOrder));
+}
+
+function getOrderedCols() {
+  return colOrder.map(k => COL_DEFS.find(c => c.key === k)).filter(Boolean);
+}
+
+// ── Build thead ──
+function buildThead() {
+  const tr = document.getElementById('thead-row');
+  tr.innerHTML = '';
+  getOrderedCols().forEach(col => {
+    const td = document.createElement('td');
+    td.dataset.key = col.key;
+    td.innerHTML = col.label + '<div class="col-resizer"></div>';
+    td.draggable = true;
+    tr.appendChild(td);
+  });
+  initColDrag();
+  initColResize();
+}
+
+// ── Cell renderer ──
+function renderCell(r, key) {
+  switch(key) {
+    case 'order_number':
+      return `<td style="color:#5ba3d9;font-weight:600;">${r.order_number||'—'}</td>`;
+    case 'name':
+      return `<td>${r.name||'—'}</td>`;
+    case 'phone':
+      return `<td style="font-size:12px;color:#a0c0e0;">${r.phone||'—'}</td>`;
+    case 'quantities':
+      return `<td style="text-align:center;font-weight:600;">${r.quantities||'—'}</td>`;
+    case 'vehicle_no':
+      return `<td style="font-weight:600;">${r.vehicle_no||'—'}</td>`;
+    case 'driver':
+      return `<td>${r.driver||'—'}</td>`;
+    case 'pickup_time':
+      return `<td style="font-weight:600;">${r.pickup_time||'—'}</td>`;
+    case 'pickup_location':
+      return `<td style="font-size:12px;">${r.pickup_location||'—'}</td>`;
+    case 'sms_status': {
+      const cls = smsStatusClass(r.sms_status);
+      return `<td><span class="sp ${cls}">${smsLabel(r.sms_status)}</span></td>`;
+    }
+    case 'agent_name':
+      return `<td style="font-size:12px;color:#a0c0e0;">${r.agent_name||'—'}</td>`;
+    case 'checkin_status': {
+      const cls = r.checkin_status === 'checked_in' ? 'sp-checkedin' : 'sp-pending';
+      return `<td><span class="sp ${cls}">${r.checkin_status === 'checked_in' ? '✓ Checked In' : '⏳ Pending'}</span></td>`;
+    }
+    case 'submitted_at': {
+      const val = r.submitted_at ? new Date(r.submitted_at).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}) : '—';
+      return `<td style="font-size:11px;color:#7a9bbe;">${val}</td>`;
+    }
+    default: return `<td>—</td>`;
+  }
+}
+
+// ── Column drag to reorder ──
+let dragSrcKey = null;
+
+function initColDrag() {
+  const tds = document.querySelectorAll('#thead-row td');
+  tds.forEach(td => {
+    td.addEventListener('dragstart', e => {
+      dragSrcKey = td.dataset.key;
+      td.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    td.addEventListener('dragend', () => {
+      td.classList.remove('dragging');
+      document.querySelectorAll('#thead-row td').forEach(t => t.classList.remove('drag-over'));
+    });
+    td.addEventListener('dragover', e => {
+      e.preventDefault();
+      if (td.dataset.key !== dragSrcKey) td.classList.add('drag-over');
+    });
+    td.addEventListener('dragleave', () => td.classList.remove('drag-over'));
+    td.addEventListener('drop', e => {
+      e.preventDefault();
+      td.classList.remove('drag-over');
+      if (!dragSrcKey || dragSrcKey === td.dataset.key) return;
+      // Reorder colOrder
+      const fromIdx = colOrder.indexOf(dragSrcKey);
+      const toIdx   = colOrder.indexOf(td.dataset.key);
+      colOrder.splice(fromIdx, 1);
+      colOrder.splice(toIdx, 0, dragSrcKey);
+      saveColOrder();
+      buildThead();
+      applyFilter(); // re-render rows in new order
+    });
+  });
+}
+
+// ── Column resize ──
+function initColResize() {
+  document.querySelectorAll('#thead-row td').forEach(th => {
+    const resizer = th.querySelector('.col-resizer');
+    if (!resizer) return;
+    let startX, startW;
+    resizer.addEventListener('mousedown', e => {
+      e.stopPropagation(); // don't trigger drag
+      startX = e.clientX;
+      startW = th.offsetWidth;
+      resizer.classList.add('resizing');
+      document.body.style.cursor = 'col-resize';
+      document.body.style.userSelect = 'none';
+      const onMove = e => { th.style.width = Math.max(40, startW + e.clientX - startX) + 'px'; };
+      const onUp   = () => {
+        resizer.classList.remove('resizing');
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      e.preventDefault();
+    });
+  });
+}
+
+// ── Data ──
 const params = new URLSearchParams(location.search);
 let currentDate = params.get('date') || new Date().toLocaleDateString('en-CA', {timeZone: 'America/Los_Angeles'});
 let currentDriver = 'all';
 let allRows = [];
 
 function onDatePick(val) { currentDate = val; loadData(); }
-
 function changeDate(d) {
   const dt = new Date(currentDate + 'T00:00:00');
   dt.setDate(dt.getDate() + d);
@@ -220,7 +351,6 @@ function goToday() {
   document.getElementById('date-display').value = currentDate;
   loadData();
 }
-
 function filterDriver(driver, el) {
   currentDriver = driver;
   document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
@@ -229,29 +359,29 @@ function filterDriver(driver, el) {
 }
 
 async function loadData() {
+  const cols = getOrderedCols().length;
   document.getElementById('track-tbody').innerHTML =
-    '<tr><td colspan="12" style="padding:28px;text-align:center;color:#4a6a8a;">Loading…</td></tr>';
-
+    `<tr><td colspan="${cols}" style="padding:28px;text-align:center;color:#4a6a8a;">Loading…</td></tr>`;
   try {
-    const res = await fetch(`/api/notifications/morning-pickup/tracking?date=${currentDate}`);
+    const res  = await fetch(`/api/notifications/morning-pickup/tracking?date=${currentDate}`);
     const data = await res.json();
     allRows = data.rows || [];
     buildDriverPills();
     applyFilter();
   } catch(e) {
     document.getElementById('track-tbody').innerHTML =
-      '<tr><td colspan="12" style="padding:28px;text-align:center;color:#4a6a8a;">Failed to load.</td></tr>';
+      `<tr><td colspan="${cols}" style="padding:28px;text-align:center;color:#4a6a8a;">Failed to load.</td></tr>`;
   }
 }
 
 function buildDriverPills() {
   const drivers = [...new Set(allRows.map(r => r.driver).filter(Boolean))];
   const container = document.getElementById('pills-container');
-  const allPill = `<span class="pill active" data-driver="all" onclick="filterDriver('all',this)">All <span class="cnt">${allRows.length}</span></span>`;
+  const allPill = `<span class="pill active" data-driver="all" onclick="filterDriver('all',this)">All <span style="opacity:.7;font-size:11px;">${allRows.length}</span></span>`;
   const driverPills = drivers.map(d => {
     const cnt = allRows.filter(r => r.driver === d).length;
-    const checkedIn = allRows.filter(r => r.driver === d && r.checkin_status === 'checked_in').length;
-    return `<span class="pill" data-driver="${d}" onclick="filterDriver('${d}',this)">${d}: ${checkedIn}/${cnt}</span>`;
+    const ci  = allRows.filter(r => r.driver === d && r.checkin_status === 'checked_in').length;
+    return `<span class="pill" data-driver="${d}" onclick="filterDriver('${d}',this)">${d}: ${ci}/${cnt}</span>`;
   }).join('');
   container.innerHTML = allPill + driverPills;
 }
@@ -269,30 +399,15 @@ function applyFilter() {
   document.getElementById('stat-pending').textContent   = rows.filter(r => r.checkin_status !== 'checked_in').length;
   document.getElementById('records-count').textContent  = `${rows.length} records`;
 
+  const cols = getOrderedCols();
   const tbody = document.getElementById('track-tbody');
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="12" style="padding:28px;text-align:center;color:#4a6a8a;">No records found.</td></tr>';
+    tbody.innerHTML = `<tr><td colspan="${cols.length}" style="padding:28px;text-align:center;color:#4a6a8a;">No records found.</td></tr>`;
     return;
   }
-
-  tbody.innerHTML = rows.map(r => {
-    const smsCls   = smsStatusClass(r.sms_status);
-    const checkinCls = r.checkin_status === 'checked_in' ? 'sp-checkedin' : 'sp-pending';
-    return `<tr>
-      <td style="color:#5ba3d9;font-weight:600;">${r.order_number || '—'}</td>
-      <td>${r.name || '—'}</td>
-      <td style="font-size:12px;color:#a0c0e0;">${r.phone || '—'}</td>
-      <td style="text-align:center;font-weight:600;">${r.quantities || '—'}</td>
-      <td style="font-weight:600;">${r.vehicle_no || '—'}</td>
-      <td>${r.driver || '—'}</td>
-      <td style="font-weight:600;">${r.pickup_time || '—'}</td>
-      <td style="font-size:12px;">${r.pickup_location || '—'}</td>
-      <td><span class="sp ${smsCls}">${smsLabel(r.sms_status)}</span></td>
-      <td style="font-size:12px;color:#a0c0e0;">${r.agent_name || '—'}</td>
-      <td><span class="sp ${checkinCls}">${r.checkin_status === 'checked_in' ? '✓ Checked In' : '⏳ Pending'}</span></td>
-      <td style="font-size:11px;color:#7a9bbe;">${r.submitted_at ? new Date(r.submitted_at).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}): '—'}</td>
-    </tr>`;
-  }).join('');
+  tbody.innerHTML = rows.map(r =>
+    `<tr>${cols.map(c => renderCell(r, c.key)).join('')}</tr>`
+  ).join('');
 }
 
 function smsStatusClass(s) {
@@ -310,48 +425,14 @@ function smsLabel(s) {
   if (s.includes('failed'))     return 'Failed';
   return s;
 }
-function formatDate(d) {
-  return new Date(d + 'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-}
 function exportExcel() {
   location.href = `/api/notifications/morning-pickup/export?date=${currentDate}`;
 }
 
+// ── Init ──
 document.getElementById('date-display').value = currentDate;
+buildThead();
 loadData();
-initResizableCols();
-/* ── Column resize ── */
-function initResizableCols() {
-  const ths = document.querySelectorAll('#thead-row td');
-  ths.forEach((th, i) => {
-    const resizer = th.querySelector('.col-resizer');
-    if (!resizer) return;
-    let startX, startW;
-    resizer.addEventListener('mousedown', e => {
-      startX = e.clientX;
-      startW = th.offsetWidth;
-      resizer.classList.add('active');
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-
-      const onMove = e => {
-        const newW = Math.max(40, startW + (e.clientX - startX));
-        th.style.width = newW + 'px';
-      };
-      const onUp = () => {
-        resizer.classList.remove('active');
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-      };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-      e.preventDefault();
-    });
-  });
-}
-
 </script>
 </body>
 </html>
