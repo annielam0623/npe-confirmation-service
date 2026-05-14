@@ -480,7 +480,7 @@ async def send_morning_pickup(
         # ── Build morning pickup short link (hides name/phone from URL) ────
         from datetime import time as dtime
         _mp_expires = datetime.combine(datetime.now(LA).date(), dtime(23, 59, 59))
-        _mp_raw_url = morning_pickup.tracking_url(row)
+        _mp_raw_url = morning_pickup._tracking_url(row)
         _mp_short   = await upsert_short_link(db, order_num, "morning_pickup", _mp_raw_url, _mp_expires)
         row["tracking_url"] = _mp_short   # morning_pickup.build_sms/build_email reads this key
 
