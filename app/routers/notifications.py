@@ -740,6 +740,66 @@ async def delete_by_date(
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# EXPORT — Tour Confirmation (from bookings, includes all tracking fields)
+# ══════════════════════════════════════════════════════════════════════════════
+
+@router.get("/tour-confirmation/export")
+async def export_tour_confirmation(
+    date: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db),
+    _user = Depends(require_staff),
+):
+    res = await db.execute(text("""
+        SELECT
+            b.order_number,
+            b.first_name || ' ' || COALESCE(b.last_name, '') AS guest_name,
+            b.phone,
+            b.customer_email,
+            b.quantities,
+            b.tour_date,
+            b.tour_type,
+            b.pickup_time,
+            b.pickup_location,
+            b.confirmation        AS status,
+            b.email_status,
+            b.sms_status,
+            b.lunch_turkey        AS turkey,
+            b.lunch_veggie        AS veggie,
+            b.lunch_beef          AS beef,
+            b.mtlv_eligible,
+            b.mtlv_qty,
+            b.mtlv_ticket_status  AS tickets,
+            b.notes,
+            b.submitted_at
+        FROM bookings b
+        WHERE b.module = 'tour_confirmation'
+          AND b.tour_date = :tour_date
+        ORDER BY b.tour_type ASC, b.last_name ASC
+    """), {"tour_date": _to_date(date) if date else _to_date(datetime.now(LA).date().isoformat())})
+
+    rows = res.all()
+
+    col_headers = [
+        "Order #", "Guest Name", "Phone", "Email", "Party",
+        "Tour Date", "Tour Type", "Pickup Time", "Pickup Location",
+        "Status", "Email Status", "SMS Status",
+        "Turkey", "Veggie", "Beef",
+        "MTLV Eligible", "MTLV Qty", "Tickets",
+        "Notes", "Submitted At",
+    ]
+    wb = _make_xlsx(col_headers, rows)
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+    filename = f"tour_confirmation_{date or 'export'}.xlsx"
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # EXPORT (Utilities)
 # ══════════════════════════════════════════════════════════════════════════════
 
