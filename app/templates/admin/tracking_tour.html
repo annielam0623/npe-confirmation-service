@@ -880,6 +880,7 @@
 
     async function loadData() {
       document.getElementById('track-tbody').innerHTML = '<tr><td colspan="16" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
+      document.querySelectorAll('.stat-card').forEach(c => c.style.pointerEvents = 'none');
       try {
         const res = await fetch(`/api/notifications/tour-confirmation/tracking?date=${currentDate}`);
         const data = await res.json();
@@ -888,6 +889,8 @@
         applyFilter();
       } catch (e) {
         document.getElementById('track-tbody').innerHTML = '<tr><td colspan="16" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
+      } finally {
+        document.querySelectorAll('.stat-card').forEach(c => c.style.pointerEvents = '');
       }
     }
 
@@ -1049,8 +1052,8 @@
         <button onclick="openNotes(${r.id},'${r.order_number}','${(r.first_name||r.guest_name||'').replace(/'/g,"\\'")}')
 " style="background:none;border:none;cursor:pointer;padding:4px;" class="notes-bubble-btn">
           ${(r.notes_count && r.notes_count > 0)
-            ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:#E24B4A;color:#fff;border-radius:50%;font-size:12px;font-weight:600;">${r.notes_count}</span>`
-            : `<span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:#f5a623;color:#fff;border-radius:50%;font-size:16px;">💬</span>`}
+            ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid #E24B4A;background:#fff;color:#E24B4A;font-size:12px;font-weight:500;"><span style="width:8px;height:8px;border-radius:50%;background:#E24B4A;flex-shrink:0;display:inline-block;"></span>Chat (${r.notes_count})</span>`
+            : `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid #9ED3A9;background:#fff;color:#2F7851;font-size:12px;font-weight:500;">💬 Chat</span>`}
         </button>
       </td>
       <td style="font-size:11px;white-space:nowrap;color:#888;">${r.submitted_at || '—'}</td>
@@ -1327,9 +1330,8 @@
         const bubble = tr.querySelector('.notes-bubble-btn span');
         if (!bubble) return;
         if (prev !== undefined && (r.notes_count || 0) > prev) {
-          bubble.style.background = '#E24B4A';
-          bubble.style.width = '32px';
-          bubble.style.height = '32px';
+          bubble.style.borderColor = '#E24B4A';
+          bubble.style.color = '#E24B4A';
         }
       });
     }
