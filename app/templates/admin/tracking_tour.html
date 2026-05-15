@@ -2,42 +2,276 @@
 {% block title %}Tour Confirmation Tracking{% endblock %}
 {% block content %}
 <style>
-  .container { width:100%; padding:20px 24px; }
-  .page-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
-  .page-header h2 { margin:0; font-size:18px; color:#1a3a5c; flex:1; }
-  .date-nav { display:flex; align-items:center; gap:6px; }
-  .btn-today  { padding:5px 12px; background:#1a3a5c; color:#fff; border:none; border-radius:6px; font-size:13px; cursor:pointer; }
-  .btn-today:hover { background:#15304d; }
-  .btn-nav    { padding:5px 10px; background:#f8f9fa; border:1px solid #dee2e6; border-radius:6px; font-size:16px; cursor:pointer; }
-  .date-wrap input[type=date] { padding:5px 10px; border:1px solid #dee2e6; border-radius:6px; font-size:13px; cursor:pointer; min-width:130px; }
-  .btn-refresh { padding:5px 12px; background:#f8f9fa; border:1px solid #dee2e6; border-radius:6px; font-size:13px; cursor:pointer; }
-  .btn-export  { padding:5px 12px; background:#198754; color:#fff; border:none; border-radius:6px; font-size:13px; cursor:pointer; }
-  .pills-bar { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
-  .pill { padding:5px 12px; border-radius:20px; border:1px solid #dee2e6; background:#f8f9fa; font-size:12px; cursor:pointer; white-space:nowrap; }
-  .pill.active { background:#1a3a5c; color:#fff; border-color:#1a3a5c; }
-  .stats-row { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
-  .stat-card { flex:1; min-width:90px; background:#fff; border:1px solid #dee2e6; border-radius:8px; padding:10px 14px; text-align:center; }
-  .stat-card .num { font-size:22px; font-weight:700; color:#1a3a5c; }
-  .stat-card .lbl { font-size:11px; color:#888; margin-top:2px; }
-  .stat-yes .num { color:#198754; } .stat-modify .num { color:#0d6efd; } .stat-pending .num { color:#fd7e14; }
-  .track-tbl { width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed; }
-  .track-tbl thead td { background:#1a3a5c; color:#fff; padding:9px 10px; font-weight:600; white-space:nowrap; position:relative; user-select:none; }
-  .track-tbl tbody tr:hover { background:#f0f5ff; }
-  .track-tbl tbody td { padding:8px 10px; border-bottom:1px solid #f0f0f0; vertical-align:middle; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .col-resizer { position:absolute; right:0; top:0; bottom:0; width:5px; cursor:col-resize; z-index:1; background:transparent; }
-  .col-resizer:hover, .col-resizer.active { background:rgba(255,255,255,.3); }
-  .s-sel { border:none; background:transparent; font-size:12px; font-weight:700; cursor:pointer; padding:2px 4px; border-radius:4px; }
-  .s-sel.yes { color:#198754; } .s-sel.modify { color:#0d6efd; } .s-sel.pending { color:#fd7e14; }
-  .s-sel:focus { outline:1px solid #1a3a5c; background:#f8f9fa; }
-  .notes-input { width:100%; border:1px solid transparent; border-radius:4px; font-size:11px; font-family:inherit; padding:3px 5px; resize:none; overflow:hidden; line-height:1.4; background:transparent; }
-  .notes-input:focus { border-color:#ffc107; background:#fff9e6; outline:none; }
-  .notes-input.dirty { background:#fff9e6; border-color:#ffc107; }
-  #notes-hdr.has-dirty { background:#fff3cd !important; color:#856404 !important; }
-  .badge-sent { color:#198754; font-size:11px; font-weight:600; }
-  .badge-delivered { color:#0d6efd; font-size:11px; font-weight:600; }
-  .badge-failed { color:#dc3545; font-size:11px; font-weight:600; }
-  .badge-queued { color:#6c757d; font-size:11px; }
-  .badge-none { color:#adb5bd; font-size:11px; }
+  .container {
+    width: 100%;
+    padding: 20px 24px;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  .page-header h2 {
+    margin: 0;
+    font-size: 18px;
+    color: #1a3a5c;
+    flex: 1;
+  }
+
+  .date-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .btn-today {
+    padding: 5px 12px;
+    background: #1a3a5c;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .btn-today:hover {
+    background: #15304d;
+  }
+
+  .btn-nav {
+    padding: 5px 10px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  .date-wrap input[type=date] {
+    padding: 5px 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    min-width: 130px;
+  }
+
+  .btn-refresh {
+    padding: 5px 12px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .btn-export {
+    padding: 5px 12px;
+    background: #198754;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
+  .pills-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .pill {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid #dee2e6;
+    background: #f8f9fa;
+    font-size: 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .pill.active {
+    background: #1a3a5c;
+    color: #fff;
+    border-color: #1a3a5c;
+  }
+
+  .stats-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .stat-card {
+    flex: 1;
+    min-width: 90px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 10px 14px;
+    text-align: center;
+  }
+
+  .stat-card .num {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a3a5c;
+  }
+
+  .stat-card .lbl {
+    font-size: 11px;
+    color: #888;
+    margin-top: 2px;
+  }
+
+  .stat-yes .num {
+    color: #198754;
+  }
+
+  .stat-modify .num {
+    color: #0d6efd;
+  }
+
+  .stat-pending .num {
+    color: #fd7e14;
+  }
+
+  .track-tbl {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    table-layout: fixed;
+  }
+
+  .track-tbl thead td {
+    background: #1a3a5c;
+    color: #fff;
+    padding: 9px 10px;
+    font-weight: 600;
+    white-space: nowrap;
+    position: relative;
+    user-select: none;
+  }
+
+  .track-tbl tbody tr:hover {
+    background: #f0f5ff;
+  }
+
+  .track-tbl tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .col-resizer {
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    cursor: col-resize;
+    z-index: 1;
+    background: transparent;
+  }
+
+  .col-resizer:hover,
+  .col-resizer.active {
+    background: rgba(255, 255, 255, .3);
+  }
+
+  .s-sel {
+    border: none;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+
+  .s-sel.yes {
+    color: #198754;
+  }
+
+  .s-sel.modify {
+    color: #0d6efd;
+  }
+
+  .s-sel.pending {
+    color: #fd7e14;
+  }
+
+  .s-sel:focus {
+    outline: 1px solid #1a3a5c;
+    background: #f8f9fa;
+  }
+
+  .notes-input {
+    width: 100%;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: inherit;
+    padding: 3px 5px;
+    resize: none;
+    overflow: hidden;
+    line-height: 1.4;
+    background: transparent;
+  }
+
+  .notes-input:focus {
+    border-color: #ffc107;
+    background: #fff9e6;
+    outline: none;
+  }
+
+  .notes-input.dirty {
+    background: #fff9e6;
+    border-color: #ffc107;
+  }
+
+  #notes-hdr.has-dirty {
+    background: #fff3cd !important;
+    color: #856404 !important;
+  }
+
+  .badge-sent {
+    color: #198754;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-delivered {
+    color: #0d6efd;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-failed {
+    color: #dc3545;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge-queued {
+    color: #6c757d;
+    font-size: 11px;
+  }
+
+  .badge-none {
+    color: #adb5bd;
+    font-size: 11px;
+  }
 </style>
 
 <div class="container">
@@ -56,131 +290,220 @@
     <button class="btn-export" onclick="exportCSV()">&#x1F4BE; Export CSV</button>
     <div style="position:relative;display:inline-block;" id="broadcastWrap">
       <div style="display:inline-flex;align-items:stretch;border-radius:8px;border:1px solid #f09595;overflow:hidden;">
-        <button onclick="toggleBroadcastMenu()" style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px;background:#fcebeb;color:#791f1f;border:none;cursor:pointer;font-weight:500;">&#128227; Broadcast</button>
-        <button onclick="toggleBroadcastMenu()" style="font-size:13px;padding:6px 9px;background:#f7c1c1;color:#791f1f;border:none;border-left:1px solid #f09595;cursor:pointer;">&#8964;</button>
+        <button onclick="toggleBroadcastMenu()"
+          style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px;background:#fcebeb;color:#791f1f;border:none;cursor:pointer;font-weight:500;">&#128227;
+          Broadcast</button>
+        <button onclick="toggleBroadcastMenu()"
+          style="font-size:13px;padding:6px 9px;background:#f7c1c1;color:#791f1f;border:none;border-left:1px solid #f09595;cursor:pointer;">&#8964;</button>
       </div>
-      <div id="broadcastMenu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:4px 0;min-width:240px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.08);">
-        <div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;" id="broadcastMenuTitle">Tour</div>
-        <div id="broadcastMenuItems"><div style="padding:8px 14px;font-size:13px;color:#aaa;">Loading...</div></div>
+      <div id="broadcastMenu"
+        style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:4px 0;min-width:240px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.08);">
+        <div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;"
+          id="broadcastMenuTitle">Tour</div>
+        <div id="broadcastMenuItems">
+          <div style="padding:8px 14px;font-size:13px;color:#aaa;">Loading...</div>
+        </div>
       </div>
     </div>
   </div>
 
   <div class="pills-bar" id="pills-bar">
     <span class="pill active" data-tour="all" onclick="filterTour(this,'all')">All <span id="pill-all"></span></span>
-    <span class="pill" data-tour="U-TC"  onclick="filterTour(this,'U-TC')">U-TC  <span class="pill-cnt" data-code="U-TC"></span></span>
-    <span class="pill" data-tour="U-BR"  onclick="filterTour(this,'U-BR')">U-BR  <span class="pill-cnt" data-code="U-BR"></span></span>
-    <span class="pill" data-tour="U-AA"  onclick="filterTour(this,'U-AA')">U-AA  <span class="pill-cnt" data-code="U-AA"></span></span>
-    <span class="pill" data-tour="U-HT"  onclick="filterTour(this,'U-HT')">U-HT  <span class="pill-cnt" data-code="U-HT"></span></span>
-    <span class="pill" data-tour="U-HH"  onclick="filterTour(this,'U-HH')">U-HH  <span class="pill-cnt" data-code="U-HH"></span></span>
-    <span class="pill" data-tour="L-KT"  onclick="filterTour(this,'L-KT')">L-KT  <span class="pill-cnt" data-code="L-KT"></span></span>
-    <span class="pill" data-tour="L-DX"  onclick="filterTour(this,'L-DX')">L-DX  <span class="pill-cnt" data-code="L-DX"></span></span>
-    <span class="pill" data-tour="X-TT"  onclick="filterTour(this,'X-TT')">X-TT  <span class="pill-cnt" data-code="X-TT"></span></span>
-    <span class="pill" data-tour="R-AA"  onclick="filterTour(this,'R-AA')">R-AA  <span class="pill-cnt" data-code="R-AA"></span></span>
+    <span class="pill" data-tour="U-TC" onclick="filterTour(this,'U-TC')">U-TC <span class="pill-cnt"
+        data-code="U-TC"></span></span>
+    <span class="pill" data-tour="U-BR" onclick="filterTour(this,'U-BR')">U-BR <span class="pill-cnt"
+        data-code="U-BR"></span></span>
+    <span class="pill" data-tour="U-AA" onclick="filterTour(this,'U-AA')">U-AA <span class="pill-cnt"
+        data-code="U-AA"></span></span>
+    <span class="pill" data-tour="U-HT" onclick="filterTour(this,'U-HT')">U-HT <span class="pill-cnt"
+        data-code="U-HT"></span></span>
+    <span class="pill" data-tour="U-HH" onclick="filterTour(this,'U-HH')">U-HH <span class="pill-cnt"
+        data-code="U-HH"></span></span>
+    <span class="pill" data-tour="L-KT" onclick="filterTour(this,'L-KT')">L-KT <span class="pill-cnt"
+        data-code="L-KT"></span></span>
+    <span class="pill" data-tour="L-DX" onclick="filterTour(this,'L-DX')">L-DX <span class="pill-cnt"
+        data-code="L-DX"></span></span>
+    <span class="pill" data-tour="X-TT" onclick="filterTour(this,'X-TT')">X-TT <span class="pill-cnt"
+        data-code="X-TT"></span></span>
+    <span class="pill" data-tour="R-AA" onclick="filterTour(this,'R-AA')">R-AA <span class="pill-cnt"
+        data-code="R-AA"></span></span>
   </div>
 
   <div class="stats-row">
-    <div class="stat-card"><div class="num" id="stat-total">—</div><div class="lbl">Total</div></div>
-    <div class="stat-card stat-yes"><div class="num" id="stat-yes">—</div><div class="lbl">YES</div></div>
-    <div class="stat-card stat-modify"><div class="num" id="stat-modify">—</div><div class="lbl">Modify</div></div>
-    <div class="stat-card stat-pending"><div class="num" id="stat-pending">—</div><div class="lbl">Pending</div></div>
+    <div class="stat-card">
+      <div class="num" id="stat-total">—</div>
+      <div class="lbl">Total</div>
+    </div>
+    <div class="stat-card stat-yes">
+      <div class="num" id="stat-yes">—</div>
+      <div class="lbl">YES</div>
+    </div>
+    <div class="stat-card stat-modify">
+      <div class="num" id="stat-modify">—</div>
+      <div class="lbl">Modify</div>
+    </div>
+    <div class="stat-card stat-pending">
+      <div class="num" id="stat-pending">—</div>
+      <div class="lbl">Pending</div>
+    </div>
   </div>
 
   <div>
     <table class="track-tbl" id="track-tbl">
-      <thead><tr id="thead-row">
-        <td style="width:100px">Order #<div class="col-resizer"></div></td>
-        <td style="width:90px">Status<div class="col-resizer"></div></td>
-        <td style="width:110px">Tour<div class="col-resizer"></div></td>
-        <td style="width:88px">Tour Date<div class="col-resizer"></div></td>
-        <td style="width:120px">Guest Name<div class="col-resizer"></div></td>
-        <td style="width:108px">Phone<div class="col-resizer"></div></td>
-        <td style="width:46px">Party<div class="col-resizer"></div></td>
-        <td style="width:80px">📧 Email<div class="col-resizer"></div></td>
-        <td style="width:80px">📱 SMS<div class="col-resizer"></div></td>
-        <td style="width:36px">🦃<div class="col-resizer"></div></td>
-        <td style="width:36px">🥗<div class="col-resizer"></div></td>
-        <td style="width:36px">🥩<div class="col-resizer"></div></td>
-        <td style="width:55px">🏛️ MTLV<div class="col-resizer"></div></td>
-        <td style="width:60px">🎟️ Tix<div class="col-resizer"></div></td>
-        <td id="notes-hdr" style="width:150px">Notes<div class="col-resizer"></div></td>
-        <td style="width:55px">💬<div class="col-resizer"></div></td>
-        <td style="width:95px">Submitted<div class="col-resizer"></div></td>
-      </tr></thead>
+      <thead>
+        <tr id="thead-row">
+          <td style="width:100px">Order #<div class="col-resizer"></div>
+          </td>
+          <td style="width:90px">Status<div class="col-resizer"></div>
+          </td>
+          <td style="width:110px">Tour<div class="col-resizer"></div>
+          </td>
+          <td style="width:88px">Tour Date<div class="col-resizer"></div>
+          </td>
+          <td style="width:120px">Guest Name<div class="col-resizer"></div>
+          </td>
+          <td style="width:108px">Phone<div class="col-resizer"></div>
+          </td>
+          <td style="width:46px">Party<div class="col-resizer"></div>
+          </td>
+          <td style="width:80px">📧 Email<div class="col-resizer"></div>
+          </td>
+          <td style="width:80px">📱 SMS<div class="col-resizer"></div>
+          </td>
+          <td style="width:36px">🦃<div class="col-resizer"></div>
+          </td>
+          <td style="width:36px">🥗<div class="col-resizer"></div>
+          </td>
+          <td style="width:36px">🥩<div class="col-resizer"></div>
+          </td>
+          <td style="width:55px">🏛️ MTLV<div class="col-resizer"></div>
+          </td>
+          <td style="width:60px">🎟️ Tix<div class="col-resizer"></div>
+          </td>
+          <td id="notes-hdr" style="width:150px">Notes<div class="col-resizer"></div>
+          </td>
+          <td style="width:55px">💬<div class="col-resizer"></div>
+          </td>
+          <td style="width:95px">Submitted<div class="col-resizer"></div>
+          </td>
+        </tr>
+      </thead>
       <tbody id="tbl-body">
-        <tr><td colspan="17" style="text-align:center;padding:40px;color:#aaa;">Loading...</td></tr>
+        <tr>
+          <td colspan="17" style="text-align:center;padding:40px;color:#aaa;">Loading...</td>
+        </tr>
       </tbody>
     </table>
   </div>
 </div>
 
 <!-- Lunch modal -->
-<div id="lunchModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;align-items:center;justify-content:center;">
+<div id="lunchModal"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:12px;padding:24px;width:300px;max-width:95vw;">
     <h3 style="margin:0 0 16px;color:#1a3a5c;font-size:15px;">Edit Lunch</h3>
     <input type="hidden" id="lunch-order">
     <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">
-      <label style="display:flex;align-items:center;gap:10px;font-size:13px;">🦃 Turkey <input type="number" id="lunch-t" min="0" style="width:60px;padding:4px 8px;border:1px solid #dee2e6;border-radius:4px;margin-left:auto;"></label>
-      <label style="display:flex;align-items:center;gap:10px;font-size:13px;">🥗 Veggie <input type="number" id="lunch-v" min="0" style="width:60px;padding:4px 8px;border:1px solid #dee2e6;border-radius:4px;margin-left:auto;"></label>
-      <label style="display:flex;align-items:center;gap:10px;font-size:13px;">🥩 Beef   <input type="number" id="lunch-b" min="0" style="width:60px;padding:4px 8px;border:1px solid #dee2e6;border-radius:4px;margin-left:auto;"></label>
+      <label style="display:flex;align-items:center;gap:10px;font-size:13px;">🦃 Turkey <input type="number"
+          id="lunch-t" min="0"
+          style="width:60px;padding:4px 8px;border:1px solid #dee2e6;border-radius:4px;margin-left:auto;"></label>
+      <label style="display:flex;align-items:center;gap:10px;font-size:13px;">🥗 Veggie <input type="number"
+          id="lunch-v" min="0"
+          style="width:60px;padding:4px 8px;border:1px solid #dee2e6;border-radius:4px;margin-left:auto;"></label>
+      <label style="display:flex;align-items:center;gap:10px;font-size:13px;">🥩 Beef <input type="number" id="lunch-b"
+          min="0"
+          style="width:60px;padding:4px 8px;border:1px solid #dee2e6;border-radius:4px;margin-left:auto;"></label>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;">
-      <button onclick="closeLunch()" style="padding:6px 14px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:13px;cursor:pointer;">Cancel</button>
-      <button onclick="saveLunch()" style="padding:6px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">Save</button>
+      <button onclick="closeLunch()"
+        style="padding:6px 14px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:13px;cursor:pointer;">Cancel</button>
+      <button onclick="saveLunch()"
+        style="padding:6px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">Save</button>
     </div>
   </div>
 </div>
 
 <!-- Broadcast dialog -->
-<div id="broadcastOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:12px;width:560px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
+<div id="broadcastOverlay"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+  <div
+    style="background:#fff;border-radius:12px;width:560px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
     <div style="background:#7f1d1d;padding:14px 18px;display:flex;align-items:center;">
-      <div style="flex:1;"><div style="color:#fff;font-weight:600;font-size:14px;">📣 Broadcast message</div><div style="color:#fca5a5;font-size:12px;" id="broadcastSubtitle"></div></div>
-      <button onclick="closeBroadcast()" style="background:none;border:none;color:#fca5a5;font-size:20px;cursor:pointer;">&times;</button>
+      <div style="flex:1;">
+        <div style="color:#fff;font-weight:600;font-size:14px;">📣 Broadcast message</div>
+        <div style="color:#fca5a5;font-size:12px;" id="broadcastSubtitle"></div>
+      </div>
+      <button onclick="closeBroadcast()"
+        style="background:none;border:none;color:#fca5a5;font-size:20px;cursor:pointer;">&times;</button>
     </div>
     <div style="padding:16px;overflow-y:auto;flex:1;">
       <div style="margin-bottom:12px;">
         <label style="font-size:12px;font-weight:500;color:#495057;display:block;margin-bottom:4px;">Template</label>
-        <select id="broadcastTemplate" onchange="onTemplateChange()" style="width:100%;padding:7px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;"><option value="">— Select template —</option></select>
+        <select id="broadcastTemplate" onchange="onTemplateChange()"
+          style="width:100%;padding:7px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;">
+          <option value="">— Select template —</option>
+        </select>
       </div>
       <div style="margin-bottom:12px;">
-        <label style="font-size:12px;font-weight:500;color:#495057;display:block;margin-bottom:4px;">Message <span style="font-weight:400;color:#888;">(supports {first_name} and {tour_date})</span></label>
-        <textarea id="broadcastBody" rows="4" style="width:100%;border:1px solid #dee2e6;border-radius:6px;padding:8px 10px;font-size:13px;resize:vertical;box-sizing:border-box;font-family:inherit;"></textarea>
+        <label style="font-size:12px;font-weight:500;color:#495057;display:block;margin-bottom:4px;">Message <span
+            style="font-weight:400;color:#888;">(supports {first_name} and {tour_date})</span></label>
+        <textarea id="broadcastBody" rows="4"
+          style="width:100%;border:1px solid #dee2e6;border-radius:6px;padding:8px 10px;font-size:13px;resize:vertical;box-sizing:border-box;font-family:inherit;"></textarea>
       </div>
       <div style="display:flex;gap:16px;margin-bottom:14px;">
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="bcastSms" checked> Send SMS</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="bcastEmail" checked> Send Email</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox"
+            id="bcastSms" checked> Send SMS</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox"
+            id="bcastEmail" checked> Send Email</label>
       </div>
-      <div style="background:#f8f9fa;border:1px solid #eee;border-radius:8px;padding:10px;max-height:200px;overflow-y:auto;">
+      <div
+        style="background:#f8f9fa;border:1px solid #eee;border-radius:8px;padding:10px;max-height:200px;overflow-y:auto;">
         <div style="font-size:12px;font-weight:500;color:#495057;margin-bottom:6px;" id="recipientCount"></div>
         <div id="recipientList" style="display:flex;flex-direction:column;gap:4px;"></div>
       </div>
     </div>
     <div style="padding:12px 16px;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:8px;">
-      <button onclick="closeBroadcast()" style="padding:7px 16px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:13px;cursor:pointer;">Cancel</button>
-      <button onclick="sendBroadcast()" id="broadcastSendBtn" style="padding:7px 16px;background:#7f1d1d;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:500;">📣 Send to all</button>
+      <button onclick="closeBroadcast()"
+        style="padding:7px 16px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:13px;cursor:pointer;">Cancel</button>
+      <button onclick="sendBroadcast()" id="broadcastSendBtn"
+        style="padding:7px 16px;background:#7f1d1d;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:500;">📣
+        Send to all</button>
     </div>
   </div>
 </div>
 
 <!-- Notes dialog -->
-<div id="notesOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:12px;width:520px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
+<div id="notesOverlay"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+  <div
+    style="background:#fff;border-radius:12px;width:520px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
     <div style="background:#1a3a5c;padding:14px 18px;display:flex;align-items:center;gap:10px;">
-      <div style="flex:1;"><div style="color:#fff;font-weight:600;font-size:14px;" id="notesTitle">Notes</div><div style="color:#a8c4e0;font-size:12px;" id="notesSubtitle"></div></div>
-      <button onclick="closeNotes()" style="background:none;border:none;color:#a8c4e0;font-size:20px;cursor:pointer;">&times;</button>
+      <div style="flex:1;">
+        <div style="color:#fff;font-weight:600;font-size:14px;" id="notesTitle">Notes</div>
+        <div style="color:#a8c4e0;font-size:12px;" id="notesSubtitle"></div>
+      </div>
+      <button onclick="closeNotes()"
+        style="background:none;border:none;color:#a8c4e0;font-size:20px;cursor:pointer;">&times;</button>
     </div>
-    <div id="notesMessages" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:380px;background:#f8f9fa;">
+    <div id="notesMessages"
+      style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:380px;background:#f8f9fa;">
       <div style="text-align:center;color:#aaa;font-size:13px;padding:20px 0;" id="notesEmpty">No notes yet.</div>
     </div>
     <div style="padding:12px 14px;border-top:1px solid #eee;background:#fff;">
-      <textarea id="noteInput" rows="3" placeholder="Write a note or message to guest..." style="width:100%;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;font-size:13px;resize:none;box-sizing:border-box;outline:none;font-family:inherit;"></textarea>
+      <textarea id="noteInput" rows="3" placeholder="Write a note or message to guest..."
+        style="width:100%;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;font-size:13px;resize:none;box-sizing:border-box;outline:none;font-family:inherit;"></textarea>
       <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" id="sendSmsCheck" checked> SMS to guest</label>
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" id="sendEmailCheck"> Email to guest</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox"
+            id="sendSmsCheck" checked> SMS to guest</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox"
+            id="sendEmailCheck"> Email to guest</label>
         <div style="margin-left:auto;display:flex;gap:8px;">
-          <button onclick="submitNote('staff_note')" style="padding:6px 14px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:12px;cursor:pointer;">Save note</button>
-          <button onclick="submitNote('sms_out')" style="padding:6px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;">Send &#8594;</button>
+          <button onclick="submitNote('staff_note')"
+            style="padding:6px 14px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:12px;cursor:pointer;">Save
+            note</button>
+          <button onclick="submitNote('sms_out')"
+            style="padding:6px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;">Send
+            &#8594;</button>
         </div>
       </div>
     </div>
@@ -188,216 +511,217 @@
 </div>
 
 <script>
-const MODULE = "tour";
-let _rows = [], _activeTour = "all";
-let _currentBookingId = null, _pollTimer = null;
-let _broadcastTemplates = [], _broadcastMenuOpen = false;
-let _broadcastRecipients = [], _broadcastGroup = null, _broadcastStatus = null;
+  const MODULE = "tour";
+  let _rows = [], _activeTour = "all";
+  let _currentBookingId = null, _pollTimer = null;
+  let _broadcastTemplates = [], _broadcastMenuOpen = false;
+  let _broadcastRecipients = [], _broadcastGroup = null, _broadcastStatus = null;
 
-function _today() { return new Date().toLocaleDateString("en-CA"); }
-function _getDate() { return document.getElementById("date-input").value || _today(); }
-function goToday()    { document.getElementById("date-input").value = _today(); loadData(); }
-function goTomorrow() { const d=new Date(); d.setDate(d.getDate()+1); document.getElementById("date-input").value=d.toLocaleDateString("en-CA"); loadData(); }
-function changeDate(delta) { const d=new Date(_getDate()+"T12:00:00"); d.setDate(d.getDate()+delta); document.getElementById("date-input").value=d.toLocaleDateString("en-CA"); loadData(); }
+  function _today() { return new Date().toLocaleDateString("en-CA"); }
+  function _getDate() { return document.getElementById("date-input").value || _today(); }
+  function goToday() { document.getElementById("date-input").value = _today(); loadData(); }
+  function goTomorrow() { const d = new Date(); d.setDate(d.getDate() + 1); document.getElementById("date-input").value = d.toLocaleDateString("en-CA"); loadData(); }
+  function changeDate(delta) { const d = new Date(_getDate() + "T12:00:00"); d.setDate(d.getDate() + delta); document.getElementById("date-input").value = d.toLocaleDateString("en-CA"); loadData(); }
 
-async function loadData() {
-  const date = _getDate();
-  document.getElementById("tbl-body").innerHTML = '<tr><td colspan="17" style="text-align:center;padding:30px;color:#aaa;">Loading...</td></tr>';
-  try {
-    const res  = await fetch(`/api/notifications/tour-confirmation/tracking?date=${date}`);
-    const data = await res.json();
-    _rows = data.rows || [];
-    renderTable(); renderStats(); renderPills();
-    _broadcastTemplates = [];
-  } catch(e) {
-    document.getElementById("tbl-body").innerHTML = '<tr><td colspan="17" style="text-align:center;padding:30px;color:#dc3545;">Failed to load data.</td></tr>';
+  async function loadData() {
+    const date = _getDate();
+    document.getElementById("tbl-body").innerHTML = '<tr><td colspan="17" style="text-align:center;padding:30px;color:#aaa;">Loading...</td></tr>';
+    try {
+      const res = await fetch(`/api/notifications/tour-confirmation/tracking?date=${date}`);
+      const data = await res.json();
+      _rows = data.rows || [];
+      renderTable(); renderStats(); renderPills();
+      _broadcastTemplates = [];
+    } catch (e) {
+      document.getElementById("tbl-body").innerHTML = '<tr><td colspan="17" style="text-align:center;padding:30px;color:#dc3545;">Failed to load data.</td></tr>';
+    }
   }
-}
 
-function _visible() { return _activeTour === "all" ? _rows : _rows.filter(r => r.tour_type === _activeTour); }
+  function _visible() { return _activeTour === "all" ? _rows : _rows.filter(r => r.tour_type === _activeTour); }
 
-function renderTable() {
-  const rows = _visible();
-  if (!rows.length) { document.getElementById("tbl-body").innerHTML='<tr><td colspan="17" style="text-align:center;padding:40px;color:#aaa;">No bookings found.</td></tr>'; return; }
-  document.getElementById("tbl-body").innerHTML = rows.map(r => {
-    const conf = r.confirmation_status || "pending";
-    const emB = r.email_status==="sent" ? '<span class="badge-sent">✓ Sent</span>'
-               : r.email_status==="failed" ? '<span class="badge-failed">✗ Failed</span>' : '<span class="badge-none">—</span>';
-    const smB = r.sms_status==="delivered" ? '<span class="badge-delivered">✓ Delivered</span>'
-               : r.sms_status==="sent" ? '<span class="badge-sent">✓ Sent</span>'
-               : r.sms_status==="failed" ? '<span class="badge-failed">✗ Failed</span>'
-               : r.sms_status==="queued" ? '<span class="badge-queued">⏳ Queued</span>' : '<span class="badge-none">—</span>';
-    const mtlv = r.mtlv_eligible ? `<span style="color:#6f42c1;font-weight:600;">${r.mtlv_qty||""}</span>` : "—";
-    const tix  = r.mtlv_ticket_status ? `<span style="color:#0d6efd;">${e(r.mtlv_ticket_status)}</span>` : "—";
-    const resub = r.submission_count > 1 ? '<span style="color:#dc3545;font-size:10px;margin-left:2px;">★</span>' : "";
-    const bubble = (r.notes_count && r.notes_count > 0)
-      ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#1a3a5c;color:#fff;border-radius:50%;font-size:11px;font-weight:600;">${r.notes_count}</span>`
-      : `<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#e9ecef;color:#495057;border-radius:50%;font-size:16px;">+</span>`;
-    const subAt = r.submitted_at ? new Date(r.submitted_at).toLocaleString("en-US",{timeZone:"America/Los_Angeles",month:"numeric",day:"numeric",hour:"numeric",minute:"2-digit"}) : "—";
-    return `<tr data-booking-id="${r.id}" data-order="${e(r.order_number)}" data-name="${e(r.guest_name)}" data-phone="${e(r.phone)}" data-email="${e(r.email)}" data-status="${e(conf)}" data-mtlv="${r.mtlv_eligible?'yes':'no'}" data-tour="${e(r.tour_type||'')}">
+  function renderTable() {
+    const rows = _visible();
+    if (!rows.length) { document.getElementById("tbl-body").innerHTML = '<tr><td colspan="17" style="text-align:center;padding:40px;color:#aaa;">No bookings found.</td></tr>'; return; }
+    document.getElementById("tbl-body").innerHTML = rows.map(r => {
+      const conf = r.confirmation_status || "pending";
+      const emB = r.email_status === "sent" ? '<span class="badge-sent">✓ Sent</span>'
+        : r.email_status === "failed" ? '<span class="badge-failed">✗ Failed</span>' : '<span class="badge-none">—</span>';
+      const smB = r.sms_status === "delivered" ? '<span class="badge-delivered">✓ Delivered</span>'
+        : r.sms_status === "sent" ? '<span class="badge-sent">✓ Sent</span>'
+          : r.sms_status === "failed" ? '<span class="badge-failed">✗ Failed</span>'
+            : r.sms_status === "queued" ? '<span class="badge-queued">⏳ Queued</span>' : '<span class="badge-none">—</span>';
+      const mtlv = r.mtlv_eligible ? `<span style="color:#6f42c1;font-weight:600;">${r.mtlv_qty || ""}</span>` : "—";
+      const tix = r.mtlv_ticket_status ? `<span style="color:#0d6efd;">${e(r.mtlv_ticket_status)}</span>` : "—";
+      const resub = r.submission_count > 1 ? '<span style="color:#dc3545;font-size:10px;margin-left:2px;">★</span>' : "";
+      const bubble = (r.notes_count && r.notes_count > 0)
+        ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#1a3a5c;color:#fff;border-radius:50%;font-size:11px;font-weight:600;">${r.notes_count}</span>`
+        : `<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#e9ecef;color:#495057;border-radius:50%;font-size:16px;">+</span>`;
+      const subAt = r.submitted_at ? new Date(r.submitted_at).toLocaleString("en-US", { timeZone: "America/Los_Angeles", month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
+      return `<tr data-booking-id="${r.id}" data-order="${e(r.order_number)}" data-name="${e(r.guest_name)}" data-phone="${e(r.phone)}" data-email="${e(r.email)}" data-status="${e(conf)}" data-mtlv="${r.mtlv_eligible ? 'yes' : 'no'}" data-tour="${e(r.tour_type || '')}">
       <td style="font-weight:600;color:#1a3a5c;font-size:11px;">${e(r.order_number)}</td>
       <td><select class="s-sel ${e(conf)}" onchange="updateStatus('${e(r.order_number)}',this)" data-orig="${e(conf)}">
-        <option value="yes" ${conf==="yes"?"selected":""}>YES</option>
-        <option value="modify" ${conf==="modify"?"selected":""}>Modify</option>
-        <option value="pending" ${conf==="pending"||!conf?"selected":""}>Pending</option>
+        <option value="yes" ${conf === "yes" ? "selected" : ""}>YES</option>
+        <option value="modify" ${conf === "modify" ? "selected" : ""}>Modify</option>
+        <option value="pending" ${conf === "pending" || !conf ? "selected" : ""}>Pending</option>
       </select>${resub}</td>
-      <td style="font-size:11px;" title="${e(r.tour_type||'')}">${e(r.tour_type||'—')}</td>
-      <td style="font-size:11px;">${e(r.tour_date||'—')}</td>
+      <td style="font-size:11px;" title="${e(r.tour_type || '')}">${e(r.tour_type || '—')}</td>
+      <td style="font-size:11px;">${e(r.tour_date || '—')}</td>
       <td>${e(r.guest_name)}</td>
-      <td style="font-size:11px;">${e(r.phone||'—')}</td>
-      <td style="text-align:center;">${r.quantities||'—'}</td>
+      <td style="font-size:11px;">${e(r.phone || '—')}</td>
+      <td style="text-align:center;">${r.quantities || '—'}</td>
       <td>${emB}</td><td>${smB}</td>
-      <td style="text-align:center;">${r.lunch_turkey||''}</td>
-      <td style="text-align:center;">${r.lunch_veggie||''}</td>
-      <td style="text-align:center;cursor:pointer;" title="Click to edit" onclick="openLunch('${e(r.order_number)}',${r.lunch_turkey||0},${r.lunch_veggie||0},${r.lunch_beef||0})">${r.lunch_beef||''}</td>
+      <td style="text-align:center;">${r.lunch_turkey || ''}</td>
+      <td style="text-align:center;">${r.lunch_veggie || ''}</td>
+      <td style="text-align:center;cursor:pointer;" title="Click to edit" onclick="openLunch('${e(r.order_number)}',${r.lunch_turkey || 0},${r.lunch_veggie || 0},${r.lunch_beef || 0})">${r.lunch_beef || ''}</td>
       <td style="text-align:center;">${mtlv}</td>
       <td style="text-align:center;">${tix}</td>
-      <td><textarea class="notes-input" rows="1" oninput="autoResize(this);markDirty(this)" onblur="saveNotes('${e(r.order_number)}',this)" data-orig="${e(r.notes||'')}">${e(r.notes||'')}</textarea></td>
+      <td><textarea class="notes-input" rows="1" oninput="autoResize(this);markDirty(this)" onblur="saveNotes('${e(r.order_number)}',this)" data-orig="${e(r.notes || '')}">${e(r.notes || '')}</textarea></td>
       <td style="text-align:center;"><button onclick="openNotes(${r.id},'${e(r.order_number)}','${e(r.guest_name)}')" style="background:none;border:none;cursor:pointer;padding:4px;">${bubble}</button></td>
       <td style="font-size:11px;color:#888;">${subAt}</td>
     </tr>`;
-  }).join("");
-  document.querySelectorAll(".notes-input").forEach(autoResize);
-}
+    }).join("");
+    document.querySelectorAll(".notes-input").forEach(autoResize);
+  }
 
-function renderStats() {
-  const v = _visible();
-  document.getElementById("stat-total").textContent   = v.length;
-  document.getElementById("stat-yes").textContent     = v.filter(r=>r.confirmation_status==="yes").length;
-  document.getElementById("stat-modify").textContent  = v.filter(r=>r.confirmation_status==="modify").length;
-  document.getElementById("stat-pending").textContent = v.filter(r=>!r.confirmation_status||r.confirmation_status==="pending").length;
-}
+  function renderStats() {
+    const v = _visible();
+    document.getElementById("stat-total").textContent = v.length;
+    document.getElementById("stat-yes").textContent = v.filter(r => r.confirmation_status === "yes").length;
+    document.getElementById("stat-modify").textContent = v.filter(r => r.confirmation_status === "modify").length;
+    document.getElementById("stat-pending").textContent = v.filter(r => !r.confirmation_status || r.confirmation_status === "pending").length;
+  }
 
-function renderPills() {
-  const el = document.getElementById("pill-all"); if(el) el.textContent=`(${_rows.length})`;
-  ["U-TC","U-BR","U-AA","U-HT","U-HH","L-KT","L-DX","X-TT","R-AA"].forEach(code => {
-    const cnt = document.querySelector(`.pill-cnt[data-code="${code}"]`); if(!cnt) return;
-    const total = _rows.filter(r=>r.tour_type===code).length;
-    const yes   = _rows.filter(r=>r.tour_type===code&&r.confirmation_status==="yes").length;
-    cnt.textContent = total ? `(${yes}/${total})` : "(0)";
-  });
-}
-
-function filterTour(el, code) {
-  document.querySelectorAll(".pill").forEach(p=>p.classList.remove("active")); el.classList.add("active");
-  _activeTour = code; renderTable(); renderStats();
-}
-
-async function updateStatus(orderNum, sel) {
-  const val = sel.value; sel.className = "s-sel "+val;
-  const tr = sel.closest("tr"); if(tr) tr.dataset.status = val;
-  try {
-    const res = await fetch(`/api/bookings/${orderNum}/confirmation`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({confirmation:val})});
-    if(!res.ok) throw new Error();
-    sel.dataset.orig = val;
-    const row = _rows.find(r=>r.order_number===orderNum); if(row) row.confirmation_status=val;
-    renderStats();
-  } catch(e2) { alert("Failed to update status."); sel.value=sel.dataset.orig; sel.className="s-sel "+sel.dataset.orig; }
-}
-
-function autoResize(el) { el.style.height="auto"; el.style.height=el.scrollHeight+"px"; }
-function markDirty(el) {
-  el.classList.toggle("dirty", el.value!==el.dataset.orig);
-  document.getElementById("notes-hdr").classList.toggle("has-dirty", !!document.querySelector(".notes-input.dirty"));
-}
-async function saveNotes(orderNum, el) {
-  if(!el.classList.contains("dirty")) return;
-  try {
-    await fetch(`/api/bookings/${orderNum}/notes`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({notes:el.value})});
-    el.classList.remove("dirty"); el.dataset.orig=el.value;
-    if(!document.querySelector(".notes-input.dirty")) document.getElementById("notes-hdr").classList.remove("has-dirty");
-  } catch(e2) {}
-}
-
-function openLunch(order,t,v,b) { document.getElementById("lunch-order").value=order; document.getElementById("lunch-t").value=t; document.getElementById("lunch-v").value=v; document.getElementById("lunch-b").value=b; document.getElementById("lunchModal").style.display="flex"; }
-function closeLunch() { document.getElementById("lunchModal").style.display="none"; }
-async function saveLunch() {
-  const order=document.getElementById("lunch-order").value;
-  const payload={lunch_turkey:parseInt(document.getElementById("lunch-t").value)||0,lunch_veggie:parseInt(document.getElementById("lunch-v").value)||0,lunch_beef:parseInt(document.getElementById("lunch-b").value)||0};
-  try { await fetch(`/api/bookings/${order}/lunch`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)}); closeLunch(); loadData(); }
-  catch(e2) { alert("Failed to save lunch."); }
-}
-
-function exportCSV() {
-  const v=_visible(); const cols=["order_number","confirmation_status","tour_type","tour_date","guest_name","phone","quantities","email_status","sms_status","lunch_turkey","lunch_veggie","lunch_beef","notes","submitted_at"];
-  const csv=[cols.join(","),...v.map(r=>cols.map(c=>`"${String(r[c]??'').replace(/"/g,'""')}"`).join(","))].join("\n");
-  const a=Object.assign(document.createElement("a"),{href:URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"})),download:`tour_tracking_${_getDate()}.csv`}); a.click();
-}
-
-(function(){
-  let startX,startW,th;
-  document.querySelectorAll(".col-resizer").forEach(r=>{
-    r.addEventListener("mousedown",ev=>{
-      th=r.parentElement;startX=ev.clientX;startW=th.offsetWidth;r.classList.add("active");
-      const onMove=e2=>{th.style.width=Math.max(40,startW+e2.clientX-startX)+"px";};
-      const onUp=()=>{r.classList.remove("active");document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);};
-      document.addEventListener("mousemove",onMove);document.addEventListener("mouseup",onUp);ev.preventDefault();
+  function renderPills() {
+    const el = document.getElementById("pill-all"); if (el) el.textContent = `(${_rows.length})`;
+    ["U-TC", "U-BR", "U-AA", "U-HT", "U-HH", "L-KT", "L-DX", "X-TT", "R-AA"].forEach(code => {
+      const cnt = document.querySelector(`.pill-cnt[data-code="${code}"]`); if (!cnt) return;
+      const total = _rows.filter(r => r.tour_type === code).length;
+      const yes = _rows.filter(r => r.tour_type === code && r.confirmation_status === "yes").length;
+      cnt.textContent = total ? `(${yes}/${total})` : "(0)";
     });
-  });
-})();
+  }
 
-async function toggleBroadcastMenu() {
-  const menu=document.getElementById("broadcastMenu"); _broadcastMenuOpen=!_broadcastMenuOpen; menu.style.display=_broadcastMenuOpen?"block":"none";
-  if(_broadcastMenuOpen){document.getElementById("broadcastMenuTitle").textContent=`Tour — ${_getDate()}`; renderBroadcastMenu();}
-}
-document.addEventListener("click",ev=>{ if(_broadcastMenuOpen&&!document.getElementById("broadcastWrap").contains(ev.target)){document.getElementById("broadcastMenu").style.display="none";_broadcastMenuOpen=false;} });
+  function filterTour(el, code) {
+    document.querySelectorAll(".pill").forEach(p => p.classList.remove("active")); el.classList.add("active");
+    _activeTour = code; renderTable(); renderStats();
+  }
 
-function renderBroadcastMenu() {
-  const v=_visible(); const general=v.filter(r=>!r.mtlv_eligible); const mtlv=v.filter(r=>r.mtlv_eligible);
-  function badge(label,color,bg){return `<span style="font-size:11px;font-weight:600;color:${color};background:${bg};padding:1px 7px;border-radius:20px;">${label}</span>`;}
-  function row(group,status,badgeHtml,count){if(!count)return"";return `<div onclick="openBroadcast('${group}','${status}')" style="display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;font-size:13px;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">${badgeHtml}<span style="flex:1;">${status==="all"?"All guests":status.charAt(0).toUpperCase()+status.slice(1)}</span><span style="color:#888;font-size:12px;">${count} guests</span></div>`;}
-  let html="";
-  if(general.length){html+=`<div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;">General — ${general.length} guests</div>`;html+=row("general","all",badge("All","#495057","#e9ecef"),general.length);html+=row("general","pending",badge("Pending","#856404","#fff3cd"),general.filter(r=>!r.confirmation_status||r.confirmation_status==="pending").length);html+=row("general","yes",badge("Yes","#155724","#d4edda"),general.filter(r=>r.confirmation_status==="yes").length);html+=row("general","modify",badge("Modify","#004085","#cce5ff"),general.filter(r=>r.confirmation_status==="modify").length);if(mtlv.length)html+=`<div style="height:1px;background:#f0f0f0;margin:4px 0;"></div>`;}
-  if(mtlv.length){html+=`<div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;">MTLV — ${mtlv.length} guests</div>`;html+=row("mtlv","all",badge("All","#495057","#e9ecef"),mtlv.length);html+=row("mtlv","pending",badge("Pending","#856404","#fff3cd"),mtlv.filter(r=>!r.confirmation_status||r.confirmation_status==="pending").length);html+=row("mtlv","yes",badge("Yes","#155724","#d4edda"),mtlv.filter(r=>r.confirmation_status==="yes").length);}
-  if(!html)html='<div style="padding:8px 14px;font-size:13px;color:#aaa;">No guests found</div>';
-  document.getElementById("broadcastMenuItems").innerHTML=html;
-}
+  async function updateStatus(orderNum, sel) {
+    const val = sel.value; sel.className = "s-sel " + val;
+    const tr = sel.closest("tr"); if (tr) tr.dataset.status = val;
+    try {
+      const res = await fetch(`/api/bookings/${orderNum}/confirmation`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirmation: val }) });
+      if (!res.ok) throw new Error();
+      sel.dataset.orig = val;
+      const row = _rows.find(r => r.order_number === orderNum); if (row) row.confirmation_status = val;
+      renderStats();
+    } catch (e2) { alert("Failed to update status."); sel.value = sel.dataset.orig; sel.className = "s-sel " + sel.dataset.orig; }
+  }
 
-async function openBroadcast(group,status) {
-  document.getElementById("broadcastMenu").style.display="none"; _broadcastMenuOpen=false;
-  _broadcastGroup=group; _broadcastStatus=status;
-  const v=_visible();
-  _broadcastRecipients=v.filter(r=>{const gm=group==="general"?!r.mtlv_eligible:r.mtlv_eligible;const sm=status==="all"?true:(r.confirmation_status||"pending")===status;return gm&&sm;});
-  if(!_broadcastTemplates.length){const res=await fetch(`/booking-notes/templates/${MODULE}`);const data=await res.json();_broadcastTemplates=data.templates;const sel=document.getElementById("broadcastTemplate");sel.innerHTML='<option value="">— Select template —</option>';_broadcastTemplates.forEach(t=>{sel.innerHTML+=`<option value="${t.name}">${t.label}</option>`;});}
-  document.getElementById("broadcastSubtitle").textContent=`${group==="general"?"General":"MTLV"} · ${{all:"All",pending:"Pending",yes:"Yes",modify:"Modify"}[status]||status} · ${_getDate()}`;
-  document.getElementById("recipientCount").textContent=`${_broadcastRecipients.length} recipient(s)`;
-  document.getElementById("recipientList").innerHTML=_broadcastRecipients.map((r,i)=>`<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 6px;background:#fff;border-radius:4px;border:1px solid #eee;"><input type="checkbox" class="rec-check" data-idx="${i}" checked><span style="flex:1;font-weight:500;">${e(r.guest_name)}</span><span style="color:#888;">${e(r.phone||r.email||"—")}</span></div>`).join("");
-  document.getElementById("broadcastOverlay").style.display="flex";
-}
-function onTemplateChange(){const sel=document.getElementById("broadcastTemplate");const t=_broadcastTemplates.find(t=>t.name===sel.value);if(t)document.getElementById("broadcastBody").value=t.body;}
-function closeBroadcast(){document.getElementById("broadcastOverlay").style.display="none";}
-async function sendBroadcast(){
-  const body=document.getElementById("broadcastBody").value.trim(); if(!body){alert("Please enter a message.");return;}
-  const idxs=Array.from(document.querySelectorAll(".rec-check:checked")).map(c=>parseInt(c.dataset.idx));
-  const recipients=idxs.map(i=>_broadcastRecipients[i]); if(!recipients.length){alert("No recipients selected.");return;}
-  const btn=document.getElementById("broadcastSendBtn"); btn.disabled=true; btn.textContent="Sending...";
-  try{const res=await fetch("/booking-notes/broadcast/send",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({module:MODULE,group_filter:_broadcastGroup,status_filter:_broadcastStatus,tour_date:_getDate(),template_name:document.getElementById("broadcastTemplate").value||null,message_body:body,recipients,send_sms:document.getElementById("bcastSms").checked,send_email:document.getElementById("bcastEmail").checked})});const data=await res.json();closeBroadcast();alert(`Broadcast sent!\nSMS: ${data.sms_sent} sent, ${data.sms_failed} failed\nEmail: ${data.email_sent} sent, ${data.email_failed} failed`);}
-  catch(e2){alert("Send failed.");}
-  finally{btn.disabled=false;btn.textContent="📣 Send to all";}
-}
+  function autoResize(el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; }
+  function markDirty(el) {
+    el.classList.toggle("dirty", el.value !== el.dataset.orig);
+    document.getElementById("notes-hdr").classList.toggle("has-dirty", !!document.querySelector(".notes-input.dirty"));
+  }
+  async function saveNotes(orderNum, el) {
+    if (!el.classList.contains("dirty")) return;
+    try {
+      await fetch(`/api/bookings/${orderNum}/notes`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ notes: el.value }) });
+      el.classList.remove("dirty"); el.dataset.orig = el.value;
+      if (!document.querySelector(".notes-input.dirty")) document.getElementById("notes-hdr").classList.remove("has-dirty");
+    } catch (e2) { }
+  }
 
-async function openNotes(bookingId,orderNum,name){_currentBookingId=bookingId;document.getElementById("notesTitle").textContent=`Order ${orderNum}`;document.getElementById("notesSubtitle").textContent=name;document.getElementById("noteInput").value="";document.getElementById("notesOverlay").style.display="flex";await fetchNotes();_pollTimer=setInterval(fetchNotes,20000);}
-function closeNotes(){document.getElementById("notesOverlay").style.display="none";_currentBookingId=null;if(_pollTimer){clearInterval(_pollTimer);_pollTimer=null;}}
-async function fetchNotes(){if(!_currentBookingId)return;try{const res=await fetch(`/booking-notes/${_currentBookingId}`);const data=await res.json();renderNotes(data.notes);}catch(e2){}}
-function renderNotes(notes){
-  const container=document.getElementById("notesMessages");
-  if(!notes||!notes.length){document.getElementById("notesEmpty").style.display="block";return;}
-  document.getElementById("notesEmpty").style.display="none";
-  const sm={staff_note:{bg:"#e8f4fd",label:"Note",color:"#0c5460"},sms_out:{bg:"#d4edda",label:"SMS sent",color:"#155724"},email_out:{bg:"#d1ecf1",label:"Email sent",color:"#0c5460"},guest_reply:{bg:"#fff3cd",label:"Guest reply",color:"#856404"}};
-  container.innerHTML=notes.map(n=>{const s=sm[n.direction]||{bg:"#f0f0f0",label:n.direction,color:"#333"};return `<div style="background:${s.bg};border-radius:8px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-size:11px;font-weight:600;color:${s.color};background:rgba(0,0,0,.06);padding:1px 7px;border-radius:20px;">${s.label}</span><span style="font-size:11px;color:#888;">${e(n.author_username)}</span><span style="font-size:11px;color:#aaa;margin-left:auto;">${e(n.created_at)}</span></div><div style="font-size:13px;color:#212529;white-space:pre-wrap;">${e(n.body)}</div></div>`;}).join("")+'<div id="notesEmpty" style="display:none;"></div>';
-  container.scrollTop=container.scrollHeight;
-  const tr=document.querySelector(`tr[data-booking-id="${_currentBookingId}"]`);
-  if(tr){const span=tr.querySelectorAll("td")[15]?.querySelector("button span");if(span){span.style.background="#1a3a5c";span.style.color="#fff";span.textContent=notes.length;}}
-}
-async function submitNote(dir){
-  const body=document.getElementById("noteInput").value.trim(); if(!body||!_currentBookingId)return;
-  try{await fetch(`/booking-notes/${_currentBookingId}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({body,direction:dir,send_sms:document.getElementById("sendSmsCheck").checked,send_email:document.getElementById("sendEmailCheck").checked})});document.getElementById("noteInput").value="";await fetchNotes();}
-  catch(e2){alert("Failed to save note.");}
-}
+  function openLunch(order, t, v, b) { document.getElementById("lunch-order").value = order; document.getElementById("lunch-t").value = t; document.getElementById("lunch-v").value = v; document.getElementById("lunch-b").value = b; document.getElementById("lunchModal").style.display = "flex"; }
+  function closeLunch() { document.getElementById("lunchModal").style.display = "none"; }
+  async function saveLunch() {
+    const order = document.getElementById("lunch-order").value;
+    const payload = { lunch_turkey: parseInt(document.getElementById("lunch-t").value) || 0, lunch_veggie: parseInt(document.getElementById("lunch-v").value) || 0, lunch_beef: parseInt(document.getElementById("lunch-b").value) || 0 };
+    try { await fetch(`/api/bookings/${order}/lunch`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); closeLunch(); loadData(); }
+    catch (e2) { alert("Failed to save lunch."); }
+  }
 
-function e(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+  function exportCSV() {
+    const v = _visible(); const cols = ["order_number", "confirmation_status", "tour_type", "tour_date", "guest_name", "phone", "quantities", "email_status", "sms_status", "lunch_turkey", "lunch_veggie", "lunch_beef", "notes", "submitted_at"];
+    const csv = [cols.join(","), ...v.map(r => cols.map(c => `"${String(r[c] ?? '').replace(/"/g, '""')}"`).join(","))].join("\n");
+    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" })), download: `tour_tracking_${_getDate()}.csv` }); a.click();
+  }
 
-document.getElementById("date-input").value = _today();
-loadData();
+  (function () {
+    let startX, startW, th;
+    document.querySelectorAll(".col-resizer").forEach(r => {
+      r.addEventListener("mousedown", ev => {
+        th = r.parentElement; startX = ev.clientX; startW = th.offsetWidth; r.classList.add("active");
+        const onMove = e2 => { th.style.width = Math.max(40, startW + e2.clientX - startX) + "px"; };
+        const onUp = () => { r.classList.remove("active"); document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); };
+        document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp); ev.preventDefault();
+      });
+    });
+  })();
+
+  async function toggleBroadcastMenu() {
+    const menu = document.getElementById("broadcastMenu"); _broadcastMenuOpen = !_broadcastMenuOpen; menu.style.display = _broadcastMenuOpen ? "block" : "none";
+    if (_broadcastMenuOpen) { document.getElementById("broadcastMenuTitle").textContent = `Tour — ${_getDate()}`; renderBroadcastMenu(); }
+  }
+  document.addEventListener("click", ev => { if (_broadcastMenuOpen && !document.getElementById("broadcastWrap").contains(ev.target)) { document.getElementById("broadcastMenu").style.display = "none"; _broadcastMenuOpen = false; } });
+
+  function renderBroadcastMenu() {
+    const v = _visible(); const general = v.filter(r => !r.mtlv_eligible); const mtlv = v.filter(r => r.mtlv_eligible);
+    function badge(label, color, bg) { return `<span style="font-size:11px;font-weight:600;color:${color};background:${bg};padding:1px 7px;border-radius:20px;">${label}</span>`; }
+    function row(group, status, badgeHtml, count) { if (!count) return ""; return `<div onclick="openBroadcast('${group}','${status}')" style="display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;font-size:13px;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">${badgeHtml}<span style="flex:1;">${status === "all" ? "All guests" : status.charAt(0).toUpperCase() + status.slice(1)}</span><span style="color:#888;font-size:12px;">${count} guests</span></div>`; }
+    let html = "";
+    if (general.length) { html += `<div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;">General — ${general.length} guests</div>`; html += row("general", "all", badge("All", "#495057", "#e9ecef"), general.length); html += row("general", "pending", badge("Pending", "#856404", "#fff3cd"), general.filter(r => !r.confirmation_status || r.confirmation_status === "pending").length); html += row("general", "yes", badge("Yes", "#155724", "#d4edda"), general.filter(r => r.confirmation_status === "yes").length); html += row("general", "modify", badge("Modify", "#004085", "#cce5ff"), general.filter(r => r.confirmation_status === "modify").length); if (mtlv.length) html += `<div style="height:1px;background:#f0f0f0;margin:4px 0;"></div>`; }
+    if (mtlv.length) { html += `<div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;">MTLV — ${mtlv.length} guests</div>`; html += row("mtlv", "all", badge("All", "#495057", "#e9ecef"), mtlv.length); html += row("mtlv", "pending", badge("Pending", "#856404", "#fff3cd"), mtlv.filter(r => !r.confirmation_status || r.confirmation_status === "pending").length); html += row("mtlv", "yes", badge("Yes", "#155724", "#d4edda"), mtlv.filter(r => r.confirmation_status === "yes").length); }
+    if (!html) html = '<div style="padding:8px 14px;font-size:13px;color:#aaa;">No guests found</div>';
+    document.getElementById("broadcastMenuItems").innerHTML = html;
+  }
+
+  async function openBroadcast(group, status) {
+    document.getElementById("broadcastMenu").style.display = "none"; _broadcastMenuOpen = false;
+    _broadcastGroup = group; _broadcastStatus = status;
+    const v = _visible();
+    _broadcastRecipients = v.filter(r => { const gm = group === "general" ? !r.mtlv_eligible : r.mtlv_eligible; const sm = status === "all" ? true : (r.confirmation_status || "pending") === status; return gm && sm; });
+    if (!_broadcastTemplates.length) { const res = await fetch(`/booking-notes/templates/${MODULE}`); const data = await res.json(); _broadcastTemplates = data.templates; const sel = document.getElementById("broadcastTemplate"); sel.innerHTML = '<option value="">— Select template —</option>'; _broadcastTemplates.forEach(t => { sel.innerHTML += `<option value="${t.name}">${t.label}</option>`; }); }
+    const _sLabel = { all: "All", pending: "Pending", yes: "Yes", modify: "Modify" };
+    document.getElementById("broadcastSubtitle").textContent = `${group === "general" ? "General" : "MTLV"} · ${_sLabel[status] || status} · ${_getDate()}`;
+    document.getElementById("recipientCount").textContent = `${_broadcastRecipients.length} recipient(s)`;
+    document.getElementById("recipientList").innerHTML = _broadcastRecipients.map((r, i) => `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 6px;background:#fff;border-radius:4px;border:1px solid #eee;"><input type="checkbox" class="rec-check" data-idx="${i}" checked><span style="flex:1;font-weight:500;">${e(r.guest_name)}</span><span style="color:#888;">${e(r.phone || r.email || "—")}</span></div>`).join("");
+    document.getElementById("broadcastOverlay").style.display = "flex";
+  }
+  function onTemplateChange() { const sel = document.getElementById("broadcastTemplate"); const t = _broadcastTemplates.find(t => t.name === sel.value); if (t) document.getElementById("broadcastBody").value = t.body; }
+  function closeBroadcast() { document.getElementById("broadcastOverlay").style.display = "none"; }
+  async function sendBroadcast() {
+    const body = document.getElementById("broadcastBody").value.trim(); if (!body) { alert("Please enter a message."); return; }
+    const idxs = Array.from(document.querySelectorAll(".rec-check:checked")).map(c => parseInt(c.dataset.idx));
+    const recipients = idxs.map(i => _broadcastRecipients[i]); if (!recipients.length) { alert("No recipients selected."); return; }
+    const btn = document.getElementById("broadcastSendBtn"); btn.disabled = true; btn.textContent = "Sending...";
+    try { const res = await fetch("/booking-notes/broadcast/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ module: MODULE, group_filter: _broadcastGroup, status_filter: _broadcastStatus, tour_date: _getDate(), template_name: document.getElementById("broadcastTemplate").value || null, message_body: body, recipients, send_sms: document.getElementById("bcastSms").checked, send_email: document.getElementById("bcastEmail").checked }) }); const data = await res.json(); closeBroadcast(); alert(`Broadcast sent!\nSMS: ${data.sms_sent} sent, ${data.sms_failed} failed\nEmail: ${data.email_sent} sent, ${data.email_failed} failed`); }
+    catch (e2) { alert("Send failed."); }
+    finally { btn.disabled = false; btn.textContent = "📣 Send to all"; }
+  }
+
+  async function openNotes(bookingId, orderNum, name) { _currentBookingId = bookingId; document.getElementById("notesTitle").textContent = `Order ${orderNum}`; document.getElementById("notesSubtitle").textContent = name; document.getElementById("noteInput").value = ""; document.getElementById("notesOverlay").style.display = "flex"; await fetchNotes(); _pollTimer = setInterval(fetchNotes, 20000); }
+  function closeNotes() { document.getElementById("notesOverlay").style.display = "none"; _currentBookingId = null; if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; } }
+  async function fetchNotes() { if (!_currentBookingId) return; try { const res = await fetch(`/booking-notes/${_currentBookingId}`); const data = await res.json(); renderNotes(data.notes); } catch (e2) { } }
+  function renderNotes(notes) {
+    const container = document.getElementById("notesMessages");
+    if (!notes || !notes.length) { document.getElementById("notesEmpty").style.display = "block"; return; }
+    document.getElementById("notesEmpty").style.display = "none";
+    const sm = { staff_note: { bg: "#e8f4fd", label: "Note", color: "#0c5460" }, sms_out: { bg: "#d4edda", label: "SMS sent", color: "#155724" }, email_out: { bg: "#d1ecf1", label: "Email sent", color: "#0c5460" }, guest_reply: { bg: "#fff3cd", label: "Guest reply", color: "#856404" } };
+    container.innerHTML = notes.map(n => { const s = sm[n.direction] || { bg: "#f0f0f0", label: n.direction, color: "#333" }; return `<div style="background:${s.bg};border-radius:8px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-size:11px;font-weight:600;color:${s.color};background:rgba(0,0,0,.06);padding:1px 7px;border-radius:20px;">${s.label}</span><span style="font-size:11px;color:#888;">${e(n.author_username)}</span><span style="font-size:11px;color:#aaa;margin-left:auto;">${e(n.created_at)}</span></div><div style="font-size:13px;color:#212529;white-space:pre-wrap;">${e(n.body)}</div></div>`; }).join("") + '<div id="notesEmpty" style="display:none;"></div>';
+    container.scrollTop = container.scrollHeight;
+    const tr = document.querySelector(`tr[data-booking-id="${_currentBookingId}"]`);
+    if (tr) { const span = tr.querySelectorAll("td")[15]?.querySelector("button span"); if (span) { span.style.background = "#1a3a5c"; span.style.color = "#fff"; span.textContent = notes.length; } }
+  }
+  async function submitNote(dir) {
+    const body = document.getElementById("noteInput").value.trim(); if (!body || !_currentBookingId) return;
+    try { await fetch(`/booking-notes/${_currentBookingId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ body, direction: dir, send_sms: document.getElementById("sendSmsCheck").checked, send_email: document.getElementById("sendEmailCheck").checked }) }); document.getElementById("noteInput").value = ""; await fetchNotes(); }
+    catch (e2) { alert("Failed to save note."); }
+  }
+
+  function e(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+
+  document.getElementById("date-input").value = _today();
+  loadData();
 </script>
 {% endblock %}
