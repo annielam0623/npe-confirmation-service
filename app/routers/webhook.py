@@ -630,7 +630,7 @@ async def twilio_inbound_sms(request: Request, db: AsyncSession = Depends(get_db
     await db.execute(
         _text("""
             INSERT INTO booking_notes
-              (booking_id, author, text, direction, channel, created_at)
+              (booking_id, author_username, body, direction, channel, created_at)
             VALUES
               (:booking_id, 'guest', :body, 'sms_in', 'sms', :created_at)
         """),
