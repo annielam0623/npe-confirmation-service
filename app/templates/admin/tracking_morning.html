@@ -1,289 +1,729 @@
-{# tracking_morning.html — v11 additions #}
-{# Same pattern as tracking_tour.html but module=morning, no MTLV, no modify status #}
+<!DOCTYPE html>
+<html lang="en">
 
-{# ── 1. Broadcast button in page header ── #}
-<div style="position:relative;display:inline-block;">
-  <div style="display:inline-flex;align-items:stretch;border-radius:8px;border:1px solid #f09595;overflow:hidden;">
-    <button onclick="toggleBroadcastMenu()" style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px;background:#fcebeb;color:#791f1f;border:none;cursor:pointer;font-weight:500;">
-      &#128227; Broadcast
-    </button>
-    <button onclick="toggleBroadcastMenu()" style="font-size:13px;padding:6px 9px;background:#f7c1c1;color:#791f1f;border:none;border-left:1px solid #f09595;cursor:pointer;">&#8964;</button>
-  </div>
-  <div id="broadcastMenu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:4px 0;min-width:220px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.08);">
-    <div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Morning Pickup — {{ display_date }}</div>
-    <div id="broadcastMenuItems">
-      <div style="padding:8px 14px;font-size:13px;color:#aaa;">Loading...</div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Morning Pickup Tracking — NPE</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0d1b2e;
+      color: #e0eaf6;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      background: #0a1628;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .topbar-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .back-btn {
+      font-size: 12px;
+      color: #7a9bbe;
+      text-decoration: none;
+      padding: 4px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+    }
+
+    .back-btn:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    .container {
+      width: 100%;
+      padding: 20px 24px;
+    }
+
+    .date-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .btn-nav {
+      width: 32px;
+      height: 32px;
+      border-radius: 7px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: #1a2f4a;
+      cursor: pointer;
+      font-size: 16px;
+      color: #a0c0e0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-nav:hover {
+      background: #1e3a5f;
+      color: #fff;
+    }
+
+    .date-display {
+      background: #1a2f4a;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 10px;
+      border-radius: 7px;
+      font-size: 14px;
+      font-weight: 600;
+      min-width: 140px;
+      text-align: center;
+      color: #fff;
+      cursor: pointer;
+      outline: none;
+      font-family: inherit;
+      color-scheme: dark;
+    }
+
+    .date-display:focus {
+      border-color: #185FA5;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 14px;
+      border-radius: 7px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      font-size: 12px;
+      cursor: pointer;
+      background: #1a2f4a;
+      color: #a0c0e0;
+      text-decoration: none;
+      transition: background 0.1s;
+    }
+
+    .btn:hover {
+      background: #1e3a5f;
+      color: #fff;
+    }
+
+    .btn-today {
+      background: #c47a12;
+      border-color: #c47a12;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .btn-today:hover {
+      background: #a86510;
+    }
+
+    .btn-refresh {
+      background: #1a6b3a;
+      border-color: #1a6b3a;
+      color: #fff;
+    }
+
+    .btn-refresh:hover {
+      background: #145530;
+    }
+
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+
+    .pill {
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: #1a2f4a;
+      color: #7a9bbe;
+      white-space: nowrap;
+    }
+
+    .pill:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #fff;
+    }
+
+    .pill.active {
+      background: #185FA5;
+      border-color: #185FA5;
+      color: #fff;
+    }
+
+    .stats-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      background: #1a2f4a;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 12px 20px;
+      text-align: center;
+      min-width: 100px;
+    }
+
+    .stat-card .num {
+      font-size: 26px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .stat-card .lbl {
+      font-size: 11px;
+      color: #7a9bbe;
+      margin-top: 2px;
+    }
+
+    .stat-card.checked-in .num {
+      color: #2ecc71;
+    }
+
+    .stat-card.pending-in .num {
+      color: #e67e22;
+    }
+
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .filter-bar input {
+      padding: 7px 12px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 7px;
+      font-size: 13px;
+      background: #1a2f4a;
+      color: #e0eaf6;
+      width: 220px;
+    }
+
+    .filter-bar input:focus {
+      outline: none;
+      border-color: #185FA5;
+    }
+
+    .records-count {
+      font-size: 12px;
+      color: #5a7a9a;
+      margin-left: auto;
+    }
+
+    /* Table */
+    .table-card {
+      background: #1a2f4a;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .table-header {
+      padding: 12px 16px;
+      background: #0f2035;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .table-header span {
+      font-size: 13px;
+      font-weight: 600;
+      color: #7ab3e0;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+    }
+
+    table.track-tbl {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      table-layout: auto;
+    }
+
+    .track-tbl thead td {
+      padding: 9px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #7a9bbe;
+      background: #0f2035;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      position: relative;
+      user-select: none;
+      cursor: grab;
+    }
+
+    .track-tbl thead td.dragging {
+      opacity: 0.4;
+      background: #0a1e35;
+    }
+
+    .track-tbl thead td.drag-over {
+      border-left: 2px solid #5ba3d9;
+    }
+
+    .track-tbl tbody tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .track-tbl tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    .track-tbl tbody tr:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .track-tbl tbody td {
+      padding: 10px 12px;
+      color: #c8ddf0;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    /* Col resizer handle */
+    .col-resizer {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      cursor: col-resize;
+      z-index: 2;
+      background: transparent;
+    }
+
+    .col-resizer:hover,
+    .col-resizer.resizing {
+      background: rgba(100, 160, 220, 0.4);
+    }
+
+    .sp {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .sp-checkedin {
+      background: rgba(46, 204, 113, 0.15);
+      color: #2ecc71;
+    }
+
+    .sp-pending {
+      background: rgba(230, 126, 34, 0.15);
+      color: #e67e22;
+    }
+
+    .sp-delivered {
+      background: rgba(52, 152, 219, 0.15);
+      color: #3498db;
+    }
+
+    .sp-sent {
+      background: rgba(155, 89, 182, 0.15);
+      color: #9b59b6;
+    }
+
+    .sp-undelivered {
+      background: rgba(231, 76, 60, 0.15);
+      color: #e74c3c;
+    }
+
+    .sp-failed {
+      background: rgba(231, 76, 60, 0.15);
+      color: #e74c3c;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <a href="/admin/manifests" class="back-btn">← Back</a>
+      <span class="topbar-title">🔵 Morning Pickup Tracking</span>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn" onclick="exportExcel()">⬇ Export</button>
+      <button class="btn btn-refresh" onclick="loadData()">↻ Refresh</button>
     </div>
   </div>
-</div>
 
-{# ── 2. Notes column header ── #}
-<th style="padding:10px 12px;text-align:center;white-space:nowrap;color:#495057;">Notes</th>
+  <div class="container">
+    <div class="date-nav">
+      <button class="btn-nav" onclick="changeDate(-1)">‹</button>
+      <input type="date" class="date-display" id="date-display" onchange="onDatePick(this.value)"
+        onclick="try{this.showPicker()}catch(e){}">
+      <button class="btn-nav" onclick="changeDate(1)">›</button>
+      <button class="btn btn-today" onclick="goToday()">Today</button>
+    </div>
 
-{# ── 3. Notes bubble cell (in each row) ── #}
-<td style="padding:9px 12px;text-align:center;">
-  <button onclick="openNotes({{ b.id }}, '{{ b.order_number }}', '{{ b.first_name }} {{ b.last_name }}')"
-    style="background:none;border:none;cursor:pointer;padding:4px;">
-    {% if b.notes_count and b.notes_count > 0 %}
-      <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#1a3a5c;color:#fff;border-radius:50%;font-size:11px;font-weight:600;">{{ b.notes_count }}</span>
-    {% else %}
-      <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#e9ecef;color:#495057;border-radius:50%;font-size:16px;">+</span>
-    {% endif %}
-  </button>
-</td>
+    <div class="pills" id="pills-container">
+      <span class="pill active" data-driver="all" onclick="filterDriver('all',this)">All</span>
+    </div>
 
-{# ── 4. Broadcast confirm dialog ── #}
-<div id="broadcastOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:12px;width:560px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
-    <div style="background:#7f1d1d;padding:14px 18px;display:flex;align-items:center;">
-      <div style="flex:1;">
-        <div style="color:#fff;font-weight:600;font-size:14px;">&#128227; Broadcast message</div>
-        <div style="color:#fca5a5;font-size:12px;" id="broadcastSubtitle"></div>
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="num" id="stat-total">—</div>
+        <div class="lbl">Total</div>
       </div>
-      <button onclick="closeBroadcast()" style="background:none;border:none;color:#fca5a5;font-size:20px;cursor:pointer;">&times;</button>
-    </div>
-    <div style="padding:16px;overflow-y:auto;flex:1;">
-      <div style="margin-bottom:12px;">
-        <label style="font-size:12px;font-weight:500;color:#495057;display:block;margin-bottom:4px;">Template</label>
-        <select id="broadcastTemplate" onchange="onTemplateChange()" style="width:100%;padding:7px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;">
-          <option value="">— Select template —</option>
-        </select>
+      <div class="stat-card checked-in">
+        <div class="num" id="stat-checkedin">—</div>
+        <div class="lbl">Checked In</div>
       </div>
-      <div style="margin-bottom:12px;">
-        <label style="font-size:12px;font-weight:500;color:#495057;display:block;margin-bottom:4px;">Message <span style="font-weight:400;color:#888;">(supports {first_name} and {tour_date})</span></label>
-        <textarea id="broadcastBody" rows="4" style="width:100%;border:1px solid #dee2e6;border-radius:6px;padding:8px 10px;font-size:13px;resize:vertical;box-sizing:border-box;font-family:inherit;"></textarea>
-      </div>
-      <div style="display:flex;gap:16px;margin-bottom:14px;">
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="bcastSms" checked> Send SMS</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="bcastEmail" checked> Send Email</label>
-      </div>
-      <div style="background:#f8f9fa;border:1px solid #eee;border-radius:8px;padding:10px;max-height:220px;overflow-y:auto;">
-        <div style="font-size:12px;font-weight:500;color:#495057;margin-bottom:8px;" id="recipientCount"></div>
-        <div id="recipientList" style="display:flex;flex-direction:column;gap:4px;"></div>
+      <div class="stat-card pending-in">
+        <div class="num" id="stat-pending">—</div>
+        <div class="lbl">Pending</div>
       </div>
     </div>
-    <div style="padding:12px 16px;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:8px;">
-      <button onclick="closeBroadcast()" style="padding:7px 16px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:13px;cursor:pointer;">Cancel</button>
-      <button onclick="sendBroadcast()" id="broadcastSendBtn" style="padding:7px 16px;background:#7f1d1d;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:500;">&#128227; Send to all</button>
-    </div>
-  </div>
-</div>
 
-{# ── 5. Notes dialog ── #}
-<div id="notesOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:12px;width:520px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
-    <div style="background:#1a3a5c;padding:14px 18px;display:flex;align-items:center;gap:10px;">
-      <div style="flex:1;">
-        <div style="color:#fff;font-weight:600;font-size:14px;" id="notesTitle">Notes</div>
-        <div style="color:#a8c4e0;font-size:12px;" id="notesSubtitle"></div>
+    <div class="filter-bar">
+      <input type="text" id="search-input" placeholder="Search order #, name, phone…" oninput="applyFilter()">
+      <span class="records-count" id="records-count">— records</span>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header">
+        <span>Check-in Log</span>
+        <span style="font-size:12px;color:#5a7a9a;" id="table-meta"></span>
       </div>
-      <button onclick="closeNotes()" style="background:none;border:none;color:#a8c4e0;font-size:20px;cursor:pointer;">&times;</button>
-    </div>
-    <div id="notesMessages" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:380px;background:#f8f9fa;">
-      <div style="text-align:center;color:#aaa;font-size:13px;padding:20px 0;" id="notesEmpty">No notes yet.</div>
-    </div>
-    <div style="padding:12px 14px;border-top:1px solid #eee;background:#fff;">
-      <textarea id="noteInput" rows="3" placeholder="Write a note or message to guest..."
-        style="width:100%;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;font-size:13px;resize:none;box-sizing:border-box;outline:none;font-family:inherit;"></textarea>
-      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#495057;cursor:pointer;"><input type="checkbox" id="sendSmsCheck" checked> SMS to guest</label>
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#495057;cursor:pointer;"><input type="checkbox" id="sendEmailCheck"> Email to guest</label>
-        <div style="margin-left:auto;display:flex;gap:8px;">
-          <button onclick="submitNote('staff_note')" style="padding:6px 14px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:12px;cursor:pointer;color:#495057;">Save note</button>
-          <button onclick="submitNote('sms_out')" style="padding:6px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;">Send &#8594;</button>
-        </div>
+      <div class="table-scroll">
+        <table class="track-tbl">
+          <thead>
+            <tr id="thead-row"></tr>
+          </thead>
+          <tbody id="track-tbody">
+            <tr>
+              <td colspan="12" style="padding:28px;text-align:center;color:#4a6a8a;">Loading…</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
-</div>
 
-{# ── 6. Script block ── #}
-<script>
-const TOUR_DATE = "{{ tour_date }}";
-const MODULE = "morning";
+  <script>
+    // ── Column definitions (order = display order, key = data field) ──
+    const COL_DEFS = [
+      { key: 'order_number', label: 'Order #' },
+      { key: 'name', label: 'Name' },
+      { key: 'phone', label: 'Phone' },
+      { key: 'quantities', label: 'PAX' },
+      { key: 'vehicle_no', label: 'Bus #' },
+      { key: 'driver', label: 'Driver' },
+      { key: 'pickup_time', label: 'Pickup Time' },
+      { key: 'pickup_location', label: 'Pickup Location' },
+      { key: 'sms_status', label: 'SMS Status' },
+      { key: 'email_status', label: 'Email Status' },
+      { key: 'agent_name', label: 'Agent' },
+      { key: 'checkin_status', label: 'Check-in' },
+      { key: 'submitted_at', label: 'Check-in Time' },
+    ];
 
-let _currentBookingId = null;
-let _pollTimer = null;
-let _broadcastRecipients = [];
-let _broadcastGroup = null;
-let _broadcastStatus = null;
-let _broadcastTemplates = [];
-let _broadcastMenuOpen = false;
-let _broadcastCounts = null;
+    const STORAGE_KEY = 'npe_morning_col_order';
+    let colOrder = loadColOrder();
 
-function _getRows() {
-  const rows = [];
-  document.querySelectorAll("tbody tr[data-booking-id]").forEach(tr => {
-    rows.push({
-      booking_id:    parseInt(tr.dataset.bookingId),
-      order_number:  tr.dataset.order,
-      customer_name: tr.dataset.name,
-      first_name:    tr.dataset.name.split(" ")[0],
-      phone:         tr.dataset.phone,
-      email:         tr.dataset.email,
-      status:        tr.dataset.status,
-      mtlv:          "no",
-    });
-  });
-  return rows;
-}
+    function loadColOrder() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const keys = JSON.parse(saved);
+          // Validate: must contain all keys
+          if (keys.length === COL_DEFS.length && COL_DEFS.every(c => keys.includes(c.key))) return keys;
+        }
+      } catch (e) { }
+      return COL_DEFS.map(c => c.key);
+    }
 
-async function toggleBroadcastMenu() {
-  const menu = document.getElementById("broadcastMenu");
-  _broadcastMenuOpen = !_broadcastMenuOpen;
-  menu.style.display = _broadcastMenuOpen ? "block" : "none";
-  if (_broadcastMenuOpen && !_broadcastCounts) await loadBroadcastCounts();
-}
+    function saveColOrder() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(colOrder));
+    }
 
-document.addEventListener("click", e => {
-  if (_broadcastMenuOpen && !e.target.closest('[onclick="toggleBroadcastMenu()"]') && !document.getElementById("broadcastMenu").contains(e.target)) {
-    document.getElementById("broadcastMenu").style.display = "none";
-    _broadcastMenuOpen = false;
-  }
-});
+    function getOrderedCols() {
+      return colOrder.map(k => COL_DEFS.find(c => c.key === k)).filter(Boolean);
+    }
 
-async function loadBroadcastCounts() {
-  try {
-    const res = await fetch(`/booking-notes/broadcast/counts?module=${MODULE}&tour_date=${TOUR_DATE}`);
-    const data = await res.json();
-    _broadcastCounts = data.counts;
-    renderBroadcastMenu();
-  } catch(e) {
-    document.getElementById("broadcastMenuItems").innerHTML = '<div style="padding:8px 14px;font-size:13px;color:#dc3545;">Failed to load</div>';
-  }
-}
+    // ── Build thead ──
+    function buildThead() {
+      const tr = document.getElementById('thead-row');
+      tr.innerHTML = '';
+      getOrderedCols().forEach(col => {
+        const td = document.createElement('td');
+        td.dataset.key = col.key;
+        td.innerHTML = col.label + '<div class="col-resizer"></div>';
+        td.draggable = true;
+        tr.appendChild(td);
+      });
+      initColDrag();
+      initColResize();
+    }
 
-function renderBroadcastMenu() {
-  const c = _broadcastCounts;
-  const badge = (label, color, bg) =>
-    `<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${bg};color:${color};font-weight:500;">${label}</span>`;
-  const row = (status, badgeHtml, count) =>
-    count > 0
-    ? `<div onclick="openBroadcast('general','${status}')" style="padding:7px 14px;font-size:13px;color:#212529;display:flex;align-items:center;gap:8px;cursor:pointer;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">
-        ${badgeHtml}<span style="margin-left:auto;font-size:11px;color:#888;">${count} guests</span>
-      </div>` : "";
+    // ── Cell renderer ──
+    function renderCell(r, key) {
+      switch (key) {
+        case 'order_number':
+          return `<td style="color:#5ba3d9;font-weight:600;">${r.order_number || '—'}</td>`;
+        case 'name':
+          return `<td>${r.name || '—'}</td>`;
+        case 'phone':
+          return `<td style="font-size:12px;color:#a0c0e0;">${r.phone || '—'}</td>`;
+        case 'quantities':
+          return `<td style="text-align:center;font-weight:600;">${r.quantities || '—'}</td>`;
+        case 'vehicle_no':
+          return `<td style="font-weight:600;">${r.vehicle_no || '—'}</td>`;
+        case 'driver':
+          return `<td>${r.driver || '—'}</td>`;
+        case 'pickup_time':
+          return `<td style="font-weight:600;">${r.pickup_time || '—'}</td>`;
+        case 'pickup_location':
+          return `<td style="font-size:12px;">${r.pickup_location || '—'}</td>`;
+        case 'sms_status': {
+          const cls = smsStatusClass(r.sms_status);
+          return `<td><span class="sp ${cls}">${smsLabel(r.sms_status)}</span></td>`;
+        }
+        case 'email_status': {
+          const cls = emailStatusClass(r.email_status);
+          return `<td><span class="sp ${cls}">${emailLabel(r.email_status)}</span></td>`;
+        }
+        case 'agent_name':
+          return `<td style="font-size:12px;color:#a0c0e0;">${r.agent_name || '—'}</td>`;
+        case 'checkin_status': {
+          const cls = r.checkin_status === 'checked_in' ? 'sp-checkedin' : 'sp-pending';
+          return `<td><span class="sp ${cls}">${r.checkin_status === 'checked_in' ? '✓ Checked In' : '⏳ Pending'}</span></td>`;
+        }
+        case 'submitted_at': {
+          const val = r.submitted_at ? new Date(r.submitted_at).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
+          return `<td style="font-size:11px;color:#7a9bbe;">${val}</td>`;
+        }
+        default: return `<td>—</td>`;
+      }
+    }
 
-  let html = "";
-  if (c.general.all > 0) {
-    html += row("all",     badge("All","#495057","#e9ecef"),       c.general.all);
-    html += row("pending", badge("Pending","#856404","#fff3cd"),   c.general.pending);
-    html += row("yes",     badge("Yes","#155724","#d4edda"),       c.general.yes);
-  }
-  if (!html) html = '<div style="padding:8px 14px;font-size:13px;color:#aaa;">No guests found</div>';
-  document.getElementById("broadcastMenuItems").innerHTML = html;
-}
+    // ── Column drag to reorder ──
+    let dragSrcKey = null;
 
-async function openBroadcast(group, status) {
-  document.getElementById("broadcastMenu").style.display = "none";
-  _broadcastMenuOpen = false;
-  _broadcastGroup = group;
-  _broadcastStatus = status;
+    function initColDrag() {
+      const tds = document.querySelectorAll('#thead-row td');
+      tds.forEach(td => {
+        td.addEventListener('dragstart', e => {
+          dragSrcKey = td.dataset.key;
+          td.classList.add('dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        td.addEventListener('dragend', () => {
+          td.classList.remove('dragging');
+          document.querySelectorAll('#thead-row td').forEach(t => t.classList.remove('drag-over'));
+        });
+        td.addEventListener('dragover', e => {
+          e.preventDefault();
+          if (td.dataset.key !== dragSrcKey) td.classList.add('drag-over');
+        });
+        td.addEventListener('dragleave', () => td.classList.remove('drag-over'));
+        td.addEventListener('drop', e => {
+          e.preventDefault();
+          td.classList.remove('drag-over');
+          if (!dragSrcKey || dragSrcKey === td.dataset.key) return;
+          // Reorder colOrder
+          const fromIdx = colOrder.indexOf(dragSrcKey);
+          const toIdx = colOrder.indexOf(td.dataset.key);
+          colOrder.splice(fromIdx, 1);
+          colOrder.splice(toIdx, 0, dragSrcKey);
+          saveColOrder();
+          buildThead();
+          applyFilter(); // re-render rows in new order
+        });
+      });
+    }
 
-  const rows = _getRows();
-  _broadcastRecipients = rows.filter(r => status === "all" ? true : r.status === status);
+    // ── Column resize ──
+    function initColResize() {
+      document.querySelectorAll('#thead-row td').forEach(th => {
+        const resizer = th.querySelector('.col-resizer');
+        if (!resizer) return;
+        let startX, startW;
+        resizer.addEventListener('mousedown', e => {
+          e.stopPropagation(); // don't trigger drag
+          startX = e.clientX;
+          startW = th.offsetWidth;
+          resizer.classList.add('resizing');
+          document.body.style.cursor = 'col-resize';
+          document.body.style.userSelect = 'none';
+          const onMove = e => { th.style.width = Math.max(40, startW + e.clientX - startX) + 'px'; };
+          const onUp = () => {
+            resizer.classList.remove('resizing');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+          };
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+          e.preventDefault();
+        });
+      });
+    }
 
-  if (_broadcastTemplates.length === 0) {
-    const res = await fetch(`/booking-notes/templates/${MODULE}`);
-    const data = await res.json();
-    _broadcastTemplates = data.templates;
-    const sel = document.getElementById("broadcastTemplate");
-    sel.innerHTML = '<option value="">— Select template —</option>';
-    _broadcastTemplates.forEach(t => { sel.innerHTML += `<option value="${t.name}">${t.label}</option>`; });
-  }
+    // ── Data ──
+    const params = new URLSearchParams(location.search);
+    let currentDate = params.get('date') || new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+    let currentDriver = 'all';
+    let allRows = [];
 
-  const statusLabel = {all:"All",pending:"Pending",yes:"Yes"}[status] || status;
-  document.getElementById("broadcastSubtitle").textContent = `${statusLabel} · ${TOUR_DATE}`;
-  document.getElementById("recipientCount").textContent = `${_broadcastRecipients.length} recipient${_broadcastRecipients.length !== 1 ? "s" : ""}`;
+    function onDatePick(val) { currentDate = val; loadData(); }
+    function changeDate(d) {
+      const dt = new Date(currentDate + 'T00:00:00');
+      dt.setDate(dt.getDate() + d);
+      currentDate = dt.toISOString().split('T')[0];
+      document.getElementById('date-display').value = currentDate;
+      loadData();
+    }
+    function goToday() {
+      currentDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+      document.getElementById('date-display').value = currentDate;
+      loadData();
+    }
+    function filterDriver(driver, el) {
+      currentDriver = driver;
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      applyFilter();
+    }
 
-  const list = document.getElementById("recipientList");
-  list.innerHTML = _broadcastRecipients.map((r, i) =>
-    `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 6px;background:#fff;border-radius:4px;border:1px solid #eee;">
-      <input type="checkbox" class="rec-check" data-idx="${i}" checked>
-      <span style="flex:1;font-weight:500;">${r.customer_name}</span>
-      <span style="color:#888;">${r.phone || r.email || "—"}</span>
-    </div>`
-  ).join("");
+    async function loadData() {
+      const cols = getOrderedCols().length;
+      document.getElementById('track-tbody').innerHTML =
+        `<tr><td colspan="${cols}" style="padding:28px;text-align:center;color:#4a6a8a;">Loading…</td></tr>`;
+      try {
+        const res = await fetch(`/api/notifications/morning-pickup/tracking?date=${currentDate}`);
+        const data = await res.json();
+        allRows = data.rows || [];
+        buildDriverPills();
+        applyFilter();
+      } catch (e) {
+        document.getElementById('track-tbody').innerHTML =
+          `<tr><td colspan="${cols}" style="padding:28px;text-align:center;color:#4a6a8a;">Failed to load.</td></tr>`;
+      }
+    }
 
-  document.getElementById("broadcastOverlay").style.display = "flex";
-}
+    function buildDriverPills() {
+      const drivers = [...new Set(allRows.map(r => r.driver).filter(Boolean))];
+      const container = document.getElementById('pills-container');
+      const allPill = `<span class="pill active" data-driver="all" onclick="filterDriver('all',this)">All <span style="opacity:.7;font-size:11px;">${allRows.length}</span></span>`;
+      const driverPills = drivers.map(d => {
+        const cnt = allRows.filter(r => r.driver === d).length;
+        const ci = allRows.filter(r => r.driver === d && r.checkin_status === 'checked_in').length;
+        return `<span class="pill" data-driver="${d}" onclick="filterDriver('${d}',this)">${d}: ${ci}/${cnt}</span>`;
+      }).join('');
+      container.innerHTML = allPill + driverPills;
+    }
 
-function onTemplateChange() {
-  const sel = document.getElementById("broadcastTemplate");
-  const t = _broadcastTemplates.find(t => t.name === sel.value);
-  if (t) document.getElementById("broadcastBody").value = t.body;
-}
+    function applyFilter() {
+      const search = document.getElementById('search-input').value.toLowerCase();
+      let rows = currentDriver === 'all' ? allRows : allRows.filter(r => r.driver === currentDriver);
+      if (search) rows = rows.filter(r =>
+        (r.order_number || '').toLowerCase().includes(search) ||
+        (r.name || '').toLowerCase().includes(search) ||
+        (r.phone || '').toLowerCase().includes(search));
 
-function closeBroadcast() { document.getElementById("broadcastOverlay").style.display = "none"; }
+      document.getElementById('stat-total').textContent = rows.length;
+      document.getElementById('stat-checkedin').textContent = rows.filter(r => r.checkin_status === 'checked_in').length;
+      document.getElementById('stat-pending').textContent = rows.filter(r => r.checkin_status !== 'checked_in').length;
+      document.getElementById('records-count').textContent = `${rows.length} records`;
 
-async function sendBroadcast() {
-  const body = document.getElementById("broadcastBody").value.trim();
-  if (!body) { alert("Please enter a message."); return; }
-  const idxs = Array.from(document.querySelectorAll(".rec-check:checked")).map(c => parseInt(c.dataset.idx));
-  const recipients = idxs.map(i => _broadcastRecipients[i]);
-  if (!recipients.length) { alert("No recipients selected."); return; }
-  const btn = document.getElementById("broadcastSendBtn");
-  btn.disabled = true; btn.textContent = "Sending...";
-  try {
-    const res = await fetch("/booking-notes/broadcast/send", {
-      method: "POST", headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({module:MODULE, group_filter:_broadcastGroup, status_filter:_broadcastStatus, tour_date:TOUR_DATE, template_name:document.getElementById("broadcastTemplate").value||null, message_body:body, recipients, send_sms:document.getElementById("bcastSms").checked, send_email:document.getElementById("bcastEmail").checked})
-    });
-    const data = await res.json();
-    closeBroadcast();
-    alert(`Broadcast sent!\nSMS: ${data.sms_sent} sent, ${data.sms_failed} failed\nEmail: ${data.email_sent} sent, ${data.email_failed} failed`);
-  } catch(e) { alert("Send failed."); }
-  finally { btn.disabled=false; btn.textContent="📣 Send to all"; }
-}
+      const cols = getOrderedCols();
+      const tbody = document.getElementById('track-tbody');
+      if (!rows.length) {
+        tbody.innerHTML = `<tr><td colspan="${cols.length}" style="padding:28px;text-align:center;color:#4a6a8a;">No records found.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = rows.map(r =>
+        `<tr>${cols.map(c => renderCell(r, c.key)).join('')}</tr>`
+      ).join('');
+    }
 
-async function openNotes(bookingId, orderNum, name) {
-  _currentBookingId = bookingId;
-  document.getElementById("notesTitle").textContent = `Order ${orderNum}`;
-  document.getElementById("notesSubtitle").textContent = name;
-  document.getElementById("noteInput").value = "";
-  document.getElementById("notesOverlay").style.display = "flex";
-  await fetchNotes();
-  _pollTimer = setInterval(fetchNotes, 20000);
-}
-function closeNotes() {
-  document.getElementById("notesOverlay").style.display = "none";
-  _currentBookingId = null;
-  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
-}
-async function fetchNotes() {
-  if (!_currentBookingId) return;
-  try {
-    const res = await fetch(`/booking-notes/${_currentBookingId}`);
-    const data = await res.json();
-    renderNotes(data.notes);
-  } catch(e) {}
-}
-function renderNotes(notes) {
-  const container = document.getElementById("notesMessages");
-  if (!notes || notes.length === 0) { document.getElementById("notesEmpty").style.display="block"; return; }
-  document.getElementById("notesEmpty").style.display="none";
-  const styleMap = {staff_note:{bg:"#e8f4fd",label:"Note",color:"#0c5460"},sms_out:{bg:"#d4edda",label:"SMS sent",color:"#155724"},email_out:{bg:"#d1ecf1",label:"Email sent",color:"#0c5460"},guest_reply:{bg:"#fff3cd",label:"Guest reply",color:"#856404"}};
-  container.innerHTML = notes.map(n => {
-    const s = styleMap[n.direction] || {bg:"#f0f0f0",label:n.direction,color:"#333"};
-    return `<div style="background:${s.bg};border-radius:8px;padding:10px 12px;">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-        <span style="font-size:11px;font-weight:600;color:${s.color};background:rgba(0,0,0,.06);padding:1px 7px;border-radius:20px;">${s.label}</span>
-        <span style="font-size:11px;color:#888;">${n.author_username}</span>
-        <span style="font-size:11px;color:#aaa;margin-left:auto;">${n.created_at}</span>
-      </div>
-      <div style="font-size:13px;color:#212529;white-space:pre-wrap;">${n.body}</div>
-    </div>`;
-  }).join("") + '<div id="notesEmpty" style="display:none;"></div>';
-  container.scrollTop = container.scrollHeight;
-  const tr = document.querySelector(`tr[data-booking-id="${_currentBookingId}"]`);
-  if (tr) { const btn = tr.querySelector("td:last-child button span"); if(btn){btn.style.background="#1a3a5c";btn.style.color="#fff";btn.textContent=notes.length;} }
-}
-async function submitNote(dir) {
-  const body = document.getElementById("noteInput").value.trim();
-  if (!body || !_currentBookingId) return;
-  try {
-    await fetch(`/booking-notes/${_currentBookingId}`, {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({body,direction:dir,send_sms:document.getElementById("sendSmsCheck").checked,send_email:document.getElementById("sendEmailCheck").checked})});
-    document.getElementById("noteInput").value = "";
-    await fetchNotes();
-  } catch(e) { alert("Failed to save note."); }
-}
-</script>
+    function emailStatusClass(s) {
+      if (!s) return 'sp-pending';
+      if (s.startsWith('sent')) return 'sp-sent';
+      if (s.includes('failed')) return 'sp-failed';
+      return 'sp-pending';
+    }
+    function emailLabel(s) {
+      if (!s) return '—';
+      if (s.startsWith('sent')) return 'Sent';
+      if (s.includes('failed')) return 'Failed';
+      return s;
+    }
+    function smsStatusClass(s) {
+      if (!s) return 'sp-pending';
+      if (s.includes('delivered')) return 'sp-delivered';
+      if (s.includes('sent')) return 'sp-sent';
+      if (s.includes('undelivered') || s.includes('failed')) return 'sp-undelivered';
+      return 'sp-pending';
+    }
+    function smsLabel(s) {
+      if (!s) return '—';
+      if (s.includes('delivered')) return 'Delivered';
+      if (s.includes('sent')) return 'Sent';
+      if (s.includes('undelivered')) return 'Undelivered';
+      if (s.includes('failed')) return 'Failed';
+      return s;
+    }
+    function exportExcel() {
+      location.href = `/api/notifications/morning-pickup/export?date=${currentDate}`;
+    }
+
+    // ── Init ──
+    document.getElementById('date-display').value = currentDate;
+    buildThead();
+    loadData();
+  </script>
+</body>
+
+</html>
