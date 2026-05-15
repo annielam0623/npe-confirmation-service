@@ -1,39 +1,264 @@
-{# tracking_tour.html — v11 additions #}
-{# Add to existing tracking_tour.html: Broadcast dropdown in header + dialogs + script #}
+{% extends "base.html" %}
+{% block title %}Tour Confirmation Tracking{% endblock %}
+{% block content %}
+<style>
+  .container { width: 100%; padding: 20px 24px; }
+  .page-header { display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .page-header h2 { margin:0; font-size:18px; color:#1a3a5c; flex:1; }
 
-{# ── 1. In the page-header div, add Broadcast button next to date nav ── #}
+  /* Date nav */
+  .date-nav { display:flex; align-items:center; gap:6px; }
+  .btn-today { padding:5px 12px; background:#1a3a5c; color:#fff; border:none; border-radius:6px; font-size:13px; cursor:pointer; }
+  .btn-today:hover { background:#15304d; }
+  .btn-nav  { padding:5px 10px; background:#f8f9fa; border:1px solid #dee2e6; border-radius:6px; font-size:16px; cursor:pointer; }
+  .date-wrap { position:relative; }
+  .date-wrap input[type=date] { padding:5px 10px; border:1px solid #dee2e6; border-radius:6px; font-size:13px; cursor:pointer; min-width:130px; }
+  .btn-refresh { padding:5px 12px; background:#f8f9fa; border:1px solid #dee2e6; border-radius:6px; font-size:13px; cursor:pointer; }
+  .btn-export  { padding:5px 12px; background:#198754; color:#fff; border:none; border-radius:6px; font-size:13px; cursor:pointer; }
 
-<div style="position:relative;display:inline-block;">
-  <div style="display:inline-flex;align-items:stretch;border-radius:8px;border:1px solid #f09595;overflow:hidden;">
-    <button onclick="toggleBroadcastMenu()" style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px;background:#fcebeb;color:#791f1f;border:none;cursor:pointer;font-weight:500;">
-      &#128227; Broadcast
-    </button>
-    <button onclick="toggleBroadcastMenu()" style="font-size:13px;padding:6px 9px;background:#f7c1c1;color:#791f1f;border:none;border-left:1px solid #f09595;cursor:pointer;">&#8964;</button>
+  /* Pills */
+  .pills-bar { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+  .pill { padding:5px 12px; border-radius:20px; border:1px solid #dee2e6; background:#f8f9fa; font-size:12px; cursor:pointer; white-space:nowrap; }
+  .pill.active { background:#1a3a5c; color:#fff; border-color:#1a3a5c; }
+  .pill .cnt { opacity:.75; margin-left:4px; }
+
+  /* Stats */
+  .stats-row { display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .stat-card { flex:1; min-width:90px; background:#fff; border:1px solid #dee2e6; border-radius:8px; padding:10px 14px; text-align:center; }
+  .stat-card .num { font-size:22px; font-weight:700; color:#1a3a5c; }
+  .stat-card .lbl { font-size:11px; color:#888; margin-top:2px; }
+  .stat-card.yes .num { color:#198754; }
+  .stat-card.modify .num { color:#0d6efd; }
+  .stat-card.pending .num { color:#fd7e14; }
+
+  /* Table */
+  .track-tbl { width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed; }
+  .track-tbl thead td { background:#1a3a5c; color:#fff; padding:9px 10px; font-weight:600; white-space:nowrap; position:relative; user-select:none; }
+  .track-tbl tbody tr:hover { background:#f0f5ff; }
+  .track-tbl tbody td { padding:8px 10px; border-bottom:1px solid #f0f0f0; vertical-align:middle; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+  /* Col resizer */
+  .col-resizer { position:absolute; right:0; top:0; bottom:0; width:5px; cursor:col-resize; z-index:1; background:transparent; }
+  .col-resizer:hover, .col-resizer.active { background:rgba(255,255,255,.3); }
+
+  /* Status */
+  .status-select { border:none; background:transparent; font-size:12px; font-weight:700; cursor:pointer; padding:2px 4px; border-radius:4px; }
+  .status-select.yes    { color:#198754; }
+  .status-select.modify { color:#0d6efd; }
+  .status-select.pending{ color:#fd7e14; }
+  .status-select:focus  { outline:1px solid #1a3a5c; background:#f8f9fa; }
+
+  /* Notes */
+  .notes-input { width:100%; border:1px solid transparent; border-radius:4px; font-size:11px; font-family:inherit; padding:3px 5px; resize:none; overflow:hidden; line-height:1.4; background:transparent; }
+  .notes-input:focus { border-color:#ffc107; background:#fff9e6; outline:none; }
+  .notes-input.dirty  { background:#fff9e6; border-color:#ffc107; }
+  th.notes-header.has-dirty { background:#fff3cd !important; color:#856404 !important; }
+
+  /* Badges */
+  .badge-sent   { color:#198754; font-size:11px; font-weight:600; }
+  .badge-failed { color:#dc3545; font-size:11px; font-weight:600; }
+  .badge-queued { color:#6c757d; font-size:11px; }
+  .badge-none   { color:#adb5bd; font-size:11px; }
+
+  /* Lunch modal */
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:500; align-items:center; justify-content:center; }
+  .modal-box { background:#fff; border-radius:12px; padding:24px; width:340px; max-width:95vw; box-shadow:0 8px 32px rgba(0,0,0,.15); }
+</style>
+
+<div class="container">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <h2>🚌 Tour Confirmation Tracking</h2>
+    <div class="date-nav">
+      <button class="btn-today" onclick="goToday()">Today</button>
+      <button class="btn-today" style="background:#6c757d;" onclick="goTomorrow()">Tomorrow</button>
+      <button class="btn-nav" onclick="changeDate(-1)">&#8249;</button>
+      <div class="date-wrap">
+        <input type="date" id="date-input" value="{{ tour_date }}"
+          onclick="this.showPicker&&this.showPicker()"
+          onchange="location.href='/admin/notifications/tour-confirmation/tracking?date='+this.value">
+      </div>
+      <button class="btn-nav" onclick="changeDate(1)">&#8250;</button>
+      <button class="btn-refresh" onclick="location.reload()">&#x21bb;</button>
+    </div>
+    <button class="btn-export" onclick="exportCSV()">&#x1F4BE; Export CSV</button>
+
+    <!-- Broadcast dropdown -->
+    <div style="position:relative;display:inline-block;" id="broadcastWrap">
+      <div style="display:inline-flex;align-items:stretch;border-radius:8px;border:1px solid #f09595;overflow:hidden;">
+        <button onclick="toggleBroadcastMenu()" style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px;background:#fcebeb;color:#791f1f;border:none;cursor:pointer;font-weight:500;">
+          &#128227; Broadcast
+        </button>
+        <button onclick="toggleBroadcastMenu()" style="font-size:13px;padding:6px 9px;background:#f7c1c1;color:#791f1f;border:none;border-left:1px solid #f09595;cursor:pointer;">&#8964;</button>
+      </div>
+      <div id="broadcastMenu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:4px 0;min-width:240px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.08);">
+        <div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Tour — {{ display_date }}</div>
+        <div id="broadcastMenuItems">
+          <div style="padding:8px 14px;font-size:13px;color:#aaa;">Loading...</div>
+        </div>
+      </div>
+    </div>
   </div>
-  <div id="broadcastMenu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:4px 0;min-width:240px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.08);">
-    <div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Tour — {{ display_date }}</div>
-    <div id="broadcastMenuItems">
-      <div style="padding:8px 14px;font-size:13px;color:#aaa;">Loading...</div>
+
+  <!-- Tour pills -->
+  <div class="pills-bar" id="pills-bar">
+    {% set pill_types = [
+      ('all','All'),('U-TC','Upper – Tumbleweed Canyon'),('U-BR','Upper – Blue Ribbon'),
+      ('U-AA','Upper – Ancient Adventure'),('U-HT','Upper – Hidden Trails'),('U-HH','Upper – Hidden Heart'),
+      ('L-KT','Lower – Kenin Tours'),('L-DX','Lower – DX'),('X-TT','X – Twin Trails'),('R-AA','Round – Ancient Adventure')
+    ] %}
+    {% for code, label in pill_types %}
+    <span class="pill {% if active_tour == code %}active{% endif %}"
+          data-tour="{{ code }}"
+          onclick="filterTour(this,'{{ code }}')"
+          title="{{ label }}">
+      {{ code }}
+      {% if code == 'all' %}
+        <span class="cnt">({{ stats.total }})</span>
+      {% else %}
+        <span class="cnt">({{ pill_counts.get(code, {}).get('confirmed',0) }}/{{ pill_counts.get(code, {}).get('total',0) }})</span>
+      {% endif %}
+    </span>
+    {% endfor %}
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card"><div class="num">{{ stats.total }}</div><div class="lbl">Total</div></div>
+    <div class="stat-card yes"><div class="num">{{ stats.yes }}</div><div class="lbl">YES</div></div>
+    <div class="stat-card modify"><div class="num">{{ stats.modify }}</div><div class="lbl">Modify</div></div>
+    <div class="stat-card pending"><div class="num">{{ stats.pending }}</div><div class="lbl">Pending</div></div>
+  </div>
+
+  <!-- Table -->
+  <div>
+    <table class="track-tbl" id="track-tbl">
+      <thead>
+        <tr id="thead-row">
+          <td style="width:100px">Order #<div class="col-resizer"></div></td>
+          <td style="width:90px">Status<div class="col-resizer"></div></td>
+          <td style="width:110px">Tour<div class="col-resizer"></div></td>
+          <td style="width:88px">Tour Date<div class="col-resizer"></div></td>
+          <td style="width:120px">Guest Name<div class="col-resizer"></div></td>
+          <td style="width:108px">Phone<div class="col-resizer"></div></td>
+          <td style="width:46px">Party<div class="col-resizer"></div></td>
+          <td style="width:80px">📧 Email<div class="col-resizer"></div></td>
+          <td style="width:80px">📱 SMS<div class="col-resizer"></div></td>
+          <td style="width:36px">🦃 T<div class="col-resizer"></div></td>
+          <td style="width:36px">🥗 V<div class="col-resizer"></div></td>
+          <td style="width:36px">🥩 B<div class="col-resizer"></div></td>
+          <td style="width:55px">🏛️ MTLV<div class="col-resizer"></div></td>
+          <td style="width:60px">🎟️ Tickets<div class="col-resizer"></div></td>
+          <td style="width:150px" id="notes-header" class="notes-header">Notes<div class="col-resizer"></div></td>
+          <td style="width:55px">Notes 💬<div class="col-resizer"></div></td>
+          <td style="width:95px">Submitted<div class="col-resizer"></div></td>
+        </tr>
+      </thead>
+      <tbody id="tbl-body">
+        {% for b in bookings %}
+        <tr data-booking-id="{{ b.id }}"
+            data-order="{{ b.order_number }}"
+            data-name="{{ b.first_name }} {{ b.last_name }}"
+            data-phone="{{ b.phone or '' }}"
+            data-email="{{ b.customer_email or '' }}"
+            data-status="{{ b.confirmation or 'pending' }}"
+            data-mtlv="{{ 'yes' if b.mtlv_eligible else '' }}"
+            data-tour="{{ b.tour_type or '' }}"
+            style="display:table-row;">
+          <td style="font-weight:600;color:#1a3a5c;font-size:11px;">{{ b.order_number }}</td>
+          <td>
+            <select class="status-select {{ b.confirmation or 'pending' }}"
+                    onchange="updateStatus('{{ b.order_number }}', this)"
+                    data-original="{{ b.confirmation or 'pending' }}">
+              <option value="pending" {% if not b.confirmation or b.confirmation=='pending' %}selected{% endif %}>Pending</option>
+              <option value="yes"     {% if b.confirmation=='yes' %}selected{% endif %}>YES</option>
+              <option value="modify"  {% if b.confirmation=='modify' %}selected{% endif %}>Modify</option>
+            </select>
+            {% if b.submission_count and b.submission_count > 1 %}
+              <span style="color:#dc3545;font-size:10px;" title="Resubmitted">★</span>
+            {% endif %}
+          </td>
+          <td style="font-size:11px;overflow:hidden;text-overflow:ellipsis;" title="{{ b.tour_type }}">{{ b.tour_type or '—' }}</td>
+          <td style="font-size:11px;">{{ b.tour_date or '—' }}</td>
+          <td>{{ b.first_name }} {{ b.last_name }}</td>
+          <td style="font-size:11px;">{{ b.phone or '—' }}</td>
+          <td style="text-align:center;">{{ b.quantities or '—' }}</td>
+          <td>
+            {% if b.email_status == 'sent' %}<span class="badge-sent">✓ Sent</span>
+            {% elif b.email_status == 'failed' %}<span class="badge-failed">✗ Failed</span>
+            {% else %}<span class="badge-none">—</span>{% endif %}
+          </td>
+          <td>
+            {% if b.sms_status == 'sent' %}<span class="badge-sent">✓ Sent</span>
+            {% elif b.sms_status == 'failed' %}<span class="badge-failed">✗ Failed</span>
+            {% elif b.sms_status == 'queued' %}<span class="badge-queued">⏳ Queued</span>
+            {% else %}<span class="badge-none">—</span>{% endif %}
+          </td>
+          <td style="text-align:center;">{{ b.lunch_turkey or '' }}</td>
+          <td style="text-align:center;">{{ b.lunch_veggie or '' }}</td>
+          <td style="text-align:center;">{{ b.lunch_beef or '' }}</td>
+          <td style="text-align:center;font-size:11px;">
+            {% if b.mtlv_eligible %}
+              <span style="color:#6f42c1;font-weight:600;">{{ b.mtlv_qty or '' }}</span>
+            {% else %}—{% endif %}
+          </td>
+          <td style="text-align:center;font-size:11px;">
+            {% if b.mtlv_ticket_status %}
+              <span style="color:#0d6efd;">{{ b.mtlv_ticket_status }}</span>
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            <textarea class="notes-input" rows="1"
+              oninput="autoResize(this);markDirty(this)"
+              onblur="saveNotes('{{ b.order_number }}', this)"
+              data-original="{{ b.notes or '' }}">{{ b.notes or '' }}</textarea>
+          </td>
+          <td style="text-align:center;">
+            <button onclick="openNotes({{ b.id }}, '{{ b.order_number }}', '{{ b.first_name }} {{ b.last_name }}')"
+              style="background:none;border:none;cursor:pointer;padding:4px;">
+              {% if b.notes_count and b.notes_count > 0 %}
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#1a3a5c;color:#fff;border-radius:50%;font-size:11px;font-weight:600;">{{ b.notes_count }}</span>
+              {% else %}
+                <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#e9ecef;color:#495057;border-radius:50%;font-size:16px;">+</span>
+              {% endif %}
+            </button>
+          </td>
+          <td style="font-size:11px;color:#888;">{{ b.submitted_at or '—' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% if not bookings %}
+    <div style="text-align:center;padding:40px;color:#aaa;">No bookings found for this date.</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Lunch edit modal -->
+<div class="modal-overlay" id="lunchModal" style="display:none;">
+  <div class="modal-box">
+    <h3 style="margin:0 0 16px;color:#1a3a5c;font-size:16px;">Edit Lunch Selection</h3>
+    <input type="hidden" id="lunch-order">
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
+      <label style="display:flex;align-items:center;gap:10px;font-size:14px;">
+        🦃 Turkey <input type="number" id="lunch-turkey" min="0" style="width:60px;padding:4px 8px;border:1px solid #dee2e6;border-radius:4px;">
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;font-size:14px;">
+        🥗 Veggie <input type="number" id="lunch-veggie" min="0" style="width:60px;padding:4px 8px;border:1px solid #dee2e6;border-radius:4px;">
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;font-size:14px;">
+        🥩 Beef <input type="number" id="lunch-beef" min="0" style="width:60px;padding:4px 8px;border:1px solid #dee2e6;border-radius:4px;">
+      </label>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button onclick="closeLunchModal()" style="padding:7px 16px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:13px;cursor:pointer;">Cancel</button>
+      <button onclick="saveLunch()" style="padding:7px 16px;background:#1a3a5c;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">Save</button>
     </div>
   </div>
 </div>
 
-{# ── 2. In the table, add Notes column header ── #}
-<th style="padding:10px 12px;text-align:center;white-space:nowrap;color:#495057;">Notes</th>
-
-{# ── 3. In each table row, add Notes bubble cell ── #}
-<td style="padding:9px 12px;text-align:center;">
-  <button onclick="openNotes({{ b.id }}, '{{ b.order_number }}', '{{ b.first_name }} {{ b.last_name }}')"
-    style="background:none;border:none;cursor:pointer;padding:4px;">
-    {% if b.notes_count and b.notes_count > 0 %}
-      <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#1a3a5c;color:#fff;border-radius:50%;font-size:11px;font-weight:600;">{{ b.notes_count }}</span>
-    {% else %}
-      <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#e9ecef;color:#495057;border-radius:50%;font-size:16px;">+</span>
-    {% endif %}
-  </button>
-</td>
-
-{# ── 4. Broadcast confirm dialog (add before closing body) ── #}
+<!-- Broadcast confirm dialog -->
 <div id="broadcastOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:12px;width:560px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
     <div style="background:#7f1d1d;padding:14px 18px;display:flex;align-items:center;">
@@ -70,7 +295,7 @@
   </div>
 </div>
 
-{# ── 5. Notes dialog (same as tickets) ── #}
+<!-- Notes dialog -->
 <div id="notesOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:12px;width:520px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
     <div style="background:#1a3a5c;padding:14px 18px;display:flex;align-items:center;gap:10px;">
@@ -95,35 +320,167 @@
         </label>
         <div style="margin-left:auto;display:flex;gap:8px;">
           <button onclick="submitNote('staff_note')" style="padding:6px 14px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:12px;cursor:pointer;color:#495057;">Save note</button>
-          <button onclick="submitNote('sms_out')" style="padding:6px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;">Send &#8594;</button>
+          <button onclick="submitNote('sms_out')"    style="padding:6px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;">Send &#8594;</button>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-{# ── 6. Script block — add/replace in existing <script> section ── #}
 <script>
 const TOUR_DATE = "{{ tour_date }}";
-const MODULE = "tour";
+const MODULE    = "tour";
 
-let _currentBookingId = null;
-let _pollTimer = null;
-let _broadcastRecipients = [];
-let _broadcastGroup = null;
-let _broadcastStatus = null;
-let _broadcastTemplates = [];
-let _broadcastMenuOpen = false;
-let _broadcastCounts = null;
+// ── Date nav ──────────────────────────────────────────
+function goToday()    { location.href = '/admin/notifications/tour-confirmation/tracking'; }
+function goTomorrow() {
+  const d = new Date(); d.setDate(d.getDate()+1);
+  location.href = '/admin/notifications/tour-confirmation/tracking?date=' + d.toISOString().slice(0,10);
+}
+function changeDate(delta) {
+  const inp = document.getElementById('date-input');
+  const d   = new Date(inp.value + 'T12:00:00');
+  d.setDate(d.getDate() + delta);
+  location.href = '/admin/notifications/tour-confirmation/tracking?date=' + d.toISOString().slice(0,10);
+}
+
+// ── Tour pill filter ──────────────────────────────────
+function filterTour(el, code) {
+  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('#tbl-body tr').forEach(tr => {
+    if (code === 'all') { tr.style.display = 'table-row'; return; }
+    tr.style.display = (tr.dataset.tour === code) ? 'table-row' : 'none';
+  });
+}
+
+// ── Status update ─────────────────────────────────────
+async function updateStatus(orderNum, sel) {
+  const val = sel.value;
+  sel.className = 'status-select ' + val;
+  try {
+    const res = await fetch('/api/bookings/' + orderNum + '/confirmation', {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({confirmation: val})
+    });
+    if (!res.ok) throw new Error();
+    sel.dataset.original = val;
+    const tr = sel.closest('tr');
+    if (tr) tr.dataset.status = val;
+  } catch(e) {
+    alert('Failed to update status.');
+    sel.value = sel.dataset.original;
+    sel.className = 'status-select ' + sel.dataset.original;
+  }
+}
+
+// ── Notes (inline textarea) ───────────────────────────
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
+function markDirty(el) {
+  el.classList.add('dirty');
+  document.getElementById('notes-header').classList.add('has-dirty');
+}
+async function saveNotes(orderNum, el) {
+  if (!el.classList.contains('dirty')) return;
+  try {
+    await fetch('/api/bookings/' + orderNum + '/notes', {
+      method: 'PUT', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({notes: el.value})
+    });
+    el.classList.remove('dirty');
+    el.dataset.original = el.value;
+    const anyDirty = document.querySelector('.notes-input.dirty');
+    if (!anyDirty) document.getElementById('notes-header').classList.remove('has-dirty');
+  } catch(e) {}
+}
+document.querySelectorAll('.notes-input').forEach(el => autoResize(el));
+
+// ── Lunch modal ───────────────────────────────────────
+function openLunchModal(orderNum, t, v, b) {
+  document.getElementById('lunch-order').value  = orderNum;
+  document.getElementById('lunch-turkey').value = t || 0;
+  document.getElementById('lunch-veggie').value = v || 0;
+  document.getElementById('lunch-beef').value   = b || 0;
+  document.getElementById('lunchModal').style.display = 'flex';
+}
+function closeLunchModal() { document.getElementById('lunchModal').style.display = 'none'; }
+async function saveLunch() {
+  const orderNum = document.getElementById('lunch-order').value;
+  const payload  = {
+    lunch_turkey: parseInt(document.getElementById('lunch-turkey').value) || 0,
+    lunch_veggie: parseInt(document.getElementById('lunch-veggie').value) || 0,
+    lunch_beef:   parseInt(document.getElementById('lunch-beef').value)   || 0,
+  };
+  try {
+    await fetch('/api/bookings/' + orderNum + '/lunch', {
+      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+    });
+    closeLunchModal();
+    location.reload();
+  } catch(e) { alert('Failed to save lunch.'); }
+}
+
+// ── Export CSV ────────────────────────────────────────
+function exportCSV() {
+  const rows = [['Order #','Status','Tour','Tour Date','Guest Name','Phone','Party','Email','SMS','Turkey','Veggie','Beef','MTLV','Notes','Submitted']];
+  document.querySelectorAll('#tbl-body tr:not([style*="none"])').forEach(tr => {
+    const tds = tr.querySelectorAll('td');
+    rows.push([
+      tds[0]?.textContent.trim(),
+      tr.querySelector('select')?.value || '',
+      tds[2]?.textContent.trim(),
+      tds[3]?.textContent.trim(),
+      tds[4]?.textContent.trim(),
+      tds[5]?.textContent.trim(),
+      tds[6]?.textContent.trim(),
+      tds[7]?.textContent.trim(),
+      tds[8]?.textContent.trim(),
+      tds[9]?.textContent.trim(),
+      tds[10]?.textContent.trim(),
+      tds[11]?.textContent.trim(),
+      tds[12]?.textContent.trim(),
+      tr.querySelector('.notes-input')?.value.replace(/\n/g,' ') || '',
+      tds[16]?.textContent.trim(),
+    ]);
+  });
+  const csv  = rows.map(r => r.map(c => '"' + String(c||'').replace(/"/g,'""') + '"').join(',')).join('\n');
+  const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8'});
+  const a    = Object.assign(document.createElement('a'), {href:URL.createObjectURL(blob), download:'tour_tracking_'+TOUR_DATE+'.csv'});
+  a.click();
+}
+
+// ── Column resizer ────────────────────────────────────
+(function() {
+  let startX, startW, th;
+  document.querySelectorAll('.col-resizer').forEach(r => {
+    r.addEventListener('mousedown', e => {
+      th = r.parentElement; startX = e.clientX; startW = th.offsetWidth;
+      r.classList.add('active');
+      const onMove = e2 => { th.style.width = Math.max(40, startW + e2.clientX - startX) + 'px'; };
+      const onUp   = ()  => { r.classList.remove('active'); document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup',   onUp);
+      e.preventDefault();
+    });
+  });
+})();
+
+// ── Broadcast ─────────────────────────────────────────
+let _broadcastRecipients = [], _broadcastGroup = null, _broadcastStatus = null;
+let _broadcastTemplates  = [], _broadcastMenuOpen = false, _broadcastCounts = null;
 
 function _getRows() {
   const rows = [];
-  document.querySelectorAll("tbody tr[data-booking-id]").forEach(tr => {
+  document.querySelectorAll('tbody tr[data-booking-id]').forEach(tr => {
+    if (tr.style.display === 'none') return;
     rows.push({
       booking_id:    parseInt(tr.dataset.bookingId),
       order_number:  tr.dataset.order,
       customer_name: tr.dataset.name,
-      first_name:    tr.dataset.name.split(" ")[0],
+      first_name:    tr.dataset.name.split(' ')[0],
       phone:         tr.dataset.phone,
       email:         tr.dataset.email,
       status:        tr.dataset.status,
@@ -134,157 +491,151 @@ function _getRows() {
 }
 
 async function toggleBroadcastMenu() {
-  const menu = document.getElementById("broadcastMenu");
+  const menu = document.getElementById('broadcastMenu');
   _broadcastMenuOpen = !_broadcastMenuOpen;
-  menu.style.display = _broadcastMenuOpen ? "block" : "none";
-  if (_broadcastMenuOpen && !_broadcastCounts) await loadBroadcastCounts();
+  menu.style.display = _broadcastMenuOpen ? 'block' : 'none';
+  if (_broadcastMenuOpen && !_broadcastCounts) {
+    try {
+      const res  = await fetch(`/booking-notes/broadcast/counts?module=${MODULE}&tour_date=${TOUR_DATE}`);
+      const data = await res.json();
+      _broadcastCounts = data.counts;
+      renderBroadcastMenu(_broadcastCounts);
+    } catch(e) { document.getElementById('broadcastMenuItems').innerHTML = '<div style="padding:8px 14px;color:#dc3545;font-size:13px;">Error loading</div>'; }
+  }
 }
-
-document.addEventListener("click", e => {
-  if (_broadcastMenuOpen && !e.target.closest('[onclick="toggleBroadcastMenu()"]') && !document.getElementById("broadcastMenu").contains(e.target)) {
-    document.getElementById("broadcastMenu").style.display = "none";
+document.addEventListener('click', e => {
+  if (_broadcastMenuOpen && !document.getElementById('broadcastWrap').contains(e.target)) {
+    document.getElementById('broadcastMenu').style.display = 'none';
     _broadcastMenuOpen = false;
   }
 });
 
-async function loadBroadcastCounts() {
-  try {
-    const res = await fetch(`/booking-notes/broadcast/counts?module=${MODULE}&tour_date=${TOUR_DATE}`);
-    const data = await res.json();
-    _broadcastCounts = data.counts;
-    renderBroadcastMenu();
-  } catch(e) {
-    document.getElementById("broadcastMenuItems").innerHTML = '<div style="padding:8px 14px;font-size:13px;color:#dc3545;">Failed to load</div>';
-  }
+function badge(label, color, bg) {
+  return `<span style="font-size:11px;font-weight:600;color:${color};background:${bg};padding:1px 7px;border-radius:20px;">${label}</span>`;
 }
-
-function renderBroadcastMenu() {
-  const c = _broadcastCounts;
-  const items = document.getElementById("broadcastMenuItems");
-  const badge = (label, color, bg) =>
-    `<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${bg};color:${color};font-weight:500;">${label}</span>`;
-  const row = (group, status, badgeHtml, count) =>
-    count > 0
-    ? `<div onclick="openBroadcast('${group}','${status}')" style="padding:7px 14px;font-size:13px;color:#212529;display:flex;align-items:center;gap:8px;cursor:pointer;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">
-        ${badgeHtml}<span style="margin-left:auto;font-size:11px;color:#888;">${count} guests</span>
-      </div>` : "";
-
-  let html = "";
-  if (c.general.all > 0) {
+function row(group, status, badgeHtml, count) {
+  return `<div onclick="openBroadcast('${group}','${status}')" style="display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;font-size:13px;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">
+    ${badgeHtml} <span style="flex:1;">${status==='all'?'All guests':status.charAt(0).toUpperCase()+status.slice(1)}</span>
+    <span style="color:#888;font-size:12px;">${count} guests</span>
+  </div>`;
+}
+function renderBroadcastMenu(c) {
+  const items = document.getElementById('broadcastMenuItems');
+  let html = '';
+  if (c.general && c.general.all > 0) {
     html += `<div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">General — ${c.general.all} guests</div>`;
-    html += row("general","all",  badge("All","#495057","#e9ecef"), c.general.all);
-    html += row("general","pending", badge("Pending","#856404","#fff3cd"), c.general.pending);
-    html += row("general","yes",  badge("Yes","#155724","#d4edda"), c.general.yes);
-    html += row("general","modify", badge("Modify","#004085","#cce5ff"), c.general.modify || 0);
+    html += row('general','all',    badge('All','#495057','#e9ecef'), c.general.all);
+    html += row('general','pending',badge('Pending','#856404','#fff3cd'), c.general.pending);
+    html += row('general','yes',    badge('Yes','#155724','#d4edda'), c.general.yes);
+    html += row('general','modify', badge('Modify','#004085','#cce5ff'), c.general.modify || 0);
     html += `<div style="height:1px;background:#f0f0f0;margin:4px 0;"></div>`;
   }
   if (c.mtlv && c.mtlv.all > 0) {
     html += `<div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">MTLV — ${c.mtlv.all} guests</div>`;
-    html += row("mtlv","all",  badge("All","#495057","#e9ecef"), c.mtlv.all);
-    html += row("mtlv","pending", badge("Pending","#856404","#fff3cd"), c.mtlv.pending);
-    html += row("mtlv","yes",  badge("Yes","#155724","#d4edda"), c.mtlv.yes);
+    html += row('mtlv','all',    badge('All','#495057','#e9ecef'), c.mtlv.all);
+    html += row('mtlv','pending',badge('Pending','#856404','#fff3cd'), c.mtlv.pending);
+    html += row('mtlv','yes',    badge('Yes','#155724','#d4edda'), c.mtlv.yes);
   }
   if (!html) html = '<div style="padding:8px 14px;font-size:13px;color:#aaa;">No guests found</div>';
   items.innerHTML = html;
 }
 
 async function openBroadcast(group, status) {
-  document.getElementById("broadcastMenu").style.display = "none";
+  document.getElementById('broadcastMenu').style.display = 'none';
   _broadcastMenuOpen = false;
-  _broadcastGroup = group;
+  _broadcastGroup  = group;
   _broadcastStatus = status;
-
   const rows = _getRows();
   _broadcastRecipients = rows.filter(r => {
-    const groupMatch = group === "general" ? r.mtlv !== "yes" : r.mtlv === "yes";
-    const statusMatch = status === "all" ? true : r.status === status;
+    const groupMatch  = group === 'general' ? r.mtlv !== 'yes' : r.mtlv === 'yes';
+    const statusMatch = status === 'all' ? true : r.status === status;
     return groupMatch && statusMatch;
   });
-
   if (_broadcastTemplates.length === 0) {
-    const res = await fetch(`/booking-notes/templates/${MODULE}`);
+    const res  = await fetch(`/booking-notes/templates/${MODULE}`);
     const data = await res.json();
     _broadcastTemplates = data.templates;
-    const sel = document.getElementById("broadcastTemplate");
+    const sel = document.getElementById('broadcastTemplate');
     sel.innerHTML = '<option value="">— Select template —</option>';
     _broadcastTemplates.forEach(t => { sel.innerHTML += `<option value="${t.name}">${t.label}</option>`; });
   }
-
-  const groupLabel = group === "general" ? "General" : "MTLV";
-  const statusLabel = {all:"All",pending:"Pending",yes:"Yes",modify:"Modify"}[status] || status;
-  document.getElementById("broadcastSubtitle").textContent = `${groupLabel} · ${statusLabel} · ${TOUR_DATE}`;
-  document.getElementById("recipientCount").textContent = `${_broadcastRecipients.length} recipient${_broadcastRecipients.length !== 1 ? "s" : ""}`;
-
-  const list = document.getElementById("recipientList");
-  list.innerHTML = _broadcastRecipients.map((r, i) =>
+  const groupLabel  = group === 'general' ? 'General' : 'MTLV';
+  const statusLabel = {all:'All',pending:'Pending',yes:'Yes',modify:'Modify'}[status] || status;
+  document.getElementById('broadcastSubtitle').textContent   = `${groupLabel} · ${statusLabel} · ${TOUR_DATE}`;
+  document.getElementById('recipientCount').textContent      = `${_broadcastRecipients.length} recipient${_broadcastRecipients.length !== 1 ? 's' : ''}`;
+  document.getElementById('recipientList').innerHTML = _broadcastRecipients.map((r, i) =>
     `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 6px;background:#fff;border-radius:4px;border:1px solid #eee;">
       <input type="checkbox" class="rec-check" data-idx="${i}" checked>
       <span style="flex:1;font-weight:500;">${r.customer_name}</span>
-      <span style="color:#888;">${r.phone || r.email || "—"}</span>
+      <span style="color:#888;">${r.phone || r.email || '—'}</span>
     </div>`
-  ).join("");
-
-  document.getElementById("broadcastOverlay").style.display = "flex";
+  ).join('');
+  document.getElementById('broadcastOverlay').style.display = 'flex';
 }
-
 function onTemplateChange() {
-  const sel = document.getElementById("broadcastTemplate");
-  const t = _broadcastTemplates.find(t => t.name === sel.value);
-  if (t) document.getElementById("broadcastBody").value = t.body;
+  const sel = document.getElementById('broadcastTemplate');
+  const t   = _broadcastTemplates.find(t => t.name === sel.value);
+  if (t) document.getElementById('broadcastBody').value = t.body;
 }
-
-function closeBroadcast() { document.getElementById("broadcastOverlay").style.display = "none"; }
+function closeBroadcast() { document.getElementById('broadcastOverlay').style.display = 'none'; }
 
 async function sendBroadcast() {
-  const body = document.getElementById("broadcastBody").value.trim();
-  if (!body) { alert("Please enter a message."); return; }
-  const idxs = Array.from(document.querySelectorAll(".rec-check:checked")).map(c => parseInt(c.dataset.idx));
+  const body = document.getElementById('broadcastBody').value.trim();
+  if (!body) { alert('Please enter a message.'); return; }
+  const idxs       = Array.from(document.querySelectorAll('.rec-check:checked')).map(c => parseInt(c.dataset.idx));
   const recipients = idxs.map(i => _broadcastRecipients[i]);
-  if (!recipients.length) { alert("No recipients selected."); return; }
-  const btn = document.getElementById("broadcastSendBtn");
-  btn.disabled = true; btn.textContent = "Sending...";
+  if (!recipients.length) { alert('No recipients selected.'); return; }
+  const btn = document.getElementById('broadcastSendBtn');
+  btn.disabled = true; btn.textContent = 'Sending...';
   try {
-    const res = await fetch("/booking-notes/broadcast/send", {
-      method: "POST", headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({module:MODULE, group_filter:_broadcastGroup, status_filter:_broadcastStatus, tour_date:TOUR_DATE, template_name:document.getElementById("broadcastTemplate").value||null, message_body:body, recipients, send_sms:document.getElementById("bcastSms").checked, send_email:document.getElementById("bcastEmail").checked})
+    const res  = await fetch('/booking-notes/broadcast/send', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({module:MODULE, group_filter:_broadcastGroup, status_filter:_broadcastStatus, tour_date:TOUR_DATE, template_name:document.getElementById('broadcastTemplate').value||null, message_body:body, recipients, send_sms:document.getElementById('bcastSms').checked, send_email:document.getElementById('bcastEmail').checked})
     });
     const data = await res.json();
     closeBroadcast();
     alert(`Broadcast sent!\nSMS: ${data.sms_sent} sent, ${data.sms_failed} failed\nEmail: ${data.email_sent} sent, ${data.email_failed} failed`);
-  } catch(e) { alert("Send failed."); }
-  finally { btn.disabled=false; btn.textContent="📣 Send to all"; }
+  } catch(e) { alert('Send failed.'); }
+  finally { btn.disabled = false; btn.textContent = '📣 Send to all'; }
 }
 
-// Notes (same logic as tickets)
+// ── Notes dialog ──────────────────────────────────────
+let _currentBookingId = null, _pollTimer = null;
+
 async function openNotes(bookingId, orderNum, name) {
   _currentBookingId = bookingId;
-  document.getElementById("notesTitle").textContent = `Order ${orderNum}`;
-  document.getElementById("notesSubtitle").textContent = name;
-  document.getElementById("noteInput").value = "";
-  document.getElementById("notesOverlay").style.display = "flex";
+  document.getElementById('notesTitle').textContent    = `Order ${orderNum}`;
+  document.getElementById('notesSubtitle').textContent = name;
+  document.getElementById('noteInput').value = '';
+  document.getElementById('notesOverlay').style.display = 'flex';
   await fetchNotes();
   _pollTimer = setInterval(fetchNotes, 20000);
 }
 function closeNotes() {
-  document.getElementById("notesOverlay").style.display = "none";
+  document.getElementById('notesOverlay').style.display = 'none';
   _currentBookingId = null;
   if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
 }
 async function fetchNotes() {
   if (!_currentBookingId) return;
   try {
-    const res = await fetch(`/booking-notes/${_currentBookingId}`);
+    const res  = await fetch(`/booking-notes/${_currentBookingId}`);
     const data = await res.json();
     renderNotes(data.notes);
   } catch(e) {}
 }
 function renderNotes(notes) {
-  const container = document.getElementById("notesMessages");
-  if (!notes || notes.length === 0) { document.getElementById("notesEmpty").style.display="block"; return; }
-  document.getElementById("notesEmpty").style.display="none";
-  const styleMap = {staff_note:{bg:"#e8f4fd",label:"Note",color:"#0c5460"},sms_out:{bg:"#d4edda",label:"SMS sent",color:"#155724"},email_out:{bg:"#d1ecf1",label:"Email sent",color:"#0c5460"},guest_reply:{bg:"#fff3cd",label:"Guest reply",color:"#856404"}};
+  const container = document.getElementById('notesMessages');
+  if (!notes || notes.length === 0) { document.getElementById('notesEmpty').style.display = 'block'; return; }
+  document.getElementById('notesEmpty').style.display = 'none';
+  const styleMap = {
+    staff_note:  {bg:'#e8f4fd', label:'Note',        color:'#0c5460'},
+    sms_out:     {bg:'#d4edda', label:'SMS sent',     color:'#155724'},
+    email_out:   {bg:'#d1ecf1', label:'Email sent',   color:'#0c5460'},
+    guest_reply: {bg:'#fff3cd', label:'Guest reply',  color:'#856404'},
+  };
   container.innerHTML = notes.map(n => {
-    const s = styleMap[n.direction] || {bg:"#f0f0f0",label:n.direction,color:"#333"};
+    const s = styleMap[n.direction] || {bg:'#f0f0f0', label:n.direction, color:'#333'};
     return `<div style="background:${s.bg};border-radius:8px;padding:10px 12px;">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
         <span style="font-size:11px;font-weight:600;color:${s.color};background:rgba(0,0,0,.06);padding:1px 7px;border-radius:20px;">${s.label}</span>
@@ -293,18 +644,25 @@ function renderNotes(notes) {
       </div>
       <div style="font-size:13px;color:#212529;white-space:pre-wrap;">${n.body}</div>
     </div>`;
-  }).join("") + '<div id="notesEmpty" style="display:none;"></div>';
+  }).join('') + '<div id="notesEmpty" style="display:none;"></div>';
   container.scrollTop = container.scrollHeight;
   const tr = document.querySelector(`tr[data-booking-id="${_currentBookingId}"]`);
-  if (tr) { const btn = tr.querySelector("td:last-child button span"); if(btn){btn.style.background="#1a3a5c";btn.style.color="#fff";btn.textContent=notes.length;} }
+  if (tr) {
+    const btn = tr.querySelector('td .notes-input') ? null : tr.querySelectorAll('td')[15]?.querySelector('span');
+    if (btn) { btn.style.background = '#1a3a5c'; btn.style.color = '#fff'; btn.textContent = notes.length; }
+  }
 }
 async function submitNote(dir) {
-  const body = document.getElementById("noteInput").value.trim();
+  const body = document.getElementById('noteInput').value.trim();
   if (!body || !_currentBookingId) return;
   try {
-    await fetch(`/booking-notes/${_currentBookingId}`, {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({body,direction:dir,send_sms:document.getElementById("sendSmsCheck").checked,send_email:document.getElementById("sendEmailCheck").checked})});
-    document.getElementById("noteInput").value = "";
+    await fetch(`/booking-notes/${_currentBookingId}`, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({body, direction:dir, send_sms:document.getElementById('sendSmsCheck').checked, send_email:document.getElementById('sendEmailCheck').checked})
+    });
+    document.getElementById('noteInput').value = '';
     await fetchNotes();
-  } catch(e) { alert("Failed to save note."); }
+  } catch(e) { alert('Failed to save note.'); }
 }
 </script>
+{% endblock %}

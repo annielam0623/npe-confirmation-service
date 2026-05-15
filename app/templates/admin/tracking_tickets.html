@@ -1,28 +1,37 @@
 {% extends "admin/base.html" %}
 {% block title %}Tracking — Tickets Reminder{% endblock %}
 
-{% block content %}
+{% extends "base.html" %}
 <div class="page-header" style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
   <h1 style="margin:0;font-size:20px;font-weight:600;color:#1a3a5c;">Tickets Reminder — Tracking</h1>
   <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
 
     <!-- Date navigation -->
-    <div style="display:flex;align-items:center;gap:6px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:4px 10px;">
-      <a href="?date={{ prev_date }}" style="color:#495057;text-decoration:none;font-size:18px;line-height:1;">&#8249;</a>
-      <span style="font-size:14px;font-weight:500;color:#1a3a5c;min-width:110px;text-align:center;">{{ display_date }}</span>
-      <a href="?date={{ next_date }}" style="color:#495057;text-decoration:none;font-size:18px;line-height:1;">&#8250;</a>
+    <div
+      style="display:flex;align-items:center;gap:6px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:4px 10px;">
+      <a href="?date={{ prev_date }}"
+        style="color:#495057;text-decoration:none;font-size:18px;line-height:1;">&#8249;</a>
+      <span style="font-size:14px;font-weight:500;color:#1a3a5c;min-width:110px;text-align:center;">{{ display_date
+        }}</span>
+      <a href="?date={{ next_date }}"
+        style="color:#495057;text-decoration:none;font-size:18px;line-height:1;">&#8250;</a>
     </div>
 
     <!-- Broadcast dropdown -->
     <div style="position:relative;display:inline-block;">
       <div style="display:inline-flex;align-items:stretch;border-radius:8px;border:1px solid #f09595;overflow:hidden;">
-        <button onclick="toggleBroadcastMenu()" style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px;background:#fcebeb;color:#791f1f;border:none;cursor:pointer;font-weight:500;">
+        <button onclick="toggleBroadcastMenu()"
+          style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px;background:#fcebeb;color:#791f1f;border:none;cursor:pointer;font-weight:500;">
           &#128227; Broadcast
         </button>
-        <button onclick="toggleBroadcastMenu()" style="font-size:13px;padding:6px 9px;background:#f7c1c1;color:#791f1f;border:none;border-left:1px solid #f09595;cursor:pointer;">&#8964;</button>
+        <button onclick="toggleBroadcastMenu()"
+          style="font-size:13px;padding:6px 9px;background:#f7c1c1;color:#791f1f;border:none;border-left:1px solid #f09595;cursor:pointer;">&#8964;</button>
       </div>
-      <div id="broadcastMenu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:4px 0;min-width:230px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.08);">
-        <div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Tickets — {{ display_date }}</div>
+      <div id="broadcastMenu"
+        style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:4px 0;min-width:230px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.08);">
+        <div
+          style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">
+          Tickets — {{ display_date }}</div>
         <div id="broadcastMenuItems" style="padding:2px 0;">
           <div style="padding:8px 14px;font-size:13px;color:#aaa;">Loading...</div>
         </div>
@@ -53,41 +62,51 @@
     </thead>
     <tbody>
       {% for b in bookings %}
-      <tr style="border-bottom:1px solid #f0f0f0;" data-booking-id="{{ b.id }}" data-order="{{ b.order_number }}" data-name="{{ b.first_name }} {{ b.last_name }}" data-phone="{{ b.phone or '' }}" data-email="{{ b.customer_email or '' }}" data-status="{{ b.confirmation or 'pending' }}" data-mtlv="{{ 'yes' if b.mtlv_eligible else 'no' }}">
+      <tr style="border-bottom:1px solid #f0f0f0;" data-booking-id="{{ b.id }}" data-order="{{ b.order_number }}"
+        data-name="{{ b.first_name }} {{ b.last_name }}" data-phone="{{ b.phone or '' }}"
+        data-email="{{ b.customer_email or '' }}" data-status="{{ b.confirmation or 'pending' }}"
+        data-mtlv="{{ 'yes' if b.mtlv_eligible else 'no' }}">
         <td style="padding:9px 12px;font-weight:500;color:#1a3a5c;">{{ b.order_number }}</td>
         <td style="padding:9px 12px;">{{ b.first_name }} {{ b.last_name }}</td>
         <td style="padding:9px 12px;font-family:monospace;font-size:12px;">{{ b.phone or '—' }}</td>
-        <td style="padding:9px 12px;font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ b.product_name or '—' }}</td>
+        <td
+          style="padding:9px 12px;font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+          {{ b.product_name or '—' }}</td>
         <td style="padding:9px 12px;font-size:12px;">{{ b.pickup_time or '—' }}</td>
         <td style="padding:9px 12px;text-align:center;">{{ b.quantities or 1 }}</td>
         <td style="padding:9px 12px;">
           {% set s = b.confirmation or 'pending' %}
           {% if s == 'yes' %}
-            <span style="background:#d4edda;color:#155724;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500;">Yes</span>
+          <span
+            style="background:#d4edda;color:#155724;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500;">Yes</span>
           {% elif s == 'pending' %}
-            <span style="background:#fff3cd;color:#856404;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500;">Pending</span>
+          <span
+            style="background:#fff3cd;color:#856404;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500;">Pending</span>
           {% else %}
-            <span style="background:#f0f0f0;color:#666;padding:2px 10px;border-radius:20px;font-size:11px;">{{ s }}</span>
+          <span style="background:#f0f0f0;color:#666;padding:2px 10px;border-radius:20px;font-size:11px;">{{ s }}</span>
           {% endif %}
         </td>
         <td style="padding:9px 12px;text-align:center;">
-          {% if b.sms_sent %}<span style="color:#28a745;">&#10003;</span>{% else %}<span style="color:#ccc;">—</span>{% endif %}
+          {% if b.sms_sent %}<span style="color:#28a745;">&#10003;</span>{% else %}<span style="color:#ccc;">—</span>{%
+          endif %}
         </td>
         <td style="padding:9px 12px;text-align:center;">
-          {% if b.email_sent %}<span style="color:#28a745;">&#10003;</span>{% else %}<span style="color:#ccc;">—</span>{% endif %}
+          {% if b.email_sent %}<span style="color:#28a745;">&#10003;</span>{% else %}<span
+            style="color:#ccc;">—</span>{% endif %}
         </td>
         <td style="padding:9px 12px;text-align:center;">
           {% if b.mtlv_eligible %}
-            <span style="background:#e8f4f8;color:#0c5460;padding:2px 8px;border-radius:12px;font-size:11px;">{{ b.mtlv_ticket_status or 'pending' }}</span>
+          <span style="background:#e8f4f8;color:#0c5460;padding:2px 8px;border-radius:12px;font-size:11px;">{{
+            b.mtlv_ticket_status or 'pending' }}</span>
           {% else %}
-            <span style="color:#ccc;font-size:12px;">—</span>
+          <span style="color:#ccc;font-size:12px;">—</span>
           {% endif %}
         </td>
         <td style="padding:9px 12px;text-align:center;">
           {% if b.mtlv_ticket_status == 'sent' %}
-            <span style="color:#28a745;font-size:12px;">Sent</span>
+          <span style="color:#28a745;font-size:12px;">Sent</span>
           {% else %}
-            <span style="color:#ccc;font-size:12px;">—</span>
+          <span style="color:#ccc;font-size:12px;">—</span>
           {% endif %}
         </td>
         <!-- Notes bubble -->
@@ -95,34 +114,44 @@
           <button onclick="openNotes({{ b.id }}, '{{ b.order_number }}', '{{ b.first_name }} {{ b.last_name }}')"
             style="background:none;border:none;cursor:pointer;position:relative;padding:4px;">
             {% if b.notes_count and b.notes_count > 0 %}
-              <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#1a3a5c;color:#fff;border-radius:50%;font-size:11px;font-weight:600;">{{ b.notes_count }}</span>
+            <span
+              style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#1a3a5c;color:#fff;border-radius:50%;font-size:11px;font-weight:600;">{{
+              b.notes_count }}</span>
             {% else %}
-              <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#e9ecef;color:#495057;border-radius:50%;font-size:16px;line-height:1;">+</span>
+            <span
+              style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#e9ecef;color:#495057;border-radius:50%;font-size:16px;line-height:1;">+</span>
             {% endif %}
           </button>
         </td>
       </tr>
       {% else %}
-      <tr><td colspan="12" style="padding:40px;text-align:center;color:#aaa;">No bookings for this date.</td></tr>
+      <tr>
+        <td colspan="12" style="padding:40px;text-align:center;color:#aaa;">No bookings for this date.</td>
+      </tr>
       {% endfor %}
     </tbody>
   </table>
 </div>
 
 <!-- ── Notes dialog ────────────────────────────────────────────────────────── -->
-<div id="notesOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:12px;width:520px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
+<div id="notesOverlay"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+  <div
+    style="background:#fff;border-radius:12px;width:520px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
     <!-- Header -->
     <div style="background:#1a3a5c;padding:14px 18px;display:flex;align-items:center;gap:10px;">
       <div style="flex:1;">
         <div style="color:#fff;font-weight:600;font-size:14px;" id="notesTitle">Notes</div>
         <div style="color:#a8c4e0;font-size:12px;" id="notesSubtitle"></div>
       </div>
-      <button onclick="closeNotes()" style="background:none;border:none;color:#a8c4e0;font-size:20px;cursor:pointer;line-height:1;">&times;</button>
+      <button onclick="closeNotes()"
+        style="background:none;border:none;color:#a8c4e0;font-size:20px;cursor:pointer;line-height:1;">&times;</button>
     </div>
     <!-- Messages -->
-    <div id="notesMessages" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:380px;background:#f8f9fa;">
-      <div style="text-align:center;color:#aaa;font-size:13px;padding:20px 0;" id="notesEmpty">No notes yet. Start a conversation below.</div>
+    <div id="notesMessages"
+      style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:380px;background:#f8f9fa;">
+      <div style="text-align:center;color:#aaa;font-size:13px;padding:20px 0;" id="notesEmpty">No notes yet. Start a
+        conversation below.</div>
     </div>
     <!-- Input area -->
     <div style="padding:12px 14px;border-top:1px solid #eee;background:#fff;">
@@ -136,8 +165,12 @@
           <input type="checkbox" id="sendEmailCheck"> Email to guest
         </label>
         <div style="margin-left:auto;display:flex;gap:8px;">
-          <button onclick="submitNote('staff_note')" style="padding:6px 14px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:12px;cursor:pointer;color:#495057;">Save note</button>
-          <button onclick="submitNote('sms_out')" style="padding:6px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;">Send &#8594;</button>
+          <button onclick="submitNote('staff_note')"
+            style="padding:6px 14px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:12px;cursor:pointer;color:#495057;">Save
+            note</button>
+          <button onclick="submitNote('sms_out')"
+            style="padding:6px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;">Send
+            &#8594;</button>
         </div>
       </div>
     </div>
@@ -145,291 +178,303 @@
 </div>
 
 <!-- ── Broadcast confirm dialog ────────────────────────────────────────────── -->
-<div id="broadcastOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:12px;width:560px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
+<div id="broadcastOverlay"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+  <div
+    style="background:#fff;border-radius:12px;width:560px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
     <div style="background:#7f1d1d;padding:14px 18px;display:flex;align-items:center;">
       <div style="flex:1;">
         <div style="color:#fff;font-weight:600;font-size:14px;">&#128227; Broadcast message</div>
         <div style="color:#fca5a5;font-size:12px;" id="broadcastSubtitle"></div>
       </div>
-      <button onclick="closeBroadcast()" style="background:none;border:none;color:#fca5a5;font-size:20px;cursor:pointer;line-height:1;">&times;</button>
+      <button onclick="closeBroadcast()"
+        style="background:none;border:none;color:#fca5a5;font-size:20px;cursor:pointer;line-height:1;">&times;</button>
     </div>
     <div style="padding:16px;overflow-y:auto;flex:1;">
       <!-- Template selector -->
       <div style="margin-bottom:12px;">
         <label style="font-size:12px;font-weight:500;color:#495057;display:block;margin-bottom:4px;">Template</label>
-        <select id="broadcastTemplate" onchange="onTemplateChange()" style="width:100%;padding:7px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;">
+        <select id="broadcastTemplate" onchange="onTemplateChange()"
+          style="width:100%;padding:7px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;">
           <option value="">— Select template —</option>
         </select>
       </div>
       <!-- Message body -->
       <div style="margin-bottom:12px;">
-        <label style="font-size:12px;font-weight:500;color:#495057;display:block;margin-bottom:4px;">Message <span style="font-weight:400;color:#888;">(supports {first_name} and {tour_date})</span></label>
-        <textarea id="broadcastBody" rows="4" style="width:100%;border:1px solid #dee2e6;border-radius:6px;padding:8px 10px;font-size:13px;resize:vertical;box-sizing:border-box;font-family:inherit;"></textarea>
+        <label style="font-size:12px;font-weight:500;color:#495057;display:block;margin-bottom:4px;">Message <span
+            style="font-weight:400;color:#888;">(supports {first_name} and {tour_date})</span></label>
+        <textarea id="broadcastBody" rows="4"
+          style="width:100%;border:1px solid #dee2e6;border-radius:6px;padding:8px 10px;font-size:13px;resize:vertical;box-sizing:border-box;font-family:inherit;"></textarea>
       </div>
       <!-- Send options -->
       <div style="display:flex;gap:16px;margin-bottom:14px;">
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="bcastSms" checked> Send SMS</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="bcastEmail" checked> Send Email</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox"
+            id="bcastSms" checked> Send SMS</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox"
+            id="bcastEmail" checked> Send Email</label>
       </div>
       <!-- Recipients preview -->
-      <div style="background:#f8f9fa;border:1px solid #eee;border-radius:8px;padding:10px;max-height:220px;overflow-y:auto;">
+      <div
+        style="background:#f8f9fa;border:1px solid #eee;border-radius:8px;padding:10px;max-height:220px;overflow-y:auto;">
         <div style="font-size:12px;font-weight:500;color:#495057;margin-bottom:8px;" id="recipientCount"></div>
         <div id="recipientList" style="display:flex;flex-direction:column;gap:4px;"></div>
       </div>
     </div>
     <div style="padding:12px 16px;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:8px;">
-      <button onclick="closeBroadcast()" style="padding:7px 16px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:13px;cursor:pointer;">Cancel</button>
-      <button onclick="sendBroadcast()" id="broadcastSendBtn" style="padding:7px 16px;background:#7f1d1d;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:500;">&#128227; Send to all</button>
+      <button onclick="closeBroadcast()"
+        style="padding:7px 16px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:13px;cursor:pointer;">Cancel</button>
+      <button onclick="sendBroadcast()" id="broadcastSendBtn"
+        style="padding:7px 16px;background:#7f1d1d;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:500;">&#128227;
+        Send to all</button>
     </div>
   </div>
 </div>
 
 <script>
-// ── State ─────────────────────────────────────────────────────────────────────
-let _currentBookingId = null;
-let _pollTimer = null;
-let _broadcastRecipients = [];
-let _broadcastGroup = null;
-let _broadcastStatus = null;
-let _broadcastTemplates = [];
-let _broadcastMenuOpen = false;
-let _broadcastCounts = null;
+  // ── State ─────────────────────────────────────────────────────────────────────
+  let _currentBookingId = null;
+  let _pollTimer = null;
+  let _broadcastRecipients = [];
+  let _broadcastGroup = null;
+  let _broadcastStatus = null;
+  let _broadcastTemplates = [];
+  let _broadcastMenuOpen = false;
+  let _broadcastCounts = null;
 
-const TOUR_DATE = "{{ tour_date }}";
-const MODULE = "tickets";
+  const TOUR_DATE = "{{ tour_date }}";
+  const MODULE = "tickets";
 
-// ── Collect all rows data ─────────────────────────────────────────────────────
-function _getRows() {
-  const rows = [];
-  document.querySelectorAll("tbody tr[data-booking-id]").forEach(tr => {
-    rows.push({
-      booking_id:    parseInt(tr.dataset.bookingId),
-      order_number:  tr.dataset.order,
-      customer_name: tr.dataset.name,
-      first_name:    tr.dataset.name.split(" ")[0],
-      phone:         tr.dataset.phone,
-      email:         tr.dataset.email,
-      status:        tr.dataset.status,
-      mtlv:          tr.dataset.mtlv,
+  // ── Collect all rows data ─────────────────────────────────────────────────────
+  function _getRows() {
+    const rows = [];
+    document.querySelectorAll("tbody tr[data-booking-id]").forEach(tr => {
+      rows.push({
+        booking_id: parseInt(tr.dataset.bookingId),
+        order_number: tr.dataset.order,
+        customer_name: tr.dataset.name,
+        first_name: tr.dataset.name.split(" ")[0],
+        phone: tr.dataset.phone,
+        email: tr.dataset.email,
+        status: tr.dataset.status,
+        mtlv: tr.dataset.mtlv,
+      });
     });
+    return rows;
+  }
+
+  // ── Broadcast menu ────────────────────────────────────────────────────────────
+  async function toggleBroadcastMenu() {
+    const menu = document.getElementById("broadcastMenu");
+    _broadcastMenuOpen = !_broadcastMenuOpen;
+    menu.style.display = _broadcastMenuOpen ? "block" : "none";
+    if (_broadcastMenuOpen && !_broadcastCounts) {
+      await loadBroadcastCounts();
+    }
+  }
+
+  document.addEventListener("click", e => {
+    if (_broadcastMenuOpen && !e.target.closest('[onclick="toggleBroadcastMenu()"]') && !document.getElementById("broadcastMenu").contains(e.target)) {
+      document.getElementById("broadcastMenu").style.display = "none";
+      _broadcastMenuOpen = false;
+    }
   });
-  return rows;
-}
 
-// ── Broadcast menu ────────────────────────────────────────────────────────────
-async function toggleBroadcastMenu() {
-  const menu = document.getElementById("broadcastMenu");
-  _broadcastMenuOpen = !_broadcastMenuOpen;
-  menu.style.display = _broadcastMenuOpen ? "block" : "none";
-  if (_broadcastMenuOpen && !_broadcastCounts) {
-    await loadBroadcastCounts();
+  async function loadBroadcastCounts() {
+    try {
+      const res = await fetch(`/booking-notes/broadcast/counts?module=${MODULE}&tour_date=${TOUR_DATE}`);
+      const data = await res.json();
+      _broadcastCounts = data.counts;
+      renderBroadcastMenu();
+    } catch (e) {
+      document.getElementById("broadcastMenuItems").innerHTML = '<div style="padding:8px 14px;font-size:13px;color:#dc3545;">Failed to load</div>';
+    }
   }
-}
 
-document.addEventListener("click", e => {
-  if (_broadcastMenuOpen && !e.target.closest('[onclick="toggleBroadcastMenu()"]') && !document.getElementById("broadcastMenu").contains(e.target)) {
-    document.getElementById("broadcastMenu").style.display = "none";
-    _broadcastMenuOpen = false;
-  }
-});
+  function renderBroadcastMenu() {
+    const c = _broadcastCounts;
+    const items = document.getElementById("broadcastMenuItems");
 
-async function loadBroadcastCounts() {
-  try {
-    const res = await fetch(`/booking-notes/broadcast/counts?module=${MODULE}&tour_date=${TOUR_DATE}`);
-    const data = await res.json();
-    _broadcastCounts = data.counts;
-    renderBroadcastMenu();
-  } catch(e) {
-    document.getElementById("broadcastMenuItems").innerHTML = '<div style="padding:8px 14px;font-size:13px;color:#dc3545;">Failed to load</div>';
-  }
-}
+    const statusBadge = (label, color, bg) =>
+      `<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${bg};color:${color};font-weight:500;">${label}</span>`;
 
-function renderBroadcastMenu() {
-  const c = _broadcastCounts;
-  const items = document.getElementById("broadcastMenuItems");
-
-  const statusBadge = (label, color, bg) =>
-    `<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${bg};color:${color};font-weight:500;">${label}</span>`;
-
-  const row = (group, status, label, badge, count) =>
-    count > 0
-    ? `<div class="bc-item" onclick="openBroadcast('${group}','${status}')" style="padding:7px 14px;font-size:13px;color:#212529;display:flex;align-items:center;gap:8px;cursor:pointer;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">
+    const row = (group, status, label, badge, count) =>
+      count > 0
+        ? `<div class="bc-item" onclick="openBroadcast('${group}','${status}')" style="padding:7px 14px;font-size:13px;color:#212529;display:flex;align-items:center;gap:8px;cursor:pointer;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">
         ${badge}<span style="margin-left:auto;font-size:11px;color:#888;">${count} guests</span>
       </div>`
-    : "";
+        : "";
 
-  let html = "";
+    let html = "";
 
-  // General section
-  if (c.general.all > 0) {
-    html += `<div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">General — ${c.general.all} guests</div>`;
-    html += row("general","all","All", statusBadge("All","#495057","#e9ecef"), c.general.all);
-    html += row("general","pending","Pending", statusBadge("Pending","#856404","#fff3cd"), c.general.pending);
-    html += row("general","yes","Yes", statusBadge("Yes","#155724","#d4edda"), c.general.yes);
-    html += `<div style="height:1px;background:#f0f0f0;margin:4px 0;"></div>`;
+    // General section
+    if (c.general.all > 0) {
+      html += `<div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">General — ${c.general.all} guests</div>`;
+      html += row("general", "all", "All", statusBadge("All", "#495057", "#e9ecef"), c.general.all);
+      html += row("general", "pending", "Pending", statusBadge("Pending", "#856404", "#fff3cd"), c.general.pending);
+      html += row("general", "yes", "Yes", statusBadge("Yes", "#155724", "#d4edda"), c.general.yes);
+      html += `<div style="height:1px;background:#f0f0f0;margin:4px 0;"></div>`;
+    }
+
+    // MTLV section (tickets module has mtlv)
+    if (c.mtlv.all > 0) {
+      html += `<div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">MTLV — ${c.mtlv.all} guests</div>`;
+      html += row("mtlv", "all", "All", statusBadge("All", "#495057", "#e9ecef"), c.mtlv.all);
+      html += row("mtlv", "pending", "Pending", statusBadge("Pending", "#856404", "#fff3cd"), c.mtlv.pending);
+      html += row("mtlv", "yes", "Yes", statusBadge("Yes", "#155724", "#d4edda"), c.mtlv.yes);
+    }
+
+    if (!html) html = '<div style="padding:8px 14px;font-size:13px;color:#aaa;">No guests found</div>';
+    items.innerHTML = html;
   }
 
-  // MTLV section (tickets module has mtlv)
-  if (c.mtlv.all > 0) {
-    html += `<div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">MTLV — ${c.mtlv.all} guests</div>`;
-    html += row("mtlv","all","All", statusBadge("All","#495057","#e9ecef"), c.mtlv.all);
-    html += row("mtlv","pending","Pending", statusBadge("Pending","#856404","#fff3cd"), c.mtlv.pending);
-    html += row("mtlv","yes","Yes", statusBadge("Yes","#155724","#d4edda"), c.mtlv.yes);
-  }
+  async function openBroadcast(group, status) {
+    document.getElementById("broadcastMenu").style.display = "none";
+    _broadcastMenuOpen = false;
+    _broadcastGroup = group;
+    _broadcastStatus = status;
 
-  if (!html) html = '<div style="padding:8px 14px;font-size:13px;color:#aaa;">No guests found</div>';
-  items.innerHTML = html;
-}
-
-async function openBroadcast(group, status) {
-  document.getElementById("broadcastMenu").style.display = "none";
-  _broadcastMenuOpen = false;
-  _broadcastGroup = group;
-  _broadcastStatus = status;
-
-  // Filter recipients from page rows
-  const rows = _getRows();
-  _broadcastRecipients = rows.filter(r => {
-    const groupMatch = group === "general" ? r.mtlv !== "yes" : r.mtlv === "yes";
-    const statusMatch = status === "all" ? true : r.status === status;
-    return groupMatch && statusMatch;
-  });
-
-  // Load templates
-  if (_broadcastTemplates.length === 0) {
-    const res = await fetch(`/booking-notes/templates/${MODULE}`);
-    const data = await res.json();
-    _broadcastTemplates = data.templates;
-    const sel = document.getElementById("broadcastTemplate");
-    sel.innerHTML = '<option value="">— Select template —</option>';
-    _broadcastTemplates.forEach(t => {
-      sel.innerHTML += `<option value="${t.name}">${t.label}</option>`;
+    // Filter recipients from page rows
+    const rows = _getRows();
+    _broadcastRecipients = rows.filter(r => {
+      const groupMatch = group === "general" ? r.mtlv !== "yes" : r.mtlv === "yes";
+      const statusMatch = status === "all" ? true : r.status === status;
+      return groupMatch && statusMatch;
     });
-  }
 
-  // Subtitle
-  const groupLabel = group === "general" ? "General" : "MTLV";
-  const statusLabel = {all:"All", pending:"Pending", yes:"Yes", modify:"Modify"}[status] || status;
-  document.getElementById("broadcastSubtitle").textContent = `${groupLabel} · ${statusLabel} · ${TOUR_DATE}`;
+    // Load templates
+    if (_broadcastTemplates.length === 0) {
+      const res = await fetch(`/booking-notes/templates/${MODULE}`);
+      const data = await res.json();
+      _broadcastTemplates = data.templates;
+      const sel = document.getElementById("broadcastTemplate");
+      sel.innerHTML = '<option value="">— Select template —</option>';
+      _broadcastTemplates.forEach(t => {
+        sel.innerHTML += `<option value="${t.name}">${t.label}</option>`;
+      });
+    }
 
-  // Recipients list
-  document.getElementById("recipientCount").textContent = `${_broadcastRecipients.length} recipient${_broadcastRecipients.length !== 1 ? "s" : ""}`;
-  const list = document.getElementById("recipientList");
-  list.innerHTML = _broadcastRecipients.map(r =>
-    `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 6px;background:#fff;border-radius:4px;border:1px solid #eee;">
+    // Subtitle
+    const groupLabel = group === "general" ? "General" : "MTLV";
+    const statusLabel = { all: "All", pending: "Pending", yes: "Yes", modify: "Modify" }[status] || status;
+    document.getElementById("broadcastSubtitle").textContent = `${groupLabel} · ${statusLabel} · ${TOUR_DATE}`;
+
+    // Recipients list
+    document.getElementById("recipientCount").textContent = `${_broadcastRecipients.length} recipient${_broadcastRecipients.length !== 1 ? "s" : ""}`;
+    const list = document.getElementById("recipientList");
+    list.innerHTML = _broadcastRecipients.map(r =>
+      `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 6px;background:#fff;border-radius:4px;border:1px solid #eee;">
       <input type="checkbox" class="rec-check" data-idx="${_broadcastRecipients.indexOf(r)}" checked>
       <span style="flex:1;font-weight:500;">${r.customer_name}</span>
       <span style="color:#888;">${r.phone || r.email || "—"}</span>
     </div>`
-  ).join("");
+    ).join("");
 
-  // Show overlay
-  const overlay = document.getElementById("broadcastOverlay");
-  overlay.style.display = "flex";
-}
-
-function onTemplateChange() {
-  const sel = document.getElementById("broadcastTemplate");
-  const t = _broadcastTemplates.find(t => t.name === sel.value);
-  if (t) document.getElementById("broadcastBody").value = t.body;
-}
-
-function closeBroadcast() {
-  document.getElementById("broadcastOverlay").style.display = "none";
-}
-
-async function sendBroadcast() {
-  const body = document.getElementById("broadcastBody").value.trim();
-  if (!body) { alert("Please enter a message."); return; }
-
-  const checked = document.querySelectorAll(".rec-check:checked");
-  const idxs = Array.from(checked).map(c => parseInt(c.dataset.idx));
-  const recipients = idxs.map(i => _broadcastRecipients[i]);
-  if (!recipients.length) { alert("No recipients selected."); return; }
-
-  const btn = document.getElementById("broadcastSendBtn");
-  btn.disabled = true;
-  btn.textContent = "Sending...";
-
-  try {
-    const res = await fetch("/booking-notes/broadcast/send", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({
-        module:        MODULE,
-        group_filter:  _broadcastGroup,
-        status_filter: _broadcastStatus,
-        tour_date:     TOUR_DATE,
-        template_name: document.getElementById("broadcastTemplate").value || null,
-        message_body:  body,
-        recipients:    recipients,
-        send_sms:      document.getElementById("bcastSms").checked,
-        send_email:    document.getElementById("bcastEmail").checked,
-      })
-    });
-    const data = await res.json();
-    closeBroadcast();
-    alert(`Broadcast sent!\nSMS: ${data.sms_sent} sent, ${data.sms_failed} failed\nEmail: ${data.email_sent} sent, ${data.email_failed} failed`);
-  } catch(e) {
-    alert("Send failed. Please try again.");
-  } finally {
-    btn.disabled = false;
-    btn.textContent = "📣 Send to all";
+    // Show overlay
+    const overlay = document.getElementById("broadcastOverlay");
+    overlay.style.display = "flex";
   }
-}
 
-// ── Notes dialog ──────────────────────────────────────────────────────────────
-async function openNotes(bookingId, orderNum, name) {
-  _currentBookingId = bookingId;
-  document.getElementById("notesTitle").textContent = `Order ${orderNum}`;
-  document.getElementById("notesSubtitle").textContent = name;
-  document.getElementById("noteInput").value = "";
-  document.getElementById("notesOverlay").style.display = "flex";
-  await fetchNotes();
-  _pollTimer = setInterval(fetchNotes, 20000);
-}
-
-function closeNotes() {
-  document.getElementById("notesOverlay").style.display = "none";
-  _currentBookingId = null;
-  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
-}
-
-async function fetchNotes() {
-  if (!_currentBookingId) return;
-  try {
-    const res = await fetch(`/booking-notes/${_currentBookingId}`);
-    const data = await res.json();
-    renderNotes(data.notes);
-  } catch(e) {}
-}
-
-function renderNotes(notes) {
-  const container = document.getElementById("notesMessages");
-  const empty = document.getElementById("notesEmpty");
-  if (!notes || notes.length === 0) {
-    empty.style.display = "block";
-    return;
+  function onTemplateChange() {
+    const sel = document.getElementById("broadcastTemplate");
+    const t = _broadcastTemplates.find(t => t.name === sel.value);
+    if (t) document.getElementById("broadcastBody").value = t.body;
   }
-  empty.style.display = "none";
 
-  const directionStyle = {
-    "staff_note":  {bg:"#e8f4fd", label:"Note",         color:"#0c5460"},
-    "sms_out":     {bg:"#d4edda", label:"SMS sent",      color:"#155724"},
-    "email_out":   {bg:"#d1ecf1", label:"Email sent",    color:"#0c5460"},
-    "guest_reply": {bg:"#fff3cd", label:"Guest reply",   color:"#856404"},
-  };
+  function closeBroadcast() {
+    document.getElementById("broadcastOverlay").style.display = "none";
+  }
 
-  const html = notes.map(n => {
-    const s = directionStyle[n.direction] || {bg:"#f0f0f0", label:n.direction, color:"#333"};
-    const statusTag = n.sms_status
-      ? `<span style="font-size:10px;color:${n.sms_status==='sent'?'#28a745':'#dc3545'};">SMS:${n.sms_status}</span>`
-      : "";
-    const emailTag = n.email_status
-      ? `<span style="font-size:10px;color:${n.email_status==='sent'?'#28a745':'#dc3545'};">Email:${n.email_status}</span>`
-      : "";
-    return `<div style="background:${s.bg};border-radius:8px;padding:10px 12px;">
+  async function sendBroadcast() {
+    const body = document.getElementById("broadcastBody").value.trim();
+    if (!body) { alert("Please enter a message."); return; }
+
+    const checked = document.querySelectorAll(".rec-check:checked");
+    const idxs = Array.from(checked).map(c => parseInt(c.dataset.idx));
+    const recipients = idxs.map(i => _broadcastRecipients[i]);
+    if (!recipients.length) { alert("No recipients selected."); return; }
+
+    const btn = document.getElementById("broadcastSendBtn");
+    btn.disabled = true;
+    btn.textContent = "Sending...";
+
+    try {
+      const res = await fetch("/booking-notes/broadcast/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          module: MODULE,
+          group_filter: _broadcastGroup,
+          status_filter: _broadcastStatus,
+          tour_date: TOUR_DATE,
+          template_name: document.getElementById("broadcastTemplate").value || null,
+          message_body: body,
+          recipients: recipients,
+          send_sms: document.getElementById("bcastSms").checked,
+          send_email: document.getElementById("bcastEmail").checked,
+        })
+      });
+      const data = await res.json();
+      closeBroadcast();
+      alert(`Broadcast sent!\nSMS: ${data.sms_sent} sent, ${data.sms_failed} failed\nEmail: ${data.email_sent} sent, ${data.email_failed} failed`);
+    } catch (e) {
+      alert("Send failed. Please try again.");
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "📣 Send to all";
+    }
+  }
+
+  // ── Notes dialog ──────────────────────────────────────────────────────────────
+  async function openNotes(bookingId, orderNum, name) {
+    _currentBookingId = bookingId;
+    document.getElementById("notesTitle").textContent = `Order ${orderNum}`;
+    document.getElementById("notesSubtitle").textContent = name;
+    document.getElementById("noteInput").value = "";
+    document.getElementById("notesOverlay").style.display = "flex";
+    await fetchNotes();
+    _pollTimer = setInterval(fetchNotes, 20000);
+  }
+
+  function closeNotes() {
+    document.getElementById("notesOverlay").style.display = "none";
+    _currentBookingId = null;
+    if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+  }
+
+  async function fetchNotes() {
+    if (!_currentBookingId) return;
+    try {
+      const res = await fetch(`/booking-notes/${_currentBookingId}`);
+      const data = await res.json();
+      renderNotes(data.notes);
+    } catch (e) { }
+  }
+
+  function renderNotes(notes) {
+    const container = document.getElementById("notesMessages");
+    const empty = document.getElementById("notesEmpty");
+    if (!notes || notes.length === 0) {
+      empty.style.display = "block";
+      return;
+    }
+    empty.style.display = "none";
+
+    const directionStyle = {
+      "staff_note": { bg: "#e8f4fd", label: "Note", color: "#0c5460" },
+      "sms_out": { bg: "#d4edda", label: "SMS sent", color: "#155724" },
+      "email_out": { bg: "#d1ecf1", label: "Email sent", color: "#0c5460" },
+      "guest_reply": { bg: "#fff3cd", label: "Guest reply", color: "#856404" },
+    };
+
+    const html = notes.map(n => {
+      const s = directionStyle[n.direction] || { bg: "#f0f0f0", label: n.direction, color: "#333" };
+      const statusTag = n.sms_status
+        ? `<span style="font-size:10px;color:${n.sms_status === 'sent' ? '#28a745' : '#dc3545'};">SMS:${n.sms_status}</span>`
+        : "";
+      const emailTag = n.email_status
+        ? `<span style="font-size:10px;color:${n.email_status === 'sent' ? '#28a745' : '#dc3545'};">Email:${n.email_status}</span>`
+        : "";
+      return `<div style="background:${s.bg};border-radius:8px;padding:10px 12px;">
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
         <span style="font-size:11px;font-weight:600;color:${s.color};background:rgba(0,0,0,.06);padding:1px 7px;border-radius:20px;">${s.label}</span>
         <span style="font-size:11px;color:#888;">${n.author_username}</span>
@@ -438,41 +483,41 @@ function renderNotes(notes) {
       </div>
       <div style="font-size:13px;color:#212529;white-space:pre-wrap;">${n.body}</div>
     </div>`;
-  }).join("");
+    }).join("");
 
-  container.innerHTML = html + '<div id="notesEmpty" style="display:none;"></div>';
-  container.scrollTop = container.scrollHeight;
+    container.innerHTML = html + '<div id="notesEmpty" style="display:none;"></div>';
+    container.scrollTop = container.scrollHeight;
 
-  // Update bubble count on row
-  const tr = document.querySelector(`tr[data-booking-id="${_currentBookingId}"]`);
-  if (tr) {
-    const btn = tr.querySelector('td:last-child button span');
-    if (btn) {
-      btn.style.background = "#1a3a5c";
-      btn.style.color = "#fff";
-      btn.textContent = notes.length;
+    // Update bubble count on row
+    const tr = document.querySelector(`tr[data-booking-id="${_currentBookingId}"]`);
+    if (tr) {
+      const btn = tr.querySelector('td:last-child button span');
+      if (btn) {
+        btn.style.background = "#1a3a5c";
+        btn.style.color = "#fff";
+        btn.textContent = notes.length;
+      }
     }
   }
-}
 
-async function submitNote(defaultDirection) {
-  const body = document.getElementById("noteInput").value.trim();
-  if (!body || !_currentBookingId) return;
-  const sendSms   = document.getElementById("sendSmsCheck").checked;
-  const sendEmail = document.getElementById("sendEmailCheck").checked;
+  async function submitNote(defaultDirection) {
+    const body = document.getElementById("noteInput").value.trim();
+    if (!body || !_currentBookingId) return;
+    const sendSms = document.getElementById("sendSmsCheck").checked;
+    const sendEmail = document.getElementById("sendEmailCheck").checked;
 
-  try {
-    const res = await fetch(`/booking-notes/${_currentBookingId}`, {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
-      body: JSON.stringify({body, direction: defaultDirection, send_sms: sendSms, send_email: sendEmail})
-    });
-    const data = await res.json();
-    document.getElementById("noteInput").value = "";
-    await fetchNotes();
-  } catch(e) {
-    alert("Failed to save note.");
+    try {
+      const res = await fetch(`/booking-notes/${_currentBookingId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ body, direction: defaultDirection, send_sms: sendSms, send_email: sendEmail })
+      });
+      const data = await res.json();
+      document.getElementById("noteInput").value = "";
+      await fetchNotes();
+    } catch (e) {
+      alert("Failed to save note.");
+    }
   }
-}
 </script>
 {% endblock %}
