@@ -194,6 +194,18 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
+      transition: border-color 0.15s;
+    }
+
+    .stat-card:hover {
+      border-color: #2F7851;
+      background: #f7fbf8;
+    }
+
+    .stat-card.sc-active {
+      border-color: #2F7851;
+      border-width: 1.5px;
+      background: #D5F0D8;
     }
 
     .stat-card .num {
@@ -722,23 +734,23 @@
     </div>
 
     <div class="stats-row">
-      <div class="stat-card">
+      <div class="stat-card" onclick="filterByStatus('')" style="cursor:pointer;" title="Show all">
         <div class="num" id="stat-total">—</div>
         <div class="lbl">Total</div>
       </div>
-      <div class="stat-card s-yes">
+      <div class="stat-card s-yes" onclick="filterByStatus('yes')" style="cursor:pointer;" title="Filter YES">
         <div class="num" id="stat-yes">—</div>
         <div class="lbl">YES</div>
       </div>
-      <div class="stat-card s-modify">
+      <div class="stat-card s-modify" onclick="filterByStatus('modify_req')" style="cursor:pointer;" title="Filter Modify">
         <div class="num" id="stat-modify">—</div>
         <div class="lbl">Modify</div>
       </div>
-      <div class="stat-card s-pending">
+      <div class="stat-card s-pending" onclick="filterByStatus('pending')" style="cursor:pointer;" title="Filter Pending">
         <div class="num" id="stat-pending">—</div>
         <div class="lbl">Pending</div>
       </div>
-      <div class="stat-card s-cancel">
+      <div class="stat-card s-cancel" onclick="filterByStatus('cancel')" style="cursor:pointer;" title="Filter Cancel">
         <div class="num" id="stat-cancel">—</div>
         <div class="lbl">Cancel</div>
       </div>
@@ -759,9 +771,9 @@
       <span class="records-count" id="records-count">— records</span>
       <!-- Broadcast -->
       <div style="position:relative;display:inline-block;" id="broadcastWrap">
-        <div style="display:inline-flex;align-items:stretch;border-radius:8px;border:1px solid #f09595;overflow:hidden;">
-          <button onclick="toggleBroadcastMenu()" style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px;background:#fcebeb;color:#791f1f;border:none;cursor:pointer;font-weight:500;">&#128227; Broadcast</button>
-          <button onclick="toggleBroadcastMenu()" style="font-size:13px;padding:6px 9px;background:#f7c1c1;color:#791f1f;border:none;border-left:1px solid #f09595;cursor:pointer;">&#8964;</button>
+        <div style="display:inline-flex;align-items:stretch;border-radius:8px;border:1px solid #9ED3A9;overflow:hidden;">
+          <button onclick="toggleBroadcastMenu()" style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px;background:#D5F0D8;color:#2F7851;border:none;cursor:pointer;font-weight:500;">&#128227; Broadcast</button>
+          <button onclick="toggleBroadcastMenu()" style="font-size:13px;padding:6px 9px;background:#9ED3A9;color:#2F7851;border:none;border-left:1px solid #9ED3A9;cursor:pointer;">&#8964;</button>
         </div>
         <div id="broadcastMenu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:4px 0;min-width:240px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.08);">
           <div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;" id="broadcastMenuTitle">Tour</div>
@@ -791,7 +803,7 @@
               <td style="width:55px">🏛️ MTLV<div class="col-resizer"></div></td>
               <td style="width:65px">🎟️ Tickets<div class="col-resizer"></div></td>
               <td style="width:150px">Notes<div class="col-resizer"></div></td>
-              <td style="width:55px">💬<div class="col-resizer"></div></td>
+              <td style="width:90px">Message 💬<div class="col-resizer"></div></td>
               <td style="width:100px">Submitted<div class="col-resizer"></div></td>
             </tr>
           </thead>
@@ -921,6 +933,19 @@
       document.getElementById('lunch-groups').innerHTML = lunchHtml;
     }
 
+    function filterByStatus(val) {
+      const sel = document.getElementById('status-filter');
+      sel.value = val;
+      // highlight active stat card
+      document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('sc-active'));
+      if (val) {
+        const map = { yes: 'stat-yes', modify_req: 'stat-modify', pending: 'stat-pending', cancel: 'stat-cancel' };
+        const el = document.getElementById(map[val]);
+        if (el) el.closest('.stat-card').classList.add('sc-active');
+      }
+      applyFilter();
+    }
+
     function applyFilter() {
       const search = document.getElementById('search-input').value.toLowerCase();
       const statusF = document.getElementById('status-filter').value;
@@ -1024,8 +1049,8 @@
         <button onclick="openNotes(${r.id},'${r.order_number}','${(r.first_name||r.guest_name||'').replace(/'/g,"\\'")}')
 " style="background:none;border:none;cursor:pointer;padding:4px;" class="notes-bubble-btn">
           ${(r.notes_count && r.notes_count > 0)
-            ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#2F7851;color:#fff;border-radius:50%;font-size:11px;font-weight:600;">${r.notes_count}</span>`
-            : `<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#D5F0D8;color:#2F7851;border-radius:50%;font-size:16px;">+</span>`}
+            ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:#E24B4A;color:#fff;border-radius:50%;font-size:12px;font-weight:600;">${r.notes_count}</span>`
+            : `<span style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;background:#f5a623;color:#fff;border-radius:50%;font-size:16px;">💬</span>`}
         </button>
       </td>
       <td style="font-size:11px;white-space:nowrap;color:#888;">${r.submitted_at || '—'}</td>
@@ -1302,7 +1327,9 @@
         const bubble = tr.querySelector('.notes-bubble-btn span');
         if (!bubble) return;
         if (prev !== undefined && (r.notes_count || 0) > prev) {
-          bubble.style.background = '#E24B4A';  // red = new message
+          bubble.style.background = '#E24B4A';
+          bubble.style.width = '32px';
+          bubble.style.height = '32px';
         }
       });
     }
