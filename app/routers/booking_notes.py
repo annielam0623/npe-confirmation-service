@@ -13,7 +13,7 @@ from app.database import get_db
 from app.auth import require_staff
 from app.models import Booking, BookingNote, BroadcastLog, BroadcastRecipient
 from app.services.sms import send_sms_async
-from app.services.mailer import send_email
+from app.services.sendgrid import send_email
 
 router = APIRouter(prefix="/booking-notes", tags=["booking_notes"])
 

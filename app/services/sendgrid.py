@@ -300,3 +300,7 @@ async def send_staff_notification(booking, conf: str,
 async def send_raw_email(to_email: str, to_name: str, subject: str,
                          html_body: str, attachments: list[dict] | None = None) -> dict:
     return await _send(to_email, subject, html_body, attachments)
+
+async def send_email(to_email: str, subject: str, html_body: str) -> dict:
+    """Simple 3-arg wrapper used by booking_notes and broadcast."""
+    return await _send(to_email, subject, html_body)
