@@ -12,6 +12,7 @@ import json
 import secrets
 from datetime import datetime, date
 from typing import Optional
+from unittest import result
 
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -606,16 +607,16 @@ async def twilio_inbound_sms(request: Request, db: AsyncSession = Depends(get_db
     suffix = clean_from[-10:] if len(clean_from) >= 10 else clean_from
 
     result = await db.execute(
-        _text("""
-            SELECT sl.booking_id
-            FROM send_log sl
-            WHERE RIGHT(REGEXP_REPLACE(sl.phone, '[^0-9]', '', 'g'), 10) = :suffix
-              AND sl.booking_id IS NOT NULL
-            ORDER BY sl.sent_at DESC
-            LIMIT 1
-        """),
-        {"suffix": suffix},
-    )
+    _text("""
+        SELECT b.id as booking_id
+        FROM send_log sl
+        JOIN bookings b ON b.order_number = sl.order_number
+        WHERE RIGHT(REGEXP_REPLACE(sl.phone, '[^0-9]', '', 'g'), 10) = :suffix
+        ORDER BY sl.sent_at DESC
+        LIMIT 1
+    """),
+    {"suffix": suffix},
+)
     row = result.fetchone()
 
     if not row or not row.booking_id:
