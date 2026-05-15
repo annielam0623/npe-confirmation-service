@@ -1,509 +1,1394 @@
-{% extends "base.html" %}
-{% block title %}Tour Confirmation Tracking{% endblock %}
-{% block content %}
-<style>
-  .container {
-    width: 100%;
-    padding: 20px 24px;
-  }
+<!DOCTYPE html>
+<html lang="en">
 
-  .page-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
-    flex-wrap: wrap;
-  }
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tour Confirmation Tracking — NPE</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-  .page-header h2 {
-    margin: 0;
-    font-size: 18px;
-    color: #1a3a5c;
-    flex: 1;
-  }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f3;
+      color: #1a1a1a;
+    }
 
-  .date-nav {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+    .topbar {
+      background: #fff;
+      border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+      padding: 0 24px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
 
-  .btn-today {
-    padding: 5px 12px;
-    background: #1a3a5c;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-size: 13px;
-    cursor: pointer;
-  }
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
 
-  .btn-today:hover {
-    background: #15304d;
-  }
+    .topbar-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #3B6D11;
+    }
 
-  .btn-nav {
-    padding: 5px 10px;
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    font-size: 16px;
-    cursor: pointer;
-  }
+    .back-btn {
+      font-size: 12px;
+      color: #888;
+      text-decoration: none;
+      padding: 4px 10px;
+      border: 0.5px solid rgba(0, 0, 0, 0.15);
+      border-radius: 6px;
+    }
 
-  .date-wrap input[type=date] {
-    padding: 5px 10px;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    font-size: 13px;
-    cursor: pointer;
-    min-width: 130px;
-  }
+    .back-btn:hover {
+      color: #1a1a1a;
+    }
 
-  .btn-refresh {
-    padding: 5px 12px;
-    background: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-    font-size: 13px;
-    cursor: pointer;
-  }
+    .container {
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px 24px;
+    }
 
-  .btn-export {
-    padding: 5px 12px;
-    background: #198754;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-size: 13px;
-    cursor: pointer;
-  }
+    .date-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
 
-  .pills-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 14px;
-  }
+    .btn-nav {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      border: 0.5px solid rgba(0, 0, 0, 0.15);
+      background: #fff;
+      cursor: pointer;
+      font-size: 15px;
+      color: #555;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-  .pill {
-    padding: 5px 12px;
-    border-radius: 20px;
-    border: 1px solid #dee2e6;
-    background: #f8f9fa;
-    font-size: 12px;
-    cursor: pointer;
-    white-space: nowrap;
-  }
+    .btn-nav:hover {
+      background: #f5f5f3;
+    }
 
-  .pill.active {
-    background: #1a3a5c;
-    color: #fff;
-    border-color: #1a3a5c;
-  }
+    .date-display {
+      background: #fff;
+      border: 0.5px solid rgba(0, 0, 0, 0.15);
+      padding: 5px 10px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 500;
+      min-width: 130px;
+      text-align: center;
+      cursor: pointer;
+      outline: none;
+      font-family: inherit;
+    }
 
-  .stats-row {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 14px;
-    flex-wrap: wrap;
-  }
+    .date-display:focus {
+      border-color: #3B6D11;
+    }
 
-  .stat-card {
-    flex: 1;
-    min-width: 90px;
-    background: #fff;
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    padding: 10px 14px;
-    text-align: center;
-  }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 12px;
+      border-radius: 7px;
+      border: 0.5px solid rgba(0, 0, 0, 0.15);
+      font-size: 12px;
+      cursor: pointer;
+      background: #fff;
+      color: #555;
+      text-decoration: none;
+    }
 
-  .stat-card .num {
-    font-size: 22px;
-    font-weight: 700;
-    color: #1a3a5c;
-  }
+    .btn:hover {
+      background: #f5f5f3;
+    }
 
-  .stat-card .lbl {
-    font-size: 11px;
-    color: #888;
-    margin-top: 2px;
-  }
+    .btn-green {
+      background: #3B6D11;
+      color: #fff;
+      border-color: #3B6D11;
+    }
 
-  .stat-yes .num {
-    color: #198754;
-  }
+    .btn-green:hover {
+      background: #2d5409;
+    }
 
-  .stat-modify .num {
-    color: #0d6efd;
-  }
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
 
-  .stat-pending .num {
-    color: #fd7e14;
-  }
+    .pill {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: pointer;
+      border: 0.5px solid rgba(0, 0, 0, 0.15);
+      background: #fff;
+      color: #555;
+      white-space: nowrap;
+    }
 
-  .track-tbl {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 12px;
-    table-layout: fixed;
-  }
+    .pill:hover {
+      border-color: #3B6D11;
+      color: #3B6D11;
+    }
 
-  .track-tbl thead td {
-    background: #1a3a5c;
-    color: #fff;
-    padding: 9px 10px;
-    font-weight: 600;
-    white-space: nowrap;
-    position: relative;
-    user-select: none;
-  }
+    .pill.active {
+      background: #EAF3DE;
+      border-color: #3B6D11;
+      color: #3B6D11;
+      font-weight: 600;
+    }
 
-  .track-tbl tbody tr:hover {
-    background: #f0f5ff;
-  }
+    .pill .ratio {
+      font-size: 11px;
+      margin-left: 4px;
+      color: #888;
+    }
 
-  .track-tbl tbody td {
-    padding: 8px 10px;
-    border-bottom: 1px solid #f0f0f0;
-    vertical-align: middle;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
+    .pill.active .ratio {
+      color: #3B6D11;
+    }
 
-  .col-resizer {
-    position: absolute;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    width: 5px;
-    cursor: col-resize;
-    z-index: 1;
-    background: transparent;
-  }
+    .stats-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
 
-  .col-resizer:hover,
-  .col-resizer.active {
-    background: rgba(255, 255, 255, .3);
-  }
+    .stat-card {
+      background: #fff;
+      border: 0.5px solid rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      padding: 10px 18px;
+      text-align: center;
+      min-width: 80px;
+    }
 
-  .s-sel {
-    border: none;
-    background: transparent;
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    padding: 2px 4px;
-    border-radius: 4px;
-  }
+    .stat-card .num {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1a1a1a;
+    }
 
-  .s-sel.yes {
-    color: #198754;
-  }
+    .stat-card .lbl {
+      font-size: 11px;
+      color: #aaa;
+      margin-top: 2px;
+    }
 
-  .s-sel.modify {
-    color: #0d6efd;
-  }
+    .stat-card.s-yes .num {
+      color: #3B6D11;
+    }
 
-  .s-sel.pending {
-    color: #fd7e14;
-  }
+    .stat-card.s-modify .num {
+      color: #e67e22;
+    }
 
-  .s-sel:focus {
-    outline: 1px solid #1a3a5c;
-    background: #f8f9fa;
-  }
+    .stat-card.s-pending .num {
+      color: #185FA5;
+    }
 
-  .notes-input {
-    width: 100%;
-    border: 1px solid transparent;
-    border-radius: 4px;
-    font-size: 11px;
-    font-family: inherit;
-    padding: 3px 5px;
-    resize: none;
-    overflow: hidden;
-    line-height: 1.4;
-    background: transparent;
-  }
+    .stat-card.s-cancel .num {
+      color: #A32D2D;
+    }
 
-  .notes-input:focus {
-    border-color: #ffc107;
-    background: #fff9e6;
-    outline: none;
-  }
+    .lunch-groups {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
 
-  .notes-input.dirty {
-    background: #fff9e6;
-    border-color: #ffc107;
-  }
+    .lunch-card {
+      background: #fff;
+      border: 0.5px solid rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+      padding: 8px 14px;
+    }
 
-  #notes-hdr.has-dirty {
-    background: #fff3cd !important;
-    color: #856404 !important;
-  }
+    .lunch-card .lc-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #3B6D11;
+      margin-bottom: 4px;
+    }
 
-  .badge-sent {
-    color: #198754;
-    font-size: 11px;
-    font-weight: 600;
-  }
+    .lunch-card .lc-counts {
+      display: flex;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
 
-  .badge-delivered {
-    color: #0d6efd;
-    font-size: 11px;
-    font-weight: 600;
-  }
+    .filter-bar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
 
-  .badge-failed {
-    color: #dc3545;
-    font-size: 11px;
-    font-weight: 600;
-  }
+    .filter-bar input[type=text] {
+      padding: 6px 10px;
+      border: 0.5px solid rgba(0, 0, 0, 0.2);
+      border-radius: 7px;
+      font-size: 13px;
+      width: 220px;
+    }
 
-  .badge-queued {
-    color: #6c757d;
-    font-size: 11px;
-  }
+    .filter-bar input[type=text]:focus {
+      outline: none;
+      border-color: #3B6D11;
+    }
 
-  .badge-none {
-    color: #adb5bd;
-    font-size: 11px;
-  }
-</style>
+    .filter-bar select {
+      padding: 6px 10px;
+      border: 0.5px solid rgba(0, 0, 0, 0.2);
+      border-radius: 7px;
+      font-size: 13px;
+      background: #fff;
+    }
 
-<div class="container">
-  <div class="page-header">
-    <h2>🚌 Tour Confirmation Tracking</h2>
-    <div class="date-nav">
-      <button class="btn-today" onclick="goToday()">Today</button>
-      <button class="btn-today" style="background:#6c757d;" onclick="goTomorrow()">Tomorrow</button>
-      <button class="btn-nav" onclick="changeDate(-1)">&#8249;</button>
-      <div class="date-wrap">
-        <input type="date" id="date-input" onclick="this.showPicker&&this.showPicker()" onchange="loadData()">
-      </div>
-      <button class="btn-nav" onclick="changeDate(1)">&#8250;</button>
-      <button class="btn-refresh" onclick="loadData()">&#x21bb;</button>
+    .records-count {
+      font-size: 12px;
+      color: #aaa;
+      margin-left: auto;
+    }
+
+    .table-card {
+      background: #fff;
+      border: 0.5px solid rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .table-header {
+      padding: 10px 16px;
+      background: #EAF3DE;
+      border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .table-header span {
+      font-size: 13px;
+      font-weight: 600;
+      color: #3B6D11;
+    }
+
+
+
+    /* Column drag reorder */
+    .track-tbl thead td { cursor: grab; }
+    .track-tbl thead td.col-dragging { opacity: 0.4; background: #e8f0e0; }
+    .track-tbl thead td.col-drag-over { border-left: 2px solid #3B6D11; }
+
+    /* Resizable columns */
+    .track-tbl thead td { position: relative; user-select: none; }
+    .col-resizer {
+      position: absolute; right: 0; top: 0; bottom: 0;
+      width: 5px; cursor: col-resize; z-index: 1;
+      background: transparent;
+    }
+    .col-resizer:hover, .col-resizer.active { background: rgba(100,160,220,0.4); }
+
+    table.track-tbl {
+      width: max-content;
+      min-width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      table-layout: auto;
+    }
+
+    .track-tbl thead td {
+      padding: 8px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #999;
+      background: #f9f9f7;
+      border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
+      white-space: nowrap;
+    }
+
+    .track-tbl tbody tr {
+      border-bottom: 0.5px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .track-tbl tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    .track-tbl tbody tr:hover {
+      background: #fafaf8;
+    }
+
+    .track-tbl tbody td {
+      padding: 8px 10px;
+      color: #444;
+      vertical-align: middle;
+    }
+
+    .sp {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .sp-yes {
+      background: #EAF3DE;
+      color: #3B6D11;
+    }
+
+    .sp-modify {
+      background: #FEF3E2;
+      color: #e67e22;
+    }
+
+    .sp-pending {
+      background: #E6F1FB;
+      color: #185FA5;
+    }
+
+    .sp-cancel {
+      background: #FCEBEB;
+      color: #A32D2D;
+    }
+
+    .sp-sent {
+      background: #EEEDFE;
+      color: #534AB7;
+    }
+
+    .sp-delivered {
+      background: #EAF3DE;
+      color: #3B6D11;
+    }
+
+    .sp-failed {
+      background: #FCEBEB;
+      color: #A32D2D;
+    }
+
+    .sp-undelivered {
+      background: #FEF3E2;
+      color: #e67e22;
+    }
+
+    .conf-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .conf-select {
+      font-size: 11px;
+      font-weight: 600;
+      border: 0.5px solid rgba(0, 0, 0, 0.2);
+      border-radius: 6px;
+      padding: 2px 4px;
+      background: #fff;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .conf-select:focus {
+      border-color: #3B6D11;
+    }
+
+    .conf-select.v-yes {
+      color: #3B6D11;
+    }
+
+    .conf-select.v-modify {
+      color: #e67e22;
+    }
+
+    .conf-select.v-pending {
+      color: #185FA5;
+    }
+
+    .conf-select.v-cancel {
+      color: #A32D2D;
+    }
+
+    .conf-btn {
+      width: 20px;
+      height: 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .conf-save-btn {
+      background: #3B6D11;
+      color: #fff;
+    }
+
+    .conf-save-btn:hover {
+      background: #2d5409;
+    }
+
+    .conf-undo-btn {
+      background: #eee;
+      color: #555;
+    }
+
+    .conf-undo-btn:hover {
+      background: #ddd;
+    }
+
+    .star {
+      color: #e74c3c;
+      font-size: 11px;
+      margin-left: 2px;
+    }
+
+    .notes-cell {
+      max-width: 140px;
+    }
+
+    .notes-text {
+      background: #fffde7;
+      border: 0.5px solid #f0d080;
+      border-radius: 4px;
+      padding: 3px 6px;
+      font-size: 11px;
+      color: #555;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 130px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .notes-text.expanded {
+      white-space: normal;
+      overflow: visible;
+      max-width: none;
+    }
+
+    .notes-collapse {
+      font-size: 10px;
+      color: #3B6D11;
+      cursor: pointer;
+      text-decoration: underline;
+      display: block;
+      margin-top: 2px;
+    }
+
+    .lunch-val {
+      cursor: pointer;
+      color: #333;
+      font-weight: 600;
+      border-bottom: 1px dashed #ccc;
+    }
+
+    .lunch-val:hover {
+      color: #3B6D11;
+    }
+
+    .lunch-dash {
+      color: #ccc;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      min-width: 300px;
+      max-width: 380px;
+      width: 90%;
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .modal-sub {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 16px;
+    }
+
+    .lunch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .lunch-row label {
+      font-size: 13px;
+      color: #555;
+    }
+
+    .lunch-row input {
+      width: 70px;
+      padding: 6px 8px;
+      border: 0.5px solid rgba(0, 0, 0, 0.2);
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .modal-save-btn {
+      flex: 1;
+      background: #3B6D11;
+      color: #fff;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .modal-save-btn:hover {
+      background: #2d5409;
+    }
+
+    .modal-cancel-btn {
+      flex: 1;
+      background: #f5f5f3;
+      color: #555;
+      border: 0.5px solid rgba(0, 0, 0, 0.15);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .sp-mtlv-pending {
+      background: #E6F1FB;
+      color: #185FA5;
+    }
+
+    .sp-mtlv-num {
+      background: #ede7f6;
+      color: #512da8;
+      font-weight: 700;
+    }
+
+    .tkt-select {
+      font-size: 11px;
+      font-weight: 600;
+      border: 0.5px solid rgba(0, 0, 0, 0.2);
+      border-radius: 6px;
+      padding: 2px 4px;
+      background: #fff;
+      cursor: pointer;
+      outline: none;
+      color: #185FA5;
+    }
+
+    .tkt-select.v-sent {
+      color: #3B6D11;
+    }
+
+    .tkt-select:focus {
+      border-color: #512da8;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 13px;
+      padding: 2px 4px;
+      border-radius: 4px;
+    }
+
+    .action-btn:hover {
+      background: #fee2e2;
+    }
+
+    .action-done {
+      font-size: 11px;
+      color: #3B6D11;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <a href="/admin/manifests" class="back-btn">← Back</a>
+      <span class="topbar-title">🟢 Tour Confirmation Tracking</span>
     </div>
-    <button class="btn-export" onclick="exportCSV()">&#x1F4BE; Export CSV</button>
-    <div style="position:relative;display:inline-block;" id="broadcastWrap">
-      <div style="display:inline-flex;align-items:stretch;border-radius:8px;border:1px solid #f09595;overflow:hidden;">
-        <button onclick="toggleBroadcastMenu()"
-          style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px;background:#fcebeb;color:#791f1f;border:none;cursor:pointer;font-weight:500;">&#128227;
-          Broadcast</button>
-        <button onclick="toggleBroadcastMenu()"
-          style="font-size:13px;padding:6px 9px;background:#f7c1c1;color:#791f1f;border:none;border-left:1px solid #f09595;cursor:pointer;">&#8964;</button>
+    <div style="display:flex;gap:8px;">
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="date-nav">
+      <button class="btn-nav" onclick="changeDate(-1)">‹</button>
+      <input type="date" class="date-display" id="date-display" onchange="onDatePick(this.value)"
+        onclick="try{this.showPicker()}catch(e){}">
+      <button class="btn-nav" onclick="changeDate(1)">›</button>
+      <button class="btn" onclick="goToday()">Today</button>
+      <button class="btn" onclick="goTomorrow()">Tomorrow</button>
+    </div>
+
+    <div class="pills" id="pills-container"></div>
+
+    <!-- Notes notification banner -->
+    <div id="notes-banner" style="display:none;background:#fff3cd;border:1px solid #f0c040;border-radius:8px;padding:10px 14px;margin-bottom:10px;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="font-size:16px;">💬</span>
+      <span id="notes-banner-text" style="flex:1;font-size:13px;color:#856404;"></span>
+      <button onclick="dismissNotesBanner()" style="background:none;border:none;cursor:pointer;color:#856404;font-size:18px;line-height:1;">&times;</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="num" id="stat-total">—</div>
+        <div class="lbl">Total</div>
       </div>
-      <div id="broadcastMenu"
-        style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:4px 0;min-width:240px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.08);">
-        <div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;"
-          id="broadcastMenuTitle">Tour</div>
-        <div id="broadcastMenuItems">
-          <div style="padding:8px 14px;font-size:13px;color:#aaa;">Loading...</div>
+      <div class="stat-card s-yes">
+        <div class="num" id="stat-yes">—</div>
+        <div class="lbl">YES</div>
+      </div>
+      <div class="stat-card s-modify">
+        <div class="num" id="stat-modify">—</div>
+        <div class="lbl">Modify</div>
+      </div>
+      <div class="stat-card s-pending">
+        <div class="num" id="stat-pending">—</div>
+        <div class="lbl">Pending</div>
+      </div>
+      <div class="stat-card s-cancel">
+        <div class="num" id="stat-cancel">—</div>
+        <div class="lbl">Cancel</div>
+      </div>
+      <div class="lunch-groups" id="lunch-groups"></div>
+    </div>
+
+    <div class="filter-bar">
+      <input type="text" id="search-input" placeholder="Search order #, name, phone…" oninput="applyFilter()">
+      <select id="status-filter" onchange="applyFilter()">
+        <option value="">All Statuses</option>
+        <option value="yes">YES</option>
+        <option value="modify_req">Modify</option>
+        <option value="pending">Pending</option>
+        <option value="cancel">Cancel</option>
+      </select>
+      <button class="btn" onclick="exportCsv()">⬇ Export</button>
+      <button class="btn btn-green" onclick="loadData()">↻ Refresh</button>
+      <span class="records-count" id="records-count">— records</span>
+      <!-- Broadcast -->
+      <div style="position:relative;display:inline-block;" id="broadcastWrap">
+        <div style="display:inline-flex;align-items:stretch;border-radius:8px;border:1px solid #f09595;overflow:hidden;">
+          <button onclick="toggleBroadcastMenu()" style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px;background:#fcebeb;color:#791f1f;border:none;cursor:pointer;font-weight:500;">&#128227; Broadcast</button>
+          <button onclick="toggleBroadcastMenu()" style="font-size:13px;padding:6px 9px;background:#f7c1c1;color:#791f1f;border:none;border-left:1px solid #f09595;cursor:pointer;">&#8964;</button>
+        </div>
+        <div id="broadcastMenu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:4px 0;min-width:240px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.08);">
+          <div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;" id="broadcastMenuTitle">Tour</div>
+          <div id="broadcastMenuItems"><div style="padding:8px 14px;font-size:13px;color:#aaa;">Loading...</div></div>
         </div>
       </div>
     </div>
-  </div>
 
-  <div class="pills-bar" id="pills-bar">
-    <span class="pill active" data-tour="all" onclick="filterTour(this,'all')">All <span id="pill-all"></span></span>
-    <span class="pill" data-tour="U-TC" onclick="filterTour(this,'U-TC')">U-TC <span class="pill-cnt"
-        data-code="U-TC"></span></span>
-    <span class="pill" data-tour="U-BR" onclick="filterTour(this,'U-BR')">U-BR <span class="pill-cnt"
-        data-code="U-BR"></span></span>
-    <span class="pill" data-tour="U-AA" onclick="filterTour(this,'U-AA')">U-AA <span class="pill-cnt"
-        data-code="U-AA"></span></span>
-    <span class="pill" data-tour="U-HT" onclick="filterTour(this,'U-HT')">U-HT <span class="pill-cnt"
-        data-code="U-HT"></span></span>
-    <span class="pill" data-tour="U-HH" onclick="filterTour(this,'U-HH')">U-HH <span class="pill-cnt"
-        data-code="U-HH"></span></span>
-    <span class="pill" data-tour="L-KT" onclick="filterTour(this,'L-KT')">L-KT <span class="pill-cnt"
-        data-code="L-KT"></span></span>
-    <span class="pill" data-tour="L-DX" onclick="filterTour(this,'L-DX')">L-DX <span class="pill-cnt"
-        data-code="L-DX"></span></span>
-    <span class="pill" data-tour="X-TT" onclick="filterTour(this,'X-TT')">X-TT <span class="pill-cnt"
-        data-code="X-TT"></span></span>
-    <span class="pill" data-tour="R-AA" onclick="filterTour(this,'R-AA')">R-AA <span class="pill-cnt"
-        data-code="R-AA"></span></span>
-  </div>
-
-  <div class="stats-row">
-    <div class="stat-card">
-      <div class="num" id="stat-total">—</div>
-      <div class="lbl">Total</div>
-    </div>
-    <div class="stat-card stat-yes">
-      <div class="num" id="stat-yes">—</div>
-      <div class="lbl">YES</div>
-    </div>
-    <div class="stat-card stat-modify">
-      <div class="num" id="stat-modify">—</div>
-      <div class="lbl">Modify</div>
-    </div>
-    <div class="stat-card stat-pending">
-      <div class="num" id="stat-pending">—</div>
-      <div class="lbl">Pending</div>
+    <div class="table-card">
+      <div class="table-header"><span>Confirmation Log</span></div>
+      <div>
+<div style="overflow-x:auto;"><table class="track-tbl">
+          <thead>
+            <tr id="thead-row">
+              <td style="width:100px">Order #<div class="col-resizer"></div></td>
+              <td style="width:90px">Status<div class="col-resizer"></div></td>
+              <td style="width:120px">Tour<div class="col-resizer"></div></td>
+              <td style="width:90px">Tour Date<div class="col-resizer"></div></td>
+              <td style="width:120px">Guest Name<div class="col-resizer"></div></td>
+              <td style="width:110px">Phone<div class="col-resizer"></div></td>
+              <td style="width:50px">Party<div class="col-resizer"></div></td>
+              <td style="width:90px">📧 Email<div class="col-resizer"></div></td>
+              <td style="width:90px">📱 SMS<div class="col-resizer"></div></td>
+              <td style="width:40px">🦃 T<div class="col-resizer"></div></td>
+              <td style="width:40px">🥗 V<div class="col-resizer"></div></td>
+              <td style="width:40px">🥩 B<div class="col-resizer"></div></td>
+              <td style="width:55px">🏛️ MTLV<div class="col-resizer"></div></td>
+              <td style="width:65px">🎟️ Tickets<div class="col-resizer"></div></td>
+              <td style="width:150px">Notes<div class="col-resizer"></div></td>
+              <td style="width:55px">💬<div class="col-resizer"></div></td>
+              <td style="width:100px">Submitted<div class="col-resizer"></div></td>
+            </tr>
+          </thead>
+          <tbody id="track-tbody">
+            <tr>
+              <td colspan="16" style="padding:24px;text-align:center;color:#ccc;">Loading…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 
-  <div>
-    <table class="track-tbl" id="track-tbl">
-      <thead>
-        <tr id="thead-row">
-          <td style="width:100px">Order #<div class="col-resizer"></div>
-          </td>
-          <td style="width:90px">Status<div class="col-resizer"></div>
-          </td>
-          <td style="width:110px">Tour<div class="col-resizer"></div>
-          </td>
-          <td style="width:88px">Tour Date<div class="col-resizer"></div>
-          </td>
-          <td style="width:120px">Guest Name<div class="col-resizer"></div>
-          </td>
-          <td style="width:108px">Phone<div class="col-resizer"></div>
-          </td>
-          <td style="width:46px">Party<div class="col-resizer"></div>
-          </td>
-          <td style="width:80px">📧 Email<div class="col-resizer"></div>
-          </td>
-          <td style="width:80px">📱 SMS<div class="col-resizer"></div>
-          </td>
-          <td style="width:36px">🦃<div class="col-resizer"></div>
-          </td>
-          <td style="width:36px">🥗<div class="col-resizer"></div>
-          </td>
-          <td style="width:36px">🥩<div class="col-resizer"></div>
-          </td>
-          <td style="width:55px">🏛️ MTLV<div class="col-resizer"></div>
-          </td>
-          <td style="width:60px">🎟️ Tix<div class="col-resizer"></div>
-          </td>
-          <td id="notes-hdr" style="width:150px">Notes<div class="col-resizer"></div>
-          </td>
-          <td style="width:55px">💬<div class="col-resizer"></div>
-          </td>
-          <td style="width:95px">Submitted<div class="col-resizer"></div>
-          </td>
-        </tr>
-      </thead>
-      <tbody id="tbl-body">
-        <tr>
-          <td colspan="17" style="text-align:center;padding:40px;color:#aaa;">Loading...</td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Lunch edit modal -->
+  <div class="modal-overlay" id="lunch-modal">
+    <div class="modal-box">
+      <div class="modal-title">Edit Lunch Selection</div>
+      <div class="modal-sub" id="lunch-modal-sub"></div>
+      <div class="lunch-row"><label>🦃 Turkey</label><input type="number" id="lm-turkey" min="0"></div>
+      <div class="lunch-row"><label>🥗 Veggie</label><input type="number" id="lm-veggie" min="0"></div>
+      <div class="lunch-row" id="lm-beef-row"><label>🥩 Beef</label><input type="number" id="lm-beef" min="0"></div>
+      <div class="modal-actions">
+        <button class="modal-save-btn" onclick="saveLunch()">Save</button>
+        <button class="modal-cancel-btn" onclick="closeLunchModal()">Cancel</button>
+      </div>
+    </div>
   </div>
-</div>
 
-<!-- Lunch modal -->
-<div id="lunchModal"
-  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:500;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:12px;padding:24px;width:300px;max-width:95vw;">
-    <h3 style="margin:0 0 16px;color:#1a3a5c;font-size:15px;">Edit Lunch</h3>
-    <input type="hidden" id="lunch-order">
-    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">
-      <label style="display:flex;align-items:center;gap:10px;font-size:13px;">🦃 Turkey <input type="number"
-          id="lunch-t" min="0"
-          style="width:60px;padding:4px 8px;border:1px solid #dee2e6;border-radius:4px;margin-left:auto;"></label>
-      <label style="display:flex;align-items:center;gap:10px;font-size:13px;">🥗 Veggie <input type="number"
-          id="lunch-v" min="0"
-          style="width:60px;padding:4px 8px;border:1px solid #dee2e6;border-radius:4px;margin-left:auto;"></label>
-      <label style="display:flex;align-items:center;gap:10px;font-size:13px;">🥩 Beef <input type="number" id="lunch-b"
-          min="0"
-          style="width:60px;padding:4px 8px;border:1px solid #dee2e6;border-radius:4px;margin-left:auto;"></label>
-    </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;">
-      <button onclick="closeLunch()"
-        style="padding:6px 14px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:13px;cursor:pointer;">Cancel</button>
-      <button onclick="saveLunch()"
-        style="padding:6px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;">Save</button>
-    </div>
-  </div>
-</div>
+  <script>
+    const TOUR_ABBR = {
+      upper_antelope: 'AC-U', lower_antelope: 'AC-L', antelop_X: 'AC-X',
+      grand_canyon_south: 'South', grand_canyon_west: 'West',
+      bryce_zion: 'BZ', valley_of_fire_full: 'VOF-F', valley_of_fire_half: 'VOF-H',
+      hoover_dam: 'HD',
+    };
+    const TOUR_HAS_BEEF = {
+      upper_antelope: true, lower_antelope: true, antelop_X: true,
+      grand_canyon_south: false, grand_canyon_west: false,
+      bryce_zion: false, valley_of_fire_full: false, valley_of_fire_half: false, hoover_dam: false,
+    };
+    const TOUR_HAS_LUNCH = {
+      upper_antelope: true, lower_antelope: true, antelop_X: true,
+      grand_canyon_south: true, grand_canyon_west: false,
+      bryce_zion: true, valley_of_fire_full: true, valley_of_fire_half: false, hoover_dam: false,
+    };
+    const LUNCH_GROUPS = {
+      'Antelope': ['upper_antelope', 'lower_antelope', 'antelop_X'],
+      'South': ['grand_canyon_south'],
+      'BZ': ['bryce_zion'],
+      'VOF-F': ['valley_of_fire_full'],
+    };
+
+    const urlParams = new URLSearchParams(location.search);
+    let currentDate = urlParams.get('date') || new Date().toISOString().split('T')[0];
+    let currentType = 'all';
+    let allRows = [];
+    let lunchEditId = null;
+
+    function onDatePick(val) { currentDate = val; loadData(); }
+    function changeDate(d) {
+      const dt = new Date(currentDate + 'T00:00:00'); dt.setDate(dt.getDate() + d);
+      currentDate = dt.toISOString().split('T')[0];
+      document.getElementById('date-display').value = currentDate; loadData();
+    }
+    function goToday() { currentDate = new Date().toLocaleDateString('en-CA', {timeZone: 'America/Los_Angeles'}); document.getElementById('date-display').value = currentDate; loadData(); }
+    function goTomorrow() { const d = new Date(); d.setDate(d.getDate() + 1); currentDate = d.toISOString().split('T')[0]; document.getElementById('date-display').value = currentDate; loadData(); }
+
+    function filterType(type, el) {
+      currentType = type;
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      el.classList.add('active');
+      applyFilter();
+    }
+
+    async function loadData() {
+      document.getElementById('track-tbody').innerHTML = '<tr><td colspan="16" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
+      try {
+        const res = await fetch(`/api/notifications/tour-confirmation/tracking?date=${currentDate}`);
+        const data = await res.json();
+        allRows = data.rows || [];
+        buildPills();
+        applyFilter();
+      } catch (e) {
+        document.getElementById('track-tbody').innerHTML = '<tr><td colspan="16" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
+      }
+    }
+
+    const TOUR_ORDER = [
+      'upper_antelope', 'lower_antelope', 'antelop_X',
+      'grand_canyon_south', 'grand_canyon_west',
+      'bryce_zion', 'valley_of_fire_full', 'valley_of_fire_half', 'hoover_dam',
+    ];
+
+    function buildPills() {
+      const allReplied = allRows.filter(r => r.confirmation_status !== 'pending').length;
+      let html = `<span class="pill active" onclick="filterType('all',this)">All <span class="ratio">${allReplied}/${allRows.length}</span></span>`;
+      TOUR_ORDER.forEach(t => {
+        const rows = allRows.filter(r => r.tour_type === t);
+        const replied = rows.filter(r => r.confirmation_status !== 'pending').length;
+        html += `<span class="pill" onclick="filterType('${t}',this)">${TOUR_ABBR[t] || t} <span class="ratio">${replied}/${rows.length}</span></span>`;
+      });
+      document.getElementById('pills-container').innerHTML = html;
+    }
+
+    function updateStats(rows) {
+      const yes = rows.filter(r => r.confirmation_status === 'yes').length;
+      const modify = rows.filter(r => r.confirmation_status === 'modify_req').length;
+      const pending = rows.filter(r => r.confirmation_status === 'pending').length;
+      const cancel = rows.filter(r => r.confirmation_status === 'cancel').length;
+      document.getElementById('stat-total').textContent = rows.length;
+      document.getElementById('stat-yes').textContent = yes;
+      document.getElementById('stat-modify').textContent = modify;
+      document.getElementById('stat-pending').textContent = pending;
+      document.getElementById('stat-cancel').textContent = cancel;
+
+      const yesRows = rows.filter(r => r.confirmation_status === 'yes');
+      let lunchHtml = '';
+      Object.entries(LUNCH_GROUPS).forEach(([label, types]) => {
+        const gr = yesRows.filter(r => types.includes(r.tour_type));
+        if (!gr.length) return;
+        const t = gr.reduce((s, r) => s + (r.lunch_turkey || 0), 0);
+        const v = gr.reduce((s, r) => s + (r.lunch_veggie || 0), 0);
+        const b = gr.reduce((s, r) => s + (r.lunch_beef || 0), 0);
+        const hasBf = gr.some(r => TOUR_HAS_BEEF[r.tour_type]);
+        lunchHtml += `<div class="lunch-card"><div class="lc-title">${label}</div><div class="lc-counts">🦃 ${t} &nbsp;🥗 ${v}${hasBf ? ' &nbsp;🥩 ' + b : ''}</div></div>`;
+      });
+      document.getElementById('lunch-groups').innerHTML = lunchHtml;
+    }
+
+    function applyFilter() {
+      const search = document.getElementById('search-input').value.toLowerCase();
+      const statusF = document.getElementById('status-filter').value;
+      let rows = currentType === 'all' ? allRows : allRows.filter(r => r.tour_type === currentType);
+      if (search) rows = rows.filter(r => (r.order_number || '').toLowerCase().includes(search) || (r.guest_name || '').toLowerCase().includes(search) || (r.phone || '').toLowerCase().includes(search));
+      if (statusF) rows = rows.filter(r => r.confirmation_status === statusF);
+      document.getElementById('records-count').textContent = `${rows.length} records`;
+      updateStats(rows);
+      renderTable(rows);
+    }
+
+    function renderTable(rows) {
+      const tbody = document.getElementById('track-tbody');
+      if (!rows.length) { tbody.innerHTML = '<tr><td colspan="16" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>'; return; }
+
+      tbody.innerHTML = rows.map(r => {
+        const conf = r.confirmation_status || 'pending';
+        const abbr = TOUR_ABBR[r.tour_type] || r.tour_type || '—';
+        const star = (r.submission_count > 1) ? '<span class="star">★</span>' : '';
+        const hasLunch = TOUR_HAS_LUNCH[r.tour_type];
+        const hasBf = TOUR_HAS_BEEF[r.tour_type];
+
+        // Status dropdown
+        const vCls = { 'yes': 'v-yes', 'modify_req': 'v-modify', 'pending': 'v-pending', 'cancel': 'v-cancel' }[conf] || 'v-pending';
+        const statusCell = `<div class="conf-wrap">
+      <select class="conf-select ${vCls}" data-id="${r.id}" data-orig="${conf}" onchange="onConfChange(this)">
+        <option value="yes"        ${conf === 'yes' ? 'selected' : ''}>YES</option>
+        <option value="modify_req" ${conf === 'modify_req' ? 'selected' : ''}>Modify</option>
+        <option value="pending"    ${conf === 'pending' ? 'selected' : ''}>Pending</option>
+        <option value="cancel"     ${conf === 'cancel' ? 'selected' : ''}>Cancel</option>
+      </select>${star}
+      <button class="conf-btn conf-save-btn" id="save-${r.id}" onclick="saveConf(${r.id})" style="display:none">✓</button>
+      <button class="conf-btn conf-undo-btn" id="undo-${r.id}" onclick="cancelConf(${r.id})" style="display:none">✕</button>
+    </div>`;
+
+        // Email/SMS
+        const emailTxt = r.email_status?.startsWith('sent') ? 'Sent' : r.email_status?.startsWith('failed') ? 'Failed' : '—';
+        const emailCls = r.email_status?.startsWith('sent') ? 'sp-delivered' : r.email_status?.startsWith('failed') ? 'sp-failed' : '';
+        const smsTxt = smsLabel(r.sms_status);
+        const smsCls = smsClass(r.sms_status);
+
+        // Lunch cells
+        let tCell = '<span class="lunch-dash">—</span>', vCell = '<span class="lunch-dash">—</span>', bCell = '<span class="lunch-dash">—</span>';
+        if (hasLunch && conf === 'yes') {
+          tCell = `<span class="lunch-val" onclick="openLunchModal(${r.id})">${r.lunch_turkey || 0}</span>`;
+          vCell = `<span class="lunch-val" onclick="openLunchModal(${r.id})">${r.lunch_veggie || 0}</span>`;
+          bCell = hasBf ? `<span class="lunch-val" onclick="openLunchModal(${r.id})">${r.lunch_beef || 0}</span>` : '<span class="lunch-dash">—</span>';
+        }
+
+        // Notes — strip timestamp prefix, show content only
+        let notesCell = '<span style="color:#ccc;">—</span>';
+        if (r.notes) {
+          let display = r.notes.replace(/^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}\]\s*/, '');
+          display = display.replace(/^Modify requested:\s*/i, 'requested: ');
+          const actionPart = r.action_taken_by
+            ? `<span class="action-done">✓ ${r.action_taken_by}</span>`
+            : `<button class="action-btn" onclick="takeAction(${r.id})" title="Mark as actioned">⚠️</button>`;
+          notesCell = `<div class="notes-cell">
+          <span class="notes-text" id="nt-${r.id}" onclick="toggleNote(${r.id})" title="Click to expand">${escHtml(display)}</span>
+          ${actionPart}
+        </div>`;
+        }
+
+        // MTLV cells
+        let mtlvCell = '<span style="color:#ccc;">—</span>';
+        let ticketsCell = '<span style="color:#ccc;">—</span>';
+        if (r.mtlv_eligible) {
+          if (r.mtlv_qty === null || r.mtlv_qty === undefined) {
+            // Guest has not replied yet
+            mtlvCell = '<span class="sp sp-mtlv-pending">Pending</span>';
+            ticketsCell = '<span style="color:#aaa;font-size:11px;">Pending</span>';
+          } else {
+            // Guest replied with a number
+            mtlvCell = `<span class="sp sp-mtlv-num">🎫 ${r.mtlv_qty}</span>`;
+            const tktStatus = r.mtlv_ticket_status || 'pending_send';
+            const isSent = tktStatus === 'sent';
+            ticketsCell = `<select class="tkt-select${isSent ? ' v-sent' : ''}" data-id="${r.id}" onchange="saveMtlvTicketStatus(this)">
+          <option value="pending_send" ${!isSent ? 'selected' : ''}>Pending</option>
+          <option value="sent" ${isSent ? 'selected' : ''}>Sent</option>
+        </select>`;
+          }
+        }
+
+        return `<tr data-id="${r.id}">
+      <td style="color:#3B6D11;font-weight:600;white-space:nowrap;">${r.order_number || '—'}</td>
+      <td>${statusCell}</td>
+      <td style="font-size:11px;color:#3B6D11;font-weight:600;">${abbr}</td>
+      <td style="white-space:nowrap;font-size:11px;">${r.tour_date || '—'}</td>
+      <td>${escHtml(r.first_name || r.guest_name || '—')}</td>
+      <td style="font-size:11px;color:#888;white-space:nowrap;">${r.phone || '—'}</td>
+      <td style="text-align:center;">${r.quantities || '—'}</td>
+      <td>${emailTxt !== '—' ? `<span class="sp ${emailCls}">${emailTxt}</span>` : '<span style="color:#ccc;">—</span>'}</td>
+      <td>${smsTxt !== '—' ? `<span class="sp ${smsCls}">${smsTxt}</span>` : '<span style="color:#ccc;">—</span>'}</td>
+      <td style="text-align:center;">${tCell}</td>
+      <td style="text-align:center;">${vCell}</td>
+      <td style="text-align:center;">${bCell}</td>
+      <td style="text-align:center;">${mtlvCell}</td>
+      <td style="text-align:center;">${ticketsCell}</td>
+      <td>${notesCell}</td>
+      <td style="text-align:center;">
+        <button onclick="openNotes(${r.id},'${r.order_number}','${(r.first_name||r.guest_name||'').replace(/'/g,"\\'")}')
+" style="background:none;border:none;cursor:pointer;padding:4px;" class="notes-bubble-btn">
+          ${(r.notes_count && r.notes_count > 0)
+            ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#1a3a5c;color:#fff;border-radius:50%;font-size:11px;font-weight:600;">${r.notes_count}</span>`
+            : `<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#e9ecef;color:#495057;border-radius:50%;font-size:16px;">+</span>`}
+        </button>
+      </td>
+      <td style="font-size:11px;white-space:nowrap;color:#888;">${r.submitted_at || '—'}</td>
+    </tr>`;
+      }).join('');
+    }
+
+    // ── Confirmation dropdown ─────────────────────────────────────────────────────
+    function onConfChange(sel) {
+      const id = sel.dataset.id;
+      const vCls = { 'yes': 'v-yes', 'modify_req': 'v-modify', 'pending': 'v-pending', 'cancel': 'v-cancel' };
+      sel.className = `conf-select ${vCls[sel.value] || 'v-pending'}`;
+      document.getElementById(`save-${id}`).style.display = 'inline-flex';
+      document.getElementById(`undo-${id}`).style.display = 'inline-flex';
+    }
+
+    function cancelConf(id) {
+      const sel = document.querySelector(`.conf-select[data-id="${id}"]`);
+      sel.value = sel.dataset.orig;
+      const vCls = { 'yes': 'v-yes', 'modify_req': 'v-modify', 'pending': 'v-pending', 'cancel': 'v-cancel' };
+      sel.className = `conf-select ${vCls[sel.value] || 'v-pending'}`;
+      document.getElementById(`save-${id}`).style.display = 'none';
+      document.getElementById(`undo-${id}`).style.display = 'none';
+    }
+
+    async function saveConf(id) {
+      const sel = document.querySelector(`.conf-select[data-id="${id}"]`);
+      const conf = sel.value;
+      const res = await fetch(`/api/bookings/${id}/confirmation`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirmation: conf }),
+      });
+      if (res.ok) {
+        const row = allRows.find(r => r.id === parseInt(id));
+        if (row) {
+          row.confirmation_status = conf;
+          if (conf === 'cancel') { row.lunch_turkey = 0; row.lunch_veggie = 0; row.lunch_beef = 0; }
+        }
+        sel.dataset.orig = conf;
+        document.getElementById(`save-${id}`).style.display = 'none';
+        document.getElementById(`undo-${id}`).style.display = 'none';
+        buildPills();
+        applyFilter();
+      } else {
+        alert('Failed to update. Please try again.');
+        cancelConf(id);
+      }
+    }
+
+    // ── Lunch modal ───────────────────────────────────────────────────────────────
+    function openLunchModal(id) {
+      const row = allRows.find(r => r.id === id);
+      if (!row || row.confirmation_status !== 'yes') return;
+      lunchEditId = id;
+      const hasBf = TOUR_HAS_BEEF[row.tour_type];
+      document.getElementById('lunch-modal-sub').textContent = `${row.first_name || row.guest_name} (Party: ${row.quantities})`;
+      document.getElementById('lm-turkey').value = row.lunch_turkey || 0;
+      document.getElementById('lm-veggie').value = row.lunch_veggie || 0;
+      document.getElementById('lm-beef').value = row.lunch_beef || 0;
+      document.getElementById('lm-beef-row').style.display = hasBf ? 'flex' : 'none';
+      document.getElementById('lunch-modal').classList.add('open');
+    }
+
+    function closeLunchModal() {
+      document.getElementById('lunch-modal').classList.remove('open');
+      lunchEditId = null;
+    }
+
+    async function saveLunch() {
+      if (!lunchEditId) return;
+      const turkey = parseInt(document.getElementById('lm-turkey').value) || 0;
+      const veggie = parseInt(document.getElementById('lm-veggie').value) || 0;
+      const beef = parseInt(document.getElementById('lm-beef').value) || 0;
+      const res = await fetch(`/api/bookings/${lunchEditId}/lunch`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lunch_turkey: turkey, lunch_veggie: veggie, lunch_beef: beef }),
+      });
+      if (res.ok) {
+        const row = allRows.find(r => r.id === lunchEditId);
+        if (row) { row.lunch_turkey = turkey; row.lunch_veggie = veggie; row.lunch_beef = beef; }
+        closeLunchModal();
+        applyFilter();
+      } else {
+        alert('Failed to save. Please try again.');
+      }
+    }
+
+    // ── MTLV ticket status ────────────────────────────────────────────────────────
+    async function saveMtlvTicketStatus(sel) {
+      const id = sel.dataset.id;
+      const status = sel.value;
+      const res = await fetch(`/api/bookings/${id}/mtlv-ticket-status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mtlv_ticket_status: status }),
+      });
+      if (res.ok) {
+        const row = allRows.find(r => r.id === parseInt(id));
+        if (row) row.mtlv_ticket_status = status;
+        sel.className = `tkt-select${status === 'sent' ? ' v-sent' : ''}`;
+      } else {
+        alert('Failed to update ticket status. Please try again.');
+        // revert
+        const row = allRows.find(r => r.id === parseInt(id));
+        sel.value = row?.mtlv_ticket_status || 'pending_send';
+      }
+    }
+
+    // ── Notes toggle ──────────────────────────────────────────────────────────────
+    function toggleNote(id) {
+      const el = document.getElementById(`nt-${id}`);
+      if (el) el.classList.toggle('expanded');
+    }
+    async function takeAction(id) {
+      const res = await fetch(`/api/bookings/${id}/take-action`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const row = allRows.find(r => r.id === id);
+        if (row) row.action_taken_by = data.action_taken_by;
+        applyFilter();
+      } else {
+        alert('Failed to mark action. Please try again.');
+      }
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────────
+    function smsClass(s) {
+      if (!s) return '';
+      if (s.includes('delivered')) return 'sp-delivered';
+      if (s.includes('sent')) return 'sp-sent';
+      if (s.includes('queued')) return 'sp-sent';
+      if (s.includes('undelivered')) return 'sp-undelivered';
+      if (s.includes('failed')) return 'sp-failed';
+      return '';
+    }
+    function smsLabel(s) {
+      if (!s) return '—';
+      if (s.includes('delivered')) return 'Delivered';
+      if (s.includes('sent')) return 'Sent';
+      if (s.includes('queued')) return 'Queued';
+      if (s.includes('undelivered')) return 'Undelivered';
+      if (s.includes('failed')) return 'Failed';
+      return s;
+    }
+    function escHtml(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+    function exportCsv() {
+      location.href = `/api/notifications/tour-confirmation/export?date=${currentDate}`;
+    }
+
+
+    // ── Column drag reorder ──
+    const COL_ORDER_KEY = 'npe_tour_col_order';
+
+    function saveColOrderTour() {
+      const keys = [...document.querySelectorAll('#thead-row td')].map(td => td.dataset.colIdx);
+      localStorage.setItem(COL_ORDER_KEY, JSON.stringify(keys));
+    }
+
+    function applyColOrder() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(COL_ORDER_KEY));
+        if (!saved || !Array.isArray(saved)) return;
+        const tr = document.getElementById('thead-row');
+        const tds = [...tr.querySelectorAll('td')];
+        if (saved.length !== tds.length) return;
+        // reorder thead
+        saved.forEach(idx => {
+          const td = tds.find(t => t.dataset.colIdx === idx);
+          if (td) tr.appendChild(td);
+        });
+        // reorder each tbody row
+        document.querySelectorAll('#track-tbody tr').forEach(row => {
+          const cells = [...row.querySelectorAll('td')];
+          if (cells.length !== saved.length) return;
+          saved.forEach(idx => {
+            const cell = cells.find((_, i) => String(i) === idx);
+            if (cell) row.appendChild(cell);
+          });
+        });
+      } catch(e) {}
+    }
+
+    function initColDragTour() {
+      const tr = document.getElementById('thead-row');
+      const tds = [...tr.querySelectorAll('td')];
+      // Assign index to each td
+      tds.forEach((td, i) => { if (!td.dataset.colIdx) td.dataset.colIdx = String(i); });
+
+      let dragSrc = null;
+      tds.forEach(td => {
+        td.draggable = true;
+        td.addEventListener('dragstart', e => {
+          dragSrc = td;
+          td.classList.add('col-dragging');
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        td.addEventListener('dragend', () => {
+          td.classList.remove('col-dragging');
+          tr.querySelectorAll('td').forEach(t => t.classList.remove('col-drag-over'));
+        });
+        td.addEventListener('dragover', e => {
+          e.preventDefault();
+          if (td !== dragSrc) td.classList.add('col-drag-over');
+        });
+        td.addEventListener('dragleave', () => td.classList.remove('col-drag-over'));
+        td.addEventListener('drop', e => {
+          e.preventDefault();
+          td.classList.remove('col-drag-over');
+          if (!dragSrc || dragSrc === td) return;
+
+          // Get current order in DOM
+          const allTds = [...tr.querySelectorAll('td')];
+          const fromI = allTds.indexOf(dragSrc);
+          const toI   = allTds.indexOf(td);
+
+          // Move thead td
+          if (fromI < toI) tr.insertBefore(dragSrc, td.nextSibling);
+          else tr.insertBefore(dragSrc, td);
+
+          // Move each tbody row's cells accordingly
+          document.querySelectorAll('#track-tbody tr').forEach(row => {
+            const cells = [...row.querySelectorAll('td')];
+            if (cells.length < allTds.length) return;
+            const cell = cells[fromI];
+            if (fromI < toI) row.insertBefore(cell, cells[toI].nextSibling);
+            else row.insertBefore(cell, cells[toI]);
+          });
+
+          saveColOrderTour();
+        });
+      });
+    }
+
+    document.getElementById('date-display').value = currentDate;
+    loadData();
+    // Init col drag after first render handled in renderRows
+    setTimeout(() => { initColDragTour(); applyColOrder(); }, 100);
+
+    // ── A+B Notes notification polling ───────────────────────
+    let _notesSnapshot = {};   // {booking_id: notes_count}
+    let _bannerDismissed = false;
+
+    function _buildSnapshot(rows) {
+      const snap = {};
+      rows.forEach(r => { if (r.id) snap[r.id] = r.notes_count || 0; });
+      return snap;
+    }
+
+    function _checkNotesChanges(newRows) {
+      const changed = [];
+      newRows.forEach(r => {
+        if (!r.id) return;
+        const prev = _notesSnapshot[r.id];
+        if (prev !== undefined && (r.notes_count || 0) > prev) {
+          changed.push(r);
+        }
+      });
+      return changed;
+    }
+
+    function _updateBubbleColors(newRows) {
+      newRows.forEach(r => {
+        if (!r.id) return;
+        const prev = _notesSnapshot[r.id];
+        const tr = document.querySelector(`tr[data-id="${r.id}"]`);
+        if (!tr) return;
+        const bubble = tr.querySelector('.notes-bubble-btn span');
+        if (!bubble) return;
+        if (prev !== undefined && (r.notes_count || 0) > prev) {
+          bubble.style.background = '#E24B4A';  // red = new message
+        }
+      });
+    }
+
+    function showNotesBanner(changed) {
+      if (_bannerDismissed) return;
+      const parts = changed.map(r => {
+        const author = r.latest_note_author === 'guest' ? 'Guest' : (r.latest_note_author || '?');
+        return `<span style="text-decoration:underline;cursor:pointer;" onclick="jumpToNotes(${r.id},'${escHtml(r.order_number)}','${escHtml(r.guest_name||r.first_name||'')}')">${escHtml(r.order_number)}</span> <span style="color:#a07000;font-size:12px;">by ${escHtml(author)}</span>`;
+      });
+      document.getElementById('notes-banner-text').innerHTML = `New message${changed.length > 1 ? 's' : ''}: ` + parts.join(' &nbsp;·&nbsp; ');
+      document.getElementById('notes-banner').style.display = 'flex';
+    }
+
+    function dismissNotesBanner() {
+      document.getElementById('notes-banner').style.display = 'none';
+      _bannerDismissed = true;
+    }
+
+    function jumpToNotes(bookingId, orderNum, name) {
+      dismissNotesBanner();
+      const tr = document.querySelector(`tr[data-id="${bookingId}"]`);
+      if (tr) tr.scrollIntoView({behavior:'smooth', block:'center'});
+      setTimeout(() => openNotes(bookingId, orderNum, name), 300);
+    }
+
+    async function _pollNotes() {
+      try {
+        const res  = await fetch(`/api/notifications/tour-confirmation/tracking?date=${currentDate}`);
+        const data = await res.json();
+        const newRows = data.rows || [];
+        if (Object.keys(_notesSnapshot).length > 0) {
+          const changed = _checkNotesChanges(newRows);
+          if (changed.length) {
+            _updateBubbleColors(newRows);
+            showNotesBanner(changed);
+          }
+        }
+        _notesSnapshot = _buildSnapshot(newRows);
+      } catch(e) {}
+    }
+
+    // Build initial snapshot after first load
+    const _origLoadData = loadData;
+    loadData = async function() {
+      await _origLoadData();
+      _notesSnapshot = _buildSnapshot(allRows);
+      _bannerDismissed = false;
+    };
+
+    // Poll every 60 seconds
+    setInterval(_pollNotes, 60000);
+  </script>
 
 <!-- Broadcast dialog -->
-<div id="broadcastOverlay"
-  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
-  <div
-    style="background:#fff;border-radius:12px;width:560px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
+<div id="broadcastOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;width:560px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
     <div style="background:#7f1d1d;padding:14px 18px;display:flex;align-items:center;">
-      <div style="flex:1;">
-        <div style="color:#fff;font-weight:600;font-size:14px;">📣 Broadcast message</div>
-        <div style="color:#fca5a5;font-size:12px;" id="broadcastSubtitle"></div>
-      </div>
-      <button onclick="closeBroadcast()"
-        style="background:none;border:none;color:#fca5a5;font-size:20px;cursor:pointer;">&times;</button>
+      <div style="flex:1;"><div style="color:#fff;font-weight:600;font-size:14px;">📣 Broadcast message</div><div style="color:#fca5a5;font-size:12px;" id="broadcastSubtitle"></div></div>
+      <button onclick="closeBroadcast()" style="background:none;border:none;color:#fca5a5;font-size:20px;cursor:pointer;">&times;</button>
     </div>
     <div style="padding:16px;overflow-y:auto;flex:1;">
       <div style="margin-bottom:12px;">
         <label style="font-size:12px;font-weight:500;color:#495057;display:block;margin-bottom:4px;">Template</label>
-        <select id="broadcastTemplate" onchange="onTemplateChange()"
-          style="width:100%;padding:7px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;">
-          <option value="">— Select template —</option>
-        </select>
+        <select id="broadcastTemplate" onchange="onTemplateChange()" style="width:100%;padding:7px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;"><option value="">— Select template —</option></select>
       </div>
       <div style="margin-bottom:12px;">
-        <label style="font-size:12px;font-weight:500;color:#495057;display:block;margin-bottom:4px;">Message <span
-            style="font-weight:400;color:#888;">(supports {first_name} and {tour_date})</span></label>
-        <textarea id="broadcastBody" rows="4"
-          style="width:100%;border:1px solid #dee2e6;border-radius:6px;padding:8px 10px;font-size:13px;resize:vertical;box-sizing:border-box;font-family:inherit;"></textarea>
+        <label style="font-size:12px;font-weight:500;color:#495057;display:block;margin-bottom:4px;">Message <span style="font-weight:400;color:#888;">(supports {first_name} and {tour_date})</span></label>
+        <textarea id="broadcastBody" rows="4" style="width:100%;border:1px solid #dee2e6;border-radius:6px;padding:8px 10px;font-size:13px;resize:vertical;box-sizing:border-box;font-family:inherit;"></textarea>
       </div>
       <div style="display:flex;gap:16px;margin-bottom:14px;">
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox"
-            id="bcastSms" checked> Send SMS</label>
-        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox"
-            id="bcastEmail" checked> Send Email</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="bcastSms" checked> Send SMS</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="bcastEmail" checked> Send Email</label>
       </div>
-      <div
-        style="background:#f8f9fa;border:1px solid #eee;border-radius:8px;padding:10px;max-height:200px;overflow-y:auto;">
-        <div style="font-size:12px;font-weight:500;color:#495057;margin-bottom:6px;" id="recipientCount"></div>
-        <div id="recipientList" style="display:flex;flex-direction:column;gap:4px;"></div>
+      <div style="background:#f8f9fa;border:1px solid #eee;border-radius:8px;padding:10px;max-height:200px;overflow-y:auto;">
+        <div style="font-size:12px;font-weight:500;color:#495057;margin-bottom:6px;" id="bcastRecipientCount"></div>
+        <div id="bcastRecipientList" style="display:flex;flex-direction:column;gap:4px;"></div>
       </div>
     </div>
     <div style="padding:12px 16px;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:8px;">
-      <button onclick="closeBroadcast()"
-        style="padding:7px 16px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:13px;cursor:pointer;">Cancel</button>
-      <button onclick="sendBroadcast()" id="broadcastSendBtn"
-        style="padding:7px 16px;background:#7f1d1d;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:500;">📣
-        Send to all</button>
+      <button onclick="closeBroadcast()" style="padding:7px 16px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:13px;cursor:pointer;">Cancel</button>
+      <button onclick="sendBroadcast()" id="broadcastSendBtn" style="padding:7px 16px;background:#7f1d1d;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:500;">📣 Send to all</button>
     </div>
   </div>
 </div>
 
 <!-- Notes dialog -->
-<div id="notesOverlay"
-  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
-  <div
-    style="background:#fff;border-radius:12px;width:520px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
+<div id="notesOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;width:520px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
     <div style="background:#1a3a5c;padding:14px 18px;display:flex;align-items:center;gap:10px;">
-      <div style="flex:1;">
-        <div style="color:#fff;font-weight:600;font-size:14px;" id="notesTitle">Notes</div>
-        <div style="color:#a8c4e0;font-size:12px;" id="notesSubtitle"></div>
-      </div>
-      <button onclick="closeNotes()"
-        style="background:none;border:none;color:#a8c4e0;font-size:20px;cursor:pointer;">&times;</button>
+      <div style="flex:1;"><div style="color:#fff;font-weight:600;font-size:14px;" id="notesTitle">Notes</div><div style="color:#a8c4e0;font-size:12px;" id="notesSubtitle"></div></div>
+      <button onclick="closeNotes()" style="background:none;border:none;color:#a8c4e0;font-size:20px;cursor:pointer;">&times;</button>
     </div>
-    <div id="notesMessages"
-      style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:380px;background:#f8f9fa;">
+    <div id="notesMessages" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:380px;background:#f8f9fa;">
       <div style="text-align:center;color:#aaa;font-size:13px;padding:20px 0;" id="notesEmpty">No notes yet.</div>
     </div>
     <div style="padding:12px 14px;border-top:1px solid #eee;background:#fff;">
-      <textarea id="noteInput" rows="3" placeholder="Write a note or message to guest..."
-        style="width:100%;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;font-size:13px;resize:none;box-sizing:border-box;outline:none;font-family:inherit;"></textarea>
+      <textarea id="noteInput" rows="3" placeholder="Write a note or message to guest..." style="width:100%;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;font-size:13px;resize:none;box-sizing:border-box;outline:none;font-family:inherit;"></textarea>
       <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox"
-            id="sendSmsCheck" checked> SMS to guest</label>
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox"
-            id="sendEmailCheck"> Email to guest</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" id="sendSmsCheck" checked> SMS to guest</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" id="sendEmailCheck"> Email to guest</label>
         <div style="margin-left:auto;display:flex;gap:8px;">
-          <button onclick="submitNote('staff_note')"
-            style="padding:6px 14px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:12px;cursor:pointer;">Save
-            note</button>
-          <button onclick="submitNote('sms_out')"
-            style="padding:6px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;">Send
-            &#8594;</button>
+          <button onclick="submitNote('staff_note')" style="padding:6px 14px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:12px;cursor:pointer;">Save note</button>
+          <button onclick="submitNote('sms_out')" style="padding:6px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;">Send &#8594;</button>
         </div>
       </div>
     </div>
@@ -511,217 +1396,158 @@
 </div>
 
 <script>
-  const MODULE = "tour";
-  let _rows = [], _activeTour = "all";
-  let _currentBookingId = null, _pollTimer = null;
-  let _broadcastTemplates = [], _broadcastMenuOpen = false;
-  let _broadcastRecipients = [], _broadcastGroup = null, _broadcastStatus = null;
+// ── Broadcast ─────────────────────────────────────────
+const _MODULE = "tour";
+let _bcastTemplates = [], _bcastMenuOpen = false;
+let _bcastRecipients = [], _bcastGroup = null, _bcastStatus = null;
 
-  function _today() { return new Date().toLocaleDateString("en-CA"); }
-  function _getDate() { return document.getElementById("date-input").value || _today(); }
-  function goToday() { document.getElementById("date-input").value = _today(); loadData(); }
-  function goTomorrow() { const d = new Date(); d.setDate(d.getDate() + 1); document.getElementById("date-input").value = d.toLocaleDateString("en-CA"); loadData(); }
-  function changeDate(delta) { const d = new Date(_getDate() + "T12:00:00"); d.setDate(d.getDate() + delta); document.getElementById("date-input").value = d.toLocaleDateString("en-CA"); loadData(); }
-
-  async function loadData() {
-    const date = _getDate();
-    document.getElementById("tbl-body").innerHTML = '<tr><td colspan="17" style="text-align:center;padding:30px;color:#aaa;">Loading...</td></tr>';
-    try {
-      const res = await fetch(`/api/notifications/tour-confirmation/tracking?date=${date}`);
-      const data = await res.json();
-      _rows = data.rows || [];
-      renderTable(); renderStats(); renderPills();
-      _broadcastTemplates = [];
-    } catch (e) {
-      document.getElementById("tbl-body").innerHTML = '<tr><td colspan="17" style="text-align:center;padding:30px;color:#dc3545;">Failed to load data.</td></tr>';
-    }
+function toggleBroadcastMenu() {
+  const menu = document.getElementById("broadcastMenu");
+  _bcastMenuOpen = !_bcastMenuOpen;
+  menu.style.display = _bcastMenuOpen ? "block" : "none";
+  if (_bcastMenuOpen) {
+    document.getElementById("broadcastMenuTitle").textContent = "Tour — " + currentDate;
+    _renderBcastMenu();
   }
-
-  function _visible() { return _activeTour === "all" ? _rows : _rows.filter(r => r.tour_type === _activeTour); }
-
-  function renderTable() {
-    const rows = _visible();
-    if (!rows.length) { document.getElementById("tbl-body").innerHTML = '<tr><td colspan="17" style="text-align:center;padding:40px;color:#aaa;">No bookings found.</td></tr>'; return; }
-    document.getElementById("tbl-body").innerHTML = rows.map(r => {
-      const conf = r.confirmation_status || "pending";
-      const emB = r.email_status === "sent" ? '<span class="badge-sent">✓ Sent</span>'
-        : r.email_status === "failed" ? '<span class="badge-failed">✗ Failed</span>' : '<span class="badge-none">—</span>';
-      const smB = r.sms_status === "delivered" ? '<span class="badge-delivered">✓ Delivered</span>'
-        : r.sms_status === "sent" ? '<span class="badge-sent">✓ Sent</span>'
-          : r.sms_status === "failed" ? '<span class="badge-failed">✗ Failed</span>'
-            : r.sms_status === "queued" ? '<span class="badge-queued">⏳ Queued</span>' : '<span class="badge-none">—</span>';
-      const mtlv = r.mtlv_eligible ? `<span style="color:#6f42c1;font-weight:600;">${r.mtlv_qty || ""}</span>` : "—";
-      const tix = r.mtlv_ticket_status ? `<span style="color:#0d6efd;">${e(r.mtlv_ticket_status)}</span>` : "—";
-      const resub = r.submission_count > 1 ? '<span style="color:#dc3545;font-size:10px;margin-left:2px;">★</span>' : "";
-      const bubble = (r.notes_count && r.notes_count > 0)
-        ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#1a3a5c;color:#fff;border-radius:50%;font-size:11px;font-weight:600;">${r.notes_count}</span>`
-        : `<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#e9ecef;color:#495057;border-radius:50%;font-size:16px;">+</span>`;
-      const subAt = r.submitted_at ? new Date(r.submitted_at).toLocaleString("en-US", { timeZone: "America/Los_Angeles", month: "numeric", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
-      return `<tr data-booking-id="${r.id}" data-order="${e(r.order_number)}" data-name="${e(r.guest_name)}" data-phone="${e(r.phone)}" data-email="${e(r.email)}" data-status="${e(conf)}" data-mtlv="${r.mtlv_eligible ? 'yes' : 'no'}" data-tour="${e(r.tour_type || '')}">
-      <td style="font-weight:600;color:#1a3a5c;font-size:11px;">${e(r.order_number)}</td>
-      <td><select class="s-sel ${e(conf)}" onchange="updateStatus('${e(r.order_number)}',this)" data-orig="${e(conf)}">
-        <option value="yes" ${conf === "yes" ? "selected" : ""}>YES</option>
-        <option value="modify" ${conf === "modify" ? "selected" : ""}>Modify</option>
-        <option value="pending" ${conf === "pending" || !conf ? "selected" : ""}>Pending</option>
-      </select>${resub}</td>
-      <td style="font-size:11px;" title="${e(r.tour_type || '')}">${e(r.tour_type || '—')}</td>
-      <td style="font-size:11px;">${e(r.tour_date || '—')}</td>
-      <td>${e(r.guest_name)}</td>
-      <td style="font-size:11px;">${e(r.phone || '—')}</td>
-      <td style="text-align:center;">${r.quantities || '—'}</td>
-      <td>${emB}</td><td>${smB}</td>
-      <td style="text-align:center;">${r.lunch_turkey || ''}</td>
-      <td style="text-align:center;">${r.lunch_veggie || ''}</td>
-      <td style="text-align:center;cursor:pointer;" title="Click to edit" onclick="openLunch('${e(r.order_number)}',${r.lunch_turkey || 0},${r.lunch_veggie || 0},${r.lunch_beef || 0})">${r.lunch_beef || ''}</td>
-      <td style="text-align:center;">${mtlv}</td>
-      <td style="text-align:center;">${tix}</td>
-      <td><textarea class="notes-input" rows="1" oninput="autoResize(this);markDirty(this)" onblur="saveNotes('${e(r.order_number)}',this)" data-orig="${e(r.notes || '')}">${e(r.notes || '')}</textarea></td>
-      <td style="text-align:center;"><button onclick="openNotes(${r.id},'${e(r.order_number)}','${e(r.guest_name)}')" style="background:none;border:none;cursor:pointer;padding:4px;">${bubble}</button></td>
-      <td style="font-size:11px;color:#888;">${subAt}</td>
-    </tr>`;
-    }).join("");
-    document.querySelectorAll(".notes-input").forEach(autoResize);
+}
+document.addEventListener("click", function(ev) {
+  if (_bcastMenuOpen && !document.getElementById("broadcastWrap").contains(ev.target)) {
+    document.getElementById("broadcastMenu").style.display = "none";
+    _bcastMenuOpen = false;
   }
+});
 
-  function renderStats() {
-    const v = _visible();
-    document.getElementById("stat-total").textContent = v.length;
-    document.getElementById("stat-yes").textContent = v.filter(r => r.confirmation_status === "yes").length;
-    document.getElementById("stat-modify").textContent = v.filter(r => r.confirmation_status === "modify").length;
-    document.getElementById("stat-pending").textContent = v.filter(r => !r.confirmation_status || r.confirmation_status === "pending").length;
+function _renderBcastMenu() {
+  const rows = typeof filteredRows !== 'undefined' ? filteredRows : allRows;
+  const general = rows.filter(function(r){ return !r.mtlv_eligible; });
+  const mtlv    = rows.filter(function(r){ return r.mtlv_eligible; });
+  function badge(label, color, bg){ return '<span style="font-size:11px;font-weight:600;color:'+color+';background:'+bg+';padding:1px 7px;border-radius:20px;">'+label+'</span>'; }
+  function row(group, status, badgeHtml, count){
+    if (!count) return "";
+    var label = {all:"All guests",pending:"Pending",yes:"Yes",modify_req:"Modify",cancel:"Cancel"}[status] || status;
+    return '<div onclick="openBroadcast(\''+group+'\',\''+status+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;font-size:13px;" onmouseover="this.style.background=\'#f8f9fa\'" onmouseout="this.style.background=\'\'">'+badgeHtml+'<span style="flex:1;">'+label+'</span><span style="color:#888;font-size:12px;">'+count+' guests</span></div>';
   }
+  var html = "";
+  if (general.length) {
+    html += '<div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;">General — '+general.length+' guests</div>';
+    html += row("general","all",    badge("All","#495057","#e9ecef"),     general.length);
+    html += row("general","pending",badge("Pending","#856404","#fff3cd"), general.filter(function(r){return !r.confirmation_status||r.confirmation_status==="pending";}).length);
+    html += row("general","yes",    badge("Yes","#155724","#d4edda"),     general.filter(function(r){return r.confirmation_status==="yes";}).length);
+    html += row("general","modify_req",badge("Modify","#004085","#cce5ff"),general.filter(function(r){return r.confirmation_status==="modify_req";}).length);
+    if (mtlv.length) html += '<div style="height:1px;background:#f0f0f0;margin:4px 0;"></div>';
+  }
+  if (mtlv.length) {
+    html += '<div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;">MTLV — '+mtlv.length+' guests</div>';
+    html += row("mtlv","all",    badge("All","#495057","#e9ecef"),     mtlv.length);
+    html += row("mtlv","pending",badge("Pending","#856404","#fff3cd"), mtlv.filter(function(r){return !r.confirmation_status||r.confirmation_status==="pending";}).length);
+    html += row("mtlv","yes",    badge("Yes","#155724","#d4edda"),     mtlv.filter(function(r){return r.confirmation_status==="yes";}).length);
+  }
+  if (!html) html = '<div style="padding:8px 14px;font-size:13px;color:#aaa;">No guests found</div>';
+  document.getElementById("broadcastMenuItems").innerHTML = html;
+}
 
-  function renderPills() {
-    const el = document.getElementById("pill-all"); if (el) el.textContent = `(${_rows.length})`;
-    ["U-TC", "U-BR", "U-AA", "U-HT", "U-HH", "L-KT", "L-DX", "X-TT", "R-AA"].forEach(code => {
-      const cnt = document.querySelector(`.pill-cnt[data-code="${code}"]`); if (!cnt) return;
-      const total = _rows.filter(r => r.tour_type === code).length;
-      const yes = _rows.filter(r => r.tour_type === code && r.confirmation_status === "yes").length;
-      cnt.textContent = total ? `(${yes}/${total})` : "(0)";
+async function openBroadcast(group, status) {
+  document.getElementById("broadcastMenu").style.display = "none";
+  _bcastMenuOpen = false;
+  _bcastGroup = group; _bcastStatus = status;
+  const rows = typeof filteredRows !== 'undefined' ? filteredRows : allRows;
+  _bcastRecipients = rows.filter(function(r){
+    var gm = group === "general" ? !r.mtlv_eligible : r.mtlv_eligible;
+    var sm = status === "all" ? true : (r.confirmation_status||"pending") === status;
+    return gm && sm;
+  });
+  if (!_bcastTemplates.length) {
+    var res = await fetch("/booking-notes/templates/" + _MODULE);
+    var data = await res.json();
+    _bcastTemplates = data.templates;
+    var sel = document.getElementById("broadcastTemplate");
+    sel.innerHTML = '<option value="">— Select template —</option>';
+    _bcastTemplates.forEach(function(t){ sel.innerHTML += '<option value="'+t.name+'">'+t.label+'</option>'; });
+  }
+  var gLabel = group === "general" ? "General" : "MTLV";
+  var sLabel = {all:"All",pending:"Pending",yes:"Yes",modify_req:"Modify",cancel:"Cancel"}[status]||status;
+  document.getElementById("broadcastSubtitle").textContent = gLabel + " · " + sLabel + " · " + currentDate;
+  document.getElementById("bcastRecipientCount").textContent = _bcastRecipients.length + " recipient(s)";
+  document.getElementById("bcastRecipientList").innerHTML = _bcastRecipients.map(function(r,i){
+    return '<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 6px;background:#fff;border-radius:4px;border:1px solid #eee;"><input type="checkbox" class="rec-check" data-idx="'+i+'" checked><span style="flex:1;font-weight:500;">'+(r.guest_name||r.first_name||'')+'</span><span style="color:#888;">'+(r.phone||r.email||'—')+'</span></div>';
+  }).join("");
+  document.getElementById("broadcastOverlay").style.display = "flex";
+}
+function onTemplateChange(){
+  var sel = document.getElementById("broadcastTemplate");
+  var t = _bcastTemplates.find(function(t){ return t.name === sel.value; });
+  if (t) document.getElementById("broadcastBody").value = t.body;
+}
+function closeBroadcast(){ document.getElementById("broadcastOverlay").style.display = "none"; }
+async function sendBroadcast(){
+  var body = document.getElementById("broadcastBody").value.trim();
+  if (!body){ alert("Please enter a message."); return; }
+  var idxs = Array.from(document.querySelectorAll(".rec-check:checked")).map(function(c){ return parseInt(c.dataset.idx); });
+  var recipients = idxs.map(function(i){ return _bcastRecipients[i]; });
+  if (!recipients.length){ alert("No recipients selected."); return; }
+  var btn = document.getElementById("broadcastSendBtn");
+  btn.disabled = true; btn.textContent = "Sending...";
+  try {
+    var res = await fetch("/booking-notes/broadcast/send", {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({module:_MODULE, group_filter:_bcastGroup, status_filter:_bcastStatus, tour_date:currentDate, template_name:document.getElementById("broadcastTemplate").value||null, message_body:body, recipients:recipients, send_sms:document.getElementById("bcastSms").checked, send_email:document.getElementById("bcastEmail").checked})
     });
-  }
+    var data = await res.json();
+    closeBroadcast();
+    alert("Broadcast sent!\nSMS: "+data.sms_sent+" sent, "+data.sms_failed+" failed\nEmail: "+data.email_sent+" sent, "+data.email_failed+" failed");
+  } catch(e){ alert("Send failed."); }
+  finally { btn.disabled=false; btn.textContent="📣 Send to all"; }
+}
 
-  function filterTour(el, code) {
-    document.querySelectorAll(".pill").forEach(p => p.classList.remove("active")); el.classList.add("active");
-    _activeTour = code; renderTable(); renderStats();
-  }
+// ── Notes dialog ──────────────────────────────────────
+let _notesBookingId = null, _notesPollTimer = null;
 
-  async function updateStatus(orderNum, sel) {
-    const val = sel.value; sel.className = "s-sel " + val;
-    const tr = sel.closest("tr"); if (tr) tr.dataset.status = val;
-    try {
-      const res = await fetch(`/api/bookings/${orderNum}/confirmation`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ confirmation: val }) });
-      if (!res.ok) throw new Error();
-      sel.dataset.orig = val;
-      const row = _rows.find(r => r.order_number === orderNum); if (row) row.confirmation_status = val;
-      renderStats();
-    } catch (e2) { alert("Failed to update status."); sel.value = sel.dataset.orig; sel.className = "s-sel " + sel.dataset.orig; }
-  }
-
-  function autoResize(el) { el.style.height = "auto"; el.style.height = el.scrollHeight + "px"; }
-  function markDirty(el) {
-    el.classList.toggle("dirty", el.value !== el.dataset.orig);
-    document.getElementById("notes-hdr").classList.toggle("has-dirty", !!document.querySelector(".notes-input.dirty"));
-  }
-  async function saveNotes(orderNum, el) {
-    if (!el.classList.contains("dirty")) return;
-    try {
-      await fetch(`/api/bookings/${orderNum}/notes`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ notes: el.value }) });
-      el.classList.remove("dirty"); el.dataset.orig = el.value;
-      if (!document.querySelector(".notes-input.dirty")) document.getElementById("notes-hdr").classList.remove("has-dirty");
-    } catch (e2) { }
-  }
-
-  function openLunch(order, t, v, b) { document.getElementById("lunch-order").value = order; document.getElementById("lunch-t").value = t; document.getElementById("lunch-v").value = v; document.getElementById("lunch-b").value = b; document.getElementById("lunchModal").style.display = "flex"; }
-  function closeLunch() { document.getElementById("lunchModal").style.display = "none"; }
-  async function saveLunch() {
-    const order = document.getElementById("lunch-order").value;
-    const payload = { lunch_turkey: parseInt(document.getElementById("lunch-t").value) || 0, lunch_veggie: parseInt(document.getElementById("lunch-v").value) || 0, lunch_beef: parseInt(document.getElementById("lunch-b").value) || 0 };
-    try { await fetch(`/api/bookings/${order}/lunch`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); closeLunch(); loadData(); }
-    catch (e2) { alert("Failed to save lunch."); }
-  }
-
-  function exportCSV() {
-    const v = _visible(); const cols = ["order_number", "confirmation_status", "tour_type", "tour_date", "guest_name", "phone", "quantities", "email_status", "sms_status", "lunch_turkey", "lunch_veggie", "lunch_beef", "notes", "submitted_at"];
-    const csv = [cols.join(","), ...v.map(r => cols.map(c => `"${String(r[c] ?? '').replace(/"/g, '""')}"`).join(","))].join("\n");
-    const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8" })), download: `tour_tracking_${_getDate()}.csv` }); a.click();
-  }
-
-  (function () {
-    let startX, startW, th;
-    document.querySelectorAll(".col-resizer").forEach(r => {
-      r.addEventListener("mousedown", ev => {
-        th = r.parentElement; startX = ev.clientX; startW = th.offsetWidth; r.classList.add("active");
-        const onMove = e2 => { th.style.width = Math.max(40, startW + e2.clientX - startX) + "px"; };
-        const onUp = () => { r.classList.remove("active"); document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); };
-        document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp); ev.preventDefault();
-      });
+async function openNotes(bookingId, orderNum, name) {
+  _notesBookingId = bookingId;
+  document.getElementById("notesTitle").textContent = "Order " + orderNum;
+  document.getElementById("notesSubtitle").textContent = name;
+  document.getElementById("noteInput").value = "";
+  document.getElementById("notesOverlay").style.display = "flex";
+  await _fetchNotes();
+  _notesPollTimer = setInterval(_fetchNotes, 20000);
+}
+function closeNotes(){
+  document.getElementById("notesOverlay").style.display = "none";
+  _notesBookingId = null;
+  if (_notesPollTimer){ clearInterval(_notesPollTimer); _notesPollTimer = null; }
+}
+async function _fetchNotes(){
+  if (!_notesBookingId) return;
+  try {
+    var res  = await fetch("/booking-notes/" + _notesBookingId);
+    var data = await res.json();
+    _renderNotes(data.notes);
+  } catch(e){}
+}
+function _renderNotes(notes){
+  var container = document.getElementById("notesMessages");
+  if (!notes || !notes.length){ document.getElementById("notesEmpty").style.display="block"; return; }
+  document.getElementById("notesEmpty").style.display = "none";
+  var sm = {staff_note:{bg:"#e8f4fd",label:"Note",color:"#0c5460"},sms_out:{bg:"#d4edda",label:"SMS sent",color:"#155724"},email_out:{bg:"#d1ecf1",label:"Email sent",color:"#0c5460"},guest_reply:{bg:"#fff3cd",label:"Guest reply",color:"#856404"}};
+  container.innerHTML = notes.map(function(n){
+    var s = sm[n.direction] || {bg:"#f0f0f0",label:n.direction,color:"#333"};
+    return '<div style="background:'+s.bg+';border-radius:8px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-size:11px;font-weight:600;color:'+s.color+';background:rgba(0,0,0,.06);padding:1px 7px;border-radius:20px;">'+s.label+'</span><span style="font-size:11px;color:#888;">'+escHtml(n.author_username)+'</span><span style="font-size:11px;color:#aaa;margin-left:auto;">'+escHtml(n.created_at)+'</span></div><div style="font-size:13px;color:#212529;white-space:pre-wrap;">'+escHtml(n.body)+'</div></div>';
+  }).join('') + '<div id="notesEmpty" style="display:none;"></div>';
+  container.scrollTop = container.scrollHeight;
+}
+async function submitNote(dir){
+  var body = document.getElementById("noteInput").value.trim();
+  if (!body || !_notesBookingId) return;
+  try {
+    await fetch("/booking-notes/" + _notesBookingId, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({body:body, direction:dir, send_sms:document.getElementById("sendSmsCheck").checked, send_email:document.getElementById("sendEmailCheck").checked})
     });
-  })();
-
-  async function toggleBroadcastMenu() {
-    const menu = document.getElementById("broadcastMenu"); _broadcastMenuOpen = !_broadcastMenuOpen; menu.style.display = _broadcastMenuOpen ? "block" : "none";
-    if (_broadcastMenuOpen) { document.getElementById("broadcastMenuTitle").textContent = `Tour — ${_getDate()}`; renderBroadcastMenu(); }
-  }
-  document.addEventListener("click", ev => { if (_broadcastMenuOpen && !document.getElementById("broadcastWrap").contains(ev.target)) { document.getElementById("broadcastMenu").style.display = "none"; _broadcastMenuOpen = false; } });
-
-  function renderBroadcastMenu() {
-    const v = _visible(); const general = v.filter(r => !r.mtlv_eligible); const mtlv = v.filter(r => r.mtlv_eligible);
-    function badge(label, color, bg) { return `<span style="font-size:11px;font-weight:600;color:${color};background:${bg};padding:1px 7px;border-radius:20px;">${label}</span>`; }
-    function row(group, status, badgeHtml, count) { if (!count) return ""; return `<div onclick="openBroadcast('${group}','${status}')" style="display:flex;align-items:center;gap:8px;padding:7px 14px;cursor:pointer;font-size:13px;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">${badgeHtml}<span style="flex:1;">${status === "all" ? "All guests" : status.charAt(0).toUpperCase() + status.slice(1)}</span><span style="color:#888;font-size:12px;">${count} guests</span></div>`; }
-    let html = "";
-    if (general.length) { html += `<div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;">General — ${general.length} guests</div>`; html += row("general", "all", badge("All", "#495057", "#e9ecef"), general.length); html += row("general", "pending", badge("Pending", "#856404", "#fff3cd"), general.filter(r => !r.confirmation_status || r.confirmation_status === "pending").length); html += row("general", "yes", badge("Yes", "#155724", "#d4edda"), general.filter(r => r.confirmation_status === "yes").length); html += row("general", "modify", badge("Modify", "#004085", "#cce5ff"), general.filter(r => r.confirmation_status === "modify").length); if (mtlv.length) html += `<div style="height:1px;background:#f0f0f0;margin:4px 0;"></div>`; }
-    if (mtlv.length) { html += `<div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;">MTLV — ${mtlv.length} guests</div>`; html += row("mtlv", "all", badge("All", "#495057", "#e9ecef"), mtlv.length); html += row("mtlv", "pending", badge("Pending", "#856404", "#fff3cd"), mtlv.filter(r => !r.confirmation_status || r.confirmation_status === "pending").length); html += row("mtlv", "yes", badge("Yes", "#155724", "#d4edda"), mtlv.filter(r => r.confirmation_status === "yes").length); }
-    if (!html) html = '<div style="padding:8px 14px;font-size:13px;color:#aaa;">No guests found</div>';
-    document.getElementById("broadcastMenuItems").innerHTML = html;
-  }
-
-  async function openBroadcast(group, status) {
-    document.getElementById("broadcastMenu").style.display = "none"; _broadcastMenuOpen = false;
-    _broadcastGroup = group; _broadcastStatus = status;
-    const v = _visible();
-    _broadcastRecipients = v.filter(r => { const gm = group === "general" ? !r.mtlv_eligible : r.mtlv_eligible; const sm = status === "all" ? true : (r.confirmation_status || "pending") === status; return gm && sm; });
-    if (!_broadcastTemplates.length) { const res = await fetch(`/booking-notes/templates/${MODULE}`); const data = await res.json(); _broadcastTemplates = data.templates; const sel = document.getElementById("broadcastTemplate"); sel.innerHTML = '<option value="">— Select template —</option>'; _broadcastTemplates.forEach(t => { sel.innerHTML += `<option value="${t.name}">${t.label}</option>`; }); }
-    const _sLabel = { all: "All", pending: "Pending", yes: "Yes", modify: "Modify" };
-    document.getElementById("broadcastSubtitle").textContent = `${group === "general" ? "General" : "MTLV"} · ${_sLabel[status] || status} · ${_getDate()}`;
-    document.getElementById("recipientCount").textContent = `${_broadcastRecipients.length} recipient(s)`;
-    document.getElementById("recipientList").innerHTML = _broadcastRecipients.map((r, i) => `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 6px;background:#fff;border-radius:4px;border:1px solid #eee;"><input type="checkbox" class="rec-check" data-idx="${i}" checked><span style="flex:1;font-weight:500;">${e(r.guest_name)}</span><span style="color:#888;">${e(r.phone || r.email || "—")}</span></div>`).join("");
-    document.getElementById("broadcastOverlay").style.display = "flex";
-  }
-  function onTemplateChange() { const sel = document.getElementById("broadcastTemplate"); const t = _broadcastTemplates.find(t => t.name === sel.value); if (t) document.getElementById("broadcastBody").value = t.body; }
-  function closeBroadcast() { document.getElementById("broadcastOverlay").style.display = "none"; }
-  async function sendBroadcast() {
-    const body = document.getElementById("broadcastBody").value.trim(); if (!body) { alert("Please enter a message."); return; }
-    const idxs = Array.from(document.querySelectorAll(".rec-check:checked")).map(c => parseInt(c.dataset.idx));
-    const recipients = idxs.map(i => _broadcastRecipients[i]); if (!recipients.length) { alert("No recipients selected."); return; }
-    const btn = document.getElementById("broadcastSendBtn"); btn.disabled = true; btn.textContent = "Sending...";
-    try { const res = await fetch("/booking-notes/broadcast/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ module: MODULE, group_filter: _broadcastGroup, status_filter: _broadcastStatus, tour_date: _getDate(), template_name: document.getElementById("broadcastTemplate").value || null, message_body: body, recipients, send_sms: document.getElementById("bcastSms").checked, send_email: document.getElementById("bcastEmail").checked }) }); const data = await res.json(); closeBroadcast(); alert(`Broadcast sent!\nSMS: ${data.sms_sent} sent, ${data.sms_failed} failed\nEmail: ${data.email_sent} sent, ${data.email_failed} failed`); }
-    catch (e2) { alert("Send failed."); }
-    finally { btn.disabled = false; btn.textContent = "📣 Send to all"; }
-  }
-
-  async function openNotes(bookingId, orderNum, name) { _currentBookingId = bookingId; document.getElementById("notesTitle").textContent = `Order ${orderNum}`; document.getElementById("notesSubtitle").textContent = name; document.getElementById("noteInput").value = ""; document.getElementById("notesOverlay").style.display = "flex"; await fetchNotes(); _pollTimer = setInterval(fetchNotes, 20000); }
-  function closeNotes() { document.getElementById("notesOverlay").style.display = "none"; _currentBookingId = null; if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; } }
-  async function fetchNotes() { if (!_currentBookingId) return; try { const res = await fetch(`/booking-notes/${_currentBookingId}`); const data = await res.json(); renderNotes(data.notes); } catch (e2) { } }
-  function renderNotes(notes) {
-    const container = document.getElementById("notesMessages");
-    if (!notes || !notes.length) { document.getElementById("notesEmpty").style.display = "block"; return; }
-    document.getElementById("notesEmpty").style.display = "none";
-    const sm = { staff_note: { bg: "#e8f4fd", label: "Note", color: "#0c5460" }, sms_out: { bg: "#d4edda", label: "SMS sent", color: "#155724" }, email_out: { bg: "#d1ecf1", label: "Email sent", color: "#0c5460" }, guest_reply: { bg: "#fff3cd", label: "Guest reply", color: "#856404" } };
-    container.innerHTML = notes.map(n => { const s = sm[n.direction] || { bg: "#f0f0f0", label: n.direction, color: "#333" }; return `<div style="background:${s.bg};border-radius:8px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-size:11px;font-weight:600;color:${s.color};background:rgba(0,0,0,.06);padding:1px 7px;border-radius:20px;">${s.label}</span><span style="font-size:11px;color:#888;">${e(n.author_username)}</span><span style="font-size:11px;color:#aaa;margin-left:auto;">${e(n.created_at)}</span></div><div style="font-size:13px;color:#212529;white-space:pre-wrap;">${e(n.body)}</div></div>`; }).join("") + '<div id="notesEmpty" style="display:none;"></div>';
-    container.scrollTop = container.scrollHeight;
-    const tr = document.querySelector(`tr[data-booking-id="${_currentBookingId}"]`);
-    if (tr) { const span = tr.querySelectorAll("td")[15]?.querySelector("button span"); if (span) { span.style.background = "#1a3a5c"; span.style.color = "#fff"; span.textContent = notes.length; } }
-  }
-  async function submitNote(dir) {
-    const body = document.getElementById("noteInput").value.trim(); if (!body || !_currentBookingId) return;
-    try { await fetch(`/booking-notes/${_currentBookingId}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ body, direction: dir, send_sms: document.getElementById("sendSmsCheck").checked, send_email: document.getElementById("sendEmailCheck").checked }) }); document.getElementById("noteInput").value = ""; await fetchNotes(); }
-    catch (e2) { alert("Failed to save note."); }
-  }
-
-  function e(s) { return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
-
-  document.getElementById("date-input").value = _today();
-  loadData();
+    document.getElementById("noteInput").value = "";
+    await _fetchNotes();
+  } catch(e){ alert("Failed to save note."); }
+}
 </script>
-{% endblock %}
+</body>
+
+</html>
