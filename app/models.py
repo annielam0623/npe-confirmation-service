@@ -230,7 +230,7 @@ class Booking(Base):
     tickets           = relationship("BookingTicket", back_populates="booking")
     notification_logs = relationship("NotificationLog", back_populates="booking")
     promotion_rel     = relationship("Promotion", foreign_keys=[promotion_id])
-    notes             = relationship("BookingNote", back_populates="booking", cascade="all, delete-orphan", order_by="BookingNote.created_at")
+    booking_notes     = relationship("BookingNote", back_populates="booking", cascade="all, delete-orphan", order_by="BookingNote.created_at")
 
     @property
     def guest_full_name(self):
@@ -433,8 +433,7 @@ class BookingNote(Base):
     sms_status      = Column(String(20), nullable=True)    # 'sent' | 'failed' | None
     email_status    = Column(String(20), nullable=True)    # 'sent' | 'failed' | None
     created_at      = Column(DateTime(timezone=True), nullable=False, default=_now_la)
-
-    booking         = relationship("Booking", back_populates="notes")
+    booking         = relationship("Booking", back_populates="booking_notes")
 
 
 # ── BroadcastLog ─────────────────────────────────────────────────────────────
