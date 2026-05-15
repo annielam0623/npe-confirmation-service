@@ -15,9 +15,15 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
 import secrets
-
+from sqlalchemy import Column, Integer, String, Text, DateTime, Date, ForeignKey
+from sqlalchemy.orm import relationship
+from datetime import datetime, timezone
 from app.database import Base
 
+
+def _now_la():
+    from zoneinfo import ZoneInfo
+    return datetime.now(ZoneInfo("America/Los_Angeles"))
 
 # ─── Enums ────────────────────────────────────────────────────────────────────
 
@@ -212,6 +218,9 @@ class Booking(Base):
     # Take Action
     action_taken_by = Column(String(100), nullable=True)
     action_taken_at = Column(DateTime, nullable=True)
+    notes_handler      = Column(String(100), nullable=True)
+    notes_handled_at   = Column(DateTime(timezone=True), nullable=True)
+    notes_action_taken = Column(Text, nullable=True)
 
     # Timestamps
     created_at = Column(DateTime, server_default=func.now())
@@ -221,6 +230,7 @@ class Booking(Base):
     tickets           = relationship("BookingTicket", back_populates="booking")
     notification_logs = relationship("NotificationLog", back_populates="booking")
     promotion_rel     = relationship("Promotion", foreign_keys=[promotion_id])
+    notes             = relationship("BookingNote", back_populates="booking", cascade="all, delete-orphan", order_by="BookingNote.created_at")
 
     @property
     def guest_full_name(self):
@@ -420,3 +430,66 @@ class BookingNote(Base):
     author     = Column(String(50), nullable=False)   # 'guest' 或 staff initials e.g. 'AB'
     text       = Column(Text, nullable=False)
     created_at = Column(DateTime, server_default=func.now(), index=True)
+
+
+# ── BookingNote ───────────────────────────────────────────────────────────────
+class BookingNote(Base):
+    __tablename__ = "booking_notes"
+
+    id              = Column(Integer, primary_key=True, index=True)
+    booking_id      = Column(Integer, ForeignKey("bookings.id", ondelete="CASCADE"), nullable=False, index=True)
+    author_username = Column(String(100), nullable=False)
+    direction       = Column(String(20), nullable=False, default="staff_note")
+    # 'staff_note' | 'sms_out' | 'email_out' | 'guest_reply'
+    body            = Column(Text, nullable=False)
+    sms_status      = Column(String(20), nullable=True)    # 'sent' | 'failed' | None
+    email_status    = Column(String(20), nullable=True)    # 'sent' | 'failed' | None
+    created_at      = Column(DateTime(timezone=True), nullable=False, default=_now_la)
+
+    booking         = relationship("Booking", back_populates="notes")
+
+
+# ── BroadcastLog ─────────────────────────────────────────────────────────────
+class BroadcastLog(Base):
+    __tablename__ = "broadcast_log"
+
+    id               = Column(Integer, primary_key=True, index=True)
+    sent_by          = Column(String(100), nullable=False)
+    module           = Column(String(30), nullable=False)   # 'tour' | 'morning' | 'tickets'
+    group_filter     = Column(String(20), nullable=False)   # 'general' | 'mtlv'
+    status_filter    = Column(String(20), nullable=False)   # 'all' | 'pending' | 'yes' | 'modify'
+    tour_date        = Column(Date, nullable=False)
+    template_name    = Column(String(100), nullable=True)
+    message_body     = Column(Text, nullable=False)
+    recipient_count  = Column(Integer, nullable=False, default=0)
+    sms_sent         = Column(Integer, nullable=False, default=0)
+    sms_failed       = Column(Integer, nullable=False, default=0)
+    email_sent       = Column(Integer, nullable=False, default=0)
+    email_failed     = Column(Integer, nullable=False, default=0)
+    created_at       = Column(DateTime(timezone=True), nullable=False, default=_now_la)
+
+    recipients       = relationship("BroadcastRecipient", back_populates="broadcast", cascade="all, delete-orphan")
+
+
+# ── BroadcastRecipient ────────────────────────────────────────────────────────
+class BroadcastRecipient(Base):
+    __tablename__ = "broadcast_recipients"
+
+    id              = Column(Integer, primary_key=True, index=True)
+    broadcast_id    = Column(Integer, ForeignKey("broadcast_log.id", ondelete="CASCADE"), nullable=False, index=True)
+    order_number    = Column(String(50), nullable=True)
+    customer_name   = Column(String(200), nullable=True)
+    phone           = Column(String(30), nullable=True)
+    email           = Column(String(200), nullable=True)
+    sms_status      = Column(String(20), nullable=True)   # 'sent' | 'failed' | 'skipped'
+    email_status    = Column(String(20), nullable=True)
+    created_at      = Column(DateTime(timezone=True), nullable=False, default=_now_la)
+
+    broadcast       = relationship("BroadcastLog", back_populates="recipients")
+
+
+# ── Add to Booking model (append these lines in models.py) ───────────────────
+# notes_handler      = Column(String(100), nullable=True)
+# notes_handled_at   = Column(DateTime(timezone=True), nullable=True)
+# notes_action_taken = Column(Text, nullable=True)
+# notes              = relationship("BookingNote", back_populates="booking", cascade="all, delete-orphan", order_by="BookingNote.created_at")

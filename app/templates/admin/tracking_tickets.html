@@ -1,651 +1,478 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tickets Reminder Log</title>
-<style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f0f2f5;color:#333;font-size:13px;}
+{% extends "admin/base.html" %}
+{% block title %}Tracking — Tickets Reminder{% endblock %}
 
-/* ── Header ── */
-.top-bar{background:#1a3a5c;color:#fff;padding:10px 20px;display:flex;align-items:center;gap:12px;}
-.top-bar img{height:36px;width:auto;}
-.top-bar h1{font-size:16px;font-weight:700;flex:1;}
-.logout-btn{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;}
-.logout-btn:hover{background:rgba(255,255,255,.25);}
+{% block content %}
+<div class="page-header" style="display:flex;align-items:center;gap:12px;margin-bottom:20px;flex-wrap:wrap;">
+  <h1 style="margin:0;font-size:20px;font-weight:600;color:#1a3a5c;">Tickets Reminder — Tracking</h1>
+  <div style="margin-left:auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
 
-/* ── Toolbar ── */
-.toolbar{background:#fff;border-bottom:1px solid #dee2e6;padding:10px 20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-.btn-today{background:#1a3a5c;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;}
-.btn-today:hover{background:#0f2440;}
-.btn-tmr{background:#6c757d;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;}
-.btn-tmr:hover{background:#5a6268;}
-.btn-nav{background:#fff;border:1px solid #ced4da;color:#495057;width:30px;height:30px;border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;line-height:1;}
-.btn-nav:hover{background:#f8f9fa;}
-.date-wrap{position:relative;display:inline-block;cursor:pointer;}
-.date-wrap input[type="date"]{
-  height:30px;padding:0 10px;border:1px solid #ced4da;border-radius:6px;
-  font-size:13px;font-weight:600;color:#1a3a5c;background:#fff;
-  cursor:pointer;min-width:150px;font-family:inherit;
-}
-.date-wrap input[type="date"]::-webkit-calendar-picker-indicator{display:none;}
-.btn-refresh{background:#17a2b8;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;}
-.btn-refresh:hover{background:#138496;}
-.btn-export{background:#28a745;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;margin-left:auto;}
-.btn-export:hover{background:#218838;}
+    <!-- Date navigation -->
+    <div style="display:flex;align-items:center;gap:6px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;padding:4px 10px;">
+      <a href="?date={{ prev_date }}" style="color:#495057;text-decoration:none;font-size:18px;line-height:1;">&#8249;</a>
+      <span style="font-size:14px;font-weight:500;color:#1a3a5c;min-width:110px;text-align:center;">{{ display_date }}</span>
+      <a href="?date={{ next_date }}" style="color:#495057;text-decoration:none;font-size:18px;line-height:1;">&#8250;</a>
+    </div>
 
-/* ── Tour pills ── */
-.pills-bar{background:#fff;border-bottom:1px solid #dee2e6;padding:8px 20px;display:flex;gap:6px;flex-wrap:wrap;}
-.pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid #dee2e6;background:#fff;color:#495057;white-space:nowrap;}
-.pill:hover{border-color:#1a3a5c;color:#1a3a5c;}
-.pill.active{background:#1a3a5c;color:#fff;border-color:#1a3a5c;}
-.pill .cnt{font-size:11px;background:rgba(0,0,0,.08);border-radius:8px;padding:1px 5px;}
-.pill.active .cnt{background:rgba(255,255,255,.25);}
+    <!-- Broadcast dropdown -->
+    <div style="position:relative;display:inline-block;">
+      <div style="display:inline-flex;align-items:stretch;border-radius:8px;border:1px solid #f09595;overflow:hidden;">
+        <button onclick="toggleBroadcastMenu()" style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 12px;background:#fcebeb;color:#791f1f;border:none;cursor:pointer;font-weight:500;">
+          &#128227; Broadcast
+        </button>
+        <button onclick="toggleBroadcastMenu()" style="font-size:13px;padding:6px 9px;background:#f7c1c1;color:#791f1f;border:none;border-left:1px solid #f09595;cursor:pointer;">&#8964;</button>
+      </div>
+      <div id="broadcastMenu" style="display:none;position:absolute;right:0;top:calc(100% + 4px);background:#fff;border:1px solid #dee2e6;border-radius:8px;padding:4px 0;min-width:230px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.08);">
+        <div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">Tickets — {{ display_date }}</div>
+        <div id="broadcastMenuItems" style="padding:2px 0;">
+          <div style="padding:8px 14px;font-size:13px;color:#aaa;">Loading...</div>
+        </div>
+      </div>
+    </div>
 
-/* ── Stat cards ── */
-.stats-bar{padding:12px 20px;display:flex;gap:10px;flex-wrap:wrap;}
-.stat{display:flex;flex-direction:column;align-items:center;min-width:76px;padding:8px 14px;border-radius:10px;border:1.5px solid #dee2e6;background:#fff;}
-.stat .num{font-size:26px;font-weight:700;line-height:1.1;}
-.stat .lbl{font-size:11px;color:#6c757d;margin-top:2px;}
-.stat.s-total .num{color:#1a3a5c;}
-.stat.s-yes   .num{color:#28a745;}
-.stat.s-resc  .num{color:#fd7e14;}
-.stat.s-pend  .num{color:#6c757d;}
-
-/* ── Table ── */
-.records-bar{padding:6px 20px;display:flex;justify-content:space-between;align-items:center;}
-.records-bar span{font-size:12px;color:#6c757d;}
-.table-wrap{padding:0 20px 24px;overflow-x:auto;}
-table{width:max-content;min-width:100%;border-collapse:collapse;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08);table-layout:auto;}
-thead tr{background:#e9ecef;}
-th{padding:8px 10px;text-align:left;font-size:12px;font-weight:600;color:#495057;white-space:nowrap;border-bottom:2px solid #dee2e6;position:relative;user-select:none;}
-td{padding:7px 10px;border-bottom:1px solid #f0f0f0;vertical-align:middle;font-size:12px;}
-tr:hover td{background:#f8f9fa;}
-tr:last-child td{border-bottom:none;}
-
-/* ── Notes cell ── */
-.notes-cell{min-width:120px;max-width:160px;cursor:pointer;}
-.notes-bubble{
-  display:inline-flex;align-items:center;gap:5px;
-  background:#fffbea;border:1px solid #ffc107;border-radius:8px;
-  padding:4px 8px;font-size:12px;color:#856404;
-  max-width:140px;cursor:pointer;transition:background .15s;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.notes-bubble:hover{background:#fff3cd;}
-.notes-bubble .nb-dot{width:6px;height:6px;border-radius:50%;background:#ffc107;flex-shrink:0;}
-.notes-add{
-  color:#ced4da;font-size:18px;cursor:pointer;padding:2px 6px;
-  border-radius:4px;transition:color .15s, background .15s;display:inline-block;
-}
-.notes-add:hover{color:#1a3a5c;background:#f0f2f5;}
-
-/* ── Notes modal ── */
-.notes-modal-overlay{
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);
-  z-index:1000;align-items:center;justify-content:center;
-}
-.notes-modal-overlay.open{display:flex;}
-.notes-modal{
-  background:#fff;border-radius:16px;width:480px;max-width:95vw;
-  box-shadow:0 8px 40px rgba(0,0,0,.18);
-  display:flex;flex-direction:column;max-height:80vh;overflow:hidden;
-}
-.nm-header{
-  padding:16px 20px 12px;border-bottom:1px solid #f0f0f0;
-  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
-}
-.nm-title{font-size:14px;font-weight:600;color:#1a3a5c;line-height:1.4;}
-.nm-sub{font-size:12px;color:#6c757d;margin-top:2px;}
-.nm-close{
-  background:none;border:none;font-size:22px;color:#adb5bd;
-  cursor:pointer;line-height:1;padding:0;flex-shrink:0;transition:color .15s;
-}
-.nm-close:hover{color:#495057;}
-.nm-action-row{
-  padding:10px 20px;border-bottom:1px solid #f0f0f0;
-  display:flex;align-items:center;gap:8px;background:#f8f9fa;
-}
-.nm-action-cb{width:15px;height:15px;cursor:pointer;accent-color:#1a3a5c;}
-.nm-action-label{font-size:12px;color:#495057;cursor:pointer;}
-.nm-action-label.done{color:#28a745;font-weight:600;}
-.nm-body{
-  flex:1;overflow-y:auto;padding:16px 20px;
-  display:flex;flex-direction:column;gap:10px;
-}
-.nm-empty{text-align:center;padding:32px;color:#adb5bd;font-size:13px;}
-.nm-msg{display:flex;flex-direction:column;gap:2px;}
-.nm-msg.guest .nm-bubble{
-  background:#e8f4fd;border:1px solid #b3d9f7;border-radius:0 10px 10px 10px;
-  align-self:flex-start;max-width:90%;
-}
-.nm-msg.staff .nm-bubble{
-  background:#f0f9f4;border:1px solid #b7e4c7;border-radius:10px 0 10px 10px;
-  align-self:flex-end;max-width:90%;
-}
-.nm-bubble{padding:8px 12px;font-size:13px;color:#333;line-height:1.5;word-break:break-word;}
-.nm-meta{font-size:11px;color:#adb5bd;padding:0 4px;}
-.nm-msg.staff .nm-meta{text-align:right;}
-.nm-footer{
-  padding:12px 16px;border-top:1px solid #f0f0f0;
-  display:flex;gap:8px;align-items:flex-end;
-}
-.nm-input{
-  flex:1;border:1px solid #dee2e6;border-radius:10px;
-  padding:8px 12px;font-size:13px;font-family:inherit;
-  resize:none;outline:none;line-height:1.5;min-height:38px;
-  max-height:120px;overflow-y:auto;transition:border-color .15s;
-}
-.nm-input:focus{border-color:#1a3a5c;}
-.nm-send{
-  background:#1a3a5c;color:#fff;border:none;border-radius:10px;
-  padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;
-  font-family:inherit;white-space:nowrap;transition:background .15s;flex-shrink:0;
-}
-.nm-send:hover{background:#0f2440;}
-.nm-send:disabled{background:#ced4da;cursor:not-allowed;}
-
-.col-dragging{opacity:0.4!important;background:#c8d8e8!important;}
-.col-drag-over{border-left:2px solid #1a3a5c!important;}
-thead th{cursor:grab;}
-.col-resizer{position:absolute;right:0;top:0;bottom:0;width:5px;cursor:col-resize;z-index:1;background:transparent;}
-.col-resizer:hover,.col-resizer.active{background:rgba(26,90,180,0.35);}
-.notes-cell{min-width:140px;max-width:200px;}
-.notes-input{width:100%;border:1px solid transparent;background:transparent;font-size:12px;font-family:inherit;padding:3px 5px;border-radius:4px;resize:none;outline:none;overflow:hidden;line-height:1.4;transition:all .15s;}
-.notes-input:focus{border-color:#ffc107;background:#fffbea;}
-.notes-input.dirty{border-color:#ffc107;background:#fffbea;}
-th.notes-hdr.hdr-dirty{background:#fff3cd !important;color:#856404;}
-
-/* ── Status ── */
-.s-sel{border:none;background:transparent;font-size:12px;font-weight:700;cursor:pointer;padding:2px 4px;border-radius:4px;}
-.s-sel.yes{color:#28a745;}
-.s-sel.pending{color:#fd7e14;}
-.s-sel:focus{outline:1px solid #1a3a5c;}
-.badge-sent{color:#28a745;font-size:11px;font-weight:600;}
-.badge-fail{color:#dc3545;font-size:11px;font-weight:600;}
-.badge-none{color:#adb5bd;font-size:11px;}
-</style>
-</head>
-<body>
-
-<div class="top-bar">
-  <img src="https://nationalparkexpress.com/wp-content/uploads/2026/03/image002.png" alt="NPE">
-  <h1>Tickets Reminder Log</h1>
-  <button class="logout-btn" onclick="location.href='/auth/logout'">Logout</button>
-</div>
-
-<div class="toolbar">
-  <button class="btn-today" onclick="goToday()">Today</button>
-  <button class="btn-tmr"   onclick="goTomorrow()">Tomorrow</button>
-  <button class="btn-nav"   onclick="changeDate(-1)">&#8249;</button>
-  <div class="date-wrap" id="date-wrap">
-    <input type="date" id="date-input" onchange="loadData()">
   </div>
-  <button class="btn-nav"     onclick="changeDate(1)">&#8250;</button>
-  <button class="btn-refresh" onclick="loadData()">&#x21bb; Refresh</button>
-  <button class="btn-export"  onclick="exportCSV()">&#128190; Export CSV</button>
 </div>
 
-<div class="pills-bar">
-  <span class="pill active" data-tour="all" onclick="filterTour(this,'all')">All <span class="cnt" id="p-all">0/0</span></span>
-  <span class="pill" data-tour="upper_antelope_tsosie"          onclick="filterTour(this,'upper_antelope_tsosie')">U-TC <span class="cnt" id="p-utc">0/0</span></span>
-  <span class="pill" data-tour="upper_antelope_brenda"          onclick="filterTour(this,'upper_antelope_brenda')">U-BR <span class="cnt" id="p-ubr">0/0</span></span>
-  <span class="pill" data-tour="upper_antelope_aact"            onclick="filterTour(this,'upper_antelope_aact')">U-AA <span class="cnt" id="p-uaa">0/0</span></span>
-  <span class="pill" data-tour="upper_antelope_hogan_transport" onclick="filterTour(this,'upper_antelope_hogan_transport')">U-HT <span class="cnt" id="p-uht">0/0</span></span>
-  <span class="pill" data-tour="upper_antelope_hogan_hiking"    onclick="filterTour(this,'upper_antelope_hogan_hiking')">U-HH <span class="cnt" id="p-uhh">0/0</span></span>
-  <span class="pill" data-tour="lower_antelope_kens"            onclick="filterTour(this,'lower_antelope_kens')">L-KT <span class="cnt" id="p-lkt">0/0</span></span>
-  <span class="pill" data-tour="lower_antelope_dixie"           onclick="filterTour(this,'lower_antelope_dixie')">L-DX <span class="cnt" id="p-ldx">0/0</span></span>
-  <span class="pill" data-tour="canyon_x"                       onclick="filterTour(this,'canyon_x')">X-TT <span class="cnt" id="p-xtt">0/0</span></span>
-  <span class="pill" data-tour="rattlesnake_aact"               onclick="filterTour(this,'rattlesnake_aact')">R-AA <span class="cnt" id="p-raa">0/0</span></span>
-</div>
-
-<div class="stats-bar">
-  <div class="stat s-total"><div class="num" id="s-total">0</div><div class="lbl">Total</div></div>
-  <div class="stat s-yes">  <div class="num" id="s-yes">0</div>  <div class="lbl">YES</div></div>
-  <div class="stat s-resc"> <div class="num" id="s-resc">0</div> <div class="lbl">Reschedule</div></div>
-  <div class="stat s-pend"> <div class="num" id="s-pend">0</div> <div class="lbl">Pending</div></div>
-</div>
-
-<div class="records-bar">
-  <span id="rec-label">0 records</span>
-</div>
-
-<div class="table-wrap"><table>
-    <thead><tr id="thead-row">
-      <th style="width:120px">Tour<div class="col-resizer"></div></th>
-      <th style="width:90px">Service Date<div class="col-resizer"></div></th>
-      <th style="width:90px">CHD#<div class="col-resizer"></div></th>
-      <th style="width:45px">Pax<div class="col-resizer"></div></th>
-      <th style="width:95px">Check-in Time<div class="col-resizer"></div></th>
-      <th style="width:80px">Tour Time<div class="col-resizer"></div></th>
-      <th style="width:130px">Guest Name<div class="col-resizer"></div></th>
-      <th style="width:110px">Phone<div class="col-resizer"></div></th>
-      <th style="width:100px">Confirmation#<div class="col-resizer"></div></th>
-      <th style="width:80px">&#9679; Email<div class="col-resizer"></div></th>
-      <th style="width:80px">&#9632; SMS<div class="col-resizer"></div></th>
-      <th class="notes-hdr" id="notes-hdr" style="width:160px">Notes<div class="col-resizer"></div></th>
-      <th style="width:80px">Status<div class="col-resizer"></div></th>
-      <th style="width:90px">Submit Time<div class="col-resizer"></div></th>
-    </tr></thead>
-    <tbody id="tbody">
-      <tr><td colspan="14" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>
+<!-- Table -->
+<div style="overflow-x:auto;">
+  <table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead>
+      <tr style="background:#f0f4f8;border-bottom:2px solid #dee2e6;">
+        <th style="padding:10px 12px;text-align:left;white-space:nowrap;color:#495057;">Order #</th>
+        <th style="padding:10px 12px;text-align:left;white-space:nowrap;color:#495057;">Name</th>
+        <th style="padding:10px 12px;text-align:left;white-space:nowrap;color:#495057;">Phone</th>
+        <th style="padding:10px 12px;text-align:left;white-space:nowrap;color:#495057;">Tour Type</th>
+        <th style="padding:10px 12px;text-align:left;white-space:nowrap;color:#495057;">Session</th>
+        <th style="padding:10px 12px;text-align:left;white-space:nowrap;color:#495057;">Pax</th>
+        <th style="padding:10px 12px;text-align:left;white-space:nowrap;color:#495057;">Status</th>
+        <th style="padding:10px 12px;text-align:left;white-space:nowrap;color:#495057;">SMS</th>
+        <th style="padding:10px 12px;text-align:left;white-space:nowrap;color:#495057;">Email</th>
+        <th style="padding:10px 12px;text-align:left;white-space:nowrap;color:#495057;">MTLV</th>
+        <th style="padding:10px 12px;text-align:left;white-space:nowrap;color:#495057;">Tickets</th>
+        <th style="padding:10px 12px;text-align:center;white-space:nowrap;color:#495057;">Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for b in bookings %}
+      <tr style="border-bottom:1px solid #f0f0f0;" data-booking-id="{{ b.id }}" data-order="{{ b.order_number }}" data-name="{{ b.first_name }} {{ b.last_name }}" data-phone="{{ b.phone or '' }}" data-email="{{ b.customer_email or '' }}" data-status="{{ b.confirmation or 'pending' }}" data-mtlv="{{ 'yes' if b.mtlv_eligible else 'no' }}">
+        <td style="padding:9px 12px;font-weight:500;color:#1a3a5c;">{{ b.order_number }}</td>
+        <td style="padding:9px 12px;">{{ b.first_name }} {{ b.last_name }}</td>
+        <td style="padding:9px 12px;font-family:monospace;font-size:12px;">{{ b.phone or '—' }}</td>
+        <td style="padding:9px 12px;font-size:12px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ b.product_name or '—' }}</td>
+        <td style="padding:9px 12px;font-size:12px;">{{ b.pickup_time or '—' }}</td>
+        <td style="padding:9px 12px;text-align:center;">{{ b.quantities or 1 }}</td>
+        <td style="padding:9px 12px;">
+          {% set s = b.confirmation or 'pending' %}
+          {% if s == 'yes' %}
+            <span style="background:#d4edda;color:#155724;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500;">Yes</span>
+          {% elif s == 'pending' %}
+            <span style="background:#fff3cd;color:#856404;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:500;">Pending</span>
+          {% else %}
+            <span style="background:#f0f0f0;color:#666;padding:2px 10px;border-radius:20px;font-size:11px;">{{ s }}</span>
+          {% endif %}
+        </td>
+        <td style="padding:9px 12px;text-align:center;">
+          {% if b.sms_sent %}<span style="color:#28a745;">&#10003;</span>{% else %}<span style="color:#ccc;">—</span>{% endif %}
+        </td>
+        <td style="padding:9px 12px;text-align:center;">
+          {% if b.email_sent %}<span style="color:#28a745;">&#10003;</span>{% else %}<span style="color:#ccc;">—</span>{% endif %}
+        </td>
+        <td style="padding:9px 12px;text-align:center;">
+          {% if b.mtlv_eligible %}
+            <span style="background:#e8f4f8;color:#0c5460;padding:2px 8px;border-radius:12px;font-size:11px;">{{ b.mtlv_ticket_status or 'pending' }}</span>
+          {% else %}
+            <span style="color:#ccc;font-size:12px;">—</span>
+          {% endif %}
+        </td>
+        <td style="padding:9px 12px;text-align:center;">
+          {% if b.mtlv_ticket_status == 'sent' %}
+            <span style="color:#28a745;font-size:12px;">Sent</span>
+          {% else %}
+            <span style="color:#ccc;font-size:12px;">—</span>
+          {% endif %}
+        </td>
+        <!-- Notes bubble -->
+        <td style="padding:9px 12px;text-align:center;">
+          <button onclick="openNotes({{ b.id }}, '{{ b.order_number }}', '{{ b.first_name }} {{ b.last_name }}')"
+            style="background:none;border:none;cursor:pointer;position:relative;padding:4px;">
+            {% if b.notes_count and b.notes_count > 0 %}
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#1a3a5c;color:#fff;border-radius:50%;font-size:11px;font-weight:600;">{{ b.notes_count }}</span>
+            {% else %}
+              <span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;background:#e9ecef;color:#495057;border-radius:50%;font-size:16px;line-height:1;">+</span>
+            {% endif %}
+          </button>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td colspan="12" style="padding:40px;text-align:center;color:#aaa;">No bookings for this date.</td></tr>
+      {% endfor %}
     </tbody>
   </table>
 </div>
 
-<!-- Notes conversation modal -->
-<div class="notes-modal-overlay" id="notesOverlay" onclick="closeNotesModal(event)">
-  <div class="notes-modal">
-    <div class="nm-header">
-      <div>
-        <div class="nm-title" id="nmTitle">Notes</div>
-        <div class="nm-sub"   id="nmSub"></div>
+<!-- ── Notes dialog ────────────────────────────────────────────────────────── -->
+<div id="notesOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;width:520px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
+    <!-- Header -->
+    <div style="background:#1a3a5c;padding:14px 18px;display:flex;align-items:center;gap:10px;">
+      <div style="flex:1;">
+        <div style="color:#fff;font-weight:600;font-size:14px;" id="notesTitle">Notes</div>
+        <div style="color:#a8c4e0;font-size:12px;" id="notesSubtitle"></div>
       </div>
-      <button class="nm-close" onclick="closeNotesModal(null)">×</button>
+      <button onclick="closeNotes()" style="background:none;border:none;color:#a8c4e0;font-size:20px;cursor:pointer;line-height:1;">&times;</button>
     </div>
-    <div class="nm-action-row">
-      <input type="checkbox" class="nm-action-cb" id="nmActionCb" onchange="toggleAction()">
-      <label class="nm-action-label" id="nmActionLabel" for="nmActionCb">Take Action</label>
+    <!-- Messages -->
+    <div id="notesMessages" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:380px;background:#f8f9fa;">
+      <div style="text-align:center;color:#aaa;font-size:13px;padding:20px 0;" id="notesEmpty">No notes yet. Start a conversation below.</div>
     </div>
-    <div class="nm-body" id="nmBody">
-      <div class="nm-empty">No messages yet.</div>
+    <!-- Input area -->
+    <div style="padding:12px 14px;border-top:1px solid #eee;background:#fff;">
+      <textarea id="noteInput" rows="3" placeholder="Write a note or message to guest..."
+        style="width:100%;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;font-size:13px;resize:none;box-sizing:border-box;outline:none;font-family:inherit;"></textarea>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#495057;cursor:pointer;">
+          <input type="checkbox" id="sendSmsCheck" checked> SMS to guest
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:#495057;cursor:pointer;">
+          <input type="checkbox" id="sendEmailCheck"> Email to guest
+        </label>
+        <div style="margin-left:auto;display:flex;gap:8px;">
+          <button onclick="submitNote('staff_note')" style="padding:6px 14px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:12px;cursor:pointer;color:#495057;">Save note</button>
+          <button onclick="submitNote('sms_out')" style="padding:6px 14px;background:#1a3a5c;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;">Send &#8594;</button>
+        </div>
+      </div>
     </div>
-    <div class="nm-footer">
-      <textarea class="nm-input" id="nmInput"
-        placeholder="Reply to guest…" rows="1"
-        oninput="autoResizeNmInput(this)"
-        onkeydown="nmInputKey(event)"></textarea>
-      <button class="nm-send" id="nmSendBtn" onclick="sendStaffNote()">Send</button>
+  </div>
+</div>
+
+<!-- ── Broadcast confirm dialog ────────────────────────────────────────────── -->
+<div id="broadcastOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;width:560px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="background:#7f1d1d;padding:14px 18px;display:flex;align-items:center;">
+      <div style="flex:1;">
+        <div style="color:#fff;font-weight:600;font-size:14px;">&#128227; Broadcast message</div>
+        <div style="color:#fca5a5;font-size:12px;" id="broadcastSubtitle"></div>
+      </div>
+      <button onclick="closeBroadcast()" style="background:none;border:none;color:#fca5a5;font-size:20px;cursor:pointer;line-height:1;">&times;</button>
+    </div>
+    <div style="padding:16px;overflow-y:auto;flex:1;">
+      <!-- Template selector -->
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;font-weight:500;color:#495057;display:block;margin-bottom:4px;">Template</label>
+        <select id="broadcastTemplate" onchange="onTemplateChange()" style="width:100%;padding:7px 10px;border:1px solid #dee2e6;border-radius:6px;font-size:13px;">
+          <option value="">— Select template —</option>
+        </select>
+      </div>
+      <!-- Message body -->
+      <div style="margin-bottom:12px;">
+        <label style="font-size:12px;font-weight:500;color:#495057;display:block;margin-bottom:4px;">Message <span style="font-weight:400;color:#888;">(supports {first_name} and {tour_date})</span></label>
+        <textarea id="broadcastBody" rows="4" style="width:100%;border:1px solid #dee2e6;border-radius:6px;padding:8px 10px;font-size:13px;resize:vertical;box-sizing:border-box;font-family:inherit;"></textarea>
+      </div>
+      <!-- Send options -->
+      <div style="display:flex;gap:16px;margin-bottom:14px;">
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="bcastSms" checked> Send SMS</label>
+        <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="checkbox" id="bcastEmail" checked> Send Email</label>
+      </div>
+      <!-- Recipients preview -->
+      <div style="background:#f8f9fa;border:1px solid #eee;border-radius:8px;padding:10px;max-height:220px;overflow-y:auto;">
+        <div style="font-size:12px;font-weight:500;color:#495057;margin-bottom:8px;" id="recipientCount"></div>
+        <div id="recipientList" style="display:flex;flex-direction:column;gap:4px;"></div>
+      </div>
+    </div>
+    <div style="padding:12px 16px;border-top:1px solid #eee;display:flex;justify-content:flex-end;gap:8px;">
+      <button onclick="closeBroadcast()" style="padding:7px 16px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:13px;cursor:pointer;">Cancel</button>
+      <button onclick="sendBroadcast()" id="broadcastSendBtn" style="padding:7px 16px;background:#7f1d1d;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:500;">&#128227; Send to all</button>
     </div>
   </div>
 </div>
 
 <script>
-var LABELS = {
-  upper_antelope_tsosie:          'Upper Antelope – Tsosie',
-  upper_antelope_brenda:          'Upper Antelope – Brenda',
-  upper_antelope_aact:            'Upper Antelope – AACT',
-  upper_antelope_hogan_transport: 'Upper Antelope – Hogan',
-  upper_antelope_hogan_hiking:    'Upper Antelope – Hogan Hike',
-  lower_antelope_kens:            "Lower Antelope – Ken's",
-  lower_antelope_dixie:           "Lower Antelope – Dixie's",
-  canyon_x:                       'Antelope Canyon X',
-  rattlesnake_aact:               'Rattlesnake Canyon',
-};
-var PILLS = {
-  upper_antelope_tsosie:'p-utc', upper_antelope_brenda:'p-ubr',
-  upper_antelope_aact:'p-uaa', upper_antelope_hogan_transport:'p-uht',
-  upper_antelope_hogan_hiking:'p-uhh', lower_antelope_kens:'p-lkt',
-  lower_antelope_dixie:'p-ldx', canyon_x:'p-xtt', rattlesnake_aact:'p-raa',
-};
+// ── State ─────────────────────────────────────────────────────────────────────
+let _currentBookingId = null;
+let _pollTimer = null;
+let _broadcastRecipients = [];
+let _broadcastGroup = null;
+let _broadcastStatus = null;
+let _broadcastTemplates = [];
+let _broadcastMenuOpen = false;
+let _broadcastCounts = null;
 
-var allRows = [], activeTour = 'all';
+const TOUR_DATE = "{{ tour_date }}";
+const MODULE = "tickets";
 
-function toYMD(d){ return d.toLocaleDateString('en-CA'); }
-function getDate(){ return document.getElementById('date-input').value; }
-
-function goToday(){
-  var la = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
-  document.getElementById('date-input').value = toYMD(la);
-  loadData();
-}
-function goTomorrow(){
-  var la = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
-  la.setDate(la.getDate()+1);
-  document.getElementById('date-input').value = toYMD(la);
-  loadData();
-}
-function changeDate(n){
-  var inp = document.getElementById('date-input');
-  var dt  = inp.value ? new Date(inp.value+'T12:00:00') : new Date();
-  dt.setDate(dt.getDate()+n);
-  inp.value = toYMD(dt);
-  loadData();
-}
-
-// Click anywhere in date-wrap → showPicker
-document.getElementById('date-wrap').addEventListener('click', function(){
-  try{ document.getElementById('date-input').showPicker(); }catch(e){}
-});
-
-function loadData(){
-  var date = getDate(); if(!date) return;
-  document.getElementById('tbody').innerHTML =
-    '<tr><td colspan="14" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>';
-  fetch('/api/tickets-reminder/log?date='+date, {credentials:'include'})
-    .then(function(r){ return r.json(); })
-    .then(function(data){ allRows = data; updatePills(); renderTable(); })
-    .catch(function(){
-      document.getElementById('tbody').innerHTML =
-        '<tr><td colspan="14" style="text-align:center;padding:24px;color:#dc3545;">Failed to load. Please refresh.</td></tr>';
+// ── Collect all rows data ─────────────────────────────────────────────────────
+function _getRows() {
+  const rows = [];
+  document.querySelectorAll("tbody tr[data-booking-id]").forEach(tr => {
+    rows.push({
+      booking_id:    parseInt(tr.dataset.bookingId),
+      order_number:  tr.dataset.order,
+      customer_name: tr.dataset.name,
+      first_name:    tr.dataset.name.split(" ")[0],
+      phone:         tr.dataset.phone,
+      email:         tr.dataset.email,
+      status:        tr.dataset.status,
+      mtlv:          tr.dataset.mtlv,
     });
-}
-
-function updatePills(){
-  var tot={}, yes={};
-  for(var k in PILLS){ tot[k]=0; yes[k]=0; }
-  var gT=0, gY=0;
-  allRows.forEach(function(r){
-    gT++;
-    if(r.confirmation==='yes') gY++;
-    if(tot[r.tour_type]!==undefined){
-      tot[r.tour_type]++;
-      if(r.confirmation==='yes') yes[r.tour_type]++;
-    }
   });
-  document.getElementById('p-all').textContent = gY+'/'+gT;
-  for(var k in PILLS) document.getElementById(PILLS[k]).textContent = yes[k]+'/'+tot[k];
+  return rows;
 }
 
-function filterTour(el, tour){
-  document.querySelectorAll('.pill').forEach(function(p){ p.classList.remove('active'); });
-  el.classList.add('active');
-  activeTour = tour;
-  renderTable();
-}
-
-function renderTable(){
-  var rows = activeTour==='all' ? allRows : allRows.filter(function(r){ return r.tour_type===activeTour; });
-  var tot=rows.length, yes=0, resc=0, pend=0;
-  rows.forEach(function(r){
-    if(r.confirmation==='yes') yes++;
-    else if(r.confirmation==='reschedule_req') resc++;
-    else pend++;
-  });
-  document.getElementById('s-total').textContent = tot;
-  document.getElementById('s-yes').textContent   = yes;
-  document.getElementById('s-resc').textContent  = resc;
-  document.getElementById('s-pend').textContent  = pend;
-  document.getElementById('rec-label').textContent = tot+' record'+(tot===1?'':'s');
-
-  if(!rows.length){
-    document.getElementById('tbody').innerHTML =
-      '<tr><td colspan="14" style="text-align:center;padding:24px;color:#aaa;">No records for this date.</td></tr>';
-    return;
+// ── Broadcast menu ────────────────────────────────────────────────────────────
+async function toggleBroadcastMenu() {
+  const menu = document.getElementById("broadcastMenu");
+  _broadcastMenuOpen = !_broadcastMenuOpen;
+  menu.style.display = _broadcastMenuOpen ? "block" : "none";
+  if (_broadcastMenuOpen && !_broadcastCounts) {
+    await loadBroadcastCounts();
   }
-
-  var html = '';
-  rows.forEach(function(r){
-    var lbl  = LABELS[r.tour_type] || r.tour_type;
-    var emB  = r.email_status==='sent' ? '<span class="badge-sent">&#10003; Sent</span>'
-               : r.email_status==='failed' ? '<span class="badge-fail">&#10007; Failed</span>'
-               : '<span class="badge-none">—</span>';
-    var smB  = r.sms_status==='sent' ? '<span class="badge-sent">&#10003; Sent</span>'
-               : r.sms_status==='failed' ? '<span class="badge-fail">&#10007; Failed</span>'
-               : '<span class="badge-none">—</span>';
-    var subT = r.submitted_at
-      ? new Date(r.submitted_at).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'})
-      : '—';
-    var notes = e(r.reschedule_notes||'');
-    var conf  = r.confirmation||'pending';
-    html += '<tr data-id="'+r.id+'" data-chd="'+e(r.chd_number)+'" data-date="'+e(r.service_date)+'">'
-      +'<td style="white-space:nowrap">'+e(lbl)+'</td>'
-      +'<td>'+e(r.service_date)+'</td>'
-      +'<td style="font-weight:600">'+e(r.chd_number)+'</td>'
-      +'<td style="text-align:center">'+e(r.no_of_pax)+'</td>'
-      +'<td>'+e(r.checkin_time)+'</td>'
-      +'<td>'+e(r.tour_time)+'</td>'
-      +'<td>'+e(r.name)+'</td>'
-      +'<td style="font-size:11px">'+e(r.phone||'—')+'</td>'
-      +'<td>'+e(r.confirmation_no||'—')+'</td>'
-      +'<td>'+emB+'</td>'
-      +'<td>'+smB+'</td>'
-      +'<td class="notes-cell" onclick="openNotesModal('+r.id+',\''+e(r.chd_number)+'\',\''+e(r.name||'')+'\','+!!(r.reschedule_notes)+','+!!(r.notes_action_taken)+')">'
-        +(r.reschedule_notes
-          ? '<span class="notes-bubble"><span class="nb-dot"></span>'+e((r.reschedule_notes||'').substring(0,30)+((r.reschedule_notes||'').length>30?'…':''))+'</span>'
-          : '<span class="notes-add" title="Add note">+</span>')
-        +'</td>'
-      +'<td><select class="s-sel '+conf+'" onchange="saveStatus(this)" data-orig="'+conf+'">'
-        +'<option value="yes"'+(conf==='yes'?' selected':'')+'>&#10003; YES</option>'
-        +'<option value="pending"'+(conf==='pending'?' selected':'')+'>&#8987; Pending</option>'
-        +'</select></td>'
-      +'<td style="white-space:nowrap;font-size:11px">'+subT+(r.resubmitted?'<span style="color:#dc3545;font-weight:700"> &#9733;</span>':'')+'</td>'
-      +'</tr>';
-  });
-  document.getElementById('tbody').innerHTML = html;
-  autoResize();
-  setTimeout(function(){ initColDragTkt(); applyColOrderTkt(); }, 0);
 }
 
-function e(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-// ── Notes: yellow on edit, header yellow if any unsaved ──
-function autoResize(){ /* no-op: notes now use modal */ }
-
-function saveStatus(el){
-  var row = el.closest('tr');
-  var val = el.value;
-  el.className = 's-sel '+val;
-  fetch('/api/tickets-reminder/update-status',{
-    method:'POST', credentials:'include',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({chd_number:row.getAttribute('data-chd'), service_date:row.getAttribute('data-date'), confirmation:val})
-  }).then(function(r){
-    if(r.ok) el.setAttribute('data-orig', val);
-    else{ el.value=el.getAttribute('data-orig'); el.className='s-sel '+el.value; }
-  });
-}
-
-function exportCSV(){
-  var rows = activeTour==='all' ? allRows : allRows.filter(function(r){ return r.tour_type===activeTour; });
-  var cols = ['tour_type','service_date','chd_number','no_of_pax','checkin_time','tour_time','name','phone','confirmation_no','email_status','sms_status','reschedule_notes','confirmation','submitted_at'];
-  var csv  = cols.join(',')+'\n';
-  rows.forEach(function(r){
-    csv += cols.map(function(c){ return '"'+(r[c]||'').toString().replace(/"/g,'""')+'"'; }).join(',')+'\n';
-  });
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download = 'tickets-'+getDate()+'.csv';
-  a.click();
-}
-
-goToday();
-setInterval(loadData, 60000);
-
-/* ── Notes modal ─────────────────────────────────────────────────────────── */
-var nmBookingId = null;
-
-function openNotesModal(bookingId, chd, guestName, hasNotes, actionTaken){
-  nmBookingId = bookingId;
-  document.getElementById('nmTitle').textContent   = chd + (guestName ? ' — ' + guestName : '');
-  document.getElementById('nmSub').textContent     = 'Guest conversation';
-  document.getElementById('nmActionCb').checked    = !!actionTaken;
-  document.getElementById('nmActionLabel').textContent = actionTaken ? '✓ Actioned' : 'Take Action';
-  document.getElementById('nmActionLabel').className   = 'nm-action-label' + (actionTaken ? ' done' : '');
-  document.getElementById('nmInput').value = '';
-  document.getElementById('nmBody').innerHTML = '<div class="nm-empty">Loading…</div>';
-  document.getElementById('notesOverlay').classList.add('open');
-  loadNotes(bookingId);
-}
-
-function closeNotesModal(e){
-  if(e && e.target !== document.getElementById('notesOverlay')) return;
-  document.getElementById('notesOverlay').classList.remove('open');
-  nmBookingId = null;
-}
-
-document.addEventListener('keydown', function(e){
-  if(e.key==='Escape') closeNotesModal(null);
+document.addEventListener("click", e => {
+  if (_broadcastMenuOpen && !e.target.closest('[onclick="toggleBroadcastMenu()"]') && !document.getElementById("broadcastMenu").contains(e.target)) {
+    document.getElementById("broadcastMenu").style.display = "none";
+    _broadcastMenuOpen = false;
+  }
 });
 
-async function loadNotes(bookingId){
-  try{
-    var r = await fetch('/api/booking-notes/'+bookingId, {credentials:'include'});
-    var notes = await r.json();
-    renderNotes(notes);
-  }catch(err){
-    document.getElementById('nmBody').innerHTML = '<div class="nm-empty">Failed to load.</div>';
+async function loadBroadcastCounts() {
+  try {
+    const res = await fetch(`/booking-notes/broadcast/counts?module=${MODULE}&tour_date=${TOUR_DATE}`);
+    const data = await res.json();
+    _broadcastCounts = data.counts;
+    renderBroadcastMenu();
+  } catch(e) {
+    document.getElementById("broadcastMenuItems").innerHTML = '<div style="padding:8px 14px;font-size:13px;color:#dc3545;">Failed to load</div>';
   }
 }
 
-function renderNotes(notes){
-  var body = document.getElementById('nmBody');
-  if(!notes.length){
-    body.innerHTML = '<div class="nm-empty">No messages yet. Start a conversation below.</div>';
-    return;
+function renderBroadcastMenu() {
+  const c = _broadcastCounts;
+  const items = document.getElementById("broadcastMenuItems");
+
+  const statusBadge = (label, color, bg) =>
+    `<span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${bg};color:${color};font-weight:500;">${label}</span>`;
+
+  const row = (group, status, label, badge, count) =>
+    count > 0
+    ? `<div class="bc-item" onclick="openBroadcast('${group}','${status}')" style="padding:7px 14px;font-size:13px;color:#212529;display:flex;align-items:center;gap:8px;cursor:pointer;" onmouseover="this.style.background='#f8f9fa'" onmouseout="this.style.background=''">
+        ${badge}<span style="margin-left:auto;font-size:11px;color:#888;">${count} guests</span>
+      </div>`
+    : "";
+
+  let html = "";
+
+  // General section
+  if (c.general.all > 0) {
+    html += `<div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">General — ${c.general.all} guests</div>`;
+    html += row("general","all","All", statusBadge("All","#495057","#e9ecef"), c.general.all);
+    html += row("general","pending","Pending", statusBadge("Pending","#856404","#fff3cd"), c.general.pending);
+    html += row("general","yes","Yes", statusBadge("Yes","#155724","#d4edda"), c.general.yes);
+    html += `<div style="height:1px;background:#f0f0f0;margin:4px 0;"></div>`;
   }
-  body.innerHTML = notes.map(function(n){
-    var isStaff = n.author !== 'guest';
-    var cls     = isStaff ? 'staff' : 'guest';
-    var author  = isStaff ? n.author : 'Guest';
-    return '<div class="nm-msg '+cls+'">'
-      +'<div class="nm-bubble">'+esc(n.text)+'</div>'
-      +'<div class="nm-meta">'+esc(author)+' · '+esc(n.created_at)+'</div>'
-      +'</div>';
-  }).join('');
-  body.scrollTop = body.scrollHeight;
+
+  // MTLV section (tickets module has mtlv)
+  if (c.mtlv.all > 0) {
+    html += `<div style="font-size:11px;color:#888;padding:6px 14px 2px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;">MTLV — ${c.mtlv.all} guests</div>`;
+    html += row("mtlv","all","All", statusBadge("All","#495057","#e9ecef"), c.mtlv.all);
+    html += row("mtlv","pending","Pending", statusBadge("Pending","#856404","#fff3cd"), c.mtlv.pending);
+    html += row("mtlv","yes","Yes", statusBadge("Yes","#155724","#d4edda"), c.mtlv.yes);
+  }
+
+  if (!html) html = '<div style="padding:8px 14px;font-size:13px;color:#aaa;">No guests found</div>';
+  items.innerHTML = html;
 }
 
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+async function openBroadcast(group, status) {
+  document.getElementById("broadcastMenu").style.display = "none";
+  _broadcastMenuOpen = false;
+  _broadcastGroup = group;
+  _broadcastStatus = status;
 
-async function sendStaffNote(){
-  var text = document.getElementById('nmInput').value.trim();
-  if(!text || !nmBookingId) return;
-  var btn = document.getElementById('nmSendBtn');
+  // Filter recipients from page rows
+  const rows = _getRows();
+  _broadcastRecipients = rows.filter(r => {
+    const groupMatch = group === "general" ? r.mtlv !== "yes" : r.mtlv === "yes";
+    const statusMatch = status === "all" ? true : r.status === status;
+    return groupMatch && statusMatch;
+  });
+
+  // Load templates
+  if (_broadcastTemplates.length === 0) {
+    const res = await fetch(`/booking-notes/templates/${MODULE}`);
+    const data = await res.json();
+    _broadcastTemplates = data.templates;
+    const sel = document.getElementById("broadcastTemplate");
+    sel.innerHTML = '<option value="">— Select template —</option>';
+    _broadcastTemplates.forEach(t => {
+      sel.innerHTML += `<option value="${t.name}">${t.label}</option>`;
+    });
+  }
+
+  // Subtitle
+  const groupLabel = group === "general" ? "General" : "MTLV";
+  const statusLabel = {all:"All", pending:"Pending", yes:"Yes", modify:"Modify"}[status] || status;
+  document.getElementById("broadcastSubtitle").textContent = `${groupLabel} · ${statusLabel} · ${TOUR_DATE}`;
+
+  // Recipients list
+  document.getElementById("recipientCount").textContent = `${_broadcastRecipients.length} recipient${_broadcastRecipients.length !== 1 ? "s" : ""}`;
+  const list = document.getElementById("recipientList");
+  list.innerHTML = _broadcastRecipients.map(r =>
+    `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:4px 6px;background:#fff;border-radius:4px;border:1px solid #eee;">
+      <input type="checkbox" class="rec-check" data-idx="${_broadcastRecipients.indexOf(r)}" checked>
+      <span style="flex:1;font-weight:500;">${r.customer_name}</span>
+      <span style="color:#888;">${r.phone || r.email || "—"}</span>
+    </div>`
+  ).join("");
+
+  // Show overlay
+  const overlay = document.getElementById("broadcastOverlay");
+  overlay.style.display = "flex";
+}
+
+function onTemplateChange() {
+  const sel = document.getElementById("broadcastTemplate");
+  const t = _broadcastTemplates.find(t => t.name === sel.value);
+  if (t) document.getElementById("broadcastBody").value = t.body;
+}
+
+function closeBroadcast() {
+  document.getElementById("broadcastOverlay").style.display = "none";
+}
+
+async function sendBroadcast() {
+  const body = document.getElementById("broadcastBody").value.trim();
+  if (!body) { alert("Please enter a message."); return; }
+
+  const checked = document.querySelectorAll(".rec-check:checked");
+  const idxs = Array.from(checked).map(c => parseInt(c.dataset.idx));
+  const recipients = idxs.map(i => _broadcastRecipients[i]);
+  if (!recipients.length) { alert("No recipients selected."); return; }
+
+  const btn = document.getElementById("broadcastSendBtn");
   btn.disabled = true;
-  try{
-    var r = await fetch('/api/booking-notes/'+nmBookingId, {
-      method:'POST', credentials:'include',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({text: text})
+  btn.textContent = "Sending...";
+
+  try {
+    const res = await fetch("/booking-notes/broadcast/send", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({
+        module:        MODULE,
+        group_filter:  _broadcastGroup,
+        status_filter: _broadcastStatus,
+        tour_date:     TOUR_DATE,
+        template_name: document.getElementById("broadcastTemplate").value || null,
+        message_body:  body,
+        recipients:    recipients,
+        send_sms:      document.getElementById("bcastSms").checked,
+        send_email:    document.getElementById("bcastEmail").checked,
+      })
     });
-    if(r.ok){
-      document.getElementById('nmInput').value = '';
-      document.getElementById('nmInput').style.height = '';
-      await loadNotes(nmBookingId);
-      // Refresh row in table to update bubble
-      loadData();
+    const data = await res.json();
+    closeBroadcast();
+    alert(`Broadcast sent!\nSMS: ${data.sms_sent} sent, ${data.sms_failed} failed\nEmail: ${data.email_sent} sent, ${data.email_failed} failed`);
+  } catch(e) {
+    alert("Send failed. Please try again.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "📣 Send to all";
+  }
+}
+
+// ── Notes dialog ──────────────────────────────────────────────────────────────
+async function openNotes(bookingId, orderNum, name) {
+  _currentBookingId = bookingId;
+  document.getElementById("notesTitle").textContent = `Order ${orderNum}`;
+  document.getElementById("notesSubtitle").textContent = name;
+  document.getElementById("noteInput").value = "";
+  document.getElementById("notesOverlay").style.display = "flex";
+  await fetchNotes();
+  _pollTimer = setInterval(fetchNotes, 20000);
+}
+
+function closeNotes() {
+  document.getElementById("notesOverlay").style.display = "none";
+  _currentBookingId = null;
+  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+}
+
+async function fetchNotes() {
+  if (!_currentBookingId) return;
+  try {
+    const res = await fetch(`/booking-notes/${_currentBookingId}`);
+    const data = await res.json();
+    renderNotes(data.notes);
+  } catch(e) {}
+}
+
+function renderNotes(notes) {
+  const container = document.getElementById("notesMessages");
+  const empty = document.getElementById("notesEmpty");
+  if (!notes || notes.length === 0) {
+    empty.style.display = "block";
+    return;
+  }
+  empty.style.display = "none";
+
+  const directionStyle = {
+    "staff_note":  {bg:"#e8f4fd", label:"Note",         color:"#0c5460"},
+    "sms_out":     {bg:"#d4edda", label:"SMS sent",      color:"#155724"},
+    "email_out":   {bg:"#d1ecf1", label:"Email sent",    color:"#0c5460"},
+    "guest_reply": {bg:"#fff3cd", label:"Guest reply",   color:"#856404"},
+  };
+
+  const html = notes.map(n => {
+    const s = directionStyle[n.direction] || {bg:"#f0f0f0", label:n.direction, color:"#333"};
+    const statusTag = n.sms_status
+      ? `<span style="font-size:10px;color:${n.sms_status==='sent'?'#28a745':'#dc3545'};">SMS:${n.sms_status}</span>`
+      : "";
+    const emailTag = n.email_status
+      ? `<span style="font-size:10px;color:${n.email_status==='sent'?'#28a745':'#dc3545'};">Email:${n.email_status}</span>`
+      : "";
+    return `<div style="background:${s.bg};border-radius:8px;padding:10px 12px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <span style="font-size:11px;font-weight:600;color:${s.color};background:rgba(0,0,0,.06);padding:1px 7px;border-radius:20px;">${s.label}</span>
+        <span style="font-size:11px;color:#888;">${n.author_username}</span>
+        <span style="font-size:11px;color:#aaa;margin-left:auto;">${n.created_at}</span>
+        ${statusTag}${emailTag}
+      </div>
+      <div style="font-size:13px;color:#212529;white-space:pre-wrap;">${n.body}</div>
+    </div>`;
+  }).join("");
+
+  container.innerHTML = html + '<div id="notesEmpty" style="display:none;"></div>';
+  container.scrollTop = container.scrollHeight;
+
+  // Update bubble count on row
+  const tr = document.querySelector(`tr[data-booking-id="${_currentBookingId}"]`);
+  if (tr) {
+    const btn = tr.querySelector('td:last-child button span');
+    if (btn) {
+      btn.style.background = "#1a3a5c";
+      btn.style.color = "#fff";
+      btn.textContent = notes.length;
     }
-  }catch(err){}
-  btn.disabled = false;
+  }
 }
 
-async function toggleAction(){
-  if(!nmBookingId) return;
-  var cb    = document.getElementById('nmActionCb');
-  var label = document.getElementById('nmActionLabel');
-  try{
-    await fetch('/api/booking-notes/'+nmBookingId+'/action', {
-      method:'POST', credentials:'include'
-    });
-    label.textContent  = cb.checked ? '✓ Actioned' : 'Take Action';
-    label.className    = 'nm-action-label' + (cb.checked ? ' done' : '');
-  }catch(err){ cb.checked = !cb.checked; }
-}
+async function submitNote(defaultDirection) {
+  const body = document.getElementById("noteInput").value.trim();
+  if (!body || !_currentBookingId) return;
+  const sendSms   = document.getElementById("sendSmsCheck").checked;
+  const sendEmail = document.getElementById("sendEmailCheck").checked;
 
-function autoResizeNmInput(el){
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  try {
+    const res = await fetch(`/booking-notes/${_currentBookingId}`, {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify({body, direction: defaultDirection, send_sms: sendSms, send_email: sendEmail})
+    });
+    const data = await res.json();
+    document.getElementById("noteInput").value = "";
+    await fetchNotes();
+  } catch(e) {
+    alert("Failed to save note.");
+  }
 }
-
-function nmInputKey(e){
-  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendStaffNote(); }
-}
-
-/* ── Column resize ── */
-
-/* ── Column drag reorder ── */
-const COL_ORDER_KEY_TKT = 'npe_tickets_col_order';
-
-function saveColOrderTkt(){
-  var keys = Array.from(document.querySelectorAll('#thead-row th')).map(function(th){return th.dataset.colIdx;});
-  localStorage.setItem(COL_ORDER_KEY_TKT, JSON.stringify(keys));
-}
-
-function applyColOrderTkt(){
-  try{
-    var saved = JSON.parse(localStorage.getItem(COL_ORDER_KEY_TKT));
-    if(!saved||!Array.isArray(saved)) return;
-    var tr = document.getElementById('thead-row');
-    var ths = Array.from(tr.querySelectorAll('th'));
-    if(saved.length !== ths.length) return;
-    saved.forEach(function(idx){
-      var th = ths.find(function(t){return t.dataset.colIdx===idx;});
-      if(th) tr.appendChild(th);
-    });
-    document.querySelectorAll('#tbody tr').forEach(function(row){
-      var cells = Array.from(row.querySelectorAll('td'));
-      if(cells.length !== saved.length) return;
-      saved.forEach(function(idx){
-        var cell = cells[parseInt(idx)];
-        if(cell) row.appendChild(cell);
-      });
-    });
-  }catch(e){}
-}
-
-function initColDragTkt(){
-  var tr = document.getElementById('thead-row');
-  var ths = Array.from(tr.querySelectorAll('th'));
-  ths.forEach(function(th, i){ if(!th.dataset.colIdx) th.dataset.colIdx = String(i); });
-  var dragSrc = null;
-  ths.forEach(function(th){
-    th.draggable = true;
-    th.addEventListener('dragstart', function(e){
-      dragSrc = th; th.classList.add('col-dragging');
-      e.dataTransfer.effectAllowed='move';
-    });
-    th.addEventListener('dragend', function(){
-      th.classList.remove('col-dragging');
-      tr.querySelectorAll('th').forEach(function(t){t.classList.remove('col-drag-over');});
-    });
-    th.addEventListener('dragover', function(e){
-      e.preventDefault();
-      if(th!==dragSrc) th.classList.add('col-drag-over');
-    });
-    th.addEventListener('dragleave', function(){th.classList.remove('col-drag-over');});
-    th.addEventListener('drop', function(e){
-      e.preventDefault(); th.classList.remove('col-drag-over');
-      if(!dragSrc||dragSrc===th) return;
-      var allThs = Array.from(tr.querySelectorAll('th'));
-      var fromI = allThs.indexOf(dragSrc);
-      var toI   = allThs.indexOf(th);
-      if(fromI<toI) tr.insertBefore(dragSrc, th.nextSibling);
-      else tr.insertBefore(dragSrc, th);
-      document.querySelectorAll('#tbody tr').forEach(function(row){
-        var cells = Array.from(row.querySelectorAll('td'));
-        if(cells.length < allThs.length) return;
-        var cell = cells[fromI];
-        if(fromI<toI) row.insertBefore(cell, cells[toI].nextSibling);
-        else row.insertBefore(cell, cells[toI]);
-      });
-      saveColOrderTkt();
-    });
-  });
-}
-function initResizableCols() {
-  const ths = document.querySelectorAll('#thead-row th');
-  ths.forEach(th => {
-    const resizer = th.querySelector('.col-resizer');
-    if (!resizer) return;
-    let startX, startW;
-    resizer.addEventListener('mousedown', e => {
-      startX = e.clientX;
-      startW = th.offsetWidth;
-      resizer.classList.add('active');
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-      const onMove = e => {
-        const newW = Math.max(40, startW + (e.clientX - startX));
-        th.style.width = newW + 'px';
-      };
-      const onUp = () => {
-        resizer.classList.remove('active');
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-      };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-      e.preventDefault();
-    });
-  });
-}
-initResizableCols();
-initColDragTkt();
-applyColOrderTkt();
 </script>
-</body>
-</html>
+{% endblock %}
