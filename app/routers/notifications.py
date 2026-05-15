@@ -233,7 +233,7 @@ async def tracking_tour_confirmation(
             b.mtlv_eligible, b.mtlv_qty, b.mtlv_ticket_status,
             b.action_taken_by,
             (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id) AS notes_count,
-            (SELECT author FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author
+            (SELECT author_username FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author
         FROM bookings b
         LEFT JOIN LATERAL (
             SELECT sms_status
@@ -305,7 +305,7 @@ async def tracking_morning_pickup(
             b.tour_date, b.driver, b.vehicle_no,
             b.action_taken_by,
             (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id) AS notes_count,
-            (SELECT author FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author,
+            (SELECT author_username FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author,
             COALESCE(sl.sms_status, b.sms_status) AS sms_status,
             COALESCE(sl.agent_name, '') AS agent_name,
             c.checkin_time
@@ -372,7 +372,7 @@ async def tracking_tickets_reminder(
             b.confirmation, b.submitted_at,
             b.action_taken_by,
             (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id) AS notes_count,
-            (SELECT author FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author
+            (SELECT author_username FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author
         FROM bookings b
         LEFT JOIN LATERAL (
             SELECT sms_status
