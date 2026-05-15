@@ -1431,8 +1431,8 @@
     <div style="padding:12px 14px;border-top:1px solid #eee;background:#fff;">
       <textarea id="noteInput" rows="3" placeholder="Write a note or message to guest..." style="width:100%;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;font-size:13px;resize:none;box-sizing:border-box;outline:none;font-family:inherit;"></textarea>
       <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" id="sendSmsCheck" checked> SMS to guest</label>
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" id="sendEmailCheck"> Email to guest</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" id="sendSmsCheck" checked> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f97316;margin-right:2px;"></span> SMS to guest</label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox" id="sendEmailCheck"> <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b82f6;margin-right:2px;"></span> Email to guest</label>
         <div style="margin-left:auto;display:flex;gap:8px;">
           <button onclick="submitNote('staff_note')" title="Save as internal note — not visible to guest" style="padding:6px 14px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:12px;cursor:pointer;">Save note</button>
           <button onclick="submitNote('sms_out')"  title="Send to guest via selected channels" style="padding:6px 14px;background:#2F7851;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;">Send &#8594;</button>
@@ -1575,10 +1575,18 @@ function _renderNotes(notes){
   var container = document.getElementById("notesMessages");
   if (!notes || !notes.length){ document.getElementById("notesEmpty").style.display="block"; return; }
   document.getElementById("notesEmpty").style.display = "none";
-  var sm = {staff_note:{bg:"#e8f4fd",label:"Note",color:"#0c5460"},sms_out:{bg:"#d4edda",label:"SMS sent",color:"#155724"},email_out:{bg:"#d1ecf1",label:"Email sent",color:"#0c5460"},guest_reply:{bg:"#fff3cd",label:"Guest reply",color:"#856404"}};
+  var sm = {
+    staff_note:  {bg:"#e8f4fd", label:"Note",          color:"#0c5460", dot:null},
+    sms_out:     {bg:"#d4edda", label:"SMS sent",       color:"#155724", dot:"#f97316"},
+    email_out:   {bg:"#d1ecf1", label:"Email sent",     color:"#0c5460", dot:"#3b82f6"},
+    guest_reply: {bg:"#fff3cd", label:"Guest reply",    color:"#856404", dot:null},
+    sms_in:      {bg:"#fff7ed", label:"Guest via SMS",  color:"#9a3412", dot:"#f97316"},
+  };
+
   container.innerHTML = notes.map(function(n){
     var s = sm[n.direction] || {bg:"#f0f0f0",label:n.direction,color:"#333"};
-    return '<div style="background:'+s.bg+';border-radius:8px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-size:11px;font-weight:600;color:'+s.color+';background:rgba(0,0,0,.06);padding:1px 7px;border-radius:20px;">'+s.label+'</span><span style="font-size:11px;color:#888;">'+escHtml(n.author_username)+'</span><span style="font-size:11px;color:#aaa;margin-left:auto;">'+escHtml(n.created_at)+'</span></div><div style="font-size:13px;color:#212529;white-space:pre-wrap;">'+escHtml(n.body)+'</div></div>';
+    var dotHtml = s.dot ? '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+s.dot+';margin-right:3px;vertical-align:middle;"></span>' : '';
+    return '<div style="background:'+s.bg+';border-radius:8px;padding:10px 12px;"><div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;"><span style="font-size:11px;font-weight:600;color:'+s.color+';background:rgba(0,0,0,.06);padding:1px 7px;border-radius:20px;">'+dotHtml+s.label+'</span><span style="font-size:11px;color:#888;">'+escHtml(n.author_username||'guest')+'</span><span style="font-size:11px;color:#aaa;margin-left:auto;">'+escHtml(n.created_at)+'</span></div><div style="font-size:13px;color:#212529;white-space:pre-wrap;">'+escHtml(n.body)+'</div></div>';
   }).join('') + '<div id="notesEmpty" style="display:none;"></div>';
   container.scrollTop = container.scrollHeight;
 }

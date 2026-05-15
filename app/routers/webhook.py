@@ -16,6 +16,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
+from zoneinfo import ZoneInfo
 
 from app.database import get_db
 from app.models import Booking, BookingSource, BookingStatus, ManifestProduct
@@ -558,3 +559,98 @@ async def sendgrid_status_callback(request: Request, db: AsyncSession = Depends(
 
     await db.commit()
     return {"status": "ok"}
+
+# ─────────────────────────────────────────────────────────────────────────────
+# ADD THIS BLOCK to the bottom of app/routers/webhook.py
+# (after the sendgrid_status_callback function)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@router.post("/twilio/inbound")
+async def twilio_inbound_sms(request: Request, db: AsyncSession = Depends(get_db)):
+    """
+    Twilio inbound SMS webhook.
+    Twilio POSTs application/x-www-form-urlencoded with:
+      From, To, Body, MessageSid, ...
+
+    Matching logic:
+      1. Normalise the From number
+      2. Find the most recent send_log row with matching phone → get booking_id
+      3. Write a booking_notes row with direction='sms_in'
+
+    Configure in Twilio console:
+      Phone Numbers → your number → Messaging → A message comes in →
+      Webhook → https://confirm.nationalparkexpress.com/webhook/twilio/inbound
+      HTTP POST
+    """
+    try:
+        form = await request.form()
+        from_number = str(form.get("From", "")).strip()
+        body_text   = str(form.get("Body", "")).strip()
+        message_sid = str(form.get("MessageSid", "")).strip()
+    except Exception as e:
+        print(f"[webhook/twilio/inbound] parse error: {e}")
+        return _twiml_response("")   # always return 200 to Twilio
+
+    if not from_number or not body_text:
+        return _twiml_response("")
+
+    print(f"[webhook/twilio/inbound] from={from_number} sid={message_sid}")
+
+    # ── Normalise phone: strip spaces/dashes, keep + prefix ──
+    import re
+    clean_from = re.sub(r"[\s\-\(\)]", "", from_number)
+
+    # ── Find most recent send_log entry matching this phone ──
+    # send_log.phone stores the number as sent (may vary in format),
+    # so we match on the last 10 digits which are format-independent.
+    suffix = clean_from[-10:] if len(clean_from) >= 10 else clean_from
+
+    result = await db.execute(
+        _text("""
+            SELECT sl.booking_id
+            FROM send_log sl
+            WHERE RIGHT(REGEXP_REPLACE(sl.phone, '[^0-9]', '', 'g'), 10) = :suffix
+              AND sl.booking_id IS NOT NULL
+            ORDER BY sl.sent_at DESC
+            LIMIT 1
+        """),
+        {"suffix": suffix},
+    )
+    row = result.fetchone()
+
+    if not row or not row.booking_id:
+        print(f"[webhook/twilio/inbound] no matching booking for {from_number}")
+        return _twiml_response("")
+
+    booking_id = row.booking_id
+
+    # ── Write to booking_notes ──
+    now_la = datetime.now(ZoneInfo("America/Los_Angeles"))
+    await db.execute(
+        _text("""
+            INSERT INTO booking_notes
+              (booking_id, author, text, direction, channel, created_at)
+            VALUES
+              (:booking_id, 'guest', :body, 'sms_in', 'sms', :created_at)
+        """),
+        {
+            "booking_id": booking_id,
+            "body":       body_text,
+            "created_at": now_la,
+        },
+    )
+    await db.commit()
+    print(f"[webhook/twilio/inbound] wrote sms_in note for booking_id={booking_id}")
+
+    # ── Return empty TwiML (no auto-reply) ──
+    return _twiml_response("")
+
+
+def _twiml_response(message: str):
+    """Return a minimal TwiML response. Empty message = no auto-reply."""
+    from fastapi.responses import Response
+    if message:
+        xml = f'<?xml version="1.0" encoding="UTF-8"?><Response><Message>{message}</Message></Response>'
+    else:
+        xml = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>'
+    return Response(content=xml, media_type="application/xml")
