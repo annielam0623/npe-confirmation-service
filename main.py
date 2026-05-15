@@ -51,7 +51,6 @@ app.include_router(shortlink.router)
 app.include_router(booking_notes.router, tags=["booking_notes"])
 app.include_router(messages.router, tags=["messages"])
 app.include_router(settings_teams.router)
-app.include_router(booking_notes.router)
 
 
 @app.get("/")
