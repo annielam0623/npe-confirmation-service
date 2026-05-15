@@ -231,8 +231,9 @@ async def tracking_tour_confirmation(
             b.submitted_at, b.notes, b.notes_history,
             b.submission_count,
             b.mtlv_eligible, b.mtlv_qty, b.mtlv_ticket_status,
-              b.action_taken_by,
-            (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id) AS notes_count
+            b.action_taken_by,
+            (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id) AS notes_count,
+            (SELECT author_username FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author
         FROM bookings b
         LEFT JOIN LATERAL (
             SELECT sms_status
@@ -284,6 +285,7 @@ async def tracking_tour_confirmation(
                 "mtlv_ticket_status":  r["mtlv_ticket_status"],
                 "action_taken_by":     r["action_taken_by"] or "",
                 "notes_count":         r["notes_count"] or 0,
+                "latest_note_author":  r["latest_note_author"] or "",
             }
             for r in rows
         ],
@@ -302,6 +304,8 @@ async def tracking_morning_pickup(
             b.phone, b.quantities, b.pickup_time, b.pickup_location,
             b.tour_date, b.driver, b.vehicle_no,
             b.action_taken_by,
+            (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id) AS notes_count,
+            (SELECT author_username FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author,
             COALESCE(sl.sms_status, b.sms_status) AS sms_status,
             COALESCE(sl.agent_name, '') AS agent_name,
             c.checkin_time
@@ -340,6 +344,9 @@ async def tracking_morning_pickup(
                 "checkin_time":    r["checkin_time"].isoformat() if r["checkin_time"] else None,
                 "action_taken_by": r["action_taken_by"] or "",
                 "agent_name":      r["agent_name"] or "",
+                "id":                   r["id"],
+                "notes_count":          r["notes_count"] or 0,
+                "latest_note_author":   r["latest_note_author"] or "",
             }
             for r in rows
         ],
@@ -363,7 +370,9 @@ async def tracking_tickets_reminder(
             b.email_status,
             COALESCE(sl.sms_status, b.sms_status) AS sms_status,
             b.confirmation, b.submitted_at,
-            b.action_taken_by
+            b.action_taken_by,
+            (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id) AS notes_count,
+            (SELECT author_username FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author
         FROM bookings b
         LEFT JOIN LATERAL (
             SELECT sms_status
@@ -399,6 +408,9 @@ async def tracking_tickets_reminder(
                 "confirmation_status": r["confirmation"] or "pending",
                 "submitted_at":        r["submitted_at"].isoformat() if r["submitted_at"] else None,
                 "action_taken_by":     r["action_taken_by"] or "",
+                "id":                  r["id"],
+                "notes_count":         r["notes_count"] or 0,
+                "latest_note_author":  r["latest_note_author"] or "",
             }
             for r in rows
         ],
