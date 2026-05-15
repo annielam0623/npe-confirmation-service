@@ -420,18 +420,6 @@ class MessageRead(Base):
     read_at    = Column(DateTime, server_default=func.now())
 
 
-# ─── Booking Notes (conversation) ─────────────────────────────────────────────
-
-class BookingNote(Base):
-    __tablename__ = "booking_notes"
-
-    id         = Column(Integer, primary_key=True, index=True)
-    booking_id = Column(Integer, ForeignKey("bookings.id", ondelete="CASCADE"), nullable=False, index=True)
-    author     = Column(String(50), nullable=False)   # 'guest' 或 staff initials e.g. 'AB'
-    text       = Column(Text, nullable=False)
-    created_at = Column(DateTime, server_default=func.now(), index=True)
-
-
 # ── BookingNote ───────────────────────────────────────────────────────────────
 class BookingNote(Base):
     __tablename__ = "booking_notes"
@@ -488,8 +476,3 @@ class BroadcastRecipient(Base):
     broadcast       = relationship("BroadcastLog", back_populates="recipients")
 
 
-# ── Add to Booking model (append these lines in models.py) ───────────────────
-# notes_handler      = Column(String(100), nullable=True)
-# notes_handled_at   = Column(DateTime(timezone=True), nullable=True)
-# notes_action_taken = Column(Text, nullable=True)
-# notes              = relationship("BookingNote", back_populates="booking", cascade="all, delete-orphan", order_by="BookingNote.created_at")
