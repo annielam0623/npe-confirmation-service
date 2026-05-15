@@ -231,7 +231,8 @@ async def tracking_tour_confirmation(
             b.submitted_at, b.notes, b.notes_history,
             b.submission_count,
             b.mtlv_eligible, b.mtlv_qty, b.mtlv_ticket_status,
-            b.action_taken_by
+              b.action_taken_by,
+            (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id) AS notes_count
         FROM bookings b
         LEFT JOIN LATERAL (
             SELECT sms_status
@@ -282,6 +283,7 @@ async def tracking_tour_confirmation(
                 "mtlv_qty":            r["mtlv_qty"],
                 "mtlv_ticket_status":  r["mtlv_ticket_status"],
                 "action_taken_by":     r["action_taken_by"] or "",
+                "notes_count":         r["notes_count"] or 0,
             }
             for r in rows
         ],
