@@ -112,6 +112,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
     <div class="nav-module-label activities">Activities</div>
     <a href="/admin/activities/order-log" class="nav-item sub activities {% if active_page == 'order_log' %}active{% endif %}"><span class="dot"></span>Order Log</a>
     <a href="/admin/notifications/send-log" class="nav-item sub activities {% if active_page == 'send_log' %}active{% endif %}"><span class="dot"></span>Send Log</a>
+    <a href="/admin/activities/broadcasting-log" class="nav-item sub activities {% if active_page == 'broadcasting_log' %}active{% endif %}"><span class="dot"></span>Broadcasting Log</a>
   </div>
   {% if current_user and current_user.role == 'admin' %}
   <div class="nav-group" style="margin-top:auto;">
