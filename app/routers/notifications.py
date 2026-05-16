@@ -361,32 +361,46 @@ async def tracking_tickets_reminder(
 ):
     result = await db.execute(text("""
         SELECT
-            b.id, b.order_number, b.confirmation_no,
-            b.first_name, b.last_name, b.phone,
-            b.customer_email AS email,
-            b.quantities, b.tour_date, b.tour_type,
-            b.pickup_time AS checkin_time,
-            b.tour_time,
-            b.email_status,
-            COALESCE(sl.sms_status, b.sms_status) AS sms_status,
-            b.confirmation, b.submitted_at,
-            b.notes,
+            t.id,
+            t.chd_number        AS order_number,
+            t.confirmation_no,
+            t.first_name,
+            t.last_name,
+            t.phone,
+            t.customer_email    AS email,
+            t.no_of_pax         AS quantities,
+            t.service_date      AS tour_date,
+            t.tour_type,
+            t.checkin_time,
+            t.tour_time,
+            t.email_status,
+            COALESCE(sl.sms_status, t.sms_status) AS sms_status,
+            t.confirmation,
+            t.submitted_at,
+            t.reschedule_notes  AS guest_notes,
+            t.submission_count,
+            b.id                AS booking_id,
             b.action_taken_by,
-            (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id) AS notes_count,
+            COALESCE(
+                (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id),
+                0
+            ) AS notes_count,
             (SELECT author_username FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author
-        FROM bookings b
+        FROM tickets_reminders t
+        LEFT JOIN bookings b
+            ON b.order_number = t.chd_number
+            AND b.module = 'tickets_reminder'
         LEFT JOIN LATERAL (
             SELECT sms_status
             FROM send_log
-            WHERE order_number = b.order_number
+            WHERE order_number = t.chd_number
               AND module = 'tickets_reminder'
               AND sms_sid IS NOT NULL AND sms_sid != ''
             ORDER BY sent_at DESC
             LIMIT 1
         ) sl ON true
-        WHERE b.tour_date = :tour_date
-          AND b.module    = 'tickets_reminder'
-        ORDER BY b.last_name ASC
+        WHERE t.service_date = :tour_date
+        ORDER BY t.last_name ASC
     """), {"tour_date": _to_date(date)})
 
     rows = result.mappings().all()
@@ -394,7 +408,8 @@ async def tracking_tickets_reminder(
         "date": date,
         "rows": [
             {
-                "order_number":        r["order_number"],
+                "id":                  r["booking_id"] or r["id"],
+                "order_number":        r["order_number"] or "",
                 "confirmation_no":     r["confirmation_no"] or "",
                 "guest_name":          f"{r['first_name']} {r['last_name']}".strip(),
                 "phone":               r["phone"] or "",
@@ -409,10 +424,10 @@ async def tracking_tickets_reminder(
                 "confirmation_status": r["confirmation"] or "pending",
                 "submitted_at":        r["submitted_at"].isoformat() if r["submitted_at"] else None,
                 "action_taken_by":     r["action_taken_by"] or "",
-                "id":                  r["id"],
                 "notes_count":         r["notes_count"] or 0,
                 "latest_note_author":  r["latest_note_author"] or "",
-                "guest_notes":         r["notes"] or "",
+                "guest_notes":         r["guest_notes"] or "",
+                "resubmitted":         (r["submission_count"] or 0) > 1,
             }
             for r in rows
         ],
