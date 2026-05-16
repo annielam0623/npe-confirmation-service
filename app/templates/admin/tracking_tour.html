@@ -711,7 +711,6 @@
       <span class="topbar-title">Tour Confirmation Tracking</span>
     </div>
     <div style="display:flex;gap:8px;">
-      <button onclick="openBroadcast()" style="display:flex;align-items:center;gap:6px;font-size:13px;padding:6px 14px;background:#EA580C;color:#fff;border:none;border-radius:7px;cursor:pointer;font-weight:500;">&#128227; Broadcast</button>
     </div>
   </div>
 
@@ -770,6 +769,7 @@
       <button class="btn" onclick="exportCsv()">⬇ Export</button>
       <button class="btn btn-green" onclick="loadData()">↻ Refresh</button>
       <span class="records-count" id="records-count">— records</span>
+      <button onclick="openBroadcast()" style="display:flex;align-items:center;gap:5px;padding:5px 14px;border-radius:7px;border:none;font-size:12px;background:linear-gradient(135deg,#ffce21,#ee8e00);color:#1a1a1a;cursor:pointer;font-weight:700;">&#128227; Broadcast</button>
     </div>
 
     <div class="table-card">
@@ -1378,23 +1378,23 @@
 
 <!-- Broadcast dialog -->
 <div id="broadcastOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:#7f1d1d;border-radius:12px;width:580px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;">
+  <div style="background:#FFFDF5;border-radius:12px;width:580px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;border:1px solid #e8b84b;">
 
     <!-- Header -->
-    <div style="padding:14px 18px;display:flex;align-items:center;border-bottom:1px solid rgba(255,255,255,0.15);">
-      <div style="flex:1;color:#fff;font-weight:600;font-size:15px;">&#128227; Broadcast message</div>
-      <button onclick="closeBroadcast()" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:22px;cursor:pointer;line-height:1;">&times;</button>
+    <div style="background:linear-gradient(135deg,#ffce21,#ee8e00);padding:14px 18px;display:flex;align-items:center;">
+      <div style="flex:1;color:#1a1a1a;font-weight:700;font-size:15px;">&#128227; Broadcast message</div>
+      <button onclick="closeBroadcast()" style="background:none;border:none;color:rgba(0,0,0,0.4);font-size:22px;cursor:pointer;line-height:1;">&times;</button>
     </div>
 
     <div style="padding:16px 18px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px;">
 
       <!-- Step 1: Tours -->
       <div>
-        <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Step 1 — Select tours</div>
+        <div style="font-size:11px;font-weight:600;color:#b86a00;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Step 1 — Select tours</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;">
-          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:rgba(255,255,255,0.15);padding:3px 10px;border-radius:20px;">
-            <input type="checkbox" id="bcast-all-tours" onchange="toggleAllTours(this)">
-            <span style="color:#fff;font-size:12px;font-weight:600;">All</span>
+          <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:#fff3cd;border:1px solid #e8b84b;padding:3px 10px;border-radius:20px;">
+            <input type="checkbox" id="bcast-all-tours" onchange="toggleAllTours(this)" style="accent-color:#ee8e00;">
+            <span style="color:#7a4f00;font-size:12px;font-weight:600;">All</span>
           </label>
         </div>
         <div id="bcast-tour-checks" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
@@ -1402,59 +1402,59 @@
 
       <!-- Step 2: Group -->
       <div>
-        <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Step 2 — Recipients</div>
+        <div style="font-size:11px;font-weight:600;color:#b86a00;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Step 2 — Recipients</div>
         <div style="display:flex;gap:8px;">
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:7px 14px;flex:1;" id="bcast-lbl-general">
-            <input type="radio" name="bcastGroup" value="general" onchange="onGroupChange()" checked>
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:#fff3cd;border:1px solid #e8b84b;border-radius:7px;padding:7px 14px;flex:1;" id="bcast-lbl-general">
+            <input type="radio" name="bcastGroup" value="general" onchange="onGroupChange()" checked style="accent-color:#ee8e00;">
             <div>
-              <div style="color:#fff;font-size:13px;font-weight:500;">General</div>
-              <div style="color:rgba(255,255,255,0.5);font-size:11px;">All guests in selected tours</div>
+              <div style="color:#7a4f00;font-size:13px;font-weight:500;">General</div>
+              <div style="color:#b86a00;font-size:11px;">All guests in selected tours</div>
             </div>
-            <span style="margin-left:auto;color:rgba(255,255,255,0.6);font-size:12px;" id="bcast-count-general">—</span>
+            <span style="margin-left:auto;color:#b86a00;font-size:12px;" id="bcast-count-general">—</span>
           </label>
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:7px;padding:7px 14px;flex:1;" id="bcast-lbl-mtlv">
-            <input type="radio" name="bcastGroup" value="mtlv" onchange="onGroupChange()">
+          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;background:#FFFDF5;border:1px solid #e8b84b;border-radius:7px;padding:7px 14px;flex:1;" id="bcast-lbl-mtlv">
+            <input type="radio" name="bcastGroup" value="mtlv" onchange="onGroupChange()" style="accent-color:#ee8e00;">
             <div>
-              <div style="color:#fff;font-size:13px;font-weight:500;">MTLV</div>
-              <div style="color:rgba(255,255,255,0.5);font-size:11px;">MTLV eligible guests only</div>
+              <div style="color:#7a4f00;font-size:13px;font-weight:500;">MTLV</div>
+              <div style="color:#b86a00;font-size:11px;">MTLV eligible guests only</div>
             </div>
-            <span style="margin-left:auto;color:rgba(255,255,255,0.6);font-size:12px;" id="bcast-count-mtlv">—</span>
+            <span style="margin-left:auto;color:#b86a00;font-size:12px;" id="bcast-count-mtlv">—</span>
           </label>
         </div>
       </div>
 
       <!-- Step 3: Template -->
       <div>
-        <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Step 3 — Message</div>
-        <select id="broadcastTemplate" onchange="onTemplateChange()" style="width:100%;padding:7px 10px;border:1px solid rgba(255,255,255,0.25);border-radius:6px;font-size:13px;background:rgba(0,0,0,0.2);color:#fff;margin-bottom:8px;">
+        <div style="font-size:11px;font-weight:600;color:#b86a00;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Step 3 — Message</div>
+        <select id="broadcastTemplate" onchange="onTemplateChange()" style="width:100%;padding:7px 10px;border:1px solid #e8b84b;border-radius:6px;font-size:13px;background:#fff;color:#7a4f00;margin-bottom:8px;">
           <option value="">— Select template —</option>
         </select>
-        <textarea id="broadcastBody" rows="3" placeholder="Message body... (supports {first_name} and {tour_date})" style="width:100%;border:1px solid rgba(255,255,255,0.25);border-radius:6px;padding:8px 10px;font-size:13px;resize:vertical;box-sizing:border-box;font-family:inherit;background:rgba(0,0,0,0.2);color:#fff;"></textarea>
-        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;">Supports {first_name} and {tour_date}</div>
+        <textarea id="broadcastBody" rows="3" placeholder="Message body... (supports {first_name} and {tour_date})" style="width:100%;border:1px solid #e8b84b;border-radius:6px;padding:8px 10px;font-size:13px;resize:vertical;box-sizing:border-box;font-family:inherit;background:#fff;color:#1a1a1a;"></textarea>
+        <div style="font-size:11px;color:#b86a00;margin-top:4px;">Supports {first_name} and {tour_date}</div>
       </div>
 
       <!-- Step 4: Channel -->
       <div>
-        <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Step 4 — Channel</div>
+        <div style="font-size:11px;font-weight:600;color:#b86a00;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Step 4 — Channel</div>
         <div style="display:flex;gap:6px;">
-          <button id="bcast-ch-both" onclick="setBcastChannel('both')" style="padding:7px 16px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;background:#6B46C1;color:#fff;">Both</button>
-          <button id="bcast-ch-sms"  onclick="setBcastChannel('sms')"  style="padding:7px 16px;border-radius:6px;border:1px solid rgba(255,255,255,0.25);font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,0.1);color:#fff;">SMS only</button>
-          <button id="bcast-ch-email" onclick="setBcastChannel('email')" style="padding:7px 16px;border-radius:6px;border:1px solid rgba(255,255,255,0.25);font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,0.1);color:#fff;">Email only</button>
+          <button id="bcast-ch-both"  onclick="setBcastChannel('both')"  style="padding:7px 16px;border-radius:6px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#ffce21,#ee8e00);color:#1a1a1a;">Both</button>
+          <button id="bcast-ch-sms"   onclick="setBcastChannel('sms')"   style="padding:7px 16px;border-radius:6px;border:1px solid #e8b84b;font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:#7a4f00;">SMS only</button>
+          <button id="bcast-ch-email" onclick="setBcastChannel('email')" style="padding:7px 16px;border-radius:6px;border:1px solid #e8b84b;font-size:12px;font-weight:600;cursor:pointer;background:#fff;color:#7a4f00;">Email only</button>
         </div>
       </div>
 
       <!-- Recipient preview -->
-      <div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:10px 12px;max-height:150px;overflow-y:auto;">
-        <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:5px;" id="bcastRecipientCount">0 recipients</div>
+      <div style="background:#fff8e1;border:1px solid #e8b84b;border-radius:8px;padding:10px 12px;max-height:150px;overflow-y:auto;">
+        <div style="font-size:12px;color:#b86a00;margin-bottom:5px;" id="bcastRecipientCount">0 recipients</div>
         <div id="bcastRecipientList" style="display:flex;flex-direction:column;gap:3px;"></div>
       </div>
 
     </div>
 
     <!-- Footer -->
-    <div style="padding:12px 18px;border-top:1px solid rgba(255,255,255,0.15);display:flex;justify-content:flex-end;gap:8px;">
-      <button onclick="closeBroadcast()" style="padding:7px 16px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:6px;font-size:13px;color:#fff;cursor:pointer;">Cancel</button>
-      <button onclick="sendBroadcast()" id="broadcastSendBtn" style="padding:7px 18px;background:#C0392B;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:500;">&#128227; Send broadcast</button>
+    <div style="padding:12px 18px;border-top:1px solid #f5e6c8;display:flex;justify-content:flex-end;gap:8px;">
+      <button onclick="closeBroadcast()" style="padding:7px 16px;background:#fff;border:1px solid #e8b84b;border-radius:6px;font-size:13px;color:#7a4f00;cursor:pointer;">Cancel</button>
+      <button onclick="sendBroadcast()" id="broadcastSendBtn" style="padding:7px 18px;background:linear-gradient(135deg,#ffce21,#ee8e00);color:#1a1a1a;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-weight:700;">&#128227; Send broadcast</button>
     </div>
   </div>
 </div>
@@ -1538,9 +1538,9 @@ function onGroupChange() { _updateBcastRecipients(); }
 function setBcastChannel(ch) {
   _bcastChannel = ch;
   const styles = {
-    both:  { 'bcast-ch-both': 'background:#6B46C1;color:#fff;border:none;', 'bcast-ch-sms': 'background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.25);', 'bcast-ch-email': 'background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.25);' },
-    sms:   { 'bcast-ch-both': 'background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.25);', 'bcast-ch-sms': 'background:#2563EB;color:#fff;border:none;', 'bcast-ch-email': 'background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.25);' },
-    email: { 'bcast-ch-both': 'background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.25);', 'bcast-ch-sms': 'background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.25);', 'bcast-ch-email': 'background:#EA580C;color:#fff;border:none;' },
+    both:  { 'bcast-ch-both': 'background:linear-gradient(135deg,#ffce21,#ee8e00);color:#1a1a1a;border:none;', 'bcast-ch-sms': 'background:#fff;color:#7a4f00;border:1px solid #e8b84b;', 'bcast-ch-email': 'background:#fff;color:#7a4f00;border:1px solid #e8b84b;' },
+    sms:   { 'bcast-ch-both': 'background:#fff;color:#7a4f00;border:1px solid #e8b84b;', 'bcast-ch-sms': 'background:linear-gradient(135deg,#ffce21,#ee8e00);color:#1a1a1a;border:none;', 'bcast-ch-email': 'background:#fff;color:#7a4f00;border:1px solid #e8b84b;' },
+    email: { 'bcast-ch-both': 'background:#fff;color:#7a4f00;border:1px solid #e8b84b;', 'bcast-ch-sms': 'background:#fff;color:#7a4f00;border:1px solid #e8b84b;', 'bcast-ch-email': 'background:linear-gradient(135deg,#ffce21,#ee8e00);color:#1a1a1a;border:none;' },
   };
   Object.entries(styles[ch]).forEach(([id, s]) => document.getElementById(id).style.cssText += ';' + s);
 }
@@ -1570,7 +1570,7 @@ function _updateBcastRecipients() {
   document.getElementById('bcastRecipientCount').textContent = recipients.length + ' recipient(s)';
   document.getElementById('bcastRecipientList').innerHTML = recipients.slice(0, 30).map((r, i) =>
     `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 6px;background:rgba(255,255,255,0.08);border-radius:4px;">
-      <input type="checkbox" class="rec-check" data-idx="${i}" checked style="accent-color:#EA580C;">
+      <input type="checkbox" class="rec-check" data-idx="${i}" checked style="accent-color:#ee8e00;">
       <span style="flex:1;color:rgba(255,255,255,0.85);font-weight:500;">${escHtml(r.guest_name || r.first_name || '—')}</span>
       <span style="color:rgba(255,255,255,0.4);font-size:11px;">${escHtml(r.phone || r.email || '—')}</span>
     </div>`

@@ -224,39 +224,50 @@ th.notes-hdr.hdr-dirty{background:#fff3cd !important;color:#856404;}
       <th style="width:100px">Confirmation#<div class="col-resizer"></div></th>
       <th style="width:80px">&#9679; Email<div class="col-resizer"></div></th>
       <th style="width:80px">&#9632; SMS<div class="col-resizer"></div></th>
-      <th class="notes-hdr" id="notes-hdr" style="width:160px">Notes<div class="col-resizer"></div></th>
+      <th class="notes-hdr" id="notes-hdr" style="width:180px">Notes <span id="notes-hdr-bubble" style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#fff;border:1.5px solid #ced4da;color:#aaa;vertical-align:middle;margin-left:4px;">0</span><div class="col-resizer"></div></th>
+      <th style="width:100px">Chat 💬<div class="col-resizer"></div></th>
       <th style="width:80px">Status<div class="col-resizer"></div></th>
       <th style="width:90px">Submit Time<div class="col-resizer"></div></th>
     </tr></thead>
     <tbody id="tbody">
-      <tr><td colspan="14" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>
+      <tr><td colspan="16" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>
     </tbody>
   </table>
 </div>
 
-<!-- Notes conversation modal -->
-<div class="notes-modal-overlay" id="notesOverlay" onclick="closeNotesModal(event)">
-  <div class="notes-modal">
-    <div class="nm-header">
-      <div>
-        <div class="nm-title" id="nmTitle">Notes</div>
-        <div class="nm-sub"   id="nmSub"></div>
+<!-- Notes / Chat dialog -->
+<div id="notesOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;width:520px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
+    <div style="background:#2F7851;padding:14px 18px;display:flex;align-items:center;gap:10px;">
+      <div style="flex:1;">
+        <div style="color:#fff;font-weight:600;font-size:14px;" id="notesTitle">Notes</div>
+        <div style="color:#D5F0D8;font-size:12px;" id="notesSubtitle"></div>
       </div>
-      <button class="nm-close" onclick="closeNotesModal(null)">×</button>
+      <button onclick="closeNotes()" style="background:none;border:none;color:#D5F0D8;font-size:20px;cursor:pointer;">&times;</button>
     </div>
-    <div class="nm-action-row">
-      <input type="checkbox" class="nm-action-cb" id="nmActionCb" onchange="toggleAction()">
-      <label class="nm-action-label" id="nmActionLabel" for="nmActionCb">Take Action</label>
+    <div style="padding:8px 14px;border-bottom:1px solid #eee;background:#f8f9fa;display:flex;align-items:center;gap:8px;">
+      <input type="checkbox" id="nmActionCb" onchange="toggleAction()" style="width:14px;height:14px;accent-color:#2F7851;cursor:pointer;">
+      <label for="nmActionCb" id="nmActionLabel" style="font-size:12px;color:#555;cursor:pointer;">Take Action</label>
     </div>
-    <div class="nm-body" id="nmBody">
-      <div class="nm-empty">No messages yet.</div>
+    <div id="notesMessages" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:360px;background:#f8f9fa;">
+      <div style="text-align:center;color:#aaa;font-size:13px;padding:20px 0;" id="notesEmpty">No messages yet.</div>
     </div>
-    <div class="nm-footer">
-      <textarea class="nm-input" id="nmInput"
-        placeholder="Reply to guest…" rows="1"
-        oninput="autoResizeNmInput(this)"
-        onkeydown="nmInputKey(event)"></textarea>
-      <button class="nm-send" id="nmSendBtn" onclick="sendStaffNote()">Send</button>
+    <div style="padding:12px 14px;border-top:1px solid #eee;background:#fff;">
+      <textarea id="noteInput" rows="3" placeholder="Write a note or reply to guest..." style="width:100%;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;font-size:13px;resize:none;box-sizing:border-box;outline:none;font-family:inherit;"></textarea>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
+          <input type="checkbox" id="sendSmsCheck" checked>
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f97316;margin-right:2px;"></span> SMS to guest
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
+          <input type="checkbox" id="sendEmailCheck">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b82f6;margin-right:2px;"></span> Email to guest
+        </label>
+        <div style="margin-left:auto;display:flex;gap:8px;">
+          <button onclick="submitNote('staff_note')" title="Save as internal note — not visible to guest" style="padding:6px 14px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:12px;cursor:pointer;">&#9733; Save note</button>
+          <button onclick="submitNote('sms_out')" title="Send to guest via selected channels" style="padding:6px 14px;background:#2F7851;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;">Send &#8594;</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -312,13 +323,13 @@ document.getElementById('date-wrap').addEventListener('click', function(){
 function loadData(){
   var date = getDate(); if(!date) return;
   document.getElementById('tbody').innerHTML =
-    '<tr><td colspan="14" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>';
-  fetch('/api/tickets-reminder/log?date='+date, {credentials:'include'})
+    '<tr><td colspan="16" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>';
+  fetch('/api/notifications/tickets-reminder/tracking?date='+date, {credentials:'include'})
     .then(function(r){ return r.json(); })
-    .then(function(data){ allRows = data; updatePills(); renderTable(); })
+    .then(function(data){ allRows = data.rows || []; updatePills(); renderTable(); })
     .catch(function(){
       document.getElementById('tbody').innerHTML =
-        '<tr><td colspan="14" style="text-align:center;padding:24px;color:#dc3545;">Failed to load. Please refresh.</td></tr>';
+        '<tr><td colspan="16" style="text-align:center;padding:24px;color:#dc3545;">Failed to load. Please refresh.</td></tr>';
     });
 }
 
@@ -328,10 +339,10 @@ function updatePills(){
   var gT=0, gY=0;
   allRows.forEach(function(r){
     gT++;
-    if(r.confirmation==='yes') gY++;
+    if(r.confirmation_status==='yes') gY++;
     if(tot[r.tour_type]!==undefined){
       tot[r.tour_type]++;
-      if(r.confirmation==='yes') yes[r.tour_type]++;
+      if(r.confirmation_status==='yes') yes[r.tour_type]++;
     }
   });
   document.getElementById('p-all').textContent = gY+'/'+gT;
@@ -349,8 +360,8 @@ function renderTable(){
   var rows = activeTour==='all' ? allRows : allRows.filter(function(r){ return r.tour_type===activeTour; });
   var tot=rows.length, yes=0, resc=0, pend=0;
   rows.forEach(function(r){
-    if(r.confirmation==='yes') yes++;
-    else if(r.confirmation==='reschedule_req') resc++;
+    if(r.confirmation_status==='yes') yes++;
+    else if(r.confirmation_status==='reschedule_req') resc++;
     else pend++;
   });
   document.getElementById('s-total').textContent = tot;
@@ -359,9 +370,25 @@ function renderTable(){
   document.getElementById('s-pend').textContent  = pend;
   document.getElementById('rec-label').textContent = tot+' record'+(tot===1?'':'s');
 
+  // Update Notes header bubble
+  var notesUnhandled = rows.filter(function(r){ return r.guest_notes && !r.action_taken_by; }).length;
+  var notesTotal     = rows.filter(function(r){ return r.guest_notes; }).length;
+  var notesHandled   = notesTotal - notesUnhandled;
+  var bubble = document.getElementById('notes-hdr-bubble');
+  if(notesTotal === 0){
+    bubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#fff;border:1.5px solid #ced4da;color:#aaa;vertical-align:middle;margin-left:4px;';
+    bubble.textContent = '0';
+  } else if(notesUnhandled > 0){
+    bubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#dc3545;border:1.5px solid #dc3545;color:#fff;vertical-align:middle;margin-left:4px;';
+    bubble.textContent = notesUnhandled;
+  } else {
+    bubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#28a745;border:1.5px solid #28a745;color:#fff;vertical-align:middle;margin-left:4px;';
+    bubble.textContent = notesHandled;
+  }
+
   if(!rows.length){
     document.getElementById('tbody').innerHTML =
-      '<tr><td colspan="14" style="text-align:center;padding:24px;color:#aaa;">No records for this date.</td></tr>';
+      '<tr><td colspan="16" style="text-align:center;padding:24px;color:#aaa;">No records for this date.</td></tr>';
     return;
   }
 
@@ -377,26 +404,53 @@ function renderTable(){
     var subT = r.submitted_at
       ? new Date(r.submitted_at).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'})
       : '—';
-    var notes = e(r.reschedule_notes||'');
-    var conf  = r.confirmation||'pending';
-    html += '<tr data-id="'+r.id+'" data-chd="'+e(r.chd_number)+'" data-date="'+e(r.service_date)+'">'
+    var conf = r.confirmation_status || 'pending';
+
+    // Notes cell — full-cell yellow preview
+    var notesCell;
+    if(r.guest_notes){
+      var actionPart = r.action_taken_by
+        ? '<div style="font-size:11px;color:#28a745;font-weight:600;margin-top:3px;">&#10003; '+e(r.action_taken_by)+'</div>'
+        : '<div style="margin-top:3px;"><button onclick="takeAction('+r.id+',event)" style="background:none;border:none;cursor:pointer;font-size:11px;padding:0;color:#856404;">&#9888;&#65039; Take action</button></div>';
+      notesCell = '<td style="padding:0;cursor:pointer;" onclick="openNotes('+r.id+',\''+e(r.order_number)+'\',\''+e(r.guest_name||'')+'\',\''+e((r.guest_notes||'').replace(/'/g,"\\'")).replace(/\n/g,' ')+'\' )">'
+        +'<div style="background:#fffbea;height:100%;padding:6px 8px;border-left:3px solid #ffc107;">'
+        +'<div style="font-size:12px;color:#555;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">'+e(r.guest_notes)+'</div>'
+        +actionPart
+        +'</div></td>';
+    } else {
+      notesCell = '<td style="color:#aaa;text-align:center;">—</td>';
+    }
+
+    // Chat cell
+    var chatCell;
+    var nCount = r.notes_count || 0;
+    var openCall = 'openNotes('+r.id+',\''+e(r.order_number)+'\',\''+e(r.guest_name||'')+'\',\''+e((r.guest_notes||'').replace(/'/g,"\\'")).replace(/\n/g,' ')+'\' )';
+    if(nCount > 0){
+      chatCell = '<td style="text-align:center;"><button onclick="'+openCall+'" style="background:none;border:none;cursor:pointer;padding:4px;">'
+        +'<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid #E24B4A;background:#fff;color:#E24B4A;font-size:12px;font-weight:500;">'
+        +'<span style="width:8px;height:8px;border-radius:50%;background:#E24B4A;display:inline-block;flex-shrink:0;"></span>Chat ('+nCount+')'
+        +'</span></button></td>';
+    } else {
+      chatCell = '<td style="text-align:center;"><button onclick="'+openCall+'" style="background:none;border:none;cursor:pointer;padding:4px;">'
+        +'<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid #9ED3A9;background:#fff;color:#2F7851;font-size:12px;font-weight:500;">&#128172; Chat</span>'
+        +'</button></td>';
+    }
+
+    html += '<tr data-id="'+r.id+'" data-chd="'+e(r.order_number)+'" data-date="'+e(r.tour_date)+'">'
       +'<td style="white-space:nowrap">'+e(lbl)+'</td>'
-      +'<td>'+e(r.service_date)+'</td>'
-      +'<td style="font-weight:600">'+e(r.chd_number)+'</td>'
-      +'<td style="text-align:center">'+e(r.no_of_pax)+'</td>'
+      +'<td>'+e(r.tour_date)+'</td>'
+      +'<td style="font-weight:600">'+e(r.order_number)+'</td>'
+      +'<td style="text-align:center">'+e(r.quantities)+'</td>'
       +'<td>'+e(r.checkin_time)+'</td>'
       +'<td>'+e(r.tour_time)+'</td>'
-      +'<td>'+e(r.name)+'</td>'
+      +'<td>'+e(r.guest_name)+'</td>'
       +'<td style="font-size:11px">'+e(r.phone||'—')+'</td>'
       +'<td>'+e(r.confirmation_no||'—')+'</td>'
       +'<td>'+emB+'</td>'
       +'<td>'+smB+'</td>'
-      +'<td class="notes-cell" onclick="openNotesModal('+r.id+',\''+e(r.chd_number)+'\',\''+e(r.name||'')+'\','+!!(r.reschedule_notes)+','+!!(r.notes_action_taken)+')">'
-        +(r.reschedule_notes
-          ? '<span class="notes-bubble"><span class="nb-dot"></span>'+e((r.reschedule_notes||'').substring(0,30)+((r.reschedule_notes||'').length>30?'…':''))+'</span>'
-          : '<span class="notes-add" title="Add note">+</span>')
-        +'</td>'
-      +'<td><select class="s-sel '+conf+'" onchange="saveStatus(this)" data-orig="'+conf+'">'
+      +notesCell
+      +chatCell
+      +'<td><select class="s-sel '+conf+'" onchange="saveStatus(this)" data-orig="'+conf+'" data-chd="'+e(r.order_number)+'" data-date="'+e(r.tour_date)+'">'
         +'<option value="yes"'+(conf==='yes'?' selected':'')+'>&#10003; YES</option>'
         +'<option value="pending"'+(conf==='pending'?' selected':'')+'>&#8987; Pending</option>'
         +'</select></td>'
@@ -420,7 +474,7 @@ function saveStatus(el){
   fetch('/api/tickets-reminder/update-status',{
     method:'POST', credentials:'include',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({chd_number:row.getAttribute('data-chd'), service_date:row.getAttribute('data-date'), confirmation:val})
+    body:JSON.stringify({chd_number:el.dataset.chd, service_date:el.dataset.date, confirmation:val})
   }).then(function(r){
     if(r.ok) el.setAttribute('data-orig', val);
     else{ el.value=el.getAttribute('data-orig'); el.className='s-sel '+el.value; }
@@ -429,7 +483,7 @@ function saveStatus(el){
 
 function exportCSV(){
   var rows = activeTour==='all' ? allRows : allRows.filter(function(r){ return r.tour_type===activeTour; });
-  var cols = ['tour_type','service_date','chd_number','no_of_pax','checkin_time','tour_time','name','phone','confirmation_no','email_status','sms_status','reschedule_notes','confirmation','submitted_at'];
+  var cols = ['tour_type','tour_date','order_number','quantities','checkin_time','tour_time','guest_name','phone','confirmation_no','email_status','sms_status','guest_notes','confirmation_status','submitted_at'];
   var csv  = cols.join(',')+'\n';
   rows.forEach(function(r){
     csv += cols.map(function(c){ return '"'+(r[c]||'').toString().replace(/"/g,'""')+'"'; }).join(',')+'\n';
@@ -443,105 +497,131 @@ function exportCSV(){
 goToday();
 setInterval(loadData, 60000);
 
-/* ── Notes modal ─────────────────────────────────────────────────────────── */
-var nmBookingId = null;
+/* ── Notes / Chat ── */
+var _notesBookingId = null, _notesPollTimer = null, _notesGuestNotes = '';
 
-function openNotesModal(bookingId, chd, guestName, hasNotes, actionTaken){
-  nmBookingId = bookingId;
-  document.getElementById('nmTitle').textContent   = chd + (guestName ? ' — ' + guestName : '');
-  document.getElementById('nmSub').textContent     = 'Guest conversation';
-  document.getElementById('nmActionCb').checked    = !!actionTaken;
-  document.getElementById('nmActionLabel').textContent = actionTaken ? '✓ Actioned' : 'Take Action';
-  document.getElementById('nmActionLabel').className   = 'nm-action-label' + (actionTaken ? ' done' : '');
-  document.getElementById('nmInput').value = '';
-  document.getElementById('nmBody').innerHTML = '<div class="nm-empty">Loading…</div>';
-  document.getElementById('notesOverlay').classList.add('open');
-  loadNotes(bookingId);
+async function openNotes(bookingId, orderNum, name, guestNotes){
+  _notesBookingId  = bookingId;
+  _notesGuestNotes = guestNotes || '';
+  document.getElementById('notesTitle').textContent    = 'Order ' + orderNum;
+  document.getElementById('notesSubtitle').textContent = name;
+  document.getElementById('noteInput').value           = '';
+  document.getElementById('notesOverlay').style.display = 'flex';
+  var row = allRows.find(function(r){ return r.id === bookingId; });
+  var actioned = row && row.action_taken_by;
+  document.getElementById('nmActionCb').checked = !!actioned;
+  document.getElementById('nmActionLabel').textContent  = actioned ? '✓ Actioned' : 'Take Action';
+  document.getElementById('nmActionLabel').style.color  = actioned ? '#28a745' : '#555';
+  document.getElementById('nmActionLabel').style.fontWeight = actioned ? '600' : 'normal';
+  await _fetchNotes();
+  _notesPollTimer = setInterval(_fetchNotes, 20000);
 }
 
-function closeNotesModal(e){
-  if(e && e.target !== document.getElementById('notesOverlay')) return;
-  document.getElementById('notesOverlay').classList.remove('open');
-  nmBookingId = null;
+function closeNotes(){
+  document.getElementById('notesOverlay').style.display = 'none';
+  _notesBookingId = null; _notesGuestNotes = '';
+  if(_notesPollTimer){ clearInterval(_notesPollTimer); _notesPollTimer = null; }
 }
 
-document.addEventListener('keydown', function(e){
-  if(e.key==='Escape') closeNotesModal(null);
-});
+document.addEventListener('keydown', function(ev){ if(ev.key==='Escape') closeNotes(); });
 
-async function loadNotes(bookingId){
+async function _fetchNotes(){
+  if(!_notesBookingId) return;
   try{
-    var r = await fetch('/api/booking-notes/'+bookingId, {credentials:'include'});
-    var notes = await r.json();
-    renderNotes(notes);
-  }catch(err){
-    document.getElementById('nmBody').innerHTML = '<div class="nm-empty">Failed to load.</div>';
-  }
+    var res  = await fetch('/booking-notes/'+_notesBookingId, {credentials:'include'});
+    var data = await res.json();
+    _renderNotes(data.notes || []);
+  }catch(e){}
 }
 
-function renderNotes(notes){
-  var body = document.getElementById('nmBody');
-  if(!notes.length){
-    body.innerHTML = '<div class="nm-empty">No messages yet. Start a conversation below.</div>';
+function _renderNotes(notes){
+  var container = document.getElementById('notesMessages');
+  var sm = {
+    staff_note:  {bg:'#fffbea', border:'#f0d080', label:'★ Note',       color:'#856404', right:true},
+    sms_out:     {bg:'#d4edda', border:'#b7ddc4', label:'SMS sent',      color:'#155724', right:true, dot:'#f97316'},
+    email_out:   {bg:'#d1ecf1', border:'#a8d8e1', label:'Email sent',    color:'#0c5460', right:true, dot:'#3b82f6'},
+    guest_reply: {bg:'#e8f4fd', border:'#b3d9f7', label:'Guest',         color:'#1a3a5c', right:false},
+    sms_in:      {bg:'#fff7ed', border:'#fcd9b0', label:'Guest via SMS', color:'#9a3412', right:false, dot:'#f97316'},
+  };
+  var msgs = [];
+  if(_notesGuestNotes){
+    msgs.push({direction:'guest_reply', body:_notesGuestNotes, author_username:'Guest (form)', created_at:'via confirmation form'});
+  }
+  msgs = msgs.concat(notes || []);
+  if(!msgs.length){
+    container.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;padding:20px 0;">No messages yet.</div>';
     return;
   }
-  body.innerHTML = notes.map(function(n){
-    var isStaff = n.author !== 'guest';
-    var cls     = isStaff ? 'staff' : 'guest';
-    var author  = isStaff ? n.author : 'Guest';
-    return '<div class="nm-msg '+cls+'">'
-      +'<div class="nm-bubble">'+esc(n.text)+'</div>'
-      +'<div class="nm-meta">'+esc(author)+' · '+esc(n.created_at)+'</div>'
-      +'</div>';
+  container.innerHTML = msgs.map(function(n){
+    var s = sm[n.direction] || {bg:'#f0f0f0', border:'#ddd', label:n.direction, color:'#333', right:false};
+    var dotHtml = s.dot ? '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+s.dot+';margin-right:3px;vertical-align:middle;"></span>' : '';
+    var radius = s.right ? '10px 0 10px 10px' : '0 10px 10px 10px';
+    return '<div style="display:flex;flex-direction:column;gap:2px;align-self:'+(s.right?'flex-end':'flex-start')+';max-width:88%;">'
+      +'<div style="background:'+s.bg+';border:0.5px solid '+s.border+';border-radius:'+radius+';padding:9px 12px;font-size:13px;color:#333;line-height:1.5;white-space:pre-wrap;word-break:break-word;">'+esc(n.body)+'</div>'
+      +'<div style="font-size:11px;color:#aaa;padding:0 4px;'+(s.right?'text-align:right;':'')+'">'+dotHtml
+      +'<span style="font-weight:600;color:'+s.color+';">'+s.label+'</span>'
+      +(n.author_username ? ' · '+esc(n.author_username) : '')
+      +(n.created_at ? ' · '+esc(n.created_at) : '')
+      +'</div></div>';
   }).join('');
-  body.scrollTop = body.scrollHeight;
+  container.scrollTop = container.scrollHeight;
 }
 
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-async function sendStaffNote(){
-  var text = document.getElementById('nmInput').value.trim();
-  if(!text || !nmBookingId) return;
-  var btn = document.getElementById('nmSendBtn');
-  btn.disabled = true;
+async function submitNote(dir){
+  var body = document.getElementById('noteInput').value.trim();
+  if(!body || !_notesBookingId) return;
   try{
-    var r = await fetch('/api/booking-notes/'+nmBookingId, {
+    await fetch('/booking-notes/'+_notesBookingId, {
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({text: text})
+      body: JSON.stringify({body:body, direction:dir,
+        send_sms:document.getElementById('sendSmsCheck').checked,
+        send_email:document.getElementById('sendEmailCheck').checked})
     });
-    if(r.ok){
-      document.getElementById('nmInput').value = '';
-      document.getElementById('nmInput').style.height = '';
-      await loadNotes(nmBookingId);
-      // Refresh row in table to update bubble
-      loadData();
-    }
-  }catch(err){}
-  btn.disabled = false;
+    document.getElementById('noteInput').value = '';
+    await _fetchNotes();
+    loadData();
+  }catch(e){ alert('Failed to save note.'); }
 }
 
 async function toggleAction(){
-  if(!nmBookingId) return;
-  var cb    = document.getElementById('nmActionCb');
+  if(!_notesBookingId) return;
+  var cb = document.getElementById('nmActionCb');
   var label = document.getElementById('nmActionLabel');
   try{
-    await fetch('/api/booking-notes/'+nmBookingId+'/action', {
-      method:'POST', credentials:'include'
+    var res = await fetch('/api/bookings/'+_notesBookingId+'/take-action', {
+      method:'PUT', credentials:'include', headers:{'Content-Type':'application/json'}
     });
-    label.textContent  = cb.checked ? '✓ Actioned' : 'Take Action';
-    label.className    = 'nm-action-label' + (cb.checked ? ' done' : '');
+    if(res.ok){
+      var data = await res.json();
+      var actioned = !!data.action_taken_by;
+      cb.checked = actioned;
+      label.textContent = actioned ? '✓ Actioned' : 'Take Action';
+      label.style.color = actioned ? '#28a745' : '#555';
+      label.style.fontWeight = actioned ? '600' : 'normal';
+      var row = allRows.find(function(r){ return r.id === _notesBookingId; });
+      if(row) row.action_taken_by = data.action_taken_by || '';
+      renderTable();
+    }
   }catch(err){ cb.checked = !cb.checked; }
 }
 
-function autoResizeNmInput(el){
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+async function takeAction(bookingId, evt){
+  evt && evt.stopPropagation();
+  try{
+    var res = await fetch('/api/bookings/'+bookingId+'/take-action', {
+      method:'PUT', credentials:'include', headers:{'Content-Type':'application/json'}
+    });
+    if(res.ok){
+      var data = await res.json();
+      var row = allRows.find(function(r){ return r.id === bookingId; });
+      if(row) row.action_taken_by = data.action_taken_by || '';
+      renderTable();
+    }
+  }catch(e){ alert('Failed.'); }
 }
 
-function nmInputKey(e){
-  if(e.key==='Enter' && !e.shiftKey){ e.preventDefault(); sendStaffNote(); }
-}
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 /* ── Column resize ── */
 

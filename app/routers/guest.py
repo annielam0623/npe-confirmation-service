@@ -451,13 +451,24 @@ async def tix_confirm_get(request: Request, db: AsyncSession = Depends(get_db)):
     # Auto-YES: guest clicked the email CTA button
     if autoyes == "1" and row.get("confirmation") != "yes":
         new_count = int(row.get("submission_count") or 0) + 1
+        now_ts = datetime.now(timezone.utc)
+        order_number = row.get("chd_number") or row.get("order_number", "")
+        # Write to tickets_reminders (backward compat)
         await db.execute(
             _sql_text("""UPDATE tickets_reminders
                          SET confirmation='yes', submitted_at=:ts,
                              submission_count=:c, source=:s
                          WHERE id=:id"""),
-            {"ts": datetime.now(timezone.utc),
-              "c": new_count, "s": src, "id": row["id"]},
+            {"ts": now_ts, "c": new_count, "s": src, "id": row["id"]},
+        )
+        # Also sync to bookings table (primary tracking source)
+        await db.execute(
+            _sql_text("""UPDATE bookings
+                         SET confirmation='yes', submitted_at=:ts,
+                             submission_count=:c
+                         WHERE order_number=:order_number
+                           AND module='tickets_reminder'"""),
+            {"ts": now_ts, "c": new_count, "order_number": order_number},
         )
         await db.commit()
         result = await db.execute(
@@ -492,13 +503,24 @@ async def tix_confirm_post(
                                             error_msg="Please select YES to confirm."))
 
     new_count = int(row.get("submission_count") or 0) + 1
+    now_ts = datetime.now(LA).replace(tzinfo=None)
+    order_number = row.get("chd_number") or row.get("order_number", "")
+    # Write to tickets_reminders (backward compat)
     await db.execute(
         _sql_text("""UPDATE tickets_reminders
                      SET confirmation='yes', reschedule_notes=:n,
                          submitted_at=:ts, submission_count=:c, source='form'
                      WHERE id=:id"""),
-        {"n": notes, "ts": datetime.now(LA).replace(tzinfo=None),
-         "c": new_count, "id": row["id"]},
+        {"n": notes, "ts": now_ts, "c": new_count, "id": row["id"]},
+    )
+    # Also sync to bookings table (primary tracking source)
+    await db.execute(
+        _sql_text("""UPDATE bookings
+                     SET confirmation='yes', notes=:n,
+                         submitted_at=:ts, submission_count=:c
+                     WHERE order_number=:order_number
+                       AND module='tickets_reminder'"""),
+        {"n": notes, "ts": now_ts, "c": new_count, "order_number": order_number},
     )
     await db.commit()
     result = await db.execute(

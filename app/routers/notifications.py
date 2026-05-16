@@ -370,6 +370,7 @@ async def tracking_tickets_reminder(
             b.email_status,
             COALESCE(sl.sms_status, b.sms_status) AS sms_status,
             b.confirmation, b.submitted_at,
+            b.notes,
             b.action_taken_by,
             (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id) AS notes_count,
             (SELECT author_username FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author
@@ -411,6 +412,7 @@ async def tracking_tickets_reminder(
                 "id":                  r["id"],
                 "notes_count":         r["notes_count"] or 0,
                 "latest_note_author":  r["latest_note_author"] or "",
+                "guest_notes":         r["notes"] or "",
             }
             for r in rows
         ],
