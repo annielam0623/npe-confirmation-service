@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Broadcasting Log — NPE{% endblock %}
+{% block page_title %}Broadcasting Log{% endblock %}
+{% block extra_styles %}
+.filter-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.filter-row input[type=date],.filter-row select{padding:6px 10px;border:0.5px solid rgba(0,0,0,0.15);border-radius:7px;font-size:13px;background:#fff;}
+.table-card{background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;overflow:hidden;}
+.table-header{padding:10px 16px;background:#f5f5f3;border-bottom:0.5px solid rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;}
+.table-header span{font-size:13px;font-weight:600;color:#1a1a1a;}
+table.bcast-tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.bcast-tbl thead td{padding:8px 12px;font-size:11px;font-weight:600;color:#888;background:#fafaf9;border-bottom:0.5px solid rgba(0,0,0,0.08);white-space:nowrap;}
+.bcast-tbl tbody tr{border-bottom:0.5px solid rgba(0,0,0,0.05);}
+.bcast-tbl tbody tr:last-child{border-bottom:none;}
+.bcast-tbl tbody tr:hover{background:#fafaf9;}
+.bcast-tbl tbody td{padding:9px 12px;color:#444;vertical-align:middle;}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.tag-general{background:#EAF3DE;color:#3B6D11;}
+.tag-mtlv{background:#EEEDFE;color:#534AB7;}
+.tag-tour{background:#EEF3EE;color:#7A9E7E;}
+.tag-morning{background:#E9EFF3;color:#6D8EA0;}
+.tag-tickets{background:#F5EDE4;color:#C4956A;}
+.num-ok{color:#2F7851;font-weight:600;}
+.num-fail{color:#A32D2D;font-weight:600;}
+.expand-btn{background:none;border:none;cursor:pointer;font-size:12px;color:#888;padding:2px 6px;border-radius:4px;}
+.expand-btn:hover{background:#f0f0f0;color:#333;}
+.recipients-row{display:none;background:#fafaf9;}
+.recipients-row.open{display:table-row;}
+.recipients-inner{padding:10px 16px;}
+.rec-table{width:100%;border-collapse:collapse;font-size:12px;}
+.rec-table td{padding:5px 10px;border-bottom:0.5px solid rgba(0,0,0,0.06);}
+.rec-table tr:last-child td{border-bottom:none;}
+.empty-state{padding:40px;text-align:center;color:#aaa;font-size:14px;}
+{% endblock %}
+{% block content %}
+<div class="filter-row">
+  <input type="date" id="filter-date" onchange="loadLog()">
+  <select id="filter-module" onchange="loadLog()">
+    <option value="">All modules</option>
+    <option value="tour">Tour Confirmation</option>
+    <option value="morning">Morning Pickup</option>
+    <option value="tickets">Tickets Reminder</option>
+  </select>
+  <select id="filter-group" onchange="loadLog()">
+    <option value="">All groups</option>
+    <option value="general">General</option>
+    <option value="mtlv">MTLV</option>
+  </select>
+  <button class="btn" onclick="loadLog()">↻ Refresh</button>
+  <span style="font-size:12px;color:#aaa;margin-left:auto;" id="records-count"></span>
+</div>
+
+<div class="table-card">
+  <div class="table-header"><span>Broadcasting Log</span></div>
+  <div style="overflow-x:auto;">
+    <table class="bcast-tbl">
+      <thead>
+        <tr>
+          <td>Date</td>
+          <td>Time</td>
+          <td>Sent by</td>
+          <td>Module</td>
+          <td>Group</td>
+          <td>Template</td>
+          <td>Message</td>
+          <td>Recipients</td>
+          <td style="text-align:center;">SMS ✓</td>
+          <td style="text-align:center;">SMS ✗</td>
+          <td style="text-align:center;">Email ✓</td>
+          <td style="text-align:center;">Email ✗</td>
+          <td></td>
+        </tr>
+      </thead>
+      <tbody id="bcast-tbody">
+        <tr><td colspan="13" class="empty-state">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+async function loadLog() {
+  const dateVal   = document.getElementById('filter-date').value;
+  const moduleVal = document.getElementById('filter-module').value;
+  const groupVal  = document.getElementById('filter-group').value;
+
+  let url = '/api/broadcasting-log?';
+  if (dateVal)   url += `date=${dateVal}&`;
+  if (moduleVal) url += `module=${moduleVal}&`;
+  if (groupVal)  url += `group=${groupVal}&`;
+
+  document.getElementById('bcast-tbody').innerHTML = '<tr><td colspan="13" class="empty-state">Loading…</td></tr>';
+
+  try {
+    const res  = await fetch(url);
+    const data = await res.json();
+    renderLog(data.rows || []);
+  } catch(e) {
+    document.getElementById('bcast-tbody').innerHTML = '<tr><td colspan="13" class="empty-state">Failed to load.</td></tr>';
+  }
+}
+
+function renderLog(rows) {
+  document.getElementById('records-count').textContent = rows.length + ' records';
+  if (!rows.length) {
+    document.getElementById('bcast-tbody').innerHTML = '<tr><td colspan="13" class="empty-state">No records found.</td></tr>';
+    return;
+  }
+
+  const moduleLabel = { tour: 'Tour', morning: 'Morning', tickets: 'Tickets' };
+  const moduleCls   = { tour: 'tag-tour', morning: 'tag-morning', tickets: 'tag-tickets' };
+
+  document.getElementById('bcast-tbody').innerHTML = rows.map(r => {
+    const dt = r.created_at ? r.created_at.split(' ') : ['—',''];
+    const modTag   = `<span class="tag ${moduleCls[r.module]||''}">${moduleLabel[r.module]||r.module}</span>`;
+    const grpTag   = `<span class="tag ${r.group_filter==='mtlv'?'tag-mtlv':'tag-general'}">${r.group_filter==='mtlv'?'MTLV':'General'}</span>`;
+    const msgShort = (r.message_body||'').length > 60 ? escHtml(r.message_body.slice(0,60))+'…' : escHtml(r.message_body||'—');
+    return `
+    <tr>
+      <td style="white-space:nowrap;color:#888;">${escHtml(dt[0])}</td>
+      <td style="white-space:nowrap;color:#888;">${escHtml(dt[1])}</td>
+      <td style="font-weight:500;">${escHtml(r.sent_by||'—')}</td>
+      <td>${modTag}</td>
+      <td>${grpTag}</td>
+      <td style="font-size:12px;color:#888;">${escHtml(r.template_name||'custom')}</td>
+      <td style="max-width:220px;font-size:12px;" title="${escHtml(r.message_body||'')}">${msgShort}</td>
+      <td style="text-align:center;">${r.recipient_count||0}</td>
+      <td style="text-align:center;" class="num-ok">${r.sms_sent||0}</td>
+      <td style="text-align:center;" class="num-fail">${r.sms_failed||0}</td>
+      <td style="text-align:center;" class="num-ok">${r.email_sent||0}</td>
+      <td style="text-align:center;" class="num-fail">${r.email_failed||0}</td>
+      <td><button class="expand-btn" onclick="toggleRecipients(${r.id}, this)">▶ Details</button></td>
+    </tr>
+    <tr class="recipients-row" id="rec-row-${r.id}">
+      <td colspan="13">
+        <div class="recipients-inner" id="rec-inner-${r.id}">Loading…</div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function toggleRecipients(id, btn) {
+  const row = document.getElementById(`rec-row-${id}`);
+  const inner = document.getElementById(`rec-inner-${id}`);
+  const isOpen = row.classList.contains('open');
+  if (isOpen) {
+    row.classList.remove('open');
+    btn.textContent = '▶ Details';
+    return;
+  }
+  row.classList.add('open');
+  btn.textContent = '▼ Details';
+
+  if (inner.dataset.loaded) return;
+  try {
+    const res  = await fetch(`/api/broadcasting-log/${id}/recipients`);
+    const data = await res.json();
+    const recs = data.recipients || [];
+    if (!recs.length) { inner.innerHTML = '<span style="color:#aaa;font-size:12px;">No recipients recorded.</span>'; }
+    else {
+      inner.innerHTML = `<table class="rec-table">
+        <tr style="font-size:11px;color:#888;font-weight:600;">
+          <td>Order #</td><td>Name</td><td>Phone</td><td>Email</td><td>SMS</td><td>Email</td>
+        </tr>
+        ${recs.map(r => `<tr>
+          <td style="color:#2F7851;font-weight:500;">${escHtml(r.order_number||'—')}</td>
+          <td>${escHtml(r.customer_name||'—')}</td>
+          <td style="color:#888;">${escHtml(r.phone||'—')}</td>
+          <td style="color:#888;font-size:11px;">${escHtml(r.email||'—')}</td>
+          <td><span class="tag ${r.sms_status==='sent'?'tag-general':'tag-tickets'}">${escHtml(r.sms_status||'—')}</span></td>
+          <td><span class="tag ${r.email_status==='sent'?'tag-general':'tag-tickets'}">${escHtml(r.email_status||'—')}</span></td>
+        </tr>`).join('')}
+      </table>`;
+    }
+    inner.dataset.loaded = '1';
+  } catch(e) {
+    inner.innerHTML = '<span style="color:#A32D2D;font-size:12px;">Failed to load recipients.</span>';
+  }
+}
+
+// Set default date to today (LA time)
+document.getElementById('filter-date').value = new Date().toLocaleDateString('en-CA', {timeZone:'America/Los_Angeles'});
+loadLog();
+</script>
+{% endblock %}
