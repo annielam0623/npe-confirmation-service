@@ -400,7 +400,15 @@ async def tracking_tickets_reminder(
             LIMIT 1
         ) sl ON true
         WHERE t.service_date = :tour_date
-        ORDER BY t.last_name ASC
+        ORDER BY
+          CASE
+            WHEN t.reschedule_notes IS NOT NULL AND t.reschedule_notes != ''
+                 AND b.action_taken_by IS NULL THEN 0
+            WHEN t.confirmation = 'yes' THEN 1
+            WHEN b.action_taken_by IS NOT NULL THEN 2
+            ELSE 3
+          END ASC,
+          t.submitted_at DESC NULLS LAST
     """), {"tour_date": _to_date(date)})
 
     rows = result.mappings().all()
