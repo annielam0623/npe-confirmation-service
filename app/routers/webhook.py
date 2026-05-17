@@ -112,122 +112,132 @@ def _parse_lunch(special_req: str) -> dict:
 # ─── Main parser ──────────────────────────────────────────────────────────────
 
 def _parse_order(payload: dict) -> Optional[dict]:
-    """
-    Parse a Rezdy webhook payload into a flat dict matching Booking columns.
-    Returns None if the payload is missing required fields.
-    """
-    order_number = payload.get("orderNumber", "").strip()
+    order_number = str(payload.get("orderNumber", "") or "").strip()
     if not order_number:
         return None
 
-    # ── Customer ──
-    customer   = payload.get("customer") or {}
-    first_name = customer.get("firstName", "").strip()
-    last_name  = customer.get("lastName", "").strip()
-    email      = customer.get("email", "").strip()
-    phone      = customer.get("mobile", "").strip() or customer.get("phone", "").strip()
-
-    if not email:
-        return None
-
-    # ── Items — take first item for tour info ──
-    items = payload.get("items") or []
-    item  = items[0] if items else {}
-
-    product_code = item.get("productCode", "").strip()
-    product_name = item.get("productName", "").strip()
-
-    # startTimeLocal is in venue's local timezone — use for display
-    start_time_local = item.get("startTimeLocal") or item.get("startTime")
-    tour_date        = _parse_start_date(start_time_local)
-    pickup_time      = _parse_start_time(start_time_local)
-    quantities       = _extract_quantities(items)
-
-    # ── Fields — order level ──
-    order_fields = payload.get("fields") or []
-
-    # ── Fields — participant level (first participant of first item) ──
-    participants  = item.get("participants") or []
-    part_fields   = participants[0].get("fields", []) if participants else []
-
-    # ── Extract key fields ──
-    # TT# — financial reference, stored but not displayed
-    tt_number = _get_field(order_fields, "TT #", "TT#", "TT Number")
-
-    # Confirmation# — attraction confirmation number (e.g. Antelope Canyon X)
-    # Try common label patterns; also check participant fields
-    confirmation_no = (
-        _get_field(order_fields, "Confirmation #", "Confirmation#",
-                   "Antelope Canyon X Confirmation #",
-                   "Lower Antelope Canyon Confirmation #",
-                   "Confirmation Number")
-        or _get_field(part_fields, "Confirmation #", "Confirmation#",
-                      "Barcode", "Ticket Number")
+    customer = payload.get("customer") or {}
+    first_name = str(customer.get("firstName", "") or "").strip()
+    last_name = str(customer.get("lastName", "") or "").strip()
+    email = str(customer.get("email", "") or "").strip()
+    phone = (
+        str(customer.get("mobile", "") or "").strip()
+        or str(customer.get("phone", "") or "").strip()
     )
 
-    # Pickup location — Rezdy can send a string OR a dict with locationName/address
+    # Do NOT reject order if email is missing.
+    # Rezdy PROCESSING webhook may not have complete customer data yet.
+
+    items = payload.get("items") or []
+    item = items[0] if items else {}
+
+    product_code = str(item.get("productCode", "") or "").strip()
+    product_name = str(item.get("productName", "") or "").strip()
+
+    start_time_local = item.get("startTimeLocal") or item.get("startTime")
+    tour_date = _parse_start_date(start_time_local)
+    pickup_time = _parse_start_time(start_time_local)
+
+    quantities = _extract_quantities(items)
+
+    order_fields = payload.get("fields") or []
+    participants = item.get("participants") or []
+    part_fields = participants[0].get("fields", []) if participants else []
+
+    tt_number = _get_field(order_fields, "TT #", "TT#", "TT Number")
+
+    confirmation_no = (
+        _get_field(
+            order_fields,
+            "Confirmation #",
+            "Confirmation#",
+            "Antelope Canyon X Confirmation #",
+            "Lower Antelope Canyon Confirmation #",
+            "Confirmation Number",
+        )
+        or _get_field(
+            part_fields,
+            "Confirmation #",
+            "Confirmation#",
+            "Barcode",
+            "Ticket Number",
+        )
+    )
+
     def _extract_location(val) -> Optional[str]:
         if not val:
             return None
         if isinstance(val, str):
             return val.strip() or None
         if isinstance(val, dict):
-            return (val.get("locationName") or val.get("name", "")).strip() or None
+            return (
+                str(val.get("locationName") or val.get("name") or "").strip()
+                or None
+            )
         return None
 
-    _raw_pickup = payload.get("pickupLocation") or item.get("pickupLocation")
+    raw_pickup = payload.get("pickupLocation") or item.get("pickupLocation")
     pickup_location = (
-        _extract_location(_raw_pickup)
-        or _get_field(part_fields, "Pick-up Location", "Pickup Location",
-                      "Hotel Name", "Hotel", "Pick Up Location")
+        _extract_location(raw_pickup)
+        or _get_field(
+            part_fields,
+            "Pick-up Location",
+            "Pickup Location",
+            "Hotel Name",
+            "Hotel",
+            "Pick Up Location",
+        )
         or _get_field(order_fields, "Pick-up Location", "Pickup Location")
     )
 
-    # Pickup time — from pickupLocation.pickupTime (earlier than startTime)
     pickup_location_obj = payload.get("pickupLocation") or item.get("pickupLocation") or {}
-    pickup_time_raw = pickup_location_obj.get("pickupTime") if isinstance(pickup_location_obj, dict) else None
+    pickup_time_raw = (
+        pickup_location_obj.get("pickupTime")
+        if isinstance(pickup_location_obj, dict)
+        else None
+    )
     pickup_time = _parse_start_time(pickup_time_raw) or pickup_time
-    # Special requirements — order level comments + item level
-    special_req = (payload.get("comments") or "").strip()
-    item_req    = (item.get("comments") or "").strip()
+
+    special_req = str(payload.get("comments", "") or "").strip()
+    item_req = str(item.get("comments", "") or "").strip()
     if item_req and item_req not in special_req:
         special_req = f"{special_req} {item_req}".strip()
 
-    # Also check Order Special Requirements custom field
-    field_req = _get_field(order_fields, "Order Special Requirements",
-                           "Special Requirements", "Special Needs")
+    field_req = _get_field(
+        order_fields,
+        "Order Special Requirements",
+        "Special Requirements",
+        "Special Needs",
+    )
     if field_req and field_req not in special_req:
         special_req = f"{special_req} {field_req}".strip()
 
-    # Lunch from special requirements
     lunch = _parse_lunch(special_req)
-
-    # Agent
-    agent_name = payload.get("resellerName", "").strip()
+    agent_name = str(payload.get("resellerName", "") or "").strip()
 
     return {
-        "order_number":          order_number,
-        "rezdy_order_id":        order_number,
-        "product_code":          product_code or None,
-        "product_name":          product_name or None,
-        "tt_number":             tt_number,
-        "confirmation_no":       confirmation_no,
-        "first_name":            first_name or "Guest",
-        "last_name":             last_name,
-        "customer_email":        email,
-        "phone":                 phone or None,
-        "quantities":            quantities,
-        "tour_date":             tour_date,
-        "pickup_time":           pickup_time,
-        "pickup_location":       pickup_location or None,
-        "special_requirements":  special_req or None,
-        "agent_name":            agent_name or None,
-        "lunch_turkey":          lunch["lunch_turkey"],
-        "lunch_veggie":          lunch["lunch_veggie"],
-        "lunch_beef":            lunch["lunch_beef"],
-        "source":                BookingSource.rezdy,
+        "order_number": order_number,
+        "rezdy_order_id": order_number,
+        "rezdy_status": str(payload.get("status", "") or "").strip().upper(),
+        "product_code": product_code or None,
+        "product_name": product_name or None,
+        "tt_number": tt_number,
+        "confirmation_no": confirmation_no,
+        "first_name": first_name or "Guest",
+        "last_name": last_name or "",
+        "customer_email": email or "",
+        "phone": phone or None,
+        "quantities": quantities,
+        "tour_date": tour_date,
+        "pickup_time": pickup_time,
+        "pickup_location": pickup_location or None,
+        "special_requirements": special_req or None,
+        "agent_name": agent_name or None,
+        "lunch_turkey": lunch["lunch_turkey"],
+        "lunch_veggie": lunch["lunch_veggie"],
+        "lunch_beef": lunch["lunch_beef"],
+        "source": BookingSource.rezdy,
     }
-
 
 # ─── Booking type lookup ──────────────────────────────────────────────────────
 
