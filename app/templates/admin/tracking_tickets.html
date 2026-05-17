@@ -570,13 +570,16 @@ function _renderNotes(notes){
 async function submitNote(dir){
   var body = document.getElementById('noteInput').value.trim();
   if(!body || !_notesBookingId) return;
+  var smsChk   = document.getElementById('sendSmsCheck');
+  var emailChk = document.getElementById('sendEmailCheck');
+  var sendSms   = smsChk   ? smsChk.checked   : false;
+  var sendEmail = emailChk ? emailChk.checked  : false;
   try{
     await fetch('/booking-notes/'+_notesBookingId, {
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({body:body, direction:dir,
-        send_sms:document.getElementById('sendSmsCheck').checked,
-        send_email:document.getElementById('sendEmailCheck').checked})
+        send_sms:sendSms, send_email:sendEmail})
     });
     document.getElementById('noteInput').value = '';
     await _fetchNotes();
@@ -599,7 +602,7 @@ async function toggleAction(){
       label.textContent = actioned ? '✓ Actioned' : 'Take Action';
       label.style.color = actioned ? '#28a745' : '#555';
       label.style.fontWeight = actioned ? '600' : 'normal';
-      var row = allRows.find(function(r){ return r.id === _notesBookingId; });
+      var row = allRows.find(function(r){ return r.id === parseInt(_notesBookingId); });
       if(row) row.action_taken_by = data.action_taken_by || '';
       renderTable();
     }
@@ -614,7 +617,7 @@ async function takeAction(bookingId, evt){
     });
     if(res.ok){
       var data = await res.json();
-      var row = allRows.find(function(r){ return r.id === bookingId; });
+      var row = allRows.find(function(r){ return r.id === parseInt(bookingId); });
       if(row) row.action_taken_by = data.action_taken_by || '';
       renderTable();
     }
