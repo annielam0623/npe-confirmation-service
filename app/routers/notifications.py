@@ -379,13 +379,14 @@ async def tracking_tickets_reminder(
             t.submitted_at,
             t.reschedule_notes  AS guest_notes,
             t.submission_count,
-            b.id                AS booking_id,
-            b.action_taken_by,
+            COALESCE(t.action_taken_by, b.action_taken_by) AS action_taken_by,
             COALESCE(
-                (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id),
+                (SELECT COUNT(*) FROM booking_notes WHERE booking_id = t.id),
                 0
             ) AS notes_count,
-            (SELECT author_username FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author
+            (SELECT author_username FROM booking_notes
+             WHERE booking_id = t.id ORDER BY created_at DESC LIMIT 1
+            ) AS latest_note_author
         FROM tickets_reminders t
         LEFT JOIN bookings b
             ON b.order_number = t.chd_number
@@ -403,20 +404,20 @@ async def tracking_tickets_reminder(
         ORDER BY
           CASE
             WHEN t.reschedule_notes IS NOT NULL AND t.reschedule_notes != ''
-                 AND b.action_taken_by IS NULL THEN 0
+                 AND COALESCE(t.action_taken_by, b.action_taken_by) IS NULL THEN 0
             WHEN t.confirmation = 'yes' THEN 1
-            WHEN b.action_taken_by IS NOT NULL THEN 2
+            WHEN COALESCE(t.action_taken_by, b.action_taken_by) IS NOT NULL THEN 2
             ELSE 3
           END ASC,
           t.submitted_at DESC NULLS LAST
     """), {"tour_date": _to_date(date)})
-
+ 
     rows = result.mappings().all()
     return {
         "date": date,
         "rows": [
             {
-                "id":                  r["booking_id"] or r["id"],
+                "id":                  r["id"],          # 始终是 tickets_reminders.id
                 "order_number":        r["order_number"] or "",
                 "confirmation_no":     r["confirmation_no"] or "",
                 "guest_name":          f"{r['first_name']} {r['last_name']}".strip(),
@@ -440,7 +441,6 @@ async def tracking_tickets_reminder(
             for r in rows
         ],
     }
-
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SEND LOG endpoint
