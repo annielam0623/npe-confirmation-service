@@ -497,90 +497,82 @@ async def unhandle_booking(
 @router.put("/{booking_id}/take-action")
 async def take_action(
     booking_id: int,
+    source: str = Query(default="booking"),  # "tickets" → tickets_reminders, else bookings
     db: AsyncSession = Depends(get_db),
     current_user=Depends(require_staff),
 ):
-    """
-    Toggle action_taken on a booking note.
-    Looks up bookings first, then falls back to tickets_reminders.
-    Supports toggle: if already actioned → clear; if not → set.
-    """
+    """Toggle action_taken. source=tickets uses tickets_reminders table."""
     from zoneinfo import ZoneInfo
     LA = ZoneInfo("America/Los_Angeles")
     now_la = datetime.now(LA).replace(tzinfo=None)
 
-    # ── Try bookings table first ──────────────────────────────────────────────
-    result = await db.execute(select(Booking).where(Booking.id == booking_id))
-    booking = result.scalar_one_or_none()
+    # ── tickets_reminders table ───────────────────────────────────────────────
+    if source == "tickets":
+        tr = await db.execute(
+            text("SELECT id, chd_number, action_taken_by FROM tickets_reminders WHERE id = :id"),
+            {"id": booking_id}
+        )
+        ticket = tr.fetchone()
+        if not ticket:
+            raise HTTPException(status_code=404, detail="Ticket not found")
 
-    if booking:
-        # Toggle
-        if booking.action_taken_by:
-            booking.action_taken_by = None
-            booking.action_taken_at = None
+        if ticket.action_taken_by:
+            # Toggle OFF
+            await db.execute(
+                text("UPDATE tickets_reminders SET action_taken_by=NULL, action_taken_at=NULL WHERE id=:id"),
+                {"id": booking_id}
+            )
+            action_taken_by = ""
+            action_taken_at = None
         else:
-            booking.action_taken_by = current_user.username
-            booking.action_taken_at = now_la
+            # Toggle ON
+            await db.execute(
+                text("UPDATE tickets_reminders SET action_taken_by=:actor, action_taken_at=:now WHERE id=:id"),
+                {"actor": current_user.username, "now": now_la, "id": booking_id}
+            )
+            action_taken_by = current_user.username
+            action_taken_at = now_la
             await _log_activity(db,
-                order_number = booking.order_number,
+                order_number = ticket.chd_number,
                 event_type   = "action_taken",
-                detail       = f"Took action on notes",
+                detail       = "Took action on notes",
                 actor        = current_user.username,
                 actor_type   = "staff",
             )
 
-        booking.updated_at = now_la
         await db.commit()
         return {
             "ok":              True,
-            "action_taken_by": booking.action_taken_by or "",
-            "action_taken_at": booking.action_taken_at.isoformat() if booking.action_taken_at else None,
+            "action_taken_by": action_taken_by,
+            "action_taken_at": action_taken_at.isoformat() if action_taken_at else None,
         }
 
-    # ── Fallback: tickets_reminders table ─────────────────────────────────────
-    tr = await db.execute(
-        text("SELECT id, chd_number, action_taken_by FROM tickets_reminders WHERE id = :id"),
-        {"id": booking_id}
-    )
-    ticket = tr.fetchone()
-
-    if not ticket:
+    # ── bookings table (default) ──────────────────────────────────────────────
+    result = await db.execute(select(Booking).where(Booking.id == booking_id))
+    booking = result.scalar_one_or_none()
+    if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
 
-    # Toggle
-    if ticket.action_taken_by:
-        await db.execute(
-            text("""
-                UPDATE tickets_reminders
-                SET action_taken_by = NULL, action_taken_at = NULL
-                WHERE id = :id
-            """),
-            {"id": booking_id}
-        )
-        action_taken_by = ""
-        action_taken_at = None
+    if booking.action_taken_by:
+        # Toggle OFF
+        booking.action_taken_by = None
+        booking.action_taken_at = None
     else:
-        await db.execute(
-            text("""
-                UPDATE tickets_reminders
-                SET action_taken_by = :actor, action_taken_at = :now
-                WHERE id = :id
-            """),
-            {"actor": current_user.username, "now": now_la, "id": booking_id}
-        )
-        action_taken_by = current_user.username
-        action_taken_at = now_la
+        # Toggle ON
+        booking.action_taken_by = current_user.username
+        booking.action_taken_at = now_la
         await _log_activity(db,
-            order_number = ticket.chd_number,
+            order_number = booking.order_number,
             event_type   = "action_taken",
             detail       = "Took action on notes",
             actor        = current_user.username,
             actor_type   = "staff",
         )
 
+    booking.updated_at = now_la
     await db.commit()
     return {
         "ok":              True,
-        "action_taken_by": action_taken_by,
-        "action_taken_at": action_taken_at.isoformat() if action_taken_at else None,
+        "action_taken_by": booking.action_taken_by or "",
+        "action_taken_at": booking.action_taken_at.isoformat() if booking.action_taken_at else None,
     }

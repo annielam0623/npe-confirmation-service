@@ -592,7 +592,7 @@ async function toggleAction(){
   var cb = document.getElementById('nmActionCb');
   var label = document.getElementById('nmActionLabel');
   try{
-    var res = await fetch('/api/bookings/'+_notesBookingId+'/take-action', {
+    var res = await fetch('/api/bookings/'+_notesBookingId+'/take-action?source=tickets', {
       method:'PUT', credentials:'include', headers:{'Content-Type':'application/json'}
     });
     if(res.ok){
@@ -612,7 +612,7 @@ async function toggleAction(){
 async function takeAction(bookingId, evt){
   evt && evt.stopPropagation();
   try{
-    var res = await fetch('/api/bookings/'+bookingId+'/take-action', {
+    var res = await fetch('/api/bookings/'+bookingId+'/take-action?source=tickets', {
       method:'PUT', credentials:'include', headers:{'Content-Type':'application/json'}
     });
     if(res.ok){
