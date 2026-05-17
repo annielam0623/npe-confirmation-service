@@ -209,28 +209,33 @@ th.notes-hdr.hdr-dirty{background:#fff3cd !important;color:#856404;}
 
 <div class="records-bar">
   <span id="rec-label">0 records</span>
+  <div style="margin-left:auto;">
+    <input type="text" id="search-input" placeholder="Search order #, name, phone…"
+      oninput="renderTable()"
+      style="padding:5px 10px;border:0.5px solid #ced4da;border-radius:7px;font-size:12px;width:220px;outline:none;">
+  </div>
 </div>
 
+<div style="text-align:right;font-size:11px;color:#6c757d;margin-bottom:4px;padding:0 20px;">&#8646; Drag columns to reorder &nbsp;·&nbsp; &#8596; Drag edges to resize</div>
 <div class="table-wrap"><table>
     <thead><tr id="thead-row">
-      <th style="width:120px">Tour<div class="col-resizer"></div></th>
-      <th style="width:90px">Service Date<div class="col-resizer"></div></th>
-      <th style="width:90px">CHD#<div class="col-resizer"></div></th>
-      <th style="width:45px">Pax<div class="col-resizer"></div></th>
-      <th style="width:95px">Check-in Time<div class="col-resizer"></div></th>
-      <th style="width:80px">Tour Time<div class="col-resizer"></div></th>
-      <th style="width:130px">Guest Name<div class="col-resizer"></div></th>
-      <th style="width:110px">Phone<div class="col-resizer"></div></th>
-      <th style="width:100px">Confirmation#<div class="col-resizer"></div></th>
-      <th style="width:80px">&#9679; Email<div class="col-resizer"></div></th>
-      <th style="width:80px">&#9632; SMS<div class="col-resizer"></div></th>
-      <th class="notes-hdr" id="notes-hdr" style="width:180px">Notes <span id="notes-hdr-bubble" style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#fff;border:1.5px solid #ced4da;color:#aaa;vertical-align:middle;margin-left:4px;">0</span><div class="col-resizer"></div></th>
-      <th style="width:100px">Chat 💬<div class="col-resizer"></div></th>
-      <th style="width:80px">Status<div class="col-resizer"></div></th>
-      <th style="width:90px">Submit Time<div class="col-resizer"></div></th>
+      <th style="width:120px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Tour<div class="col-resizer"></div></th>
+      <th style="width:90px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Service Date<div class="col-resizer"></div></th>
+      <th style="width:90px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>CHD#<div class="col-resizer"></div></th>
+      <th style="width:45px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Pax<div class="col-resizer"></div></th>
+      <th style="width:95px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Check-in Time<div class="col-resizer"></div></th>
+      <th style="width:80px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Tour Time<div class="col-resizer"></div></th>
+      <th style="width:130px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Guest Name<div class="col-resizer"></div></th>
+      <th style="width:110px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Phone<div class="col-resizer"></div></th>
+      <th style="width:100px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Confirmation#<div class="col-resizer"></div></th>
+      <th style="width:80px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>&#9679; Email<div class="col-resizer"></div></th>
+      <th style="width:80px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>&#9632; SMS<div class="col-resizer"></div></th>
+      <th class="notes-hdr" id="notes-hdr" style="width:200px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Notes <span id="notes-hdr-bubble" style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#fff;border:1.5px solid #ced4da;color:#aaa;vertical-align:middle;margin-left:4px;">0</span><div class="col-resizer"></div></th>
+      <th style="width:80px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Status<div class="col-resizer"></div></th>
+      <th style="width:90px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Submit Time<div class="col-resizer"></div></th>
     </tr></thead>
     <tbody id="tbody">
-      <tr><td colspan="16" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>
+      <tr><td colspan="15" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>
     </tbody>
   </table>
 </div>
@@ -323,13 +328,13 @@ document.getElementById('date-wrap').addEventListener('click', function(){
 function loadData(){
   var date = getDate(); if(!date) return;
   document.getElementById('tbody').innerHTML =
-    '<tr><td colspan="16" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>';
+    '<tr><td colspan="15" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>';
   fetch('/api/notifications/tickets-reminder/tracking?date='+date, {credentials:'include'})
     .then(function(r){ return r.json(); })
     .then(function(data){ allRows = data.rows || []; updatePills(); renderTable(); })
     .catch(function(){
       document.getElementById('tbody').innerHTML =
-        '<tr><td colspan="16" style="text-align:center;padding:24px;color:#dc3545;">Failed to load. Please refresh.</td></tr>';
+        '<tr><td colspan="15" style="text-align:center;padding:24px;color:#dc3545;">Failed to load. Please refresh.</td></tr>';
     });
 }
 
@@ -358,6 +363,15 @@ function filterTour(el, tour){
 
 function renderTable(){
   var rows = activeTour==='all' ? allRows : allRows.filter(function(r){ return r.tour_type===activeTour; });
+  var searchEl = document.getElementById('search-input');
+  if(searchEl && searchEl.value.trim()){
+    var q = searchEl.value.trim().toLowerCase();
+    rows = rows.filter(function(r){
+      return (r.order_number||'').toLowerCase().includes(q)
+          || (r.guest_name||'').toLowerCase().includes(q)
+          || (r.phone||'').toLowerCase().includes(q);
+    });
+  }
   var tot=rows.length, yes=0, resc=0, pend=0;
   rows.forEach(function(r){
     if(r.confirmation_status==='yes') yes++;
@@ -388,7 +402,7 @@ function renderTable(){
 
   if(!rows.length){
     document.getElementById('tbody').innerHTML =
-      '<tr><td colspan="16" style="text-align:center;padding:24px;color:#aaa;">No records for this date.</td></tr>';
+      '<tr><td colspan="15" style="text-align:center;padding:24px;color:#aaa;">No records for this date.</td></tr>';
     return;
   }
 
@@ -406,35 +420,27 @@ function renderTable(){
       : '—';
     var conf = r.confirmation_status || 'pending';
 
-    // Notes cell — full-cell yellow preview
+    // Notes cell — single column, all rows clickable
+    var openCall = 'openNotes('+r.id+',\''+e(r.order_number)+'\',\''+e(r.guest_name||'')+'\',\''+e((r.guest_notes||'').replace(/'/g,"\\'")).replace(/\n/g,' ')+'\' )';
     var notesCell;
     if(r.guest_notes){
       var actionPart = r.action_taken_by
-        ? '<div style="font-size:11px;color:#28a745;font-weight:600;margin-top:3px;">&#10003; '+e(r.action_taken_by)+'</div>'
-        : '<div style="margin-top:3px;"><button onclick="takeAction('+r.id+',event)" style="background:none;border:none;cursor:pointer;font-size:11px;padding:0;color:#856404;">&#9888;&#65039; Take action</button></div>';
-      notesCell = '<td style="padding:0;cursor:pointer;" onclick="openNotes('+r.id+',\''+e(r.order_number)+'\',\''+e(r.guest_name||'')+'\',\''+e((r.guest_notes||'').replace(/'/g,"\\'")).replace(/\n/g,' ')+'\' )">'
+        ? '<div style="font-size:11px;color:#28a745;font-weight:600;margin-top:4px;">&#10003; '+e(r.action_taken_by)+'<span style="font-weight:400;color:#aaa;margin-left:4px;">(click to undo)</span></div>'
+        : '<div style="margin-top:4px;"><button onclick="takeAction('+r.id+',event)" style="background:none;border:none;cursor:pointer;font-size:11px;padding:0;color:#856404;">&#9888;&#65039; Take action</button></div>';
+      notesCell = '<td style="padding:0;cursor:pointer;" onclick="'+openCall+'">'
         +'<div style="background:#fffbea;height:100%;padding:6px 8px;border-left:3px solid #ffc107;">'
         +'<div style="font-size:12px;color:#555;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">'+e(r.guest_notes)+'</div>'
         +actionPart
         +'</div></td>';
     } else {
-      notesCell = '<td style="color:#aaa;text-align:center;">—</td>';
+      var nCount = r.notes_count || 0;
+      notesCell = '<td style="cursor:pointer;text-align:center;" onclick="'+openCall+'">'
+        +(nCount > 0
+          ? '<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;border:1px solid #E24B4A;color:#E24B4A;font-size:11px;"><span style="width:7px;height:7px;border-radius:50%;background:#E24B4A;display:inline-block;"></span>Chat ('+nCount+')</span>'
+          : '<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;border:1px solid #9ED3A9;color:#2F7851;font-size:11px;">&#128172; Chat</span>')
+        +'</td>';
     }
 
-    // Chat cell
-    var chatCell;
-    var nCount = r.notes_count || 0;
-    var openCall = 'openNotes('+r.id+',\''+e(r.order_number)+'\',\''+e(r.guest_name||'')+'\',\''+e((r.guest_notes||'').replace(/'/g,"\\'")).replace(/\n/g,' ')+'\' )';
-    if(nCount > 0){
-      chatCell = '<td style="text-align:center;"><button onclick="'+openCall+'" style="background:none;border:none;cursor:pointer;padding:4px;">'
-        +'<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid #E24B4A;background:#fff;color:#E24B4A;font-size:12px;font-weight:500;">'
-        +'<span style="width:8px;height:8px;border-radius:50%;background:#E24B4A;display:inline-block;flex-shrink:0;"></span>Chat ('+nCount+')'
-        +'</span></button></td>';
-    } else {
-      chatCell = '<td style="text-align:center;"><button onclick="'+openCall+'" style="background:none;border:none;cursor:pointer;padding:4px;">'
-        +'<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid #9ED3A9;background:#fff;color:#2F7851;font-size:12px;font-weight:500;">&#128172; Chat</span>'
-        +'</button></td>';
-    }
 
     html += '<tr data-id="'+r.id+'" data-chd="'+e(r.order_number)+'" data-date="'+e(r.tour_date)+'">'
       +'<td style="white-space:nowrap">'+e(lbl)+'</td>'
@@ -449,7 +455,6 @@ function renderTable(){
       +'<td>'+emB+'</td>'
       +'<td>'+smB+'</td>'
       +notesCell
-      +chatCell
       +'<td><select class="s-sel '+conf+'" onchange="saveStatus(this)" data-orig="'+conf+'" data-chd="'+e(r.order_number)+'" data-date="'+e(r.tour_date)+'">'
         +'<option value="yes"'+(conf==='yes'?' selected':'')+'>&#10003; YES</option>'
         +'<option value="pending"'+(conf==='pending'?' selected':'')+'>&#8987; Pending</option>'
@@ -483,6 +488,15 @@ function saveStatus(el){
 
 function exportCSV(){
   var rows = activeTour==='all' ? allRows : allRows.filter(function(r){ return r.tour_type===activeTour; });
+  var searchEl = document.getElementById('search-input');
+  if(searchEl && searchEl.value.trim()){
+    var q = searchEl.value.trim().toLowerCase();
+    rows = rows.filter(function(r){
+      return (r.order_number||'').toLowerCase().includes(q)
+          || (r.guest_name||'').toLowerCase().includes(q)
+          || (r.phone||'').toLowerCase().includes(q);
+    });
+  }
   var cols = ['tour_type','tour_date','order_number','quantities','checkin_time','tour_time','guest_name','phone','confirmation_no','email_status','sms_status','guest_notes','confirmation_status','submitted_at'];
   var csv  = cols.join(',')+'\n';
   rows.forEach(function(r){
