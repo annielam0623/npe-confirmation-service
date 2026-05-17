@@ -528,7 +528,7 @@ document.addEventListener('keydown', function(ev){ if(ev.key==='Escape') closeNo
 async function _fetchNotes(){
   if(!_notesBookingId) return;
   try{
-    var res  = await fetch('/booking-notes/'+_notesBookingId, {credentials:'include'});
+    var res  = await fetch('/booking-notes/'+_notesBookingId+'?source=tickets', {credentials:'include'});
     var data = await res.json();
     _renderNotes(data.notes || []);
   }catch(e){}
@@ -575,7 +575,7 @@ async function submitNote(dir){
   var sendSms   = smsChk   ? smsChk.checked   : false;
   var sendEmail = emailChk ? emailChk.checked  : false;
   try{
-    await fetch('/booking-notes/'+_notesBookingId, {
+    await fetch('/booking-notes/'+_notesBookingId+'?source=tickets', {
       method:'POST', credentials:'include',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({body:body, direction:dir,
