@@ -276,8 +276,14 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
         print(f"[webhook] JSON parse error: {e}")
         return {"status": "error", "reason": "invalid json"}
 
-    order_number = payload.get("orderNumber", "").strip()
-    rezdy_status = payload.get("status", "").strip().upper()
+    order_number = str(payload.get("orderNumber", "") or "").strip()
+    rezdy_status = str(payload.get("status", "") or "").strip().upper()
+
+    if not order_number and not rezdy_status:
+        print("[webhook] ignored empty payload")
+        return {"status": "ignored", "reason": "empty payload"}
+
+    print(f"[webhook] order={order_number} status={rezdy_status}")
 
     print(f"[webhook] order={order_number} status={rezdy_status}")
 
