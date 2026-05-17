@@ -621,12 +621,17 @@ async def twilio_inbound_sms(request: Request, db: AsyncSession = Depends(get_db
     # so we match on the last 10 digits which are format-independent.
     suffix = clean_from[-10:] if len(clean_from) >= 10 else clean_from
 
+    # ── Try tickets_reminders first, then bookings ──────────────────────────
+    # tickets_reminders.id is used as booking_notes.booking_id for ticket orders
     result = await db.execute(
     _text("""
-        SELECT b.id as booking_id
+        SELECT
+            tr.id          AS ticket_id,
+            NULL           AS booking_id
         FROM send_log sl
-        JOIN bookings b ON b.order_number = sl.order_number
+        JOIN tickets_reminders tr ON tr.chd_number = sl.order_number
         WHERE RIGHT(REGEXP_REPLACE(sl.phone, '[^0-9]', '', 'g'), 10) = :suffix
+          AND sl.module = 'tickets_reminder'
         ORDER BY sl.sent_at DESC
         LIMIT 1
     """),
@@ -634,11 +639,28 @@ async def twilio_inbound_sms(request: Request, db: AsyncSession = Depends(get_db
 )
     row = result.fetchone()
 
-    if not row or not row.booking_id:
-        print(f"[webhook/twilio/inbound] no matching booking for {from_number}")
-        return _twiml_response("")
-
-    booking_id = row.booking_id
+    if row and row.ticket_id:
+        booking_id = row.ticket_id
+        print(f"[webhook/twilio/inbound] matched tickets_reminders id={booking_id}")
+    else:
+        # fallback: check bookings table (tour / morning)
+        result2 = await db.execute(
+        _text("""
+            SELECT b.id AS booking_id
+            FROM send_log sl
+            JOIN bookings b ON b.order_number = sl.order_number
+            WHERE RIGHT(REGEXP_REPLACE(sl.phone, '[^0-9]', '', 'g'), 10) = :suffix
+            ORDER BY sl.sent_at DESC
+            LIMIT 1
+        """),
+        {"suffix": suffix},
+    )
+        row2 = result2.fetchone()
+        if not row2 or not row2.booking_id:
+            print(f"[webhook/twilio/inbound] no matching booking for {from_number}")
+            return _twiml_response("")
+        booking_id = row2.booking_id
+        print(f"[webhook/twilio/inbound] matched bookings id={booking_id}")
 
     # ── Write to booking_notes ──
     now_la = datetime.now(ZoneInfo("America/Los_Angeles"))
