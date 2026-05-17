@@ -384,9 +384,8 @@ async def tracking_tickets_reminder(
                 (SELECT COUNT(*) FROM booking_notes WHERE booking_id = t.id),
                 0
             ) AS notes_count,
-            (SELECT author_username FROM booking_notes
-             WHERE booking_id = t.id ORDER BY created_at DESC LIMIT 1
-            ) AS latest_note_author
+            (SELECT body      FROM booking_notes WHERE booking_id = t.id ORDER BY created_at DESC LIMIT 1) AS latest_note_body,
+            (SELECT direction FROM booking_notes WHERE booking_id = t.id ORDER BY created_at DESC LIMIT 1) AS latest_note_direction
         FROM tickets_reminders t
         LEFT JOIN bookings b
             ON b.order_number = t.chd_number
@@ -403,44 +402,46 @@ async def tracking_tickets_reminder(
         WHERE t.service_date = :tour_date
         ORDER BY
           CASE
-            WHEN t.reschedule_notes IS NOT NULL AND t.reschedule_notes != ''
-                 AND COALESCE(t.action_taken_by, b.action_taken_by) IS NULL THEN 0
+            WHEN COALESCE(t.action_taken_by, b.action_taken_by) IS NULL
+                 AND (SELECT COUNT(*) FROM booking_notes WHERE booking_id = t.id) > 0 THEN 0
             WHEN t.confirmation = 'yes' THEN 1
             WHEN COALESCE(t.action_taken_by, b.action_taken_by) IS NOT NULL THEN 2
             ELSE 3
           END ASC,
           t.submitted_at DESC NULLS LAST
     """), {"tour_date": _to_date(date)})
- 
+
     rows = result.mappings().all()
     return {
         "date": date,
         "rows": [
             {
-                "id":                  r["id"],          # 始终是 tickets_reminders.id
-                "order_number":        r["order_number"] or "",
-                "confirmation_no":     r["confirmation_no"] or "",
-                "guest_name":          f"{r['first_name']} {r['last_name']}".strip(),
-                "phone":               r["phone"] or "",
-                "email":               r["email"] or "",
-                "quantities":          r["quantities"],
-                "tour_date":           str(r["tour_date"]) if r["tour_date"] else "",
-                "tour_type":           r["tour_type"] or "",
-                "checkin_time":        r["checkin_time"] or "",
-                "tour_time":           r["tour_time"] or "",
-                "email_status":        r["email_status"] or "",
-                "sms_status":          r["sms_status"] or "",
-                "confirmation_status": r["confirmation"] or "pending",
-                "submitted_at":        r["submitted_at"].isoformat() if r["submitted_at"] else None,
-                "action_taken_by":     r["action_taken_by"] or "",
-                "notes_count":         r["notes_count"] or 0,
-                "latest_note_author":  r["latest_note_author"] or "",
-                "guest_notes":         r["guest_notes"] or "",
-                "resubmitted":         (r["submission_count"] or 0) > 1,
+                "id":                      r["id"],
+                "order_number":            r["order_number"] or "",
+                "confirmation_no":         r["confirmation_no"] or "",
+                "guest_name":              f"{r['first_name']} {r['last_name']}".strip(),
+                "phone":                   r["phone"] or "",
+                "email":                   r["email"] or "",
+                "quantities":              r["quantities"],
+                "tour_date":               str(r["tour_date"]) if r["tour_date"] else "",
+                "tour_type":               r["tour_type"] or "",
+                "checkin_time":            r["checkin_time"] or "",
+                "tour_time":               r["tour_time"] or "",
+                "email_status":            r["email_status"] or "",
+                "sms_status":              r["sms_status"] or "",
+                "confirmation_status":     r["confirmation"] or "pending",
+                "submitted_at":            r["submitted_at"].isoformat() if r["submitted_at"] else None,
+                "action_taken_by":         r["action_taken_by"] or "",
+                "notes_count":             r["notes_count"] or 0,
+                "latest_note_body":        r["latest_note_body"] or "",
+                "latest_note_direction":   r["latest_note_direction"] or "",
+                "guest_notes":             r["guest_notes"] or "",
+                "resubmitted":             (r["submission_count"] or 0) > 1,
             }
             for r in rows
         ],
     }
+
 
 # ══════════════════════════════════════════════════════════════════════════════
 # SEND LOG endpoint

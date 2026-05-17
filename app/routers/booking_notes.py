@@ -1,8 +1,8 @@
 # app/routers/booking_notes.py
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, func, text
+from sqlalchemy import select, update, func
 from sqlalchemy.orm import selectinload
 from pydantic import BaseModel
 from typing import Optional, List
@@ -150,7 +150,6 @@ async def get_templates(module: str, user=Depends(require_staff)):
 @router.get("/{booking_id}")
 async def get_notes(
     booking_id: int,
-    source: str = Query(default="booking"),  # "tickets" -> tickets_reminders
     db: AsyncSession = Depends(get_db),
     user=Depends(require_staff),
 ):
@@ -161,16 +160,15 @@ async def get_notes(
     )
     notes = result.scalars().all()
 
-    # Only update handler for bookings table (not tickets)
-    if source != "tickets":
-        await db.execute(
-            update(Booking)
-            .where(Booking.id == booking_id)
-            .values(
-                notes_handler=user.username,
-                notes_handled_at=_now_la(),
-            )
+    # Update handler on booking
+    await db.execute(
+        update(Booking)
+        .where(Booking.id == booking_id)
+        .values(
+            notes_handler=user.username,
+            notes_handled_at=_now_la(),
         )
+    )
     await db.commit()
 
     return {"notes": [_serialize_note(n) for n in notes]}
@@ -182,61 +180,37 @@ async def get_notes(
 async def add_note(
     booking_id: int,
     payload: NoteCreate,
-    source: str = Query(default="booking"),  # "tickets" -> use tickets_reminders for phone/email
     db: AsyncSession = Depends(get_db),
     user=Depends(require_staff),
 ):
-    phone = None
-    customer_email = None
-    first_name = "Guest"
-    order_number = str(booking_id)
+    # Fetch booking for SMS/email
+    result = await db.execute(select(Booking).where(Booking.id == booking_id))
+    booking = result.scalar_one_or_none()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
 
-    if source == "tickets":
-        # ── Get contact info from tickets_reminders ───────────────────────
-        tr = await db.execute(
-            text("SELECT chd_number, first_name, phone, customer_email FROM tickets_reminders WHERE id = :id"),
-            {"id": booking_id}
-        )
-        ticket = tr.fetchone()
-        if not ticket:
-            raise HTTPException(status_code=404, detail="Ticket not found")
-        phone          = ticket.phone
-        customer_email = ticket.customer_email
-        first_name     = ticket.first_name or "Guest"
-        order_number   = ticket.chd_number or str(booking_id)
-    else:
-        # ── Get contact info from bookings ────────────────────────────────
-        result = await db.execute(select(Booking).where(Booking.id == booking_id))
-        booking = result.scalar_one_or_none()
-        if not booking:
-            raise HTTPException(status_code=404, detail="Booking not found")
-        phone          = booking.phone
-        customer_email = booking.customer_email
-        first_name     = booking.first_name or "Guest"
-        order_number   = booking.order_number
-
-    sms_status   = None
+    sms_status = None
     email_status = None
 
     # Send SMS if requested
-    if payload.send_sms and phone:
+    if payload.send_sms and booking.phone:
         try:
-            await send_sms_async(phone, payload.body)
+            await send_sms_async(booking.phone, payload.body)
             sms_status = "sent"
         except Exception:
             sms_status = "failed"
 
     # Send Email if requested
-    if payload.send_email and customer_email:
+    if payload.send_email and booking.customer_email:
         try:
-            subject = f"Update on your National Park Express tour — Order {order_number}"
-            html = (
-                f"<p>Hi {first_name},</p>"
-                f"<p>{payload.body}</p>"
-                f"<p>If you have any questions, please contact us at 702-948-4190.</p>"
-                f"<p>National Park Express</p>"
-            )
-            await send_email(customer_email, subject, html)
+            subject = f"Update on your National Park Express tour — Order {booking.order_number}"
+            html = f"""
+            <p>Hi {booking.first_name},</p>
+            <p>{payload.body}</p>
+            <p>If you have any questions, please contact us at 702-948-4190.</p>
+            <p>National Park Express</p>
+            """
+            await send_email(booking.customer_email, subject, html)
             email_status = "sent"
         except Exception:
             email_status = "failed"
@@ -244,7 +218,7 @@ async def add_note(
     # Determine direction
     direction = payload.direction
     if payload.send_sms and payload.send_email:
-        direction = "sms_out"
+        direction = "sms_out"   # primary direction; email_out logged separately below
     elif payload.send_sms:
         direction = "sms_out"
     elif payload.send_email:
@@ -262,16 +236,31 @@ async def add_note(
     )
     db.add(note)
 
-    # Update handler (bookings table only)
-    if source != "tickets":
-        await db.execute(
-            update(Booking)
-            .where(Booking.id == booking_id)
-            .values(
-                notes_handler=user.username,
-                notes_handled_at=_now_la(),
-            )
+    # Update handler
+    await db.execute(
+        update(Booking)
+        .where(Booking.id == booking_id)
+        .values(
+            notes_handler=user.username,
+            notes_handled_at=_now_la(),
         )
+    )
+
+    # ── Clear action_taken_by for inbound guest messages ─────────────────
+    inbound_directions = {"sms_in", "email_in", "guest_reply"}
+    if direction in inbound_directions:
+        if source == "tickets":
+            await db.execute(
+                text("UPDATE tickets_reminders SET action_taken_by=NULL, action_taken_at=NULL WHERE id=:id"),
+                {"id": booking_id}
+            )
+        else:
+            from sqlalchemy import update as sa_update
+            await db.execute(
+                sa_update(Booking)
+                .where(Booking.id == booking_id)
+                .values(action_taken_by=None, action_taken_at=None)
+            )
 
     await db.commit()
     await db.refresh(note)

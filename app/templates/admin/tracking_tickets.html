@@ -385,19 +385,20 @@ function renderTable(){
   document.getElementById('rec-label').textContent = tot+' record'+(tot===1?'':'s');
 
   // Update Notes header bubble
-  var notesUnhandled = rows.filter(function(r){ return r.guest_notes && !r.action_taken_by; }).length;
-  var notesTotal     = rows.filter(function(r){ return r.guest_notes; }).length;
-  var notesHandled   = notesTotal - notesUnhandled;
+  // Bubble: red = has notes + no action_taken; green = has notes + actioned; white = no notes
+  var hasNotes    = rows.filter(function(r){ return (r.notes_count||0) > 0 || r.guest_notes; });
+  var unhandled   = hasNotes.filter(function(r){ return !r.action_taken_by; }).length;
+  var handled     = hasNotes.length - unhandled;
   var bubble = document.getElementById('notes-hdr-bubble');
-  if(notesTotal === 0){
+  if(hasNotes.length === 0){
     bubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#fff;border:1.5px solid #ced4da;color:#aaa;vertical-align:middle;margin-left:4px;';
     bubble.textContent = '0';
-  } else if(notesUnhandled > 0){
+  } else if(unhandled > 0){
     bubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#dc3545;border:1.5px solid #dc3545;color:#fff;vertical-align:middle;margin-left:4px;';
-    bubble.textContent = notesUnhandled;
+    bubble.textContent = unhandled;
   } else {
     bubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#28a745;border:1.5px solid #28a745;color:#fff;vertical-align:middle;margin-left:4px;';
-    bubble.textContent = notesHandled;
+    bubble.textContent = handled;
   }
 
   if(!rows.length){
@@ -420,28 +421,26 @@ function renderTable(){
       : '—';
     var conf = r.confirmation_status || 'pending';
 
-    // Notes cell — single column, all rows clickable
-    // Notes cell — use data attributes to avoid quote escaping in onclick
-    var nCount = r.notes_count || 0;
+    // Notes cell — preview shows latest note; all rows clickable
+    var nCount   = r.notes_count || 0;
+    var hasAny   = nCount > 0 || !!r.guest_notes;
+    var actioned = !!r.action_taken_by;
+    var previewBody = r.latest_note_body || r.guest_notes || '';
     var notesCell;
-    if(r.guest_notes){
-      var actionPart = r.action_taken_by
+    if(hasAny){
+      var actionPart = actioned
         ? '<div style="font-size:11px;color:#28a745;font-weight:600;margin-top:4px;">&#10003; '+e(r.action_taken_by)+'<span style="font-weight:400;color:#aaa;margin-left:4px;">(click to undo)</span></div>'
         : '<div style="margin-top:4px;"><button onclick="event.stopPropagation();takeAction('+r.id+',event)" style="background:none;border:none;cursor:pointer;font-size:11px;padding:0;color:#856404;">&#9888;&#65039; Take action</button></div>';
       notesCell = '<td class="js-open-notes" data-bid="'+r.id+'" style="padding:0;cursor:pointer;">'
         +'<div style="background:#fffbea;height:100%;padding:6px 8px;border-left:3px solid #ffc107;">'
-        +'<div style="font-size:12px;color:#555;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">'+e(r.guest_notes)+'</div>'
+        +'<div style="font-size:12px;color:#555;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">'+e(previewBody)+'</div>'
         +actionPart
         +'</div></td>';
     } else {
       notesCell = '<td class="js-open-notes" data-bid="'+r.id+'" style="cursor:pointer;text-align:center;">'
-        +(nCount > 0
-          ? '<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;border:1px solid #E24B4A;color:#E24B4A;font-size:11px;"><span style="width:7px;height:7px;border-radius:50%;background:#E24B4A;display:inline-block;"></span>Chat ('+nCount+')</span>'
-          : '<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;border:1px solid #9ED3A9;color:#2F7851;font-size:11px;">&#128172; Chat</span>')
+        +'<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;border:1px solid #9ED3A9;color:#2F7851;font-size:11px;">&#128172; Chat</span>'
         +'</td>';
     }
-
-
     html += '<tr data-id="'+r.id+'" data-chd="'+e(r.order_number)+'" data-date="'+e(r.tour_date)+'">'
       +'<td style="white-space:nowrap">'+e(lbl)+'</td>'
       +'<td>'+e(r.tour_date)+'</td>'
@@ -555,8 +554,9 @@ function _renderNotes(notes){
     staff_note:  {bg:'#fffbea', border:'#f0d080', label:'★ Note',       color:'#856404', right:true},
     sms_out:     {bg:'#d4edda', border:'#b7ddc4', label:'SMS sent',      color:'#155724', right:true, dot:'#f97316'},
     email_out:   {bg:'#d1ecf1', border:'#a8d8e1', label:'Email sent',    color:'#0c5460', right:true, dot:'#3b82f6'},
-    guest_reply: {bg:'#e8f4fd', border:'#b3d9f7', label:'Guest',         color:'#1a3a5c', right:false},
-    sms_in:      {bg:'#fff7ed', border:'#fcd9b0', label:'Guest via SMS', color:'#9a3412', right:false, dot:'#f97316'},
+    sms_in:      {bg:'#fff7ed', border:'#fcd9b0', label:'Guest via SMS',   color:'#9a3412', right:false, dot:'#f97316'},
+    email_in:    {bg:'#eff6ff', border:'#bfdbfe', label:'Guest via Email', color:'#1e40af', right:false, dot:'#3b82f6'},
+    guest_reply: {bg:'#e8f4fd', border:'#b3d9f7', label:'Guest',           color:'#1a3a5c', right:false},
   };
   var msgs = [];
   if(_notesGuestNotes){
