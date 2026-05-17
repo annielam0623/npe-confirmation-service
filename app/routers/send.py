@@ -195,6 +195,7 @@ async def send_tour_confirmation(
         await db.execute(text(
             "UPDATE bookings SET confirm_token = :token WHERE id = :id"
         ), {"token": token, "id": booking_id})
+        await db.commit()  # Commit token immediately so guest.py can look it up
 
         # Short link — expires day-before tour at 18:00 LA (same as token)
         from datetime import time as dtime, timedelta
@@ -327,6 +328,7 @@ async def send_tour_confirmation_bulk(
         await db.execute(text(
             "UPDATE bookings SET confirm_token = :token WHERE id = :id"
         ), {"token": token, "id": booking_id})
+        await db.commit()  # Commit token immediately so guest.py can look it up
 
         from datetime import time as dtime, timedelta
         _day_before = _to_date(tour_date) - timedelta(days=1)
