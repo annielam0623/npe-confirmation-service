@@ -269,6 +269,7 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
 
     Rezdy UI config: point all three events at /webhook/rezdy
     """
+    print("===== REZDY WEBHOOK HIT =====")
     # ── Parse body ──
     try:
         payload = await request.json()
@@ -282,8 +283,6 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     if not order_number and not rezdy_status:
         print("[webhook] ignored empty payload")
         return {"status": "ignored", "reason": "empty payload"}
-
-    print(f"[webhook] order={order_number} status={rezdy_status}")
 
     print(f"[webhook] order={order_number} status={rezdy_status}")
 
