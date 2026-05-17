@@ -583,7 +583,7 @@ async function submitNote(dir){
     });
     document.getElementById('noteInput').value = '';
     await _fetchNotes();
-    loadData();
+    // loadData() removed — prevents table refresh from wiping take-action state
   }catch(e){ alert('Failed to save note.'); }
 }
 
@@ -602,7 +602,7 @@ async function toggleAction(){
       label.textContent = actioned ? '✓ Actioned' : 'Take Action';
       label.style.color = actioned ? '#28a745' : '#555';
       label.style.fontWeight = actioned ? '600' : 'normal';
-      var row = allRows.find(function(r){ return r.id === parseInt(_notesBookingId); });
+      var row = allRows.find(function(r){ return r.id === _notesBookingId; });
       if(row) row.action_taken_by = data.action_taken_by || '';
       renderTable();
     }
@@ -617,7 +617,7 @@ async function takeAction(bookingId, evt){
     });
     if(res.ok){
       var data = await res.json();
-      var row = allRows.find(function(r){ return r.id === parseInt(bookingId); });
+      var row = allRows.find(function(r){ return r.id === bookingId; });
       if(row) row.action_taken_by = data.action_taken_by || '';
       renderTable();
     }
