@@ -451,7 +451,7 @@ async def tix_confirm_get(request: Request, db: AsyncSession = Depends(get_db)):
     # Auto-YES: guest clicked the email CTA button
     if autoyes == "1" and row.get("confirmation") != "yes":
         new_count = int(row.get("submission_count") or 0) + 1
-        now_ts = datetime.now(timezone.utc)
+        now_ts = datetime.now(timezone.utc).replace(tzinfo=None)
         order_number = row.get("chd_number") or row.get("order_number", "")
         # Write to tickets_reminders (backward compat)
         await db.execute(

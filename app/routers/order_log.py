@@ -76,7 +76,7 @@ async def order_log_api(
     db: AsyncSession = Depends(get_db),
 ):
     # Base: join bookings to get tour_date; exclude system events
-    al_filters  = ["al.actor_type != 'system'"]
+    al_filters  = ["al.actor_type != 'system'", "al.event_type != 'guest_confirmed'"]
     bk_filters  = []
     params      = {}
 
