@@ -1497,15 +1497,24 @@ const BROADCAST_TEMPLATES_LOCAL = [
 ];
 
 function openBroadcast() {
-  // Build tour checkboxes from allRows
+  // Build tour checkboxes from allRows — use pill labels from DOM to get display names
   const toursPresent = [...new Set(allRows.map(r => r.tour_type).filter(Boolean))];
-  const orderedTours = TOUR_ORDER.filter(t => toursPresent.includes(t));
+
+  // Try to get display names from existing pills in the page
+  const pillMap = {};
+  document.querySelectorAll('.pill[onclick]').forEach(pill => {
+    const m = pill.getAttribute('onclick').match(/filterType\('([^']+)'/);
+    if (m) {
+      const label = pill.textContent.replace(/\s*\d+\/\d+\s*/g, '').trim();
+      if (label && label !== 'All') pillMap[m[1]] = label;
+    }
+  });
 
   const checksDiv = document.getElementById('bcast-tour-checks');
-  checksDiv.innerHTML = orderedTours.map(t => `
-    <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);padding:3px 10px;border-radius:20px;">
-      <input type="checkbox" class="bcast-tour-chk" value="${t}" onchange="_updateBcastRecipients()">
-      <span style="color:rgba(255,255,255,0.85);font-size:12px;">${TOUR_ABBR[t] || t}</span>
+  checksDiv.innerHTML = toursPresent.map(t => `
+    <label style="display:flex;align-items:center;gap:5px;cursor:pointer;background:#fff;border:1px solid #e8b84b;padding:3px 10px;border-radius:20px;">
+      <input type="checkbox" class="bcast-tour-chk" value="${t}" onchange="_updateBcastRecipients()" style="accent-color:#ee8e00;">
+      <span style="color:#7a4f00;font-size:12px;">${pillMap[t] || t}</span>
     </label>`).join('');
 
   // Populate templates
@@ -1569,10 +1578,10 @@ function _updateBcastRecipients() {
   const recipients = group === 'mtlv' ? mtlv : general;
   document.getElementById('bcastRecipientCount').textContent = recipients.length + ' recipient(s)';
   document.getElementById('bcastRecipientList').innerHTML = recipients.slice(0, 30).map((r, i) =>
-    `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 6px;background:rgba(255,255,255,0.08);border-radius:4px;">
+    `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 6px;background:#fff;border-radius:4px;border:1px solid #e8b84b;">
       <input type="checkbox" class="rec-check" data-idx="${i}" checked style="accent-color:#ee8e00;">
-      <span style="flex:1;color:rgba(255,255,255,0.85);font-weight:500;">${escHtml(r.guest_name || r.first_name || '—')}</span>
-      <span style="color:rgba(255,255,255,0.4);font-size:11px;">${escHtml(r.phone || r.email || '—')}</span>
+      <span style="flex:1;color:#1a1a1a;font-weight:500;">${escHtml(r.guest_name || r.first_name || '—')}</span>
+      <span style="color:#b86a00;font-size:11px;">${escHtml(r.phone || r.email || '—')}</span>
     </div>`
   ).join('') + (recipients.length > 30 ? `<div style="font-size:11px;color:rgba(255,255,255,0.4);padding:4px 6px;">... and ${recipients.length - 30} more</div>` : '');
 }
