@@ -184,7 +184,7 @@ th.notes-hdr.hdr-dirty{background:#fff3cd !important;color:#856404;}
   </div>
   <button class="btn-nav"     onclick="changeDate(1)">&#8250;</button>
   <button class="btn-refresh" onclick="loadData()">&#x21bb; Refresh</button>
-  <button class="btn-export"  onclick="exportCSV()">&#128190; Export CSV</button>
+  <button class="btn-export"  onclick="exportXLSX()">&#128196; Export Excel</button>
 </div>
 
 <div class="pills-bar">
@@ -209,11 +209,9 @@ th.notes-hdr.hdr-dirty{background:#fff3cd !important;color:#856404;}
 
 <div class="records-bar">
   <span id="rec-label">0 records</span>
-  <div style="margin-left:auto;">
-    <input type="text" id="search-input" placeholder="Search order #, name, phone…"
-      oninput="renderTable()"
-      style="padding:5px 10px;border:0.5px solid #ced4da;border-radius:7px;font-size:12px;width:220px;outline:none;">
-  </div>
+  <input type="text" id="search-input" placeholder="Search order #, name, phone…"
+    oninput="renderTable()"
+    style="padding:5px 10px;border:0.5px solid #ced4da;border-radius:7px;font-size:12px;width:220px;outline:none;margin-left:12px;">
 </div>
 
 <div style="text-align:right;font-size:11px;color:#6c757d;margin-bottom:4px;padding:0 20px;">&#8646; Drag columns to reorder &nbsp;·&nbsp; &#8596; Drag edges to resize</div>
@@ -494,25 +492,12 @@ function saveStatus(el){
   });
 }
 
-function exportCSV(){
-  var rows = activeTour==='all' ? allRows : allRows.filter(function(r){ return r.tour_type===activeTour; });
-  var searchEl = document.getElementById('search-input');
-  if(searchEl && searchEl.value.trim()){
-    var q = searchEl.value.trim().toLowerCase();
-    rows = rows.filter(function(r){
-      return (r.order_number||'').toLowerCase().includes(q)
-          || (r.guest_name||'').toLowerCase().includes(q)
-          || (r.phone||'').toLowerCase().includes(q);
-    });
-  }
-  var cols = ['tour_type','tour_date','order_number','quantities','checkin_time','tour_time','guest_name','phone','confirmation_no','email_status','sms_status','guest_notes','confirmation_status','submitted_at'];
-  var csv  = cols.join(',')+'\n';
-  rows.forEach(function(r){
-    csv += cols.map(function(c){ return '"'+(r[c]||'').toString().replace(/"/g,'""')+'"'; }).join(',')+'\n';
-  });
+function exportXLSX(){
+  var date = getDate();
+  var url = '/api/notifications/tickets-reminder/export?date='+date;
   var a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
-  a.download = 'tickets-'+getDate()+'.csv';
+  a.href = url;
+  a.download = 'tickets-'+date+'.xlsx';
   a.click();
 }
 
