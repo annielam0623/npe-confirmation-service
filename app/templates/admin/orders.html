@@ -1,326 +1,221 @@
-<!DOCTYPE html>
-<html lang="en">
-{% set active_page = "orders" %}
-{% include "admin/base.html" %}
+{% extends "base.html" %}
+{% block title %}Orders — NPE Operations{% endblock %}
+{% block page_title %}Orders{% endblock %}
 
-<body>
-      <div class="layout">
-            {% include "admin/sidebar.html" %}
-            <main class="main-content">
-                  <div class="page-header">
-                        <h1>📦 Orders</h1>
-                  </div>
+{% block extra_styles %}
+/* ── Table ────────────────────────────────────────────── */
+.manifest-table-wrap { overflow-x: auto; }
+table.manifest-tbl {
+  width: 100%; border-collapse: collapse; font-size: 12px;
+  min-width: 800px;
+}
+.manifest-tbl thead tr { border-bottom: 0.5px solid rgba(0,0,0,0.08); }
+.manifest-tbl thead td {
+  padding: 7px 10px; font-size: 11px; font-weight: 500; color: #999;
+  white-space: nowrap; background: #fff;
+}
+.manifest-tbl tbody tr { border-bottom: 0.5px solid rgba(0,0,0,0.06); }
+.manifest-tbl tbody tr:last-child { border-bottom: none; }
+.manifest-tbl tbody tr:hover { background: #fafaf8; }
+.manifest-tbl tbody td { padding: 8px 10px; color: #444; vertical-align: middle; }
 
-                  <!-- Stats cards -->
-                  <div class="stats-row" id="stats-row">
-                        <div class="stat-card" onclick="setEventFilter('')" id="card-all">
-                              <div class="num" id="stat-all">—</div>
-                              <div class="lbl">All Events</div>
-                        </div>
-                        <div class="stat-card" onclick="setEventFilter('booking_created')" id="card-created">
-                              <div class="num" id="stat-created">—</div>
-                              <div class="lbl">Created</div>
-                        </div>
-                        <div class="stat-card" onclick="setEventFilter('booking_updated')" id="card-updated">
-                              <div class="num" id="stat-updated">—</div>
-                              <div class="lbl">Updated</div>
-                        </div>
-                  </div>
+/* order link */
+.order-no { color: #378ADD; font-size: 12px; }
 
-                  <!-- Filters -->
-                  <div class="filter-bar">
-                        <label>Date <input type="date" id="f-date" onchange="loadData()"></label>
-                        <label>Order # <input type="text" id="f-order" placeholder="CHD..."
-                                    onchange="loadData()"></label>
-                        <label>Event
-                              <select id="f-event" onchange="loadData()">
-                                    <option value="">All</option>
-                                    <option value="booking_created">Booking Created</option>
-                                    <option value="booking_updated">Booking Updated</option>
-                              </select>
-                        </label>
-                        <button onclick="resetFilters()">Reset</button>
-                        <span id="total-count" style="margin-left:auto;font-size:12px;color:#888;"></span>
-                  </div>
+/* status pills */
+.sp { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+.sp-confirmed { background: #eaf3de; color: #3b6d11; }
+.sp-onhold    { background: #faeeda; color: #ba7517; }
+.sp-pending   { background: #e6f1fb; color: #185fa5; }
+.sp-cancelled { background: #fcebeb; color: #a32d2d; }
+.sp-new       { background: #eeedfe; color: #534ab7; }
+.sp-source    { background: #f1efe8; color: #5f5e5a; }
 
-                  <!-- Table -->
-                  <div class="log-table-wrap">
-                        <table class="log-table">
-                              <thead>
-                                    <tr>
-                                          <th style="width:140px">Time</th>
-                                          <th style="width:110px">Order #</th>
-                                          <th style="width:150px">Event</th>
-                                          <th>Detail</th>
-                                          <th style="width:80px">By</th>
-                                    </tr>
-                              </thead>
-                              <tbody id="log-body">
-                                    <tr>
-                                          <td colspan="5" style="text-align:center;color:#aaa;padding:40px">Loading...
-                                          </td>
-                                    </tr>
-                              </tbody>
-                        </table>
-                  </div>
+/* inline edit */
+.inline-edit {
+  border: none; background: transparent; font-size: 12px; color: #1a1a1a;
+  width: 90px; border-bottom: 1px dashed rgba(0,0,0,0.2);
+  font-family: inherit; padding: 1px 2px;
+}
+.inline-edit:focus { outline: none; border-bottom: 1px solid rgba(0,0,0,0.5); }
+.inline-edit::placeholder { color: #ccc; }
 
-                  <!-- Pagination -->
-                  <div class="pagination" id="pagination"></div>
-            </main>
-      </div>
+/* handled badge */
+.handled-badge {
+  font-size: 10px; color: #3b6d11;
+  background: #eaf3de; padding: 2px 6px; border-radius: 6px;
+  white-space: nowrap;
+}
 
-      <style>
-            .stats-row {
-                  display: flex;
-                  gap: 10px;
-                  margin-bottom: 16px;
-                  flex-wrap: wrap;
-            }
+/* ── Section headers ──────────────────────────────────── */
+.bookings-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+}
+.bookings-section-label {
+  font-size: 15px; font-weight: 500; color: #1a1a1a;
+}
+.count-badge {
+  font-size: 11px; padding: 2px 8px; border-radius: 10px;
+  background: #faeeda; color: #ba7517;
+}
+.count-badge.normal { background: #f1efe8; color: #5f5e5a; }
 
-            .stat-card {
-                  background: #fff;
-                  border: 0.5px solid rgba(0, 0, 0, 0.1);
-                  border-radius: 10px;
-                  padding: 10px 20px;
-                  text-align: center;
-                  min-width: 100px;
-                  cursor: pointer;
-                  transition: border-color .15s;
-            }
+.bookings-wrap {
+  background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+  border-radius: 10px; overflow: hidden; margin-bottom: 16px;
+}
+{% endblock %}
 
-            .stat-card:hover {
-                  border-color: #185FA5;
-            }
+{% block content %}
 
-            .stat-card.active {
-                  border-color: #185FA5;
-                  background: #EBF3FC;
-            }
-
-            .stat-card .num {
-                  font-size: 22px;
-                  font-weight: 700;
-                  color: #1a1a1a;
-            }
-
-            .stat-card .lbl {
-                  font-size: 11px;
-                  color: #aaa;
-                  margin-top: 2px;
-            }
-
-            .filter-bar {
-                  display: flex;
-                  gap: 12px;
-                  align-items: center;
-                  flex-wrap: wrap;
-                  margin-bottom: 14px;
-                  background: #fff;
-                  border: 0.5px solid rgba(0, 0, 0, 0.1);
-                  border-radius: 10px;
-                  padding: 12px 16px;
-            }
-
-            .filter-bar label {
-                  font-size: 12px;
-                  color: #555;
-                  display: flex;
-                  flex-direction: column;
-                  gap: 3px;
-            }
-
-            .filter-bar input,
-            .filter-bar select {
-                  height: 30px;
-                  border: 0.5px solid rgba(0, 0, 0, 0.2);
-                  border-radius: 6px;
-                  padding: 0 8px;
-                  font-size: 12px;
-                  font-family: inherit;
-            }
-
-            .filter-bar button {
-                  height: 30px;
-                  padding: 0 14px;
-                  border-radius: 6px;
-                  border: 0.5px solid rgba(0, 0, 0, 0.2);
-                  background: #fff;
-                  font-size: 12px;
-                  cursor: pointer;
-            }
-
-            .filter-bar button:hover {
-                  background: #f5f5f3;
-            }
-
-            .log-table-wrap {
-                  background: #fff;
-                  border: 0.5px solid rgba(0, 0, 0, 0.1);
-                  border-radius: 10px;
-                  overflow: hidden;
-            }
-
-            .log-table {
-                  width: 100%;
-                  border-collapse: collapse;
-                  font-size: 12px;
-            }
-
-            .log-table th {
-                  background: #f9f9f8;
-                  padding: 8px 12px;
-                  text-align: left;
-                  font-size: 11px;
-                  color: #888;
-                  border-bottom: 0.5px solid rgba(0, 0, 0, 0.08);
-                  font-weight: 500;
-            }
-
-            .log-table td {
-                  padding: 9px 12px;
-                  border-bottom: 0.5px solid rgba(0, 0, 0, 0.05);
-                  vertical-align: top;
-            }
-
-            .log-table tr:last-child td {
-                  border-bottom: none;
-            }
-
-            .log-table tr:hover td {
-                  background: #fafafa;
-            }
-
-            .ev-tag {
-                  display: inline-block;
-                  padding: 2px 8px;
-                  border-radius: 4px;
-                  font-size: 11px;
-                  font-weight: 500;
-            }
-
-            .order-link {
-                  color: #185FA5;
-                  font-weight: 600;
-                  font-family: monospace;
-                  font-size: 12px;
-            }
-
-            .pagination {
-                  display: flex;
-                  gap: 6px;
-                  margin-top: 12px;
-                  justify-content: center;
-                  flex-wrap: wrap;
-            }
-
-            .page-btn {
-                  padding: 4px 10px;
-                  border-radius: 6px;
-                  border: 0.5px solid rgba(0, 0, 0, 0.15);
-                  background: #fff;
-                  font-size: 12px;
-                  cursor: pointer;
-            }
-
-            .page-btn.active {
-                  background: #185FA5;
-                  color: #fff;
-                  border-color: #185FA5;
-            }
-      </style>
-
-      <script>
-            let currentPage = 1;
-            let activeEventFilter = '';
-            const PAGE_SIZE = 50;
-
-            const today = new Date().toISOString().slice(0, 10);
-            document.getElementById('f-date').value = today;
-
-            function setEventFilter(val) {
-                  activeEventFilter = val;
-                  document.getElementById('f-event').value = val;
-                  // Update card highlight
-                  ['all', 'created', 'updated'].forEach(k => {
-                        document.getElementById(`card-${k}`).classList.remove('active');
-                  });
-                  const map = { '': 'all', 'booking_created': 'created', 'booking_updated': 'updated' };
-                  document.getElementById(`card-${map[val]}`).classList.add('active');
-                  currentPage = 1;
-                  loadData();
-            }
-
-            function resetFilters() {
-                  document.getElementById('f-date').value = today;
-                  document.getElementById('f-order').value = '';
-                  setEventFilter('');
-            }
-
-            async function loadData() {
-                  const date = document.getElementById('f-date').value;
-                  const order = document.getElementById('f-order').value.trim();
-                  const event = document.getElementById('f-event').value;
-
-                  // Sync card highlight with select
-                  activeEventFilter = event;
-                  ['all', 'created', 'updated'].forEach(k => document.getElementById(`card-${k}`).classList.remove('active'));
-                  const map = { '': 'all', 'booking_created': 'created', 'booking_updated': 'updated' };
-                  document.getElementById(`card-${map[event] || 'all'}`).classList.add('active');
-
-                  const params = new URLSearchParams({ page: currentPage, page_size: PAGE_SIZE });
-                  if (date) params.set('date', date);
-                  if (order) params.set('order_number', order);
-                  if (event) params.set('event_type', event);
-
-                  const res = await fetch(`/api/operations/orders?${params}`);
-                  const data = await res.json();
-
-                  // Stats
-                  const total = data.total || 0;
-                  const created = data.stats?.booking_created || 0;
-                  const updated = data.stats?.booking_updated || 0;
-                  document.getElementById('stat-all').textContent = total;
-                  document.getElementById('stat-created').textContent = created;
-                  document.getElementById('stat-updated').textContent = updated;
-                  document.getElementById('total-count').textContent = `${total} records`;
-
-                  // Rows
-                  const tbody = document.getElementById('log-body');
-                  if (!data.records?.length) {
-                        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#aaa;padding:40px">No records found.</td></tr>`;
-                        document.getElementById('pagination').innerHTML = '';
-                        return;
-                  }
-
-                  tbody.innerHTML = data.records.map(r => `
+<!-- Action Required -->
+<div class="bookings-header">
+  <span class="bookings-section-label">Action Required</span>
+  <span class="count-badge" id="ar-count">—</span>
+</div>
+<div class="bookings-wrap" id="action-required-table">
+  <table class="manifest-tbl">
+    <thead>
       <tr>
-        <td style="color:#888;white-space:nowrap;">${r.created_at}</td>
-        <td><span class="order-link">${r.order_number || '—'}</span></td>
-        <td><span class="ev-tag" style="background:${r.event_color}22;color:${r.event_color}">${r.event_label}</span></td>
-        <td style="color:#555;">${r.detail || '—'}</td>
-        <td style="color:#aaa;font-size:11px;">${r.actor}</td>
+        <td>Order</td><td>Guest</td><td>Tour</td><td>Date</td>
+        <td>Pax</td><td>Status</td><td>Cfm #</td><td>Source</td><td>Actions</td>
       </tr>
-    `).join('');
+    </thead>
+    <tbody id="ar-tbody">
+      <tr><td colspan="9" style="padding:16px;text-align:center;color:#ccc;">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
 
-                  // Pagination
-                  const totalPages = Math.ceil(total / PAGE_SIZE);
-                  const pag = document.getElementById('pagination');
-                  if (totalPages <= 1) { pag.innerHTML = ''; return; }
-                  pag.innerHTML = Array.from({ length: totalPages }, (_, i) => i + 1)
-                        .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
-                        .map(p => `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`)
-                        .join('');
-            }
+<!-- New Orders -->
+<div class="bookings-header" style="margin-top:24px;">
+  <span class="bookings-section-label">New Orders</span>
+  <span class="count-badge normal" id="no-count">—</span>
+</div>
+<div class="bookings-wrap">
+  <table class="manifest-tbl">
+    <thead>
+      <tr>
+        <td>Order</td><td>Guest</td><td>Tour</td><td>Date</td>
+        <td>Pax</td><td>Status</td><td>Cfm #</td><td>Source</td><td>Handled by</td>
+      </tr>
+    </thead>
+    <tbody id="no-tbody">
+      <tr><td colspan="9" style="padding:16px;text-align:center;color:#ccc;">Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
 
-            function goPage(p) {
-                  currentPage = p;
-                  loadData();
-            }
+{% endblock %}
 
-            // Init
-            document.getElementById('card-all').classList.add('active');
-            loadData();
-      </script>
-</body>
+{% block scripts %}
+<script>
+function statusBadge(s) {
+  if (!s) return '<span style="color:#ccc;">—</span>';
+  const map = {
+    'CONFIRMED':        'sp-confirmed',
+    'ON_HOLD':          'sp-onhold',
+    'PENDING_SUPPLIER': 'sp-pending',
+    'PENDING_CUSTOMER': 'sp-pending',
+    'CANCELLED':        'sp-cancelled',
+    'NEW':              'sp-new',
+  };
+  const cls = map[s.toUpperCase()] || 'sp-source';
+  const label = s.replace(/_/g,' ').replace(/\b\w/g, c => c.toUpperCase());
+  return `<span class="sp ${cls}">${label}</span>`;
+}
 
-</html>
+async function saveCfmNo(id, value) {
+  await fetch(`/api/bookings/${id}/confirmation-no`, {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({confirmation_no: value}),
+  });
+}
+
+async function loadBookings() {
+  const today = new Date().toISOString().split('T')[0];
+  const res  = await fetch(`/api/bookings/?tour_date=${today}`);
+  const data = await res.json();
+
+  document.getElementById('ar-count').textContent = data.action_required.length;
+  document.getElementById('no-count').textContent = data.new_orders.length;
+
+  // Action Required
+  const arTbody = document.getElementById('ar-tbody');
+  if (data.action_required.length === 0) {
+    arTbody.innerHTML = '<tr><td colspan="9" style="padding:16px;text-align:center;color:#ccc;">No action required</td></tr>';
+  } else {
+    arTbody.innerHTML = data.action_required.map(b => `
+      <tr data-id="${b.id}">
+        <td><span class="order-no">${b.order_number}</span></td>
+        <td>${b.guest_name}<br><span style="font-size:11px;color:#aaa;">${b.phone||''}</span></td>
+        <td style="font-size:12px;">${b.product_name||b.product_code||'—'}</td>
+        <td style="white-space:nowrap;font-size:12px;">${b.tour_date||'—'}</td>
+        <td>${b.quantities}</td>
+        <td>${statusBadge(b.rezdy_status)}</td>
+        <td>
+          <input class="inline-edit" value="${b.confirmation_no||''}" placeholder="Add #"
+                 onblur="saveCfmNo(${b.id},this.value)"
+                 onkeydown="if(event.key==='Enter')this.blur();">
+        </td>
+        <td><span class="sp sp-source">${(b.source||'').replace(/\b\w/g,c=>c.toUpperCase())}</span></td>
+        <td style="display:flex;gap:6px;align-items:center;">
+          <button class="btn" style="font-size:11px;padding:3px 8px;"
+                  onclick="handleBooking(${b.id},this)">✓ Done</button>
+          <button class="btn btn-danger" style="font-size:11px;padding:3px 8px;"
+                  onclick="dismissBooking(${b.id},this)">Dismiss</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  // New Orders
+  const noTbody = document.getElementById('no-tbody');
+  if (data.new_orders.length === 0) {
+    noTbody.innerHTML = '<tr><td colspan="9" style="padding:16px;text-align:center;color:#ccc;">No new orders</td></tr>';
+  } else {
+    noTbody.innerHTML = data.new_orders.map(b => `
+      <tr data-id="${b.id}" ${b.handled_by ? 'style="opacity:0.6;"' : ''}>
+        <td><span class="order-no">${b.order_number}</span></td>
+        <td>${b.guest_name}<br><span style="font-size:11px;color:#aaa;">${b.phone||''}</span></td>
+        <td style="font-size:12px;">${b.product_name||b.product_code||'—'}</td>
+        <td style="white-space:nowrap;font-size:12px;">${b.tour_date||'—'}</td>
+        <td>${b.quantities}</td>
+        <td>${statusBadge(b.rezdy_status)}</td>
+        <td>${b.confirmation_no||'—'}</td>
+        <td><span class="sp sp-source">${(b.source||'').replace(/\b\w/g,c=>c.toUpperCase())}</span></td>
+        <td>
+          ${b.handled_by
+            ? `<span class="handled-badge">✓ ${b.handled_by}</span>
+               <span style="font-size:10px;color:#aaa;margin-left:4px;">${b.handled_at ? new Date(b.handled_at).toLocaleString('en-US',{month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}) : ''}</span>`
+            : '—'}
+        </td>
+      </tr>`).join('');
+  }
+}
+
+async function handleBooking(id, btn) {
+  btn.disabled = true;
+  const res = await fetch(`/api/bookings/${id}/handle`, {method:'POST'});
+  if (res.ok) loadBookings();
+}
+
+async function dismissBooking(id, btn) {
+  if (!confirm('Dismiss this booking from Action Required?')) return;
+  btn.disabled = true;
+  const res = await fetch(`/api/bookings/${id}/dismiss`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({}),
+  });
+  if (res.ok) {
+    const tr = btn.closest('tr');
+    tr.style.opacity = '0.3';
+    setTimeout(() => tr.remove(), 400);
+    loadBookings();
+  }
+}
+
+loadBookings();
+</script>
+{% endblock %}

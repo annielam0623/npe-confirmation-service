@@ -1,7 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import uvicorn
+import os
 
 from app.database import init_db
 from app.routers import auth, admin, bookings, notifications, guest, webhook
@@ -17,7 +19,6 @@ from app.routers import shortlink
 from app.routers import booking_notes
 from app.routers import messages
 from app.routers import settings_teams
-from app.routers import booking_notes
 from app.routers import broadcasting_log
 
 @asynccontextmanager
@@ -31,6 +32,24 @@ app = FastAPI(
     version="2.0.0",
     lifespan=lifespan
 )
+
+# ── Docs IP Whitelist ─────────────────────────────────────────────────────────
+# Railway 环境变量 DOCS_ALLOWED_IPS 设置允许访问 /docs 的 IP，逗号分隔
+# 例如：DOCS_ALLOWED_IPS=1.2.3.4,5.6.7.8
+# 留空或不设置 → /docs 对所有人关闭（生产上线后用）
+_raw_ips = os.getenv("DOCS_ALLOWED_IPS", "")
+DOCS_ALLOWED_IPS = {ip.strip() for ip in _raw_ips.split(",") if ip.strip()}
+
+@app.middleware("http")
+async def protect_docs(request: Request, call_next):
+    if request.url.path in ("/docs", "/redoc", "/openapi.json"):
+        # Railway 经过代理，真实 IP 在 x-forwarded-for 第一位
+        forwarded = request.headers.get("x-forwarded-for", "")
+        client_ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "")
+        if client_ip not in DOCS_ALLOWED_IPS:
+            return JSONResponse(status_code=404, content={"detail": "Not found"})
+    return await call_next(request)
+# ─────────────────────────────────────────────────────────────────────────────
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
@@ -56,7 +75,7 @@ app.include_router(broadcasting_log.router)
 
 @app.get("/")
 def home():
-    return {"status": "NPE Confirmation Service v2.0", "docs": "/docs"}
+    return {"status": "NPE Confirmation Service v2.0"}
 
 @app.get("/health")
 def health():

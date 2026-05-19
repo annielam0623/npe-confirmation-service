@@ -448,6 +448,20 @@ async def coming_soon(
         "active_page": "",
     })
 
+# ─── Orders ───────────────────────────────────────────────────────────────────
+
+@router.get("/orders", response_class=HTMLResponse)
+async def orders(
+    request: Request,
+    current_user=Depends(require_staff),
+):
+    return templates.TemplateResponse("admin/orders.html", {
+        "request": request,
+        "current_user": current_user,
+        "active_page": "orders",
+    })
+
+
 # ─── Settings — Pickup Locations ─────────────────────────────────────────────
 
 @router.get("/settings/pickup-locations", response_class=HTMLResponse)
