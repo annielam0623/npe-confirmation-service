@@ -719,7 +719,7 @@
       <input type="date" class="date-display" id="date-display" onchange="onDatePick(this.value)"
         onclick="try{this.showPicker()}catch(e){}">
       <button class="btn-nav" onclick="changeDate(1)">›</button>
-      <button class="btn" onclick="goToday()">Today</button>
+      <button class="btn btn-green"  onclick="goToday()">Today</button>
       <button class="btn" onclick="goTomorrow()">Tomorrow</button>
     </div>
 
@@ -768,7 +768,7 @@
 
     <div class="table-card">
       <div class="table-header">
-        <span>Confirmation Log</span>
+        <span>Dashboard</span>
         <span id="notes-banner" style="display:none;align-items:center;gap:5px;background:#fff8e1;border:1px solid #f0c040;border-radius:5px;padding:2px 8px;font-size:11px;color:#856404;margin-left:8px;">💬 <span id="notes-banner-text"></span><button onclick="dismissNotesBanner()" style="background:none;border:none;cursor:pointer;color:#856404;font-size:13px;line-height:1;padding:0 0 0 4px;">&times;</button></span>
         <span style="margin-left:auto;font-size:11px;color:#9ED3A9;white-space:nowrap;">&#8646; Drag to reorder &nbsp;·&nbsp; &#8596; Drag to resize</span>
       </div>
