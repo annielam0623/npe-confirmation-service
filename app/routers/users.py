@@ -16,14 +16,12 @@ from sqlalchemy.future import select
 from pydantic import BaseModel
 from typing import List
 
-from app.auth import hash_password, require_admin
+from app.auth import hash_password, require_admin, require_superadmin
 from app.database import get_db
 from app.models import AdminUser, Team, UserTeam
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
-print("CWD:", os.getcwd())
-print("Templates dir exists:", os.path.exists("app/templates/admin/base.html"))
 
 
 # ── GET /admin/settings/users ─────────────────────────────────────────────────
@@ -195,6 +193,34 @@ async def delete_user(
     await db.commit()
     return JSONResponse({"ok": True})
 
+
+
+
+# ── POST /admin/settings/users/{user_id}/role — superadmin only ───────────────
+@router.post("/admin/settings/users/{user_id}/role")
+async def update_user_role(
+    user_id: int,
+    request: Request,
+    current_user: AdminUser = Depends(require_superadmin),
+    db: AsyncSession = Depends(get_db),
+):
+    body = await request.json()
+    new_role = body.get("role", "").strip()
+    if new_role not in ("staff", "admin"):
+        raise HTTPException(status_code=400, detail="Role must be 'staff' or 'admin'")
+
+    result = await db.execute(select(AdminUser).where(AdminUser.id == user_id))
+    user = result.scalar_one_or_none()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.username == current_user.username:
+        raise HTTPException(status_code=400, detail="Cannot change your own role")
+    if user.role == "superadmin":
+        raise HTTPException(status_code=400, detail="Cannot change superadmin role")
+
+    user.role = new_role
+    await db.commit()
+    return JSONResponse({"ok": True, "role": new_role})
 
 # ── GET /register/{token} — public registration page ─────────────────────────
 @router.get("/register/{token}", response_class=HTMLResponse)

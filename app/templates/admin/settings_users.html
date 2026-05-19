@@ -70,7 +70,18 @@
 
           <!-- Role badge -->
           <td style="padding:14px 16px;">
-            {% if user.role == 'admin' %}
+            {% if user.role == 'superadmin' %}
+              <span style="background:#f3e8ff;color:#6d28d9;padding:3px 10px;border-radius:20px;
+                           font-size:12px;font-weight:600;">Super Admin</span>
+            {% elif current_user.role == 'superadmin' and not is_pending and user.username != current_user.username %}
+              <select onchange="changeRole({{ user.id }}, this.value)"
+                style="padding:3px 8px;border-radius:20px;font-size:12px;font-weight:600;
+                       border:1px solid #d1d5db;cursor:pointer;background:#fff;
+                       {% if user.role == 'admin' %}color:#166534;{% else %}color:#1e40af;{% endif %}">
+                <option value="admin"  {% if user.role == 'admin'  %}selected{% endif %}>Admin</option>
+                <option value="staff"  {% if user.role == 'staff'  %}selected{% endif %}>Staff</option>
+              </select>
+            {% elif user.role == 'admin' %}
               <span style="background:#dcfce7;color:#166534;padding:3px 10px;border-radius:20px;
                            font-size:12px;font-weight:600;">Admin</span>
             {% else %}
@@ -188,6 +199,9 @@
               font-size:12px;color:#6b7280;border:1px solid #e5e7eb;">
     <strong style="color:#374151;">Role permissions:</strong>
     &nbsp;
+    <span style="background:#f3e8ff;color:#6d28d9;padding:2px 8px;border-radius:12px;font-weight:600;">Super Admin</span>
+    — Full access + can change user roles.
+    &nbsp;&nbsp;
     <span style="background:#dcfce7;color:#166534;padding:2px 8px;border-radius:12px;font-weight:600;">Admin</span>
     — Full access including Settings &amp; User management.
     &nbsp;&nbsp;
@@ -441,6 +455,20 @@ async function deleteUser(id) {
   const res = await fetch(`/admin/settings/users/${id}`, { method: 'DELETE' });
   if (res.ok) location.reload();
   else alert('Error deleting user.');
+}
+
+// ── Change role (superadmin only) ────────────────────────────────────────────
+async function changeRole(id, newRole) {
+  if (!confirm(`Change this user's role to ${newRole}?`)) {
+    location.reload(); return;
+  }
+  const res = await fetch(`/admin/settings/users/${id}/role`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({role: newRole}),
+  });
+  if (res.ok) location.reload();
+  else alert('Error changing role.');
 }
 
 // close modals on backdrop click
