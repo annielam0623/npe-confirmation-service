@@ -114,7 +114,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
     <a href="/admin/notifications/send-log" class="nav-item sub activities {% if active_page == 'send_log' %}active{% endif %}"><span class="dot"></span>Send Log</a>
     <a href="/admin/activities/broadcasting-log" class="nav-item sub activities {% if active_page == 'broadcasting_log' %}active{% endif %}"><span class="dot"></span>Broadcasting Log</a>
   </div>
-  {% if current_user and current_user.role == 'admin' %}
+  {% if current_user and current_user.role in ('admin', 'superadmin') %}
   <div class="nav-group" style="margin-top:auto;">
     <div class="nav-group-label" style="font-weight:700;color:#1a1a1a;">Settings</div>
     <a href="/admin/coming-soon?module=General+Settings" class="nav-item sub {% if active_page == 'settings_general' %}active{% endif %}"><span class="dot"></span>General</a>
