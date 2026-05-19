@@ -726,12 +726,7 @@
 
     <div class="pills" id="pills-container"></div>
 
-    <!-- Notes notification banner -->
-    <div id="notes-banner" style="display:none;background:#fff3cd;border:1px solid #f0c040;border-radius:8px;padding:10px 14px;margin-bottom:10px;align-items:center;gap:10px;flex-wrap:wrap;">
-      <span style="font-size:16px;">💬</span>
-      <span id="notes-banner-text" style="flex:1;font-size:13px;color:#856404;"></span>
-      <button onclick="dismissNotesBanner()" style="background:none;border:none;cursor:pointer;color:#856404;font-size:18px;line-height:1;">&times;</button>
-    </div>
+
 
     <div class="stats-row">
       <div class="stat-card" onclick="filterByStatus('')" style="cursor:pointer;" title="Show all">
@@ -766,15 +761,18 @@
         <option value="pending">Pending</option>
         <option value="cancel">Cancel</option>
       </select>
+      <span class="records-count" id="records-count">— records</span>
       <button class="btn" onclick="exportCsv()">⬇ Export</button>
       <button class="btn btn-green" onclick="loadData()">↻ Refresh</button>
-      <span class="records-count" id="records-count">— records</span>
-      <button onclick="openBroadcast()" style="display:flex;align-items:center;gap:5px;padding:5px 14px;border-radius:7px;border:none;font-size:12px;background:linear-gradient(135deg,#ffce21,#ee8e00);color:#1a1a1a;cursor:pointer;font-weight:700;">&#128227; Broadcast</button>
     </div>
 
     <div style="text-align:right;font-size:11px;color:#aaa;margin-bottom:4px;padding:0 2px;">&#8646; Drag columns to reorder &nbsp;·&nbsp; &#8596; Drag edges to resize</div>
     <div class="table-card">
-      <div class="table-header"><span>Confirmation Log</span></div>
+      <div class="table-header">
+        <span>Confirmation Log</span>
+        <span id="notes-banner" style="display:none;align-items:center;gap:5px;background:#fff8e1;border:1px solid #f0c040;border-radius:5px;padding:2px 8px;font-size:11px;color:#856404;margin-left:8px;">💬 <span id="notes-banner-text"></span><button onclick="dismissNotesBanner()" style="background:none;border:none;cursor:pointer;color:#856404;font-size:13px;line-height:1;padding:0 0 0 4px;">&times;</button></span>
+        <button onclick="openBroadcast()" style="margin-left:auto;display:flex;align-items:center;gap:5px;padding:5px 14px;border-radius:7px;border:none;font-size:12px;background:linear-gradient(135deg,#ffce21,#ee8e00);color:#1a1a1a;cursor:pointer;font-weight:700;">&#128227; Broadcast</button>
+      </div>
       <div>
 <div style="overflow-x:auto;"><table class="track-tbl">
           <thead>
@@ -1334,7 +1332,7 @@
         return `<span style="text-decoration:underline;cursor:pointer;" onclick="jumpToNotes(${r.id},'${escHtml(r.order_number)}','${escHtml(r.guest_name||r.first_name||'')}')">${escHtml(r.order_number)}</span> <span style="color:#a07000;font-size:12px;">by ${escHtml(author)}</span>`;
       });
       document.getElementById('notes-banner-text').innerHTML = `New message${changed.length > 1 ? 's' : ''}: ` + parts.join(' &nbsp;·&nbsp; ');
-      document.getElementById('notes-banner').style.display = 'flex';
+      document.getElementById('notes-banner').style.display = 'inline-flex';
     }
 
     function dismissNotesBanner() {

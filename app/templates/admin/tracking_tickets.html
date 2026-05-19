@@ -207,15 +207,30 @@ th.notes-hdr.hdr-dirty{background:#fff3cd !important;color:#856404;}
   <div class="stat s-pend"> <div class="num" id="s-pend">0</div> <div class="lbl">Pending</div></div>
 </div>
 
-<div class="records-bar">
-  <span id="rec-label">0 records</span>
+<div class="records-bar" style="justify-content:flex-start;gap:10px;">
   <input type="text" id="search-input" placeholder="Search order #, name, phone…"
     oninput="renderTable()"
-    style="padding:5px 10px;border:0.5px solid #ced4da;border-radius:7px;font-size:12px;width:220px;outline:none;margin-left:12px;">
+    style="padding:5px 10px;border:0.5px solid #ced4da;border-radius:7px;font-size:12px;width:220px;outline:none;">
+  <span id="rec-label">0 records</span>
 </div>
 
 <div style="text-align:right;font-size:11px;color:#6c757d;margin-bottom:4px;padding:0 20px;">&#8646; Drag columns to reorder &nbsp;·&nbsp; &#8596; Drag edges to resize</div>
-<div class="table-wrap"><table>
+<div style="padding:0 20px 6px;">
+  <div style="background:#dce8f5;border:0.5px solid #b3d9f7;border-radius:8px 8px 0 0;padding:8px 14px;display:flex;align-items:center;gap:8px;">
+    <span style="font-size:13px;font-weight:600;color:#1a3a5c;">Tickets Reminder Log</span>
+    <span id="tkt-notes-banner" style="display:none;align-items:center;gap:5px;background:#fff8e1;border:1px solid #f0c040;border-radius:5px;padding:2px 8px;font-size:11px;color:#856404;margin-left:4px;">💬 <span id="tkt-notes-banner-text"></span><button onclick="dismissTktBanner()" style="background:none;border:none;cursor:pointer;color:#856404;font-size:13px;line-height:1;padding:0 0 0 4px;">&times;</button></span>
+    <div style="position:relative;margin-left:auto;">
+      <button id="broadcastBtn" onclick="toggleBroadcastMenu()" style="background:linear-gradient(135deg,#ffce21,#ee8e00);color:#000;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">&#128227; Broadcast</button>
+      <div id="broadcastMenu" style="display:none;position:absolute;top:34px;right:0;background:#fff;border:1px solid #dee2e6;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:200;min-width:190px;overflow:hidden;">
+        <div style="padding:8px 12px;font-size:11px;color:#6c757d;font-weight:600;border-bottom:1px solid #f0f0f0;background:#f8f9fa;">SEND TO</div>
+        <div onclick="openBroadcast('all')"     style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background=''">All guests <span id="bc-cnt-all"     style="font-size:11px;color:#6c757d;"></span></div>
+        <div onclick="openBroadcast('pending')" style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background=''">Pending    <span id="bc-cnt-pending" style="font-size:11px;color:#6c757d;"></span></div>
+        <div onclick="openBroadcast('yes')"     style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background=''">Yes        <span id="bc-cnt-yes"     style="font-size:11px;color:#6c757d;"></span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="table-wrap" style="padding-top:0;"><table>
     <thead><tr id="thead-row">
       <th style="width:120px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Tour<div class="col-resizer"></div></th>
       <th style="width:90px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Service Date<div class="col-resizer"></div></th>
@@ -746,6 +761,40 @@ document.getElementById('tbody').addEventListener('click', function(ev){
 initResizableCols();
 initColDragTkt();
 applyColOrderTkt();
+
+/* ── Tickets notes banner (60s poll) ── */
+var _tktBannerDismissed = false;
+var _tktPrevNotesMap = {};
+function dismissTktBanner(){
+  document.getElementById('tkt-notes-banner').style.display = 'none';
+  _tktBannerDismissed = true;
+}
+function checkTktNotesBanner(){
+  if(_tktBannerDismissed) return;
+  var changed = [];
+  allRows.forEach(function(r){
+    var prev = _tktPrevNotesMap[r.id] || 0;
+    var curr = (r.notes_count || 0);
+    if(curr > prev){
+      changed.push('<strong>' + esc(r.order_number) + '</strong>');
+    }
+    _tktPrevNotesMap[r.id] = curr;
+  });
+  if(!changed.length) return;
+  document.getElementById('tkt-notes-banner-text').innerHTML = changed.slice(0,3).join(' &nbsp;·&nbsp; ') + (changed.length > 3 ? ' +' + (changed.length-3) + ' more' : '');
+  document.getElementById('tkt-notes-banner').style.display = 'inline-flex';
+}
+setInterval(function(){
+  var date = getDate(); if(!date) return;
+  fetch('/api/notifications/tickets-reminder/tracking?date='+date, {credentials:'include'})
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      _tktBannerDismissed = false;
+      var newRows = data.rows || [];
+      allRows = newRows;
+      checkTktNotesBanner();
+    }).catch(function(){});
+}, 60000);
 </script>
 </body>
 </html>
