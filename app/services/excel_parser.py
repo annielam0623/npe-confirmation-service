@@ -228,6 +228,9 @@ def parse_excel(file_bytes: bytes, module: str) -> dict:
         if phone and not phone.startswith("+"):
             phone = _format_phone(phone)
 
+        if not get(row, "order_number") and not get(row, "phone"):
+         continue
+
         rows.append({
             "order_number":    get(row, "order_number"),
             "confirmation_no": get(row, "confirmation_no"),
