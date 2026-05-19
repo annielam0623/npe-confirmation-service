@@ -32,7 +32,7 @@ body{font-family:"Helvetica Neue",Arial,sans-serif;background:#f0f2f5;color:#333
 .date-wrap input[type="date"]::-webkit-calendar-picker-indicator{display:none;}
 .btn-refresh{background:#17a2b8;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;}
 .btn-refresh:hover{background:#138496;}
-.btn-export{background:#28a745;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;margin-left:auto;}
+.btn-export{background:#28a745;color:#fff;border:none;padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;}
 .btn-export:hover{background:#218838;}
 
 /* ── Tour pills ── */
@@ -183,8 +183,6 @@ th.notes-hdr.hdr-dirty{background:#fff3cd !important;color:#856404;}
     <input type="date" id="date-input" onchange="loadData()">
   </div>
   <button class="btn-nav"     onclick="changeDate(1)">&#8250;</button>
-  <button class="btn-refresh" onclick="loadData()">&#x21bb; Refresh</button>
-  <button class="btn-export"  onclick="exportXLSX()">&#128196; Export Excel</button>
 </div>
 
 <div class="pills-bar">
@@ -207,27 +205,29 @@ th.notes-hdr.hdr-dirty{background:#fff3cd !important;color:#856404;}
   <div class="stat s-pend"> <div class="num" id="s-pend">0</div> <div class="lbl">Pending</div></div>
 </div>
 
-<div class="records-bar" style="justify-content:flex-start;gap:10px;">
+<div class="records-bar" style="justify-content:flex-start;gap:8px;align-items:center;padding:6px 20px;">
+  <span id="rec-label" style="white-space:nowrap;font-size:12px;color:#6c757d;">0 records</span>
   <input type="text" id="search-input" placeholder="Search order #, name, phone…"
     oninput="renderTable()"
-    style="padding:5px 10px;border:0.5px solid #ced4da;border-radius:7px;font-size:12px;width:220px;outline:none;">
-  <span id="rec-label">0 records</span>
+    style="padding:0 10px;height:30px;border:0.5px solid #ced4da;border-radius:7px;font-size:12px;width:220px;outline:none;box-sizing:border-box;">
+  <button class="btn-export" onclick="exportXLSX()" style="height:30px;padding:0 12px;">&#128196; Export Excel</button>
+  <button class="btn-refresh" onclick="loadData()" style="height:30px;padding:0 12px;">&#x21bb; Refresh</button>
+  <div style="position:relative;margin-left:auto;">
+    <button id="broadcastBtn" onclick="toggleBroadcastMenu()" style="height:30px;padding:0 14px;background:linear-gradient(135deg,#ffce21,#ee8e00);color:#000;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">&#128227; Broadcast</button>
+    <div id="broadcastMenu" style="display:none;position:absolute;top:36px;right:0;background:#fff;border:1px solid #dee2e6;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:200;min-width:190px;overflow:hidden;">
+      <div style="padding:8px 12px;font-size:11px;color:#6c757d;font-weight:600;border-bottom:1px solid #f0f0f0;background:#f8f9fa;">SEND TO</div>
+      <div onclick="openBroadcast('all')"     style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background=''">All guests <span id="bc-cnt-all"     style="font-size:11px;color:#6c757d;"></span></div>
+      <div onclick="openBroadcast('pending')" style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background=''">Pending    <span id="bc-cnt-pending" style="font-size:11px;color:#6c757d;"></span></div>
+      <div onclick="openBroadcast('yes')"     style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background=''">Yes        <span id="bc-cnt-yes"     style="font-size:11px;color:#6c757d;"></span></div>
+    </div>
+  </div>
 </div>
 
-<div style="text-align:right;font-size:11px;color:#6c757d;margin-bottom:4px;padding:0 20px;">&#8646; Drag columns to reorder &nbsp;·&nbsp; &#8596; Drag edges to resize</div>
 <div style="padding:0 20px 6px;">
   <div style="background:#dce8f5;border:0.5px solid #b3d9f7;border-radius:8px 8px 0 0;padding:8px 14px;display:flex;align-items:center;gap:8px;">
     <span style="font-size:13px;font-weight:600;color:#1a3a5c;">Tickets Reminder Log</span>
     <span id="tkt-notes-banner" style="display:none;align-items:center;gap:5px;background:#fff8e1;border:1px solid #f0c040;border-radius:5px;padding:2px 8px;font-size:11px;color:#856404;margin-left:4px;">💬 <span id="tkt-notes-banner-text"></span><button onclick="dismissTktBanner()" style="background:none;border:none;cursor:pointer;color:#856404;font-size:13px;line-height:1;padding:0 0 0 4px;">&times;</button></span>
-    <div style="position:relative;margin-left:auto;">
-      <button id="broadcastBtn" onclick="toggleBroadcastMenu()" style="background:linear-gradient(135deg,#ffce21,#ee8e00);color:#000;border:none;padding:5px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">&#128227; Broadcast</button>
-      <div id="broadcastMenu" style="display:none;position:absolute;top:34px;right:0;background:#fff;border:1px solid #dee2e6;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:200;min-width:190px;overflow:hidden;">
-        <div style="padding:8px 12px;font-size:11px;color:#6c757d;font-weight:600;border-bottom:1px solid #f0f0f0;background:#f8f9fa;">SEND TO</div>
-        <div onclick="openBroadcast('all')"     style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background=''">All guests <span id="bc-cnt-all"     style="font-size:11px;color:#6c757d;"></span></div>
-        <div onclick="openBroadcast('pending')" style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background=''">Pending    <span id="bc-cnt-pending" style="font-size:11px;color:#6c757d;"></span></div>
-        <div onclick="openBroadcast('yes')"     style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background=''">Yes        <span id="bc-cnt-yes"     style="font-size:11px;color:#6c757d;"></span></div>
-      </div>
-    </div>
+    <span style="margin-left:auto;font-size:11px;color:#b3d9f7;white-space:nowrap;">&#8646; Drag to reorder &nbsp;·&nbsp; &#8596; Drag to resize</span>
   </div>
 </div>
 <div class="table-wrap" style="padding-top:0;"><table>
