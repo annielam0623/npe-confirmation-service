@@ -178,10 +178,11 @@ async def list_bookings(
     if product_code and product_code != "all":
         filters.append(Booking.product_code == product_code)
 
+    from sqlalchemy import func as _func
     result = await db.execute(
         select(Booking)
         .where(and_(*filters) if filters else True)
-        .order_by(Booking.updated_at.desc())
+        .order_by(_func.greatest(Booking.created_at, Booking.updated_at).desc())
     )
     all_bookings = result.scalars().all()
 
@@ -281,7 +282,6 @@ async def update_confirmation_no(
         raise HTTPException(status_code=404, detail="Booking not found")
 
     booking.confirmation_no = payload.confirmation_no.strip()
-    booking.updated_at = datetime.utcnow()
     await db.commit()
     return {"ok": True, "confirmation_no": booking.confirmation_no}
 

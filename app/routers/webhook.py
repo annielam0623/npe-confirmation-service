@@ -366,6 +366,10 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
         if existing.status == BookingStatus.cancelled:
             existing.status = BookingStatus.pending
 
+        # Record the time Rezdy pushed this update
+        from zoneinfo import ZoneInfo as _ZI
+        existing.updated_at = datetime.now(_ZI("America/Los_Angeles")).replace(tzinfo=None)
+
         print(f"[webhook] updated booking id={existing.id}")
         await db.execute(_text("""
     INSERT INTO activity_log (order_number, event_type, detail, actor, actor_type)
