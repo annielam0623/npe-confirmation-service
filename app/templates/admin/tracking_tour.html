@@ -440,17 +440,17 @@
 
     .conf-select {
       font-size: 11px;
-      font-weight: 600;
-      border: 0.5px solid #9ED3A9;
-      border-radius: 6px;
-      padding: 2px 4px;
-      background: #fff;
+      font-weight: 700;
+      border: none;
+      background: transparent;
       cursor: pointer;
       outline: none;
+      padding: 2px 4px;
+      border-radius: 4px;
     }
 
     .conf-select:focus {
-      border-color: #2F7851;
+      outline: 1px solid #2F7851;
     }
 
     .conf-select.v-yes {
@@ -663,10 +663,10 @@
     .tkt-select {
       font-size: 11px;
       font-weight: 600;
-      border: 0.5px solid #9ED3A9;
-      border-radius: 6px;
+      border: none;
+      border-radius: 4px;
       padding: 2px 4px;
-      background: #fff;
+      background: transparent;
       cursor: pointer;
       outline: none;
       color: #185FA5;
@@ -677,7 +677,7 @@
     }
 
     .tkt-select:focus {
-      border-color: #2F7851;
+      outline: 1px solid #2F7851;
     }
 
     .action-btn {
@@ -790,14 +790,13 @@
               <td style="width:40px">🥩 B<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
               <td style="width:55px">🏛️ MTLV<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
               <td style="width:65px">🎟️ Tickets<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
-              <td style="width:150px">Notes<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
-              <td style="width:90px">Message 💬<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
+              <td style="width:200px">Notes<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
               <td style="width:100px">Submitted<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
             </tr>
           </thead>
           <tbody id="track-tbody">
             <tr>
-              <td colspan="16" style="padding:24px;text-align:center;color:#ccc;">Loading…</td>
+              <td colspan="15" style="padding:24px;text-align:center;color:#ccc;">Loading…</td>
             </tr>
           </tbody>
         </table>
@@ -986,18 +985,25 @@
           bCell = hasBf ? `<span class="lunch-val" onclick="openLunchModal(${r.id})">${r.lunch_beef || 0}</span>` : '<span class="lunch-dash">—</span>';
         }
 
-        // Notes — strip timestamp prefix, show content only
-        let notesCell = '<span style="color:#ccc;">—</span>';
-        if (r.notes) {
-          let display = r.notes.replace(/^\[\d{4}-\d{2}-\d{2} \d{2}:\d{2}\]\s*/, '');
-          display = display.replace(/^Modify requested:\s*/i, 'requested: ');
-          const actionPart = r.action_taken_by
-            ? `<span class="action-done">✓ ${r.action_taken_by}</span>`
-            : `<button class="action-btn" onclick="takeAction(${r.id})" title="Mark as actioned">⚠️</button>`;
-          notesCell = `<div class="notes-cell">
-          <span class="notes-text" id="nt-${r.id}" onclick="toggleNote(${r.id})" title="Click to expand">${escHtml(display)}</span>
-          ${actionPart}
-        </div>`;
+        // Notes — tickets style: yellow preview card + take action
+        const nCount   = r.notes_count || 0;
+        const hasAny   = nCount > 0 || !!r.notes;
+        const actioned = !!r.action_taken_by;
+        const previewBody = r.latest_note_body || r.notes || '';
+        let notesCell;
+        if (hasAny) {
+          const actionPart = actioned
+            ? `<div style="font-size:11px;color:#28a745;font-weight:600;margin-top:4px;">✓ ${escHtml(r.action_taken_by)}<span style="font-weight:400;color:#aaa;margin-left:4px;">(click to undo)</span></div>`
+            : `<div style="margin-top:4px;"><button onclick="event.stopPropagation();takeAction(${r.id},event)" style="background:none;border:none;cursor:pointer;font-size:11px;padding:0;color:#856404;">⚠️ Take action</button></div>`;
+          notesCell = `<td class="js-open-notes" data-bid="${r.id}" style="padding:0;cursor:pointer;">`
+            + `<div style="background:#fffbea;height:100%;padding:6px 8px;border-left:3px solid #ffc107;">`
+            + `<div style="font-size:12px;color:#555;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">${escHtml(previewBody)}</div>`
+            + actionPart
+            + `</div></td>`;
+        } else {
+          notesCell = `<td class="js-open-notes" data-bid="${r.id}" style="cursor:pointer;text-align:center;">`
+            + `<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;border:1px solid #9ED3A9;color:#2F7851;font-size:11px;">💬 Chat</span>`
+            + `</td>`;
         }
 
         // MTLV cells
@@ -1036,16 +1042,6 @@
       <td style="text-align:center;">${mtlvCell}</td>
       <td style="text-align:center;">${ticketsCell}</td>
       <td>${notesCell}</td>
-      <td style="text-align:center;">
-        <button onclick="openNotes(${r.id},'${r.order_number}','${(r.first_name||r.guest_name||'').replace(/'/g,"\\'")}')
-" style="background:none;border:none;cursor:pointer;padding:4px;" class="notes-bubble-btn">
-          ${(r.notes_count && r.notes_count > 0)
-            ? r.action_taken_by
-              ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid #9ED3A9;background:#fff;color:#2F7851;font-size:12px;font-weight:500;"><span style="width:8px;height:8px;border-radius:50%;background:#2F7851;flex-shrink:0;display:inline-block;"></span>Chat (${r.notes_count})</span>`
-              : `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid #E24B4A;background:#fff;color:#E24B4A;font-size:12px;font-weight:500;"><span style="width:8px;height:8px;border-radius:50%;background:#E24B4A;flex-shrink:0;display:inline-block;"></span>Chat (${r.notes_count})</span>`
-            : `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid #9ED3A9;background:#fff;color:#2F7851;font-size:12px;font-weight:500;">💬 Chat</span>`}
-        </button>
-      </td>
       <td style="font-size:11px;white-space:nowrap;color:#888;">${r.submitted_at || '—'}</td>
     </tr>`;
       }).join('');
@@ -1159,7 +1155,8 @@
       const el = document.getElementById(`nt-${id}`);
       if (el) el.classList.toggle('expanded');
     }
-    async function takeAction(id) {
+    async function takeAction(id, evt) {
+      if (evt) evt.stopPropagation();
       const res = await fetch(`/api/bookings/${id}/take-action`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -1174,6 +1171,15 @@
       }
     }
 
+    // ── js-open-notes click handler (tickets style) ───────────────────────────
+    document.getElementById('tbody').addEventListener('click', function(e) {
+      const td = e.target.closest('.js-open-notes');
+      if (!td) return;
+      const bid = parseInt(td.dataset.bid);
+      const row = allRows.find(r => r.id === bid);
+      if (row) openNotes(bid, row.order_number, row.first_name || row.guest_name || '');
+    });
+
     // ── Helpers ───────────────────────────────────────────────────────────────────
     function smsClass(s) {
       if (!s) return '';
@@ -1187,8 +1193,7 @@
     function smsLabel(s) {
       if (!s) return '—';
       if (s.includes('delivered')) return 'Delivered';
-      if (s.includes('sent')) return 'Sent';
-      if (s.includes('queued')) return 'Queued';
+      if (s.includes('sent') || s.includes('queued')) return 'Sent';
       if (s.includes('undelivered')) return 'Undelivered';
       if (s.includes('failed')) return 'Failed';
       return s;
@@ -1312,18 +1317,16 @@
     }
 
     function _updateBubbleColors(newRows) {
+      // Update allRows with new notes counts then re-render
       newRows.forEach(r => {
-        if (!r.id) return;
-        const prev = _notesSnapshot[r.id];
-        const tr = document.querySelector(`tr[data-id="${r.id}"]`);
-        if (!tr) return;
-        const bubble = tr.querySelector('.notes-bubble-btn span');
-        if (!bubble) return;
-        if (prev !== undefined && (r.notes_count || 0) > prev) {
-          bubble.style.borderColor = '#E24B4A';
-          bubble.style.color = '#E24B4A';
+        const row = allRows.find(x => x.id === r.id);
+        if (row) {
+          row.notes_count = r.notes_count;
+          row.latest_note_body = r.latest_note_body;
+          row.action_taken_by = r.action_taken_by;
         }
       });
+      applyFilter();
     }
 
     function showNotesBanner(changed) {
@@ -1722,15 +1725,12 @@ async function takeActionFromNotes(){
       // Update allRows in memory — no table re-render
       const row = allRows.find(r => r.id === _notesBookingId);
       if (row) row.action_taken_by = data.action_taken_by;
-      // Update the Chat bubble in the table row directly
+      // Update the notes cell action part directly in the table row
       const tr = document.querySelector(`tr[data-id="${_notesBookingId}"]`);
       if (tr) {
-        const bubble = tr.querySelector('.notes-bubble-btn span');
-        if (bubble) {
-          bubble.style.borderColor = '#9ED3A9';
-          bubble.style.color = '#2F7851';
-          const dot = bubble.querySelector('span');
-          if (dot) dot.style.background = '#2F7851';
+        const actionDiv = tr.querySelector('.js-open-notes [style*="margin-top:4px"]');
+        if (actionDiv) {
+          actionDiv.innerHTML = `<div style="font-size:11px;color:#28a745;font-weight:600;margin-top:4px;">✓ ${data.action_taken_by}<span style="font-weight:400;color:#aaa;margin-left:4px;">(click to undo)</span></div>`;
         }
       }
       // Update button to show actioned state

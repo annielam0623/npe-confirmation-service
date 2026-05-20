@@ -380,6 +380,14 @@
       background: rgba(231, 76, 60, 0.15);
       color: #e74c3c;
     }
+
+    /* Plain text SMS status — no background pill */
+    .sp-plain { font-size: 11px; font-weight: 600; }
+    .sp-plain.sp-delivered  { color: #2F7851; }
+    .sp-plain.sp-sent       { color: #2F7851; }
+    .sp-plain.sp-undelivered{ color: #e74c3c; }
+    .sp-plain.sp-failed     { color: #e74c3c; }
+    .sp-plain.sp-pending    { color: #aaa; }
   </style>
 </head>
 
@@ -527,7 +535,7 @@
           return `<td style="font-size:12px;">${r.pickup_location || '—'}</td>`;
         case 'sms_status': {
           const cls = smsStatusClass(r.sms_status);
-          return `<td><span class="sp ${cls}">${smsLabel(r.sms_status)}</span></td>`;
+          return `<td><span class="sp-plain ${cls}">${smsLabel(r.sms_status)}</span></td>`;
         }
         case 'email_status': {
           const cls = emailStatusClass(r.email_status);
@@ -704,14 +712,14 @@
     function smsStatusClass(s) {
       if (!s) return 'sp-pending';
       if (s.includes('delivered')) return 'sp-delivered';
-      if (s.includes('sent')) return 'sp-sent';
+      if (s.includes('sent') || s.includes('queued')) return 'sp-sent';
       if (s.includes('undelivered') || s.includes('failed')) return 'sp-undelivered';
       return 'sp-pending';
     }
     function smsLabel(s) {
       if (!s) return '—';
       if (s.includes('delivered')) return 'Delivered';
-      if (s.includes('sent')) return 'Sent';
+      if (s.includes('sent') || s.includes('queued')) return 'Sent';
       if (s.includes('undelivered')) return 'Undelivered';
       if (s.includes('failed')) return 'Failed';
       return s;
