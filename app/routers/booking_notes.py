@@ -1,8 +1,8 @@
 # app/routers/booking_notes.py
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, func
+from sqlalchemy import select, update, func, text
 from sqlalchemy.orm import selectinload
 from pydantic import BaseModel
 from typing import Optional, List
@@ -150,6 +150,7 @@ async def get_templates(module: str, user=Depends(require_staff)):
 @router.get("/{booking_id}")
 async def get_notes(
     booking_id: int,
+    source: str = Query(default="tour"),
     db: AsyncSession = Depends(get_db),
     user=Depends(require_staff),
 ):
@@ -160,15 +161,16 @@ async def get_notes(
     )
     notes = result.scalars().all()
 
-    # Update handler on booking
-    await db.execute(
-        update(Booking)
-        .where(Booking.id == booking_id)
-        .values(
-            notes_handler=user.username,
-            notes_handled_at=_now_la(),
+    # Update handler on booking (only for tour/morning, not tickets)
+    if source != "tickets":
+        await db.execute(
+            update(Booking)
+            .where(Booking.id == booking_id)
+            .values(
+                notes_handler=user.username,
+                notes_handled_at=_now_la(),
+            )
         )
-    )
     await db.commit()
 
     return {"notes": [_serialize_note(n) for n in notes]}
@@ -180,6 +182,7 @@ async def get_notes(
 async def add_note(
     booking_id: int,
     payload: NoteCreate,
+    source: str = Query(default="tour"),
     db: AsyncSession = Depends(get_db),
     user=Depends(require_staff),
 ):
@@ -236,15 +239,16 @@ async def add_note(
     )
     db.add(note)
 
-    # Update handler
-    await db.execute(
-        update(Booking)
-        .where(Booking.id == booking_id)
-        .values(
-            notes_handler=user.username,
-            notes_handled_at=_now_la(),
+    # Update handler (only for tour/morning, not tickets)
+    if source != "tickets":
+        await db.execute(
+            update(Booking)
+            .where(Booking.id == booking_id)
+            .values(
+                notes_handler=user.username,
+                notes_handled_at=_now_la(),
+            )
         )
-    )
 
     # ── Clear action_taken_by for inbound guest messages ─────────────────
     inbound_directions = {"sms_in", "email_in", "guest_reply"}
