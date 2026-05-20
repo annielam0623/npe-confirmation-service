@@ -13,6 +13,8 @@ from app.services.short_links import resolve_short_link
 
 router = APIRouter()
 
+_NO_CACHE = {"Cache-Control": "no-store, no-cache, must-revalidate", "Pragma": "no-cache"}
+
 
 @router.get("/c/{code}")
 async def redirect_short_link(code: str, db: AsyncSession = Depends(get_db)):
@@ -31,6 +33,7 @@ async def redirect_short_link(code: str, db: AsyncSession = Depends(get_db)):
             </html>
             """,
             status_code=410,
+            headers=_NO_CACHE,
         )
 
-    return RedirectResponse(url=target.strip(), status_code=302)
+    return RedirectResponse(url=target.strip(), status_code=302, headers=_NO_CACHE)
