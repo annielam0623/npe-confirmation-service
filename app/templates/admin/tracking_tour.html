@@ -1040,7 +1040,9 @@
         <button onclick="openNotes(${r.id},'${r.order_number}','${(r.first_name||r.guest_name||'').replace(/'/g,"\\'")}')
 " style="background:none;border:none;cursor:pointer;padding:4px;" class="notes-bubble-btn">
           ${(r.notes_count && r.notes_count > 0)
-            ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid #E24B4A;background:#fff;color:#E24B4A;font-size:12px;font-weight:500;"><span style="width:8px;height:8px;border-radius:50%;background:#E24B4A;flex-shrink:0;display:inline-block;"></span>Chat (${r.notes_count})</span>`
+            ? r.action_taken_by
+              ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid #9ED3A9;background:#fff;color:#2F7851;font-size:12px;font-weight:500;"><span style="width:8px;height:8px;border-radius:50%;background:#2F7851;flex-shrink:0;display:inline-block;"></span>Chat (${r.notes_count})</span>`
+              : `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid #E24B4A;background:#fff;color:#E24B4A;font-size:12px;font-weight:500;"><span style="width:8px;height:8px;border-radius:50%;background:#E24B4A;flex-shrink:0;display:inline-block;"></span>Chat (${r.notes_count})</span>`
             : `<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid #9ED3A9;background:#fff;color:#2F7851;font-size:12px;font-weight:500;">💬 Chat</span>`}
         </button>
       </td>
@@ -1477,6 +1479,9 @@
           <button onclick="submitNote('sms_out')"  title="Send to guest via selected channels" style="padding:6px 14px;background:#2F7851;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;">Send &#8594;</button>
         </div>
       </div>
+      <div style="margin-top:8px;border-top:1px solid #f0f0f0;padding-top:8px;">
+        <button id="takeActionBtn" onclick="takeActionFromNotes()" style="width:100%;padding:6px 14px;background:#f8f9fa;border:1px solid #9ED3A9;border-radius:6px;font-size:12px;cursor:pointer;color:#2F7851;font-weight:500;">✓ Mark as actioned</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1640,10 +1645,30 @@ async function sendBroadcast() {
 let _notesBookingId = null, _notesPollTimer = null;
 
 async function openNotes(bookingId, orderNum, name) {
+  // Stop any existing poll timer first
+  if (_notesPollTimer){ clearInterval(_notesPollTimer); _notesPollTimer = null; }
   _notesBookingId = bookingId;
   document.getElementById("notesTitle").textContent = "Order " + orderNum;
   document.getElementById("notesSubtitle").textContent = name;
   document.getElementById("noteInput").value = "";
+  // Clear container immediately so previous booking's notes never show
+  document.getElementById("notesMessages").innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;padding:20px 0;">Loading...</div>';
+  // Init Take Action button based on current row state
+  const row = allRows.find(r => r.id === bookingId);
+  const btn = document.getElementById('takeActionBtn');
+  if (row && row.action_taken_by) {
+    btn.textContent = '✓ Actioned by ' + row.action_taken_by;
+    btn.style.background = '#D5F0D8';
+    btn.style.borderColor = '#9ED3A9';
+    btn.style.color = '#2F7851';
+    btn.disabled = false;
+  } else {
+    btn.textContent = '✓ Mark as actioned';
+    btn.style.background = '#f8f9fa';
+    btn.style.borderColor = '#9ED3A9';
+    btn.style.color = '#2F7851';
+    btn.disabled = false;
+  }
   document.getElementById("notesOverlay").style.display = "flex";
   await _fetchNotes();
   _notesPollTimer = setInterval(_fetchNotes, 20000);
@@ -1663,7 +1688,10 @@ async function _fetchNotes(){
 }
 function _renderNotes(notes){
   var container = document.getElementById("notesMessages");
-  if (!notes || !notes.length){ document.getElementById("notesEmpty").style.display="block"; return; }
+  if (!notes || !notes.length){
+    container.innerHTML = '<div id="notesEmpty" style="text-align:center;color:#aaa;font-size:13px;padding:20px 0;">No notes yet.</div>';
+    return;
+  }
   document.getElementById("notesEmpty").style.display = "none";
   var sm = {
     staff_note:  {bg:"#e8f4fd", label:"Note",          color:"#0c5460", dot:null},
@@ -1680,7 +1708,44 @@ function _renderNotes(notes){
   }).join('') + '<div id="notesEmpty" style="display:none;"></div>';
   container.scrollTop = container.scrollHeight;
 }
-async function submitNote(dir){
+async function takeActionFromNotes(){
+  if (!_notesBookingId) return;
+  const btn = document.getElementById('takeActionBtn');
+  btn.disabled = true;
+  try {
+    const res = await fetch(`/api/bookings/${_notesBookingId}/take-action`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      // Update allRows in memory — no table re-render
+      const row = allRows.find(r => r.id === _notesBookingId);
+      if (row) row.action_taken_by = data.action_taken_by;
+      // Update the Chat bubble in the table row directly
+      const tr = document.querySelector(`tr[data-id="${_notesBookingId}"]`);
+      if (tr) {
+        const bubble = tr.querySelector('.notes-bubble-btn span');
+        if (bubble) {
+          bubble.style.borderColor = '#9ED3A9';
+          bubble.style.color = '#2F7851';
+          const dot = bubble.querySelector('span');
+          if (dot) dot.style.background = '#2F7851';
+        }
+      }
+      // Update button to show actioned state
+      btn.textContent = '✓ Actioned by ' + (data.action_taken_by || 'you');
+      btn.style.background = '#D5F0D8';
+      btn.style.borderColor = '#9ED3A9';
+      btn.style.color = '#2F7851';
+    }
+  } catch(e) {
+    alert('Failed to mark action.');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
   var body = document.getElementById("noteInput").value.trim();
   if (!body || !_notesBookingId) return;
   try {
