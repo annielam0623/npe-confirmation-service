@@ -64,9 +64,17 @@ table.manifest-tbl {
   background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
   border-radius: 10px; overflow: hidden; margin-bottom: 16px;
 }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 {% endblock %}
 
 {% block content %}
+
+<!-- Top bar with refresh -->
+<div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+  <button class="btn" id="refresh-btn" onclick="refreshAll()" style="font-size:12px;padding:5px 14px;display:flex;align-items:center;gap:6px;">
+    <span id="refresh-icon">↻</span> Refresh
+  </button>
+</div>
 
 <!-- Action Required -->
 <div class="bookings-header">
@@ -77,12 +85,12 @@ table.manifest-tbl {
   <table class="manifest-tbl">
     <thead>
       <tr>
-        <td>Order</td><td>Guest</td><td>Tour</td><td>Date</td>
-        <td>Pax</td><td>Status</td><td>Cfm #</td><td>Source</td><td>Actions</td>
+        <td>Order</td><td>Guest</td><td>Tour</td><td>Tour Date</td>
+        <td>Created At</td><td>Pax</td><td>Status</td><td>Cfm #</td><td>Source</td><td>Actions</td>
       </tr>
     </thead>
     <tbody id="ar-tbody">
-      <tr><td colspan="9" style="padding:16px;text-align:center;color:#ccc;">Loading…</td></tr>
+      <tr><td colspan="10" style="padding:16px;text-align:center;color:#ccc;">Loading…</td></tr>
     </tbody>
   </table>
 </div>
@@ -96,12 +104,12 @@ table.manifest-tbl {
   <table class="manifest-tbl">
     <thead>
       <tr>
-        <td>Order</td><td>Guest</td><td>Tour</td><td>Date</td>
-        <td>Pax</td><td>Status</td><td>Cfm #</td><td>Source</td><td>Handled by</td>
+        <td>Order</td><td>Guest</td><td>Tour</td><td>Tour Date</td>
+        <td>Created At</td><td>Pax</td><td>Status</td><td>Cfm #</td><td>Source</td><td>Handled by</td>
       </tr>
     </thead>
     <tbody id="no-tbody">
-      <tr><td colspan="9" style="padding:16px;text-align:center;color:#ccc;">Loading…</td></tr>
+      <tr><td colspan="10" style="padding:16px;text-align:center;color:#ccc;">Loading…</td></tr>
     </tbody>
   </table>
 </div>
@@ -133,6 +141,33 @@ async function saveCfmNo(id, value) {
   });
 }
 
+function fmtTourDate(s) {
+  if (!s) return '—';
+  const [y, m, d] = s.split('-');
+  return `${m}-${d}-${y}`;
+}
+
+function fmtCreatedAt(s) {
+  if (!s) return '—';
+  const dt = new Date(s);
+  return dt.toLocaleString('en-US', {
+    timeZone: 'America/Los_Angeles',
+    month: '2-digit', day: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).replace(',', '');
+}
+
+async function refreshAll() {
+  const btn  = document.getElementById('refresh-btn');
+  const icon = document.getElementById('refresh-icon');
+  btn.disabled = true;
+  icon.style.display = 'inline-block';
+  icon.style.animation = 'spin 0.6s linear infinite';
+  await loadBookings();
+  btn.disabled = false;
+  icon.style.animation = '';
+}
+
 async function loadBookings() {
   const today = new Date().toISOString().split('T')[0];
   const res  = await fetch(`/api/bookings/?tour_date=${today}`);
@@ -144,14 +179,15 @@ async function loadBookings() {
   // Action Required
   const arTbody = document.getElementById('ar-tbody');
   if (data.action_required.length === 0) {
-    arTbody.innerHTML = '<tr><td colspan="9" style="padding:16px;text-align:center;color:#ccc;">No action required</td></tr>';
+    arTbody.innerHTML = '<tr><td colspan="10" style="padding:16px;text-align:center;color:#ccc;">No action required</td></tr>';
   } else {
     arTbody.innerHTML = data.action_required.map(b => `
       <tr data-id="${b.id}">
         <td><span class="order-no">${b.order_number}</span></td>
         <td>${b.guest_name}<br><span style="font-size:11px;color:#aaa;">${b.phone||''}</span></td>
         <td style="font-size:12px;">${b.product_name||b.product_code||'—'}</td>
-        <td style="white-space:nowrap;font-size:12px;">${b.tour_date||'—'}</td>
+        <td style="white-space:nowrap;font-size:12px;">${fmtTourDate(b.tour_date)}</td>
+        <td style="white-space:nowrap;font-size:12px;">${fmtCreatedAt(b.created_at)}</td>
         <td>${b.quantities}</td>
         <td>${statusBadge(b.rezdy_status)}</td>
         <td>
@@ -172,14 +208,15 @@ async function loadBookings() {
   // New Orders
   const noTbody = document.getElementById('no-tbody');
   if (data.new_orders.length === 0) {
-    noTbody.innerHTML = '<tr><td colspan="9" style="padding:16px;text-align:center;color:#ccc;">No new orders</td></tr>';
+    noTbody.innerHTML = '<tr><td colspan="10" style="padding:16px;text-align:center;color:#ccc;">No new orders</td></tr>';
   } else {
     noTbody.innerHTML = data.new_orders.map(b => `
       <tr data-id="${b.id}" ${b.handled_by ? 'style="opacity:0.6;"' : ''}>
         <td><span class="order-no">${b.order_number}</span></td>
         <td>${b.guest_name}<br><span style="font-size:11px;color:#aaa;">${b.phone||''}</span></td>
         <td style="font-size:12px;">${b.product_name||b.product_code||'—'}</td>
-        <td style="white-space:nowrap;font-size:12px;">${b.tour_date||'—'}</td>
+        <td style="white-space:nowrap;font-size:12px;">${fmtTourDate(b.tour_date)}</td>
+        <td style="white-space:nowrap;font-size:12px;">${fmtCreatedAt(b.created_at)}</td>
         <td>${b.quantities}</td>
         <td>${statusBadge(b.rezdy_status)}</td>
         <td>${b.confirmation_no||'—'}</td>
@@ -187,7 +224,7 @@ async function loadBookings() {
         <td>
           ${b.handled_by
             ? `<span class="handled-badge">✓ ${b.handled_by}</span>
-               <span style="font-size:10px;color:#aaa;margin-left:4px;">${b.handled_at ? new Date(b.handled_at).toLocaleString('en-US',{month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}) : ''}</span>`
+               <span style="font-size:10px;color:#aaa;margin-left:4px;">${fmtCreatedAt(b.handled_at)}</span>`
             : '—'}
         </td>
       </tr>`).join('');
