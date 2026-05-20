@@ -1746,6 +1746,7 @@ async function takeActionFromNotes(){
   }
 }
 
+async function submitNote(dir){
   var body = document.getElementById("noteInput").value.trim();
   if (!body || !_notesBookingId) return;
   try {
