@@ -149,7 +149,7 @@ function fmtTourDate(s) {
 
 function fmtCreatedAt(s) {
   if (!s) return '—';
-  const dt = new Date(s);
+  const dt = new Date(s.endsWith('Z') ? s : s + 'Z');
   return dt.toLocaleString('en-US', {
     timeZone: 'America/Los_Angeles',
     month: '2-digit', day: '2-digit', year: 'numeric',
