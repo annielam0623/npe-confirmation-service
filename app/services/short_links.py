@@ -9,7 +9,7 @@ Codes:
   CHDBHURCV-MP  →  Morning Pickup
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
@@ -70,8 +70,14 @@ async def resolve_short_link(
     if not row:
         return None
 
-    now = datetime.now(LA).replace(tzinfo=None)
-    if row.expires_at < now:
+    # Always compare in UTC to avoid naive/aware mismatch
+    now = datetime.now(timezone.utc)
+    expires = row.expires_at
+    if expires.tzinfo is None:
+        # DB returned naive datetime — treat as UTC
+        expires = expires.replace(tzinfo=timezone.utc)
+
+    if expires < now:
         return None
 
     return row.target_url
