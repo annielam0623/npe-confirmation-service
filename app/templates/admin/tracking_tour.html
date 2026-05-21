@@ -790,7 +790,7 @@
               <td style="width:40px">🥩 B<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
               <td style="width:55px">🏛️ MTLV<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
               <td style="width:65px">🎟️ Tickets<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
-              <td style="width:200px">Notes<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
+              <td style="width:200px">Notes <span id="notes-hdr-bubble" style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#fff;border:1.5px solid #ced4da;color:#aaa;vertical-align:middle;margin-left:2px;">0</span><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
               <td style="width:100px">Submitted<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
             </tr>
           </thead>
@@ -1046,6 +1046,24 @@
       <td style="font-size:11px;white-space:nowrap;color:#888;">${r.submitted_at || '—'}</td>
     </tr>`;
       }).join('');
+
+      // ── Notes header bubble ──────────────────────────────────────────────
+      const hasNotes  = rows.filter(r => (r.notes_count || 0) > 0 || r.notes);
+      const unhandled = hasNotes.filter(r => !r.action_taken_by).length;
+      const handled   = hasNotes.length - unhandled;
+      const bubble    = document.getElementById('notes-hdr-bubble');
+      if (bubble) {
+        if (hasNotes.length === 0) {
+          bubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#fff;border:1.5px solid #ced4da;color:#aaa;vertical-align:middle;margin-left:2px;';
+          bubble.textContent = '0';
+        } else if (unhandled > 0) {
+          bubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#dc3545;border:1.5px solid #dc3545;color:#fff;vertical-align:middle;margin-left:2px;';
+          bubble.textContent = unhandled;
+        } else {
+          bubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#28a745;border:1.5px solid #28a745;color:#fff;vertical-align:middle;margin-left:2px;';
+          bubble.textContent = handled;
+        }
+      }
     }
 
     // ── Confirmation dropdown ─────────────────────────────────────────────────────
