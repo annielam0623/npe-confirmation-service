@@ -1786,7 +1786,7 @@ function _renderNotes(notes){
     var radius = s.right ? '10px 0 10px 10px' : '0 10px 10px 10px';
     return '<div style="display:flex;flex-direction:column;gap:2px;align-self:'+(s.right?'flex-end':'flex-start')+';max-width:88%;">'
       +'<div style="background:'+s.bg+';border:0.5px solid '+s.border+';border-radius:'+radius+';padding:9px 12px;font-size:13px;color:#333;line-height:1.5;white-space:pre-wrap;word-break:break-word;">'+escHtml(n.body)+'</div>'
-      +'<div style="font-size:11px;color:#aaa;padding:0 4px;'+(s.right?'text-align:right;')+'">'
+      +'<div style="font-size:11px;color:#aaa;padding:0 4px;'+(s.right?'text-align:right;':'')+'">'
       +dotHtml
       +'<span style="font-weight:600;color:'+s.color+';">'+s.label+'</span>'
       +(n.author_username ? ' · '+escHtml(n.author_username) : '')
