@@ -9,6 +9,8 @@ import os
 import time
 import base64
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
+_LA = ZoneInfo("America/Los_Angeles")
 
 SECRET_KEY = os.environ.get("TOKEN_SECRET", "tconf_secret_fallback")
 CONFIRM_BASE_URL = os.environ.get("SERVICE_BASE_URL", "https://confirm.nationalparkexpress.com")
@@ -76,7 +78,7 @@ TOUR_TYPES: dict[str, dict] = {
 # ── Token ────────────────────────────────────────────────────────────────────
 def make_token(record_id: int, email: str, tour_date: str) -> str:
     """
-    Token expires at 6:00 PM PST (= 02:00 UTC next day) the day before tour.
+    Token expires at 6:00 PM LA time (DST-aware) the day before tour.
     Mirrors PHP tconf_make_token().
     """
     if tour_date:
@@ -85,7 +87,7 @@ def make_token(record_id: int, email: str, tour_date: str) -> str:
             day_before = td - timedelta(days=1)
             # 18:00 PST = 18:00 + 8h = 02:00 UTC next day  → store as unix ts
             expires_dt = datetime(day_before.year, day_before.month, day_before.day,
-                                  18, 0, 0, tzinfo=timezone(timedelta(hours=-8)))
+                                  18, 0, 0, tzinfo=_LA)
             expires = int(expires_dt.timestamp())
         except ValueError:
             expires = int(time.time()) + 7 * 86400
@@ -129,12 +131,12 @@ def build_sms(first_name: str, tour_type: str, tour_date: str, form_url: str) ->
 
     if cfg.get("has_lunch"):
         return (
-            f"Hi {first_name}! This is National Park Express, your local tour operator "
+            f"Hi {first_name}, This is National Park Express, your local tour operator "
             f"for {label} on {date_fmt}. Please reconfirm your tour and select your lunch "
             f"option here: {form_url}. Thank you"
         )
     return (
-        f"Hi {first_name}! This is National Park Express, your local tour operator "
+        f"Hi {first_name}, This is National Park Express, your local tour operator "
         f"for {label} on {date_fmt}. Please reconfirm your tour here: {form_url}. Thank you"
     )
 

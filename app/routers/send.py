@@ -43,6 +43,13 @@ def _to_date(d: str) -> date:
     return datetime.strptime(d, "%Y-%m-%d").date()
 
 
+def _tour_confirmation_expires(tour_date: str) -> datetime:
+    """Tour confirmation link 过期时间：tour 前一天 LA 时间 18:00"""
+    from datetime import timedelta
+    day_before = _to_date(tour_date) - timedelta(days=1)
+    return datetime(day_before.year, day_before.month, day_before.day, 18, 0, 0, tzinfo=LA)
+
+
 def _fmt_date(date_str: str) -> str:
     try:
         return datetime.strptime(date_str, "%Y-%m-%d").strftime("%B %-d, %Y")
@@ -198,9 +205,7 @@ async def send_tour_confirmation(
         await db.commit()  # Commit token immediately so guest.py can look it up
 
         # Short link — expires day-before tour at 18:00 LA (same as token)
-        from datetime import time as dtime, timedelta
-        _day_before = _to_date(tour_date) - timedelta(days=1)
-        _tc_expires = datetime(_day_before.year, _day_before.month, _day_before.day, 18, 0, 0, tzinfo=LA)
+        _tc_expires = _tour_confirmation_expires(tour_date)
         email_url = await upsert_short_link(db, order_num, "tour_confirmation",
                                             tc.confirm_url(token, src="email"), _tc_expires)
         sms_url   = await upsert_short_link(db, order_num, "tour_confirmation",
@@ -330,9 +335,7 @@ async def send_tour_confirmation_bulk(
         ), {"token": token, "id": booking_id})
         await db.commit()  # Commit token immediately so guest.py can look it up
 
-        from datetime import time as dtime, timedelta
-        _day_before = _to_date(tour_date) - timedelta(days=1)
-        _tc_expires = datetime(_day_before.year, _day_before.month, _day_before.day, 18, 0, 0, tzinfo=LA)
+        _tc_expires = _tour_confirmation_expires(tour_date)
         email_url = await upsert_short_link(db, order_num, "tour_confirmation",
                                             tc.confirm_url(token, src="email"), _tc_expires)
         sms_url   = await upsert_short_link(db, order_num, "tour_confirmation",
