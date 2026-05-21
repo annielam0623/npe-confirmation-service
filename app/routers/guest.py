@@ -268,7 +268,24 @@ def _render(booking, tour_config: dict, error_msg: str = "",
     mtlv_html = ""
     if mtlv_eligible:
         current_mtlv = int(mtlv_qty_val) if mtlv_qty_val is not None else 0
-        mtlv_html = f"""<div class="gf-section">
+        mtlv_locked_status = getattr(booking, "mtlv_ticket_status", None)
+        mtlv_locked = mtlv_locked_status in ("sent", "cancel")
+        if mtlv_locked:
+            if mtlv_locked_status == "cancel":
+                lock_msg = "Your Madame Tussauds ticket selection has been cancelled."
+                lock_style = "color:#999;"
+            else:
+                lock_msg = "Your Madame Tussauds ticket selection has been confirmed and can no longer be changed."
+                lock_style = "color:#2F7851;font-weight:600;"
+            mtlv_html = f"""<div class="gf-section">
+          <div class="gf-mtlv-box" style="opacity:0.7;">
+            <div class="gf-mtlv-title">🏛️ Madame Tussauds Las Vegas Ticket</div>
+            <div style="font-size:13px;{lock_style}margin-top:6px;">{lock_msg}</div>
+            <input type="hidden" name="mtlv_qty" value="{current_mtlv}">
+          </div>
+        </div>"""
+        else:
+            mtlv_html = f"""<div class="gf-section">
           <div class="gf-mtlv-box">
             <div class="gf-mtlv-title">🏛️ Madame Tussauds Las Vegas Ticket</div>
             <div class="gf-mtlv-hint">Your package includes the option to add Madame Tussauds tickets. Please select the number of tickets for your party (0–{qty}). Enter 0 if you do not need any tickets.</div>
@@ -666,12 +683,13 @@ async def guest_confirm_submit(
     booking.submitted_at     = datetime.now(LA).replace(tzinfo=None)
     booking.submission_count = new_count
 
-    # MTLV — only write if eligible
+    # MTLV — only write if eligible and not locked (sent/cancel)
     if getattr(booking, "mtlv_eligible", False):
-        clamped = max(0, min(int(mtlv_qty), int(booking.quantities or 1)))
-        booking.mtlv_qty = clamped
-        # Auto-set ticket status to pending_send on first reply; don't overwrite if already sent
-        if getattr(booking, "mtlv_ticket_status", None) != "sent":
+        _mtlv_locked_status = getattr(booking, "mtlv_ticket_status", None)
+        if _mtlv_locked_status not in ("sent", "cancel"):
+            clamped = max(0, min(int(mtlv_qty), int(booking.quantities or 1)))
+            booking.mtlv_qty = clamped
+            # Auto-set ticket status to pending_send on first reply
             booking.mtlv_ticket_status = "pending_send"
     
     # Save guest message to booking_notes if notes were provided

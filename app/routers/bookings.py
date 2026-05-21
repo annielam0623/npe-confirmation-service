@@ -380,11 +380,16 @@ async def update_confirmation(
     booking.confirmation = new_conf
     booking.updated_at   = now_la
 
-    # Cancel → clear lunch
+    # Cancel → clear lunch + clear MTLV
     if new_conf == "cancel":
         booking.lunch_turkey = 0
         booking.lunch_veggie = 0
         booking.lunch_beef   = 0
+        if getattr(booking, "mtlv_eligible", False):
+            booking.mtlv_qty           = 0
+            booking.mtlv_ticket_status = "cancel"
+            booking.mtlv_ticket_sent_by = None
+            booking.mtlv_ticket_sent_at = None
 
     # Update lunch if provided (only meaningful for YES)
     if new_conf == "yes" and "lunch_turkey" in payload:
@@ -460,8 +465,8 @@ async def update_mtlv_ticket_status(
         raise HTTPException(status_code=400, detail="Booking is not MTLV eligible")
 
     new_status = (payload.get("mtlv_ticket_status") or "").lower()
-    if new_status not in ("pending_send", "sent"):
-        raise HTTPException(status_code=400, detail="Invalid status. Use pending_send or sent.")
+    if new_status not in ("pending_send", "sent", "cancel"):
+        raise HTTPException(status_code=400, detail="Invalid status. Use pending_send, sent, or cancel.")
 
     booking.mtlv_ticket_status = new_status
     booking.updated_at = now_la
@@ -471,6 +476,11 @@ async def update_mtlv_ticket_status(
     if new_status == "sent":
         booking.mtlv_ticket_sent_by = display_name
         booking.mtlv_ticket_sent_at = now_la
+    elif new_status == "cancel":
+        # Cancel ticket → clear qty and sent info
+        booking.mtlv_qty            = 0
+        booking.mtlv_ticket_sent_by = None
+        booking.mtlv_ticket_sent_at = None
     else:
         # Reverted to pending — clear sent_by/sent_at
         booking.mtlv_ticket_sent_by = None
@@ -489,6 +499,7 @@ async def update_mtlv_ticket_status(
     return {
         "ok":                  True,
         "mtlv_ticket_status":  booking.mtlv_ticket_status,
+        "mtlv_qty":            booking.mtlv_qty,
         "sent_by":             booking.mtlv_ticket_sent_by,
         "sent_at":             sent_at_str,
     }
