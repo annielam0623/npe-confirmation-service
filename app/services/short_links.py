@@ -74,14 +74,13 @@ async def resolve_short_link(
     if not row:
         return None
 
-    # Always compare in UTC to avoid naive/aware mismatch
-    now = datetime.now(timezone.utc)
+    # DB stores naive LA time — compare as LA time
+    now_la = datetime.now(LA).replace(tzinfo=None)
     expires = row.expires_at
-    if expires.tzinfo is None:
-        # DB returned naive datetime — treat as UTC
-        expires = expires.replace(tzinfo=timezone.utc)
+    if hasattr(expires, 'tzinfo') and expires.tzinfo is not None:
+        expires = expires.astimezone(LA).replace(tzinfo=None)
 
-    if expires < now:
+    if expires < now_la:
         return None
 
     return row.target_url
