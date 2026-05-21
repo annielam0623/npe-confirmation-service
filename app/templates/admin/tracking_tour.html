@@ -1239,11 +1239,57 @@
       } catch(e) {}
     }
 
+    const COL_WIDTH_KEY = 'npe_tour_col_widths';
+
+    function saveColWidths() {
+      const tr = document.getElementById('thead-row');
+      const widths = [...tr.querySelectorAll('td')].map(td => td.offsetWidth);
+      localStorage.setItem(COL_WIDTH_KEY, JSON.stringify(widths));
+    }
+
+    function applyColWidths() {
+      const saved = localStorage.getItem(COL_WIDTH_KEY);
+      if (!saved) return;
+      try {
+        const widths = JSON.parse(saved);
+        const tds = [...document.getElementById('thead-row').querySelectorAll('td')];
+        widths.forEach((w, i) => { if (tds[i] && w > 20) tds[i].style.width = w + 'px'; });
+      } catch(e) {}
+    }
+
     function initColDragTour() {
       const tr = document.getElementById('thead-row');
       const tds = [...tr.querySelectorAll('td')];
       // Assign index to each td
       tds.forEach((td, i) => { if (!td.dataset.colIdx) td.dataset.colIdx = String(i); });
+
+      // ── Column resize ──────────────────────────────────────────────────────
+      tds.forEach(td => {
+        const resizer = td.querySelector('.col-resizer');
+        if (!resizer) return;
+        let startX, startW;
+        resizer.addEventListener('mousedown', e => {
+          e.preventDefault();
+          e.stopPropagation();
+          startX = e.clientX;
+          startW = td.offsetWidth;
+          resizer.classList.add('active');
+          const onMove = e2 => {
+            const newW = startW + e2.clientX - startX;
+            td.style.width = newW + 'px';
+          };
+          const onUp = () => {
+            resizer.classList.remove('active');
+            saveColWidths();
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+          };
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+        });
+      });
+
+      applyColWidths();
 
       let dragSrc = null;
       tds.forEach(td => {
