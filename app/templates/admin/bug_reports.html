@@ -1,0 +1,287 @@
+{% extends "admin/base.html" %}
+{% block title %}Bug Reports · NPE Operations{% endblock %}
+{% block page_title %}Bug Reports{% endblock %}
+
+{% block extra_styles %}
+.br-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.br-title-bar{display:flex;align-items:center;gap:12px;}
+.br-count{font-size:13px;color:#888;}
+.br-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.br-filters select{height:30px;padding:0 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;background:#fff;}
+.btn-new-bug{height:30px;padding:0 14px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;}
+.btn-new-bug:hover{background:#333;}
+.br-table-wrap{background:#fff;border-radius:10px;border:1px solid #e8e0d8;overflow:hidden;}
+.br-table{width:100%;border-collapse:collapse;font-size:13px;}
+.br-table th{background:#f5f0eb;padding:9px 12px;text-align:left;font-size:11px;font-weight:600;color:#888;border-bottom:1px solid #e8e0d8;white-space:nowrap;}
+.br-table td{padding:10px 12px;border-bottom:1px solid #f0ece8;vertical-align:middle;}
+.br-table tr:last-child td{border-bottom:none;}
+.br-table tr:hover td{background:#faf8f5;}
+.br-empty{text-align:center;padding:40px;color:#aaa;font-size:13px;}
+.pri-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.pri-urgent{background:#fee2e2;color:#991b1b;}
+.pri-high{background:#ffedd5;color:#9a3412;}
+.pri-normal{background:#dbeafe;color:#1e40af;}
+.pri-low{background:#f1f5f9;color:#475569;}
+.status-sel{height:26px;padding:0 6px;border-radius:5px;font-size:11px;border:1px solid #ddd;background:#fff;cursor:pointer;}
+.status-open{color:#9a3412;background:#fff7ed;border-color:#fdba74;}
+.status-in_progress{color:#075985;background:#e0f2fe;border-color:#7dd3fc;}
+.status-fixed{color:#166534;background:#dcfce7;border-color:#86efac;}
+.mod-badge{display:inline-block;padding:2px 7px;border-radius:8px;font-size:11px;background:#f1efe8;color:#5f5e5a;}
+.clickup-link{font-size:11px;color:#2563eb;text-decoration:none;}
+.clickup-link:hover{text-decoration:underline;}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:#fff;border-radius:12px;padding:28px;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
+.modal-title{font-size:15px;font-weight:700;color:#1a1a1a;}
+.modal-close{background:none;border:none;font-size:18px;cursor:pointer;color:#aaa;line-height:1;}
+.field-group{margin-bottom:12px;}
+.field-label{font-size:11px;font-weight:600;color:#666;margin-bottom:4px;}
+.field-input{width:100%;height:32px;padding:0 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;box-sizing:border-box;}
+.field-select{width:100%;height:32px;padding:0 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:#fff;}
+.field-textarea{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;resize:vertical;min-height:80px;box-sizing:border-box;font-family:inherit;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;}
+.btn-cancel{height:32px;padding:0 16px;border:1px solid #ddd;border-radius:6px;font-size:13px;cursor:pointer;background:#fff;color:#555;}
+.btn-submit{height:32px;padding:0 16px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;}
+.btn-submit:hover{background:#333;}
+.btn-submit:disabled{background:#aaa;cursor:not-allowed;}
+.msg-success{font-size:12px;color:#166534;margin-top:8px;text-align:center;}
+.msg-error{font-size:12px;color:#991b1b;margin-top:8px;text-align:center;}
+{% endblock %}
+
+{% block content %}
+<div class="br-header">
+  <div class="br-title-bar">
+    <span style="font-size:15px;font-weight:700;">Bug Reports</span>
+    <span class="br-count" id="br-count"></span>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <div class="br-filters">
+      <select id="f-module" onchange="loadBugs()">
+        <option value="">All Modules</option>
+        <option value="tour">Tour Confirmation</option>
+        <option value="morning">Morning Pickup</option>
+        <option value="tickets">Tickets Reminder</option>
+        <option value="general">General</option>
+      </select>
+      <select id="f-priority" onchange="loadBugs()">
+        <option value="">All Priority</option>
+        <option value="urgent">Urgent</option>
+        <option value="high">High</option>
+        <option value="normal">Normal</option>
+        <option value="low">Low</option>
+      </select>
+      <select id="f-status" onchange="loadBugs()">
+        <option value="">All Status</option>
+        <option value="open">Open</option>
+        <option value="in_progress">In Progress</option>
+        <option value="fixed">Fixed</option>
+      </select>
+    </div>
+    <button class="btn-new-bug" onclick="openModal()">＋ New Bug</button>
+  </div>
+</div>
+
+<div class="br-table-wrap">
+  <table class="br-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Title</th>
+        <th>Module</th>
+        <th>Priority</th>
+        <th>Status</th>
+        <th>Order#</th>
+        <th>Submitted By</th>
+        <th>Created</th>
+        <th>ClickUp</th>
+      </tr>
+    </thead>
+    <tbody id="br-tbody">
+      <tr><td colspan="9" class="br-empty">Loading...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- New Bug Modal -->
+<div class="modal-overlay" id="bug-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">New Bug Report</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="field-group">
+      <div class="field-label">Title *</div>
+      <input class="field-input" id="nb-title" placeholder="Bug title">
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <div class="field-label">Module</div>
+        <select class="field-select" id="nb-module">
+          <option value="general">General</option>
+          <option value="tour">Tour Confirmation</option>
+          <option value="morning">Morning Pickup</option>
+          <option value="tickets">Tickets Reminder</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Priority</div>
+        <select class="field-select" id="nb-priority">
+          <option value="normal">Normal</option>
+          <option value="urgent">🔴 Urgent</option>
+          <option value="high">🟡 High</option>
+          <option value="low">⚪ Low</option>
+        </select>
+      </div>
+    </div>
+    <div class="field-group">
+      <div class="field-label">Order Number (optional)</div>
+      <input class="field-input" id="nb-order" placeholder="e.g. CHD1234AB">
+    </div>
+    <div class="field-group">
+      <div class="field-label">Description</div>
+      <textarea class="field-textarea" id="nb-desc" placeholder="Steps to reproduce, expected vs actual behavior..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-submit" id="nb-submit" onclick="submitBug()">Submit</button>
+    </div>
+    <div id="nb-msg"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const MODULE_LABELS = {tour:"Tour Confirmation",morning:"Morning Pickup",tickets:"Tickets Reminder",general:"General"};
+const PRI_LABELS = {urgent:"Urgent",high:"High",normal:"Normal",low:"Low"};
+
+async function loadBugs() {
+  const module   = document.getElementById('f-module').value;
+  const priority = document.getElementById('f-priority').value;
+  const status   = document.getElementById('f-status').value;
+  const params   = new URLSearchParams();
+  if (module)   params.set('module', module);
+  if (priority) params.set('priority', priority);
+  if (status)   params.set('status', status);
+
+  const tbody = document.getElementById('br-tbody');
+  tbody.innerHTML = '<tr><td colspan="9" class="br-empty">Loading...</td></tr>';
+
+  try {
+    const resp = await fetch('/api/bug-reports?' + params.toString());
+    const bugs = await resp.json();
+    document.getElementById('br-count').textContent = bugs.length + ' record' + (bugs.length !== 1 ? 's' : '');
+    if (!bugs.length) {
+      tbody.innerHTML = '<tr><td colspan="9" class="br-empty">No bug reports found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = bugs.map(b => {
+      const priClass = 'pri-' + b.priority;
+      const priLabel = PRI_LABELS[b.priority] || b.priority;
+      const modLabel = MODULE_LABELS[b.module] || b.module;
+      const created  = new Date(b.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+      const clickup  = b.clickup_task_id
+        ? `<a class="clickup-link" href="https://app.clickup.com/t/${b.clickup_task_id}" target="_blank">#${b.clickup_task_id}</a>`
+        : '<span style="color:#ccc">—</span>';
+      return `<tr>
+        <td style="color:#aaa;font-size:11px;">${b.id}</td>
+        <td style="font-weight:500;max-width:280px;">${escHtml(b.title)}</td>
+        <td><span class="mod-badge">${modLabel}</span></td>
+        <td><span class="pri-badge ${priClass}">${priLabel}</span></td>
+        <td>
+          <select class="status-sel status-${b.status}" onchange="updateStatus(${b.id}, this)">
+            <option value="open"        ${b.status==='open'        ?'selected':''}>Open</option>
+            <option value="in_progress" ${b.status==='in_progress' ?'selected':''}>In Progress</option>
+            <option value="fixed"       ${b.status==='fixed'       ?'selected':''}>Fixed</option>
+          </select>
+        </td>
+        <td style="font-size:12px;color:#666;">${b.order_number ? escHtml(b.order_number) : '—'}</td>
+        <td style="font-size:12px;">${escHtml(b.submitted_by)}</td>
+        <td style="font-size:11px;color:#aaa;white-space:nowrap;">${created}</td>
+        <td>${clickup}</td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="9" class="br-empty" style="color:#c00;">Failed to load. Please refresh.</td></tr>';
+  }
+}
+
+async function updateStatus(id, sel) {
+  const newStatus = sel.value;
+  sel.className = 'status-sel status-' + newStatus;
+  try {
+    await fetch('/api/bug-reports/' + id + '/status', {
+      method: 'PATCH',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({status: newStatus})
+    });
+  } catch(e) { console.error(e); }
+}
+
+function openModal() {
+  document.getElementById('nb-title').value = '';
+  document.getElementById('nb-desc').value  = '';
+  document.getElementById('nb-order').value = '';
+  document.getElementById('nb-module').value   = 'general';
+  document.getElementById('nb-priority').value = 'normal';
+  document.getElementById('nb-msg').textContent = '';
+  document.getElementById('nb-submit').disabled = false;
+  document.getElementById('bug-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('bug-modal').classList.remove('open');
+}
+
+async function submitBug() {
+  const title = document.getElementById('nb-title').value.trim();
+  if (!title) { showMsg('Title is required.', 'error'); return; }
+  const btn = document.getElementById('nb-submit');
+  btn.disabled = true;
+  btn.textContent = 'Submitting...';
+  try {
+    const resp = await fetch('/api/bug-reports', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        title,
+        description:  document.getElementById('nb-desc').value.trim() || null,
+        module:       document.getElementById('nb-module').value,
+        priority:     document.getElementById('nb-priority').value,
+        order_number: document.getElementById('nb-order').value.trim() || null,
+      })
+    });
+    if (resp.ok) {
+      showMsg('Bug submitted successfully.', 'success');
+      setTimeout(() => { closeModal(); loadBugs(); }, 1000);
+    } else {
+      showMsg('Submission failed. Please try again.', 'error');
+      btn.disabled = false; btn.textContent = 'Submit';
+    }
+  } catch(e) {
+    showMsg('Network error.', 'error');
+    btn.disabled = false; btn.textContent = 'Submit';
+  }
+}
+
+function showMsg(text, type) {
+  const el = document.getElementById('nb-msg');
+  el.textContent = text;
+  el.className = type === 'success' ? 'msg-success' : 'msg-error';
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+document.getElementById('bug-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+loadBugs();
+</script>
+{% endblock %}
