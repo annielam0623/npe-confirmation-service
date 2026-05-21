@@ -870,6 +870,7 @@
       document.querySelectorAll('.stat-card').forEach(c => c.style.pointerEvents = 'none');
       try {
         const res = await fetch(`/api/notifications/tour-confirmation/tracking?date=${currentDate}`);
+        if (res.redirected || res.status === 401) { window.location.href = '/auth/login'; return; }
         const data = await res.json();
         allRows = data.rows || [];
         buildPills();
@@ -1354,6 +1355,7 @@
     async function _pollNotes() {
       try {
         const res  = await fetch(`/api/notifications/tour-confirmation/tracking?date=${currentDate}`);
+        if (res.redirected || res.status === 401) { clearInterval(_tourPollTimer); window.location.href = '/auth/login'; return; }
         const data = await res.json();
         const newRows = data.rows || [];
         if (Object.keys(_notesSnapshot).length > 0) {
@@ -1376,7 +1378,7 @@
     };
 
     // Poll every 60 seconds
-    setInterval(_pollNotes, 60000);
+    var _tourPollTimer = setInterval(_pollNotes, 60000);
   </script>
 
 <!-- Broadcast dialog -->

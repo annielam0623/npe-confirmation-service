@@ -343,7 +343,10 @@ function loadData(){
   document.getElementById('tbody').innerHTML =
     '<tr><td colspan="15" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>';
   fetch('/api/notifications/tickets-reminder/tracking?date='+date, {credentials:'include'})
-    .then(function(r){ return r.json(); })
+    .then(function(r){
+      if(r.redirected || r.status===401){ window.location.href='/auth/login'; return Promise.reject('session'); }
+      return r.json();
+    })
     .then(function(data){ allRows = data.rows || []; updatePills(); renderTable(); })
     .catch(function(){
       document.getElementById('tbody').innerHTML =
@@ -784,10 +787,13 @@ function checkTktNotesBanner(){
   document.getElementById('tkt-notes-banner-text').innerHTML = changed.slice(0,3).join(' &nbsp;·&nbsp; ') + (changed.length > 3 ? ' +' + (changed.length-3) + ' more' : '');
   document.getElementById('tkt-notes-banner').style.display = 'inline-flex';
 }
-setInterval(function(){
+var _tktPollTimer = setInterval(function(){
   var date = getDate(); if(!date) return;
   fetch('/api/notifications/tickets-reminder/tracking?date='+date, {credentials:'include'})
-    .then(function(r){ return r.json(); })
+    .then(function(r){
+      if(r.redirected || r.status===401){ clearInterval(_tktPollTimer); window.location.href='/auth/login'; return Promise.reject('session'); }
+      return r.json();
+    })
     .then(function(data){
       _tktBannerDismissed = false;
       var newRows = data.rows || [];
