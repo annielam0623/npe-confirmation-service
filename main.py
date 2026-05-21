@@ -20,6 +20,7 @@ from app.routers import booking_notes
 from app.routers import messages
 from app.routers import settings_teams
 from app.routers import broadcasting_log
+from app.routers import bug_reports
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -72,6 +73,7 @@ app.include_router(booking_notes.router, tags=["booking_notes"])
 app.include_router(messages.router, tags=["messages"])
 app.include_router(settings_teams.router)
 app.include_router(broadcasting_log.router)
+app.include_router(bug_reports.router)
 
 @app.get("/")
 def home():
