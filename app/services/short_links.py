@@ -36,6 +36,10 @@ async def upsert_short_link(
     suffix = _module_suffix(module)
     code = f"{order_number}-{suffix}"
 
+    # Normalize to naive UTC — DB column is timestamp without time zone
+    if expires_at.tzinfo is not None:
+        expires_at = expires_at.astimezone(timezone.utc).replace(tzinfo=None)
+
     await db.execute(text("""
         INSERT INTO short_links (code, target_url, module, order_number, expires_at, updated_at)
         VALUES (:code, :target_url, :module, :order_number, :expires_at, NOW())
