@@ -699,7 +699,9 @@
       font-weight: 600;
       white-space: nowrap;
     }
-  </style>
+    #takeActionBtn { transition: background 0.15s, color 0.15s; }
+  #takeActionBtn:hover:not(.actioned) { background: #2F7851 !important; color: #fff !important; border-color: #2F7851 !important; }
+</style>
 </head>
 
 <body>
@@ -1728,18 +1730,19 @@ async function openNotes(bookingId, orderNum, name, guestNotes) {
   // Init Take Action button based on current row state
   const row = allRows.find(r => r.id === bookingId);
   const btn = document.getElementById('takeActionBtn');
+  btn.disabled = false;
   if (row && row.action_taken_by) {
     btn.textContent = '✓ Actioned by ' + row.action_taken_by;
     btn.style.background = '#D5F0D8';
     btn.style.borderColor = '#9ED3A9';
     btn.style.color = '#2F7851';
-    btn.disabled = false;
+    btn.classList.add('actioned');
   } else {
     btn.textContent = '✓ Mark as actioned';
     btn.style.background = '#f8f9fa';
     btn.style.borderColor = '#9ED3A9';
     btn.style.color = '#2F7851';
-    btn.disabled = false;
+    btn.classList.remove('actioned');
   }
   document.getElementById("notesOverlay").style.display = "flex";
   await _fetchNotes();
@@ -1761,73 +1764,46 @@ async function _fetchNotes(){
 function _renderNotes(notes){
   var container = document.getElementById("notesMessages");
   var sm = {
-    staff_note:  {bg:'#fffbea', border:'#f0d080', label:'★ Note',         color:'#856404', right:true},
-    sms_out:     {bg:'#d4edda', border:'#b7ddc4', label:'SMS sent',        color:'#155724', right:true,  dot:'#f97316'},
-    email_out:   {bg:'#d1ecf1', border:'#a8d8e1', label:'Email sent',      color:'#0c5460', right:true,  dot:'#3b82f6'},
-    sms_in:      {bg:'#fff7ed', border:'#fcd9b0', label:'Guest via SMS',   color:'#9a3412', right:false, dot:'#f97316'},
-    email_in:    {bg:'#eff6ff', border:'#bfdbfe', label:'Guest via Email', color:'#1e40af', right:false, dot:'#3b82f6'},
-    guest_reply: {bg:'#e8f4fd', border:'#b3d9f7', label:'Guest',           color:'#1a3a5c', right:false},
+    staff_note:  {label:'★ Note',         color:'#856404', right:true,  dot:null},
+    sms_out:     {label:'SMS sent',        color:'#155724', right:true,  dot:'#f97316'},
+    email_out:   {label:'Email sent',      color:'#0c5460', right:true,  dot:'#3b82f6'},
+    sms_in:      {label:'Guest via SMS',   color:'#9a3412', right:false, dot:'#f97316'},
+    email_in:    {label:'Guest via Email', color:'#1e40af', right:false, dot:'#3b82f6'},
+    guest_reply: {label:'Guest',           color:'#1a3a5c', right:false, dot:null},
   };
   var msgs = [];
   if (_notesGuestNotes) {
-    msgs.push({direction:'guest_reply', body:_notesGuestNotes, author_username:'Guest (form)', created_at:'via confirmation form'});
+    msgs.push({direction:'guest_reply', body:_notesGuestNotes, author_username:'Guest (form)', created_at:'via confirmation form', _sort:0});
   }
-  msgs = msgs.concat(notes || []);
+  (notes || []).forEach(function(n){
+    msgs.push(Object.assign({}, n, {_sort: n.created_at ? new Date(n.created_at).getTime() : 1}));
+  });
+  msgs.sort(function(a, b){ return (b._sort||0) - (a._sort||0); });
   if (!msgs.length) {
     container.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;padding:20px 0;">No messages yet.</div>';
     return;
   }
   container.style.display = 'flex';
   container.style.flexDirection = 'column';
-  container.style.gap = '8px';
+  container.style.gap = '10px';
   container.innerHTML = msgs.map(function(n){
-    var s = sm[n.direction] || {bg:'#f0f0f0', border:'#ddd', label:n.direction, color:'#333', right:false};
+    var s = sm[n.direction] || {label:n.direction, color:'#333', right:false, dot:null};
     var dotHtml = s.dot ? '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+s.dot+';margin-right:3px;vertical-align:middle;"></span>' : '';
+    var align = s.right ? 'flex-end' : 'flex-start';
+    var bubbleBg = s.right ? '#fff' : '#f0f4f8';
+    var bubbleBorder = s.right ? '#dee2e6' : '#cdd8e3';
     var radius = s.right ? '10px 0 10px 10px' : '0 10px 10px 10px';
-    return '<div style="display:flex;flex-direction:column;gap:2px;align-self:'+(s.right?'flex-end':'flex-start')+';max-width:88%;">'
-      +'<div style="background:'+s.bg+';border:0.5px solid '+s.border+';border-radius:'+radius+';padding:9px 12px;font-size:13px;color:#333;line-height:1.5;white-space:pre-wrap;word-break:break-word;">'+escHtml(n.body)+'</div>'
+    return '<div style="display:flex;flex-direction:column;gap:3px;align-self:'+align+';max-width:88%;">'
+      +'<div style="background:'+bubbleBg+';border:1px solid '+bubbleBorder+';border-radius:'+radius+';padding:9px 12px;font-size:13px;color:#212529;line-height:1.5;white-space:pre-wrap;word-break:break-word;">'+escHtml(n.body)+'</div>'
       +'<div style="font-size:11px;color:#aaa;padding:0 4px;'+(s.right?'text-align:right;':'')+'">'
       +dotHtml
       +'<span style="font-weight:600;color:'+s.color+';">'+s.label+'</span>'
       +(n.author_username ? ' · '+escHtml(n.author_username) : '')
       +(n.created_at ? ' · '+escHtml(n.created_at) : '')
-      +'</div></div>';
+      +'</div>'
+      +'</div>';
   }).join('');
-  container.scrollTop = container.scrollHeight;
-}
-async function takeActionFromNotes(){
-  if (!_notesBookingId) return;
-  const btn = document.getElementById('takeActionBtn');
-  btn.disabled = true;
-  try {
-    const res = await fetch(`/api/bookings/${_notesBookingId}/take-action`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-    });
-    if (res.ok) {
-      const data = await res.json();
-      // Update allRows in memory — no table re-render
-      const row = allRows.find(r => r.id === _notesBookingId);
-      if (row) row.action_taken_by = data.action_taken_by;
-      // Update the notes cell action part directly in the table row
-      const tr = document.querySelector(`tr[data-id="${_notesBookingId}"]`);
-      if (tr) {
-        const actionDiv = tr.querySelector('.js-open-notes [style*="margin-top:4px"]');
-        if (actionDiv) {
-          actionDiv.innerHTML = `<div style="font-size:11px;color:#28a745;font-weight:600;margin-top:4px;">✓ ${data.action_taken_by}<span style="font-weight:400;color:#aaa;margin-left:4px;">(click to undo)</span></div>`;
-        }
-      }
-      // Update button to show actioned state
-      btn.textContent = '✓ Actioned by ' + (data.action_taken_by || 'you');
-      btn.style.background = '#D5F0D8';
-      btn.style.borderColor = '#9ED3A9';
-      btn.style.color = '#2F7851';
-    }
-  } catch(e) {
-    alert('Failed to mark action.');
-  } finally {
-    btn.disabled = false;
-  }
+  container.scrollTop = 0;
 }
 
 async function submitNote(dir){
