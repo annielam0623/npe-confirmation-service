@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text as _sql_text
 
 from app.database import get_db
-from app.models import Booking
+from app.models import Booking, BookingNote
 from app.services.tour_config import TOUR_TYPES
 from app.services.sendgrid import send_staff_notification
 
@@ -671,8 +671,18 @@ async def guest_confirm_submit(
         if getattr(booking, "mtlv_ticket_status", None) != "sent":
             booking.mtlv_ticket_status = "pending_send"
     
-    await db.commit()
-    
+    # Save guest message to booking_notes if notes were provided
+    if notes and notes.strip():
+        guest_note = BookingNote(
+            booking_id=booking.id,
+            author_username="guest",
+            direction="guest_reply",
+            body=notes.strip(),
+            created_at=datetime.now(LA),
+        )
+        db.add(guest_note)
+        await db.commit()
+
     # Activity log
     try:
         _activity_detail = ""

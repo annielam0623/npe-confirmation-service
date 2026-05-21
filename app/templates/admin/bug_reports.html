@@ -3,285 +3,697 @@
 {% block page_title %}Bug Reports{% endblock %}
 
 {% block extra_styles %}
+.stat-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:20px;}
+.stat{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color 0.15s,box-shadow 0.15s;user-select:none;}
+.stat:hover{border-color:#94a3b8;box-shadow:0 1px 4px rgba(0,0,0,0.06);}
+.stat.active{border-color:#0f172a;box-shadow:0 0 0 2px #0f172a;background:#f8fafc;}
+.stat-label{font-size:11px;color:#64748b;margin-bottom:4px;}
+.stat-val{font-size:22px;font-weight:700;}
+.status-filter-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.sf-btn{padding:8px 14px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;color:#64748b;font-size:13px;cursor:pointer;font-weight:500;line-height:1.4;text-align:left;}
+.sf-btn:hover{border-color:#94a3b8;color:#0f172a;}
+.sf-btn.active{background:#0f172a;color:#fff;border-color:#0f172a;}
+.sf-label{font-size:11px;color:inherit;}
+.sf-en{font-size:11px;color:inherit;}
+.sf-num{font-size:18px;font-weight:700;color:inherit;margin-top:2px;}
+.sf-btn.active .sf-label,.sf-btn.active .sf-num{color:#fff;}
+.br-filters{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.br-filters input,.br-filters select{padding:6px 10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;background:#fff;}
+.br-filters input{width:220px;}
 .br-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
-.br-title-bar{display:flex;align-items:center;gap:12px;}
-.br-count{font-size:13px;color:#888;}
-.br-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
-.br-filters select{height:30px;padding:0 8px;border:1px solid #ddd;border-radius:6px;font-size:12px;background:#fff;}
-.btn-new-bug{height:30px;padding:0 14px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;}
-.btn-new-bug:hover{background:#333;}
-.br-table-wrap{background:#fff;border-radius:10px;border:1px solid #e8e0d8;overflow:hidden;}
-.br-table{width:100%;border-collapse:collapse;font-size:13px;}
-.br-table th{background:#f5f0eb;padding:9px 12px;text-align:left;font-size:11px;font-weight:600;color:#888;border-bottom:1px solid #e8e0d8;white-space:nowrap;}
-.br-table td{padding:10px 12px;border-bottom:1px solid #f0ece8;vertical-align:middle;}
-.br-table tr:last-child td{border-bottom:none;}
-.br-table tr:hover td{background:#faf8f5;}
-.br-empty{text-align:center;padding:40px;color:#aaa;font-size:13px;}
-.pri-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
-.pri-urgent{background:#fee2e2;color:#991b1b;}
-.pri-high{background:#ffedd5;color:#9a3412;}
-.pri-normal{background:#dbeafe;color:#1e40af;}
-.pri-low{background:#f1f5f9;color:#475569;}
-.status-sel{height:26px;padding:0 6px;border-radius:5px;font-size:11px;border:1px solid #ddd;background:#fff;cursor:pointer;}
-.status-open{color:#9a3412;background:#fff7ed;border-color:#fdba74;}
-.status-in_progress{color:#075985;background:#e0f2fe;border-color:#7dd3fc;}
-.status-fixed{color:#166534;background:#dcfce7;border-color:#86efac;}
-.mod-badge{display:inline-block;padding:2px 7px;border-radius:8px;font-size:11px;background:#f1efe8;color:#5f5e5a;}
-.clickup-link{font-size:11px;color:#2563eb;text-decoration:none;}
-.clickup-link:hover{text-decoration:underline;}
-
-/* Modal */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center;}
+.btn-new-bug{padding:6px 14px;background:#fff;color:#0f172a;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;}
+.btn-new-bug:hover{border-color:#94a3b8;}
+.btn-refresh{padding:6px 14px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;}
+.btn-refresh:hover{background:#333;}
+.btn-lang{padding:6px 14px;background:#fff;color:#0f172a;border:1px solid #e2e8f0;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;}
+.count{font-size:13px;color:#64748b;margin-bottom:10px;}
+.bug-loading{text-align:center;padding:48px;color:#94a3b8;font-size:14px;}
+.bug-error{text-align:center;padding:48px;color:#ef4444;font-size:14px;}
+.bug-card{background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:16px;margin-bottom:10px;}
+.bug-card:hover{border-color:#94a3b8;}
+.bug-summary{cursor:pointer;}
+.bug-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
+.badge{font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;border:1px solid transparent;}
+.b-p0{background:#fee2e2;color:#991b1b;border-color:#fca5a5;}
+.b-p1{background:#ffedd5;color:#9a3412;border-color:#fdba74;}
+.b-p2{background:#dbeafe;color:#1e40af;border-color:#93c5fd;}
+.b-p3{background:#f1f5f9;color:#475569;border-color:#cbd5e1;}
+.b-new{background:#f1f5f9;color:#475569;border-color:#e2e8f0;}
+.b-open{background:#fef3c7;color:#92400e;border-color:#fde68a;}
+.b-prog{background:#e0f2fe;color:#075985;border-color:#7dd3fc;}
+.b-done{background:#dcfce7;color:#166534;border-color:#86efac;}
+.b-closed{background:#f0fdf4;color:#15803d;border-color:#bbf7d0;}
+.b-reason{background:#f5f3ff;color:#5b21b6;border-color:#c4b5fd;}
+.bug-title{font-size:14px;font-weight:600;color:#0f172a;margin-bottom:6px;line-height:1.4;}
+.bug-meta{font-size:12px;color:#64748b;display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+.assignees{display:flex;gap:3px;align-items:center;}
+.avatar{width:22px;height:22px;border-radius:50%;object-fit:cover;border:1px solid #e2e8f0;}
+.avatar-placeholder{width:22px;height:22px;border-radius:50%;background:#e2e8f0;display:inline-flex;align-items:center;justify-content:center;font-size:9px;font-weight:600;color:#64748b;}
+.bug-link{font-size:11px;color:#2563eb;text-decoration:none;}
+.bug-link:hover{text-decoration:underline;}
+.days-badge{font-size:11px;padding:2px 7px;border-radius:20px;background:#fef9c3;color:#854d0e;border:1px solid #fde047;}
+.days-urgent{background:#fee2e2;color:#991b1b;border-color:#fca5a5;}
+.expand-panel{display:none;margin-top:16px;padding-top:16px;border-top:0.5px solid #f1f5f9;}
+.desc-section{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 14px;margin-bottom:14px;}
+.desc-text{font-size:13px;color:#475569;line-height:1.7;white-space:pre-wrap;}
+.expand-grid{display:grid;grid-template-columns:1fr 280px;gap:16px;align-items:start;min-width:0;}
+.panel-label{font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;}
+.latest-log-card{border:1px solid #e2e8f0;border-radius:10px;padding:12px 16px;background:#fafafa;width:100%;margin-bottom:12px;}
+.comments-scroll{display:flex;gap:10px;flex-wrap:wrap;padding-bottom:8px;min-width:0;}
+.comment-card{border:1px solid #e2e8f0;border-radius:8px;padding:10px 12px;min-width:200px;max-width:200px;max-height:180px;overflow-y:auto;flex-shrink:0;background:#fafafa;}
+.comment-header{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
+.comment-user{font-weight:600;font-size:12px;color:#0f172a;}
+.comment-date{font-size:11px;color:#94a3b8;margin-left:auto;}
+.comment-body{font-size:12px;color:#334155;white-space:pre-wrap;line-height:1.6;}
+.form-col{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:12px;}
+.field-label{font-size:11px;color:#64748b;margin-bottom:3px;}
+.field-wrap{margin-bottom:8px;}
+.field-wrap select,.field-wrap textarea{width:100%;padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;font-family:inherit;background:#fff;color:#0f172a;}
+.field-wrap textarea{resize:vertical;min-height:44px;}
+.submit-btn{width:100%;padding:8px;background:#0f172a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:500;}
+.submit-btn:hover{background:#1e293b;}
+.success-msg{font-size:12px;color:#16a34a;margin-top:6px;display:none;}
+/* modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
-.modal-box{background:#fff;border-radius:12px;padding:28px;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);}
-.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;}
-.modal-title{font-size:15px;font-weight:700;color:#1a1a1a;}
-.modal-close{background:none;border:none;font-size:18px;cursor:pointer;color:#aaa;line-height:1;}
-.field-group{margin-bottom:12px;}
-.field-label{font-size:11px;font-weight:600;color:#666;margin-bottom:4px;}
-.field-input{width:100%;height:32px;padding:0 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;box-sizing:border-box;}
-.field-select{width:100%;height:32px;padding:0 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:#fff;}
-.field-textarea{width:100%;padding:8px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;resize:vertical;min-height:80px;box-sizing:border-box;font-family:inherit;}
-.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
-.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;}
-.btn-cancel{height:32px;padding:0 16px;border:1px solid #ddd;border-radius:6px;font-size:13px;cursor:pointer;background:#fff;color:#555;}
-.btn-submit{height:32px;padding:0 16px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;}
-.btn-submit:hover{background:#333;}
-.btn-submit:disabled{background:#aaa;cursor:not-allowed;}
-.msg-success{font-size:12px;color:#166534;margin-top:8px;text-align:center;}
-.msg-error{font-size:12px;color:#991b1b;margin-top:8px;text-align:center;}
 {% endblock %}
 
 {% block content %}
 <div class="br-header">
-  <div class="br-title-bar">
-    <span style="font-size:15px;font-weight:700;">Bug Reports</span>
-    <span class="br-count" id="br-count"></span>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <span style="font-size:15px;font-weight:600;">Bug Reports</span>
+    <span style="font-size:12px;color:#888;" id="page-sub">数据来自 ClickUp · Bug list · TripGuru-Dev</span>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;">
-    <div class="br-filters">
-      <select id="f-module" onchange="loadBugs()">
-        <option value="">All Modules</option>
-        <option value="tour">Tour Confirmation</option>
-        <option value="morning">Morning Pickup</option>
-        <option value="tickets">Tickets Reminder</option>
-        <option value="general">General</option>
-      </select>
-      <select id="f-priority" onchange="loadBugs()">
-        <option value="">All Priority</option>
-        <option value="urgent">Urgent</option>
-        <option value="high">High</option>
-        <option value="normal">Normal</option>
-        <option value="low">Low</option>
-      </select>
-      <select id="f-status" onchange="loadBugs()">
-        <option value="">All Status</option>
-        <option value="open">Open</option>
-        <option value="in_progress">In Progress</option>
-        <option value="fixed">Fixed</option>
-      </select>
-    </div>
-    <button class="btn-new-bug" onclick="openModal()">＋ New Bug</button>
+  <div style="display:flex;gap:8px;align-items:center;">
+    <button class="btn-lang" id="lang-btn" onclick="toggleLang()">EN</button>
+    <button class="btn-new-bug" id="new-bug-btn" onclick="openNewBugModal()">＋ 新建 Bug</button>
+    <button class="btn-refresh" id="refresh-btn" onclick="loadTasks()">刷新数据</button>
   </div>
 </div>
 
-<div class="br-table-wrap">
-  <table class="br-table">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Title</th>
-        <th>Module</th>
-        <th>Priority</th>
-        <th>Status</th>
-        <th>Order#</th>
-        <th>Submitted By</th>
-        <th>Created</th>
-        <th>ClickUp</th>
-      </tr>
-    </thead>
-    <tbody id="br-tbody">
-      <tr><td colspan="9" class="br-empty">Loading...</td></tr>
-    </tbody>
-  </table>
+<div class="stat-row" id="stats">
+  <div class="stat"><div class="stat-label">Loading...</div></div>
+</div>
+
+<div class="status-filter-row" id="status-filter-row"></div>
+
+<div class="br-filters">
+  <input type="text" id="search" placeholder="搜索 bug 标题、负责人..." oninput="render()">
+  <select id="f-severity" onchange="render()">
+    <option value="" data-zh="所有优先级" data-en="All Severity">所有优先级</option>
+    <option value="P0">P0</option>
+    <option value="P1">P1</option>
+    <option value="P2">P2</option>
+  </select>
+  <select id="f-status" onchange="render()">
+    <option value="" data-zh="所有状态" data-en="All Status">所有状态</option>
+    <option value="new" data-zh="新建" data-en="New">新建</option>
+    <option value="in progress" data-zh="进行中" data-en="In Progress">进行中</option>
+    <option value="complete" data-zh="已完成" data-en="Complete">已完成</option>
+  </select>
+  <select id="f-reason" onchange="render()">
+    <option value="" data-zh="所有原因" data-en="All Reasons">所有原因</option>
+    <option value="需求不明确" data-zh="需求不明确" data-en="Unclear Requirements">需求不明确</option>
+    <option value="UI问题" data-zh="UI问题" data-en="UI Issue">UI问题</option>
+    <option value="优化建议" data-zh="优化建议" data-en="Optimization">优化建议</option>
+    <option value="逻辑错误" data-zh="逻辑错误" data-en="Logic Error">逻辑错误</option>
+    <option value="功能缺失" data-zh="功能缺失" data-en="Missing Feature">功能缺失</option>
+    <option value="数据问题" data-zh="数据问题" data-en="Data Issue">数据问题</option>
+    <option value="兼容性问题" data-zh="兼容性问题" data-en="Compatibility">兼容性问题</option>
+    <option value="测试遗漏" data-zh="测试遗漏" data-en="Test Gap">测试遗漏</option>
+    <option value="环境与部署问题" data-zh="环境与部署问题" data-en="Env / Deploy">环境与部署问题</option>
+  </select>
+  <select id="f-workstream" onchange="render()">
+    <option value="" data-zh="所有 Workstream" data-en="All Workstreams">所有 Workstream</option>
+    <option value="Hotel">Hotel</option>
+    <option value="Tour">Tour</option>
+    <option value="Activity">Activity</option>
+    <option value="OA">OA</option>
+    <option value="API">API</option>
+    <option value="Payment">Payment</option>
+  </select>
+  <select id="f-assignee" onchange="render()">
+    <option value="" data-zh="所有负责人" data-en="All Assignees">所有负责人</option>
+  </select>
+  <select id="f-sort" onchange="render()">
+    <option value="priority" data-zh="优先级（默认）" data-en="Priority (default)">优先级（默认）</option>
+    <option value="days-desc" data-zh="天数最多优先" data-en="Oldest First">天数最多优先</option>
+    <option value="updated-desc" data-zh="最新动态优先" data-en="Recently Updated">最新动态优先</option>
+  </select>
+</div>
+
+<div id="bug-list">
+  <div class="bug-loading">正在从 ClickUp 拉取数据...</div>
 </div>
 
 <!-- New Bug Modal -->
-<div class="modal-overlay" id="bug-modal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <span class="modal-title">New Bug Report</span>
-      <button class="modal-close" onclick="closeModal()">✕</button>
+<div class="modal-overlay" id="new-bug-modal">
+  <div style="background:#fff;border-radius:12px;padding:28px;width:520px;max-width:95vw;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+      <div style="font-size:16px;font-weight:700;color:#0f172a;">New Bug</div>
+      <button onclick="closeNewBugModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#94a3b8;">✕</button>
     </div>
-    <div class="field-group">
+    <div class="field-wrap">
       <div class="field-label">Title *</div>
-      <input class="field-input" id="nb-title" placeholder="Bug title">
+      <input type="text" id="nb-title" placeholder="Bug title" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;box-sizing:border-box;">
     </div>
-    <div class="field-row">
-      <div class="field-group">
-        <div class="field-label">Module</div>
-        <select class="field-select" id="nb-module">
-          <option value="general">General</option>
-          <option value="tour">Tour Confirmation</option>
-          <option value="morning">Morning Pickup</option>
-          <option value="tickets">Tickets Reminder</option>
-        </select>
-      </div>
-      <div class="field-group">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+      <div class="field-wrap">
         <div class="field-label">Priority</div>
-        <select class="field-select" id="nb-priority">
-          <option value="normal">Normal</option>
-          <option value="urgent">🔴 Urgent</option>
-          <option value="high">🟡 High</option>
-          <option value="low">⚪ Low</option>
+        <select id="nb-severity" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;">
+          <option value="">— Select —</option>
+          <option value="1">🔴 Urgent</option>
+          <option value="2">🟡 High</option>
+          <option value="3">🔵 Normal</option>
+          <option value="4">⚪ Low</option>
+        </select>
+      </div>
+      <div class="field-wrap">
+        <div class="field-label">Workstream</div>
+        <select id="nb-workstream" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;">
+          <option value="">— Select —</option>
+          <option value="d07884ea-5fdd-4851-840c-b964deeaf163">Hotel</option>
+          <option value="fe3e41eb-4f5c-41fc-acc7-5924618baacb">Tour</option>
+          <option value="6d0f5780-f926-4a18-8df3-aaa9507057c1">Activity</option>
+          <option value="f42a56e6-9405-4cab-8387-4bf6fe77cbab">OA</option>
+          <option value="7659e076-726b-4efa-a684-5f95f8c12393">API</option>
+          <option value="d8b80dd8-4eeb-4677-b1d9-8f4fcb2c6f79">Payment</option>
         </select>
       </div>
     </div>
-    <div class="field-group">
-      <div class="field-label">Order Number (optional)</div>
-      <input class="field-input" id="nb-order" placeholder="e.g. CHD1234AB">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;">
+      <div class="field-wrap">
+        <div class="field-label">Assignee</div>
+        <select id="nb-assignee" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;">
+          <option value="">— Select —</option>
+        </select>
+      </div>
+      <div class="field-wrap">
+        <div class="field-label">Due Date</div>
+        <input type="date" id="nb-due" onclick="this.showPicker()" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;box-sizing:border-box;cursor:pointer;">
+      </div>
     </div>
-    <div class="field-group">
+    <div class="field-wrap" style="margin-top:12px;">
+      <div class="field-label">Reported By</div>
+      <input type="text" id="nb-reporter" placeholder="Your name" style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;box-sizing:border-box;">
+    </div>
+    <div class="field-wrap" style="margin-top:12px;">
       <div class="field-label">Description</div>
-      <textarea class="field-textarea" id="nb-desc" placeholder="Steps to reproduce, expected vs actual behavior..."></textarea>
+      <textarea id="nb-desc" rows="3" placeholder="Describe the bug..." style="width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;resize:vertical;box-sizing:border-box;"></textarea>
     </div>
-    <div class="modal-footer">
-      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
-      <button class="btn-submit" id="nb-submit" onclick="submitBug()">Submit</button>
+    <div class="field-wrap" style="margin-top:12px;">
+      <div class="field-label">Attachments</div>
+      <div id="nb-drop-zone" onclick="document.getElementById('nb-files').click()"
+        ondragover="event.preventDefault();this.style.borderColor='#0f172a'"
+        ondragleave="this.style.borderColor='#e2e8f0'"
+        ondrop="event.preventDefault();this.style.borderColor='#e2e8f0';handleNewBugFiles(event.dataTransfer.files)"
+        style="border:2px dashed #e2e8f0;border-radius:8px;padding:20px;text-align:center;cursor:pointer;color:#94a3b8;font-size:13px;transition:border-color 0.15s;">
+        📎 Click or drag files here to upload
+        <input type="file" id="nb-files" multiple style="display:none" onchange="handleNewBugFiles(this.files)">
+      </div>
+      <div id="nb-file-list" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;"></div>
     </div>
-    <div id="nb-msg"></div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+      <button onclick="closeNewBugModal()" style="padding:8px 18px;border:1px solid #e2e8f0;background:#fff;border-radius:6px;cursor:pointer;font-size:13px;color:#64748b;">Cancel</button>
+      <button onclick="submitNewBug()" id="nb-submit-btn" style="padding:8px 18px;background:#0f172a;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600;">Submit</button>
+    </div>
+    <div id="nb-msg" style="display:none;margin-top:12px;text-align:center;font-size:13px;color:#16a34a;"></div>
   </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-const MODULE_LABELS = {tour:"Tour Confirmation",morning:"Morning Pickup",tickets:"Tickets Reminder",general:"General"};
-const PRI_LABELS = {urgent:"Urgent",high:"High",normal:"Normal",low:"Low"};
+let allTasks = [];
+let activeStatFilter = null;
+let activePillFilter = null;
+let lang = 'zh';
 
-async function loadBugs() {
-  const module   = document.getElementById('f-module').value;
-  const priority = document.getElementById('f-priority').value;
-  const status   = document.getElementById('f-status').value;
-  const params   = new URLSearchParams();
-  if (module)   params.set('module', module);
-  if (priority) params.set('priority', priority);
-  if (status)   params.set('status', status);
+const i18n = {
+  zh: {
+    pageSub:'数据来自 ClickUp · Bug list · TripGuru-Dev',refresh:'刷新数据',loading:'正在从 ClickUp 拉取数据...',
+    connError:'连接失败，请稍后重试',noResult:'没有符合条件的 bug',empty:'目前为空',cleared:'已从该项移出',
+    noOwner:'无负责人',allBug:'全部 Bug',unclosed:'未关闭',search:'搜索 bug 标题、负责人...',
+    showing:(n,t)=>`显示 ${n} / ${t} 条`,daysAgoLabel:d=>`已 ${d} 天`,createdLabel:d=>`创建: ${d}`,
+    viewClickup:'在 ClickUp 查看 ↗',historyLabel:'历史日报',submitLabel:'提交今日日报',
+    nameLabel:'姓名',nameHolder:'— 选择 —',yestLabel:'昨日进展',yestHolder:'昨天完成了什么？',
+    blockLabel:'卡点',blockHolder:'遇到什么阻碍？',todayLabel:'今日计划 *',todayHolder:'今天打算做什么？',
+    tomorrowLabel:'明日计划',tomorrowHolder:'明天打算做什么？',submitBtn:'提交日报',
+    submitOk:'✓ 已提交到 ClickUp',commentFail:'加载失败',noComment:'暂无日报记录',
+    commentLoading:'加载中...',allPill:'全部',
+    statLabels:{active:'未关闭',P0:'P0',P1:'P1',P2:'P2','no-owner':'无负责人'},
+    pills:[
+      {val:'new',label:'新建<br>New'},{val:'in progress',label:'修复中<br>In Progress'},
+      {val:'fixed',label:'已修复待测试<br>Fixed & Pending Test'},{val:'in verification',label:'验证中<br>Under Verification'},
+      {val:'test passed',label:'TEST验证通过<br>Test Passed'},{val:'complete',label:'已上线<br>Completed'},
+      {val:'已拒绝',label:'已拒绝<br>Rejected'},{val:'cr',label:'转为需求<br>Moved to Backlog'},
+    ],
+  },
+  en: {
+    pageSub:'Data from ClickUp · Bug list · TripGuru-Dev',refresh:'Refresh',loading:'Loading from ClickUp...',
+    connError:'Connection failed. Please try again.',noResult:'No bugs found',empty:'Currently empty',cleared:'All cleared',
+    noOwner:'No assignee',allBug:'All Bugs',unclosed:'Open',search:'Search bug title, assignee...',
+    showing:(n,t)=>`Showing ${n} / ${t}`,daysAgoLabel:d=>`${d} days`,createdLabel:d=>`Created: ${d}`,
+    viewClickup:'View in ClickUp ↗',historyLabel:'Daily Log History',submitLabel:'Submit Daily Log',
+    nameLabel:'Name',nameHolder:'— Select —',yestLabel:'Yesterday',yestHolder:'What did you finish yesterday?',
+    blockLabel:'Blockers',blockHolder:'Any blockers?',todayLabel:"Today's Plan *",todayHolder:"What's your plan today?",
+    tomorrowLabel:"Tomorrow's Plan",tomorrowHolder:"What's your plan tomorrow?",submitBtn:'Submit',
+    submitOk:'✓ Submitted to ClickUp',commentFail:'Failed to load',noComment:'No logs yet',
+    commentLoading:'Loading...',allPill:'All',
+    statLabels:{active:'Open',P0:'P0',P1:'P1',P2:'P2','no-owner':'No Assignee'},
+    pills:[
+      {val:'new',label:'New'},{val:'in progress',label:'In Progress'},
+      {val:'fixed',label:'Fixed & Pending Test'},{val:'in verification',label:'Under Verification'},
+      {val:'test passed',label:'Test Passed'},{val:'complete',label:'Completed'},
+      {val:'已拒绝',label:'Rejected'},{val:'cr',label:'Moved to Backlog'},
+    ],
+  }
+};
 
-  const tbody = document.getElementById('br-tbody');
-  tbody.innerHTML = '<tr><td colspan="9" class="br-empty">Loading...</td></tr>';
+function t(){ return i18n[lang]; }
 
-  try {
-    const resp = await fetch('/api/bug-reports?' + params.toString());
-    const bugs = await resp.json();
-    document.getElementById('br-count').textContent = bugs.length + ' record' + (bugs.length !== 1 ? 's' : '');
-    if (!bugs.length) {
-      tbody.innerHTML = '<tr><td colspan="9" class="br-empty">No bug reports found.</td></tr>';
-      return;
-    }
-    tbody.innerHTML = bugs.map(b => {
-      const priClass = 'pri-' + b.priority;
-      const priLabel = PRI_LABELS[b.priority] || b.priority;
-      const modLabel = MODULE_LABELS[b.module] || b.module;
-      const created  = new Date(b.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
-      const clickup  = b.clickup_task_id
-        ? `<a class="clickup-link" href="https://app.clickup.com/t/${b.clickup_task_id}" target="_blank">#${b.clickup_task_id}</a>`
-        : '<span style="color:#ccc">—</span>';
-      return `<tr>
-        <td style="color:#aaa;font-size:11px;">${b.id}</td>
-        <td style="font-weight:500;max-width:280px;">${escHtml(b.title)}</td>
-        <td><span class="mod-badge">${modLabel}</span></td>
-        <td><span class="pri-badge ${priClass}">${priLabel}</span></td>
-        <td>
-          <select class="status-sel status-${b.status}" onchange="updateStatus(${b.id}, this)">
-            <option value="open"        ${b.status==='open'        ?'selected':''}>Open</option>
-            <option value="in_progress" ${b.status==='in_progress' ?'selected':''}>In Progress</option>
-            <option value="fixed"       ${b.status==='fixed'       ?'selected':''}>Fixed</option>
-          </select>
-        </td>
-        <td style="font-size:12px;color:#666;">${b.order_number ? escHtml(b.order_number) : '—'}</td>
-        <td style="font-size:12px;">${escHtml(b.submitted_by)}</td>
-        <td style="font-size:11px;color:#aaa;white-space:nowrap;">${created}</td>
-        <td>${clickup}</td>
-      </tr>`;
+function toggleLang(){
+  lang = lang==='zh'?'en':'zh';
+  document.getElementById('lang-btn').textContent = lang==='zh'?'EN':'中文';
+  document.getElementById('page-sub').textContent = t().pageSub;
+  document.getElementById('refresh-btn').textContent = t().refresh;
+  document.getElementById('new-bug-btn').textContent = lang==='zh'?'＋ 新建 Bug':'＋ New Bug';
+  document.getElementById('search').placeholder = t().search;
+  document.querySelectorAll('option[data-zh]').forEach(opt=>{ opt.textContent = opt.getAttribute('data-'+lang); });
+  render();
+}
+
+function getSeverity(task){
+  const f = task.custom_fields?.find(f=>f.name==='Bug Severity');
+  if(!f||f.value===null||f.value===undefined) return null;
+  const opt = f.type_config?.options?.find(o=>o.orderindex===f.value);
+  return opt?.name||null;
+}
+function getReason(task){
+  const f = task.custom_fields?.find(f=>f.name==='Bug原因');
+  if(!f||f.value===null||f.value===undefined) return null;
+  const opt = f.type_config?.options?.find(o=>o.orderindex===f.value);
+  return opt?.name||null;
+}
+function getWorkstream(task){
+  const f = task.custom_fields?.find(f=>f.name==='Workstream');
+  if(!f||f.value===null||f.value===undefined) return null;
+  const opt = f.type_config?.options?.find(o=>o.orderindex===f.value||o.id===f.value);
+  return opt?.name||null;
+}
+function daysAgo(ts){ return Math.floor((Date.now()-parseInt(ts))/86400000); }
+function severityClass(s){ return s==='P0'?'b-p0':s==='P1'?'b-p1':s==='P2'?'b-p2':'b-p3'; }
+function statusClass(s){
+  const sl=(s||'').toLowerCase();
+  if(sl.includes('new')||sl.includes('新建')) return 'b-new';
+  if(sl.includes('progress')||sl.includes('进行')) return 'b-prog';
+  if(sl.includes('complete')||sl.includes('上线')||sl.includes('done')) return 'b-closed';
+  if(sl.includes('fixed')||sl.includes('passed')) return 'b-done';
+  return 'b-open';
+}
+function isClosed(tk){
+  const s=(tk.status?.status||'').toLowerCase();
+  return s.includes('complete')||s.includes('上线')||s.includes('已拒绝')||s.includes('cr')||s.includes('rejected');
+}
+
+function setStatFilter(key){
+  activeStatFilter = activeStatFilter===key?null:key;
+  activePillFilter = null;
+  document.querySelectorAll('.stat').forEach(el=>el.classList.remove('active'));
+  if(activeStatFilter) document.querySelector(`.stat[data-key="${activeStatFilter}"]`)?.classList.add('active');
+  render();
+}
+
+function applyStatFilter(tasks){
+  if(!activeStatFilter) return tasks;
+  if(activeStatFilter==='active') return tasks.filter(tk=>!isClosed(tk));
+  if(activeStatFilter==='P0') return tasks.filter(tk=>getSeverity(tk)==='P0');
+  if(activeStatFilter==='P1') return tasks.filter(tk=>getSeverity(tk)==='P1');
+  if(activeStatFilter==='P2') return tasks.filter(tk=>getSeverity(tk)==='P2');
+  if(activeStatFilter==='no-owner') return tasks.filter(tk=>!isClosed(tk)&&tk.assignees?.length===0);
+  return tasks;
+}
+
+function renderStats(tasks){
+  const active = tasks.filter(tk=>!isClosed(tk));
+  const p0=tasks.filter(tk=>getSeverity(tk)==='P0').length;
+  const p1=tasks.filter(tk=>getSeverity(tk)==='P1').length;
+  const p2=tasks.filter(tk=>getSeverity(tk)==='P2').length;
+  const noOwner=active.filter(tk=>tk.assignees?.length===0).length;
+  const stats=[
+    {key:null,label:t().allBug,val:tasks.length,color:'#0f172a'},
+    {key:'active',label:t().statLabels.active,val:active.length,color:'#0369a1'},
+    {key:'P0',label:'P0',val:p0,color:'#dc2626'},
+    {key:'P1',label:'P1',val:p1,color:'#ea580c'},
+    {key:'P2',label:'P2',val:p2,color:'#2563eb'},
+    {key:'no-owner',label:t().statLabels['no-owner'],val:noOwner,color:'#9333ea'},
+  ];
+  document.getElementById('stats').innerHTML = stats.map(s=>`
+    <div class="stat${activeStatFilter===s.key&&s.key?' active':''}" data-key="${s.key||''}"
+         onclick="${s.key?`setStatFilter('${s.key}')` :'setStatFilter(null)'}">
+      <div class="stat-label">${s.label}</div>
+      <div class="stat-val" style="color:${s.color}">${s.val}</div>
+    </div>`).join('');
+
+  document.getElementById('status-filter-row').innerHTML =
+    `<button class="sf-btn active" onclick="setStatusFilter('',this)">
+      <div class="sf-label">${t().allPill}</div><div class="sf-num">${tasks.length}</div>
+    </button>` +
+    t().pills.map(s=>{
+      const count=tasks.filter(tk=>(tk.status?.status||'').toLowerCase().includes(s.val.toLowerCase())).length;
+      const onclick=count===0?`showEmpty(this)`:`setStatusFilter('${s.val}',this)`;
+      const [zhLine,enLine]=s.label.split('<br>');
+      return `<button class="sf-btn" onclick="${onclick}">
+        <div class="sf-label">${zhLine}${enLine?`<span class="sf-en"> ${enLine}</span>`:''}</div>
+        <div class="sf-num">${count}</div>
+      </button>`;
     }).join('');
-  } catch(e) {
-    tbody.innerHTML = '<tr><td colspan="9" class="br-empty" style="color:#c00;">Failed to load. Please refresh.</td></tr>';
+}
+
+function setStatusFilter(val,btn){
+  document.querySelectorAll('.sf-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  activePillFilter=val||null;
+  render();
+}
+function showEmpty(btn){
+  document.querySelectorAll('.sf-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('bug-list').innerHTML=`<div class="bug-loading">${t().empty}</div>`;
+}
+
+function populateAssignees(tasks){
+  const names=new Set();
+  tasks.forEach(tk=>tk.assignees?.forEach(a=>names.add(a.username)));
+  const sel=document.getElementById('f-assignee');
+  [...names].sort().forEach(name=>{
+    const opt=document.createElement('option');
+    opt.value=name; opt.textContent=name; sel.appendChild(opt);
+  });
+}
+
+function render(){
+  const search=document.getElementById('search').value.toLowerCase();
+  const fSev=document.getElementById('f-severity').value;
+  const fStatus=document.getElementById('f-status').value;
+  const fReason=document.getElementById('f-reason').value;
+  const fWorkstream=document.getElementById('f-workstream').value;
+  const fAssignee=document.getElementById('f-assignee').value;
+  const sortBy=document.getElementById('f-sort').value;
+  const sevOrder={P0:0,P1:1,P2:2,P3:3};
+
+  let filtered=applyStatFilter(allTasks).filter(tk=>{
+    const sev=getSeverity(tk);
+    const reason=getReason(tk);
+    const statusStr=(tk.status?.status||'').toLowerCase();
+    const assigneeNames=tk.assignees?.map(a=>a.username).join(' ')||'';
+    const matchText=!search||tk.name.toLowerCase().includes(search)||assigneeNames.toLowerCase().includes(search);
+    const matchStatus=activePillFilter?statusStr.includes(activePillFilter.toLowerCase()):(!fStatus||statusStr.includes(fStatus));
+    return matchText&&matchStatus&&(!fSev||sev===fSev)&&(!fReason||reason===fReason)
+      &&(!fWorkstream||getWorkstream(tk)===fWorkstream)&&(!fAssignee||assigneeNames.includes(fAssignee));
+  });
+
+  filtered.sort((a,b)=>{
+    const aDone=isClosed(a)?1:0,bDone=isClosed(b)?1:0;
+    if(aDone!==bDone) return aDone-bDone;
+    if(sortBy==='days-desc') return parseInt(a.date_created)-parseInt(b.date_created);
+    if(sortBy==='updated-desc') return parseInt(b.date_updated)-parseInt(a.date_updated);
+    const sa=sevOrder[getSeverity(a)]??4,sb=sevOrder[getSeverity(b)]??4;
+    if(sa!==sb) return sa-sb;
+    return parseInt(b.date_created)-parseInt(a.date_created);
+  });
+
+  renderStats(allTasks);
+
+  const el=document.getElementById('bug-list');
+  if(!filtered.length){
+    el.innerHTML=activeStatFilter
+      ?`<div class="bug-loading" style="color:#16a34a;">✓ ${t().cleared}</div>`
+      :`<div class="bug-loading">${t().noResult}</div>`;
+    return;
+  }
+
+  el.innerHTML=`<div class="count">${t().showing(filtered.length,allTasks.length)}</div>`+
+    filtered.map(task=>{
+      const sev=getSeverity(task),reason=getReason(task),workstream=getWorkstream(task);
+      const days=daysAgo(task.date_created),isUrgent=days>7&&!isClosed(task);
+      const assignees=task.assignees||[];
+      const dateStr=new Date(parseInt(task.date_created)).toLocaleDateString('zh-CN');
+      const avatarsHtml=assignees.length
+        ?assignees.map(a=>a.profilePicture
+            ?`<img class="avatar" src="${a.profilePicture}" title="${a.username}">`
+            :`<span class="avatar-placeholder" title="${a.username}">${a.initials||a.username[0]}</span>`
+          ).join('')
+        :`<span style="font-size:12px;color:#94a3b8;">${t().noOwner}</span>`;
+      const assigneeText=assignees.map(a=>`<span style="font-size:12px">${a.username}</span>`).join('、');
+      return `
+<div class="bug-card" id="card-${task.id}">
+  <div class="bug-summary" onclick="toggleExpand('${task.id}')">
+    <div class="bug-badges">
+      ${sev?`<span class="badge ${severityClass(sev)}">${sev}</span>`:''}
+      <span class="badge ${statusClass(task.status?.status)}">${task.status?.status||'—'}</span>
+      ${workstream?`<span class="badge b-ws">${workstream}</span>`:''}
+      ${reason?`<span class="badge b-reason">${reason}</span>`:''}
+    </div>
+    <div class="bug-title">${task.name}</div>
+    <div class="bug-meta">
+      <div class="assignees">${avatarsHtml}${assigneeText}</div>
+      <span>${t().createdLabel(dateStr)}</span>
+      <span class="days-badge ${isUrgent?'days-urgent':''}">${t().daysAgoLabel(days)}</span>
+      <a class="bug-link" href="${task.url}" target="_blank" onclick="event.stopPropagation()">${t().viewClickup}</a>
+    </div>
+  </div>
+  <div class="expand-panel" id="expand-${task.id}">
+    <div class="desc-section">
+      <div class="panel-label">Bug 描述 / Description</div>
+      <div class="desc-text">${task.text_content?task.text_content.trim():'No description created for this bug'}</div>
+    </div>
+    <div class="expand-grid">
+      <div>
+        <div id="latest-${task.id}"></div>
+        <div class="panel-label">${t().historyLabel}</div>
+        <div class="comments-scroll" id="comments-${task.id}">
+          <span style="font-size:13px;color:#94a3b8;">${t().commentLoading}</span>
+        </div>
+      </div>
+      <div class="form-col">
+        <div class="panel-label">${t().submitLabel}</div>
+        <div class="field-wrap">
+          <div class="field-label">${t().nameLabel}</div>
+          <select id="member-${task.id}">
+            <option value="">${t().nameHolder}</option>
+            <option>liucai</option><option>LiAng Lu</option><option>YangMingqin</option>
+            <option>Eric</option><option>lili</option><option>Liyumeng</option>
+            <option>Echo Pang</option><option>Lily Wang</option>
+          </select>
+        </div>
+        <div class="field-wrap">
+          <div class="field-label">${t().yestLabel}</div>
+          <textarea id="prog-${task.id}" placeholder="${t().yestHolder}"></textarea>
+        </div>
+        <div class="field-wrap">
+          <div class="field-label">${t().blockLabel}</div>
+          <textarea id="block-${task.id}" placeholder="${t().blockHolder}"></textarea>
+        </div>
+        <div class="field-wrap">
+          <div class="field-label">${t().todayLabel}</div>
+          <textarea id="today-${task.id}" placeholder="${t().todayHolder}"></textarea>
+        </div>
+        <div class="field-wrap">
+          <div class="field-label">${t().tomorrowLabel}</div>
+          <textarea id="tomorrow-${task.id}" placeholder="${t().tomorrowHolder}"></textarea>
+        </div>
+        <button class="submit-btn" onclick="submitLog('${task.id}')">${t().submitBtn}</button>
+        <div class="success-msg" id="msg-${task.id}">${t().submitOk}</div>
+        <div style="margin-top:12px;border-top:1px solid #e2e8f0;padding-top:10px;">
+          <div class="field-label" style="margin-bottom:6px;">${lang==='zh'?'上传附件':'Upload Attachment'}</div>
+          <div onclick="document.getElementById('attach-input-${task.id}').click()"
+            style="border:2px dashed #e2e8f0;border-radius:6px;padding:10px;text-align:center;cursor:pointer;color:#94a3b8;font-size:12px;">
+            📎 ${lang==='zh'?'点击选择文件':'Click to select files'}
+            <input type="file" id="attach-input-${task.id}" multiple style="display:none"
+              onchange="handleExistingBugFiles('${task.id}',this.files)">
+          </div>
+          <div id="attach-list-${task.id}" style="margin-top:6px;display:flex;flex-wrap:wrap;gap:4px;"></div>
+          <button id="attach-btn-${task.id}" onclick="submitAttachment('${task.id}')"
+            class="submit-btn" style="margin-top:8px;">${lang==='zh'?'上传附件':'Upload'}</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>`;
+    }).join('');
+}
+
+async function toggleExpand(taskId){
+  const panel=document.getElementById(`expand-${taskId}`);
+  const isOpen=panel.style.display==='block';
+  panel.style.display=isOpen?'none':'block';
+  if(!isOpen) loadComments(taskId);
+}
+
+async function loadComments(taskId){
+  const el=document.getElementById(`comments-${taskId}`);
+  const latestEl=document.getElementById(`latest-${taskId}`);
+  el.innerHTML=`<span style="font-size:13px;color:#94a3b8;">${t().commentLoading}</span>`;
+  latestEl.innerHTML='';
+  try{
+    const res=await fetch(`/api/bug-reports/task/${taskId}/comment`);
+    const data=await res.json();
+    const comments=data.comments||[];
+    if(!comments.length){ el.innerHTML=`<span style="font-size:13px;color:#94a3b8;">${t().noComment}</span>`; return; }
+    const logLabel=lang==='zh'?'日报':'Log';
+    const latest=comments[0];
+    const history=comments.slice(1);
+    const isLatestLog=latest.comment_text?.startsWith('📅');
+    latestEl.innerHTML=`
+<div class="latest-log-card" style="${isLatestLog?'border-color:#86efac;background:#f0fdf4;':''}">
+  <div class="comment-header">
+    ${latest.user?.profilePicture?`<img src="${latest.user.profilePicture}" style="width:18px;height:18px;border-radius:50%;">` :''}
+    <span class="comment-user">${latest.user?.username||'—'}</span>
+    ${isLatestLog?`<span style="font-size:10px;background:#dcfce7;color:#166534;padding:1px 6px;border-radius:20px;border:1px solid #86efac;">${logLabel}</span>`:''}
+    <span class="comment-date">${new Date(parseInt(latest.date)).toLocaleDateString('zh-CN')}</span>
+  </div>
+  <div class="comment-body">${latest.comment_text}</div>
+</div>`;
+    if(!history.length){ el.innerHTML=`<span style="font-size:13px;color:#94a3b8;">${t().noComment}</span>`; return; }
+    el.innerHTML=history.map(c=>{
+      const isLog=c.comment_text?.startsWith('📅');
+      return `<div class="comment-card" style="${isLog?'border-color:#86efac;background:#f0fdf4;':''}">
+  <div class="comment-header">
+    ${c.user?.profilePicture?`<img src="${c.user.profilePicture}" style="width:18px;height:18px;border-radius:50%;">`:''}
+    <span class="comment-user">${c.user?.username||'—'}</span>
+    ${isLog?`<span style="font-size:10px;background:#dcfce7;color:#166534;padding:1px 6px;border-radius:20px;border:1px solid #86efac;">${logLabel}</span>`:''}
+    <span class="comment-date">${new Date(parseInt(c.date)).toLocaleDateString('zh-CN')}</span>
+  </div>
+  <div class="comment-body">${c.comment_text}</div>
+</div>`;
+    }).join('');
+  }catch(e){
+    el.innerHTML=`<span style="color:#ef4444;font-size:13px;">${t().commentFail}</span>`;
   }
 }
 
-async function updateStatus(id, sel) {
-  const newStatus = sel.value;
-  sel.className = 'status-sel status-' + newStatus;
-  try {
-    await fetch('/api/bug-reports/' + id + '/status', {
-      method: 'PATCH',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({status: newStatus})
+async function submitLog(taskId){
+  const member=document.getElementById(`member-${taskId}`).value;
+  const today=document.getElementById(`today-${taskId}`).value.trim();
+  if(!member){ alert(lang==='zh'?'请选择姓名':'Please select your name'); return; }
+  if(!today){ alert(lang==='zh'?'请填写今日计划':"Please fill in today's plan"); return; }
+  const prog=document.getElementById(`prog-${taskId}`).value.trim();
+  const block=document.getElementById(`block-${taskId}`).value.trim();
+  const tomorrow=document.getElementById(`tomorrow-${taskId}`).value.trim();
+  const date=new Date().toLocaleDateString('zh-CN');
+  const text=`📅 ${date} | ${member}\n━━━━━━━━━━━━━━━━\n昨日进展：${prog||'—'}\n卡点：${block||'—'}\n今日计划：${today}\n明日计划：${tomorrow||'—'}`;
+  try{
+    await fetch(`/api/bug-reports/task/${taskId}/comment`,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({comment_text:text})
     });
-  } catch(e) { console.error(e); }
+    const msg=document.getElementById(`msg-${taskId}`);
+    msg.textContent=t().submitOk; msg.style.display='block';
+    ['member','prog','block','today','tomorrow'].forEach(f=>{ document.getElementById(`${f}-${taskId}`).value=''; });
+    setTimeout(()=>{ msg.style.display='none'; loadComments(taskId); },1500);
+  }catch(e){ alert((lang==='zh'?'提交失败：':'Submit failed: ')+e.message); }
 }
 
-function openModal() {
-  document.getElementById('nb-title').value = '';
-  document.getElementById('nb-desc').value  = '';
-  document.getElementById('nb-order').value = '';
-  document.getElementById('nb-module').value   = 'general';
-  document.getElementById('nb-priority').value = 'normal';
-  document.getElementById('nb-msg').textContent = '';
-  document.getElementById('nb-submit').disabled = false;
-  document.getElementById('bug-modal').classList.add('open');
+function openNewBugModal(){
+  const sel=document.getElementById('nb-assignee');
+  sel.innerHTML='<option value="">— Select —</option>';
+  const seen=new Set();
+  allTasks.forEach(tk=>tk.assignees?.forEach(a=>{
+    if(!seen.has(a.id)){ seen.add(a.id); const opt=document.createElement('option'); opt.value=a.id; opt.textContent=a.username; sel.appendChild(opt); }
+  }));
+  ['nb-title','nb-reporter','nb-desc'].forEach(id=>document.getElementById(id).value='');
+  ['nb-severity','nb-workstream','nb-assignee'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('nb-due').value='';
+  document.getElementById('nb-files').value='';
+  document.getElementById('nb-file-list').innerHTML='';
+  document.getElementById('nb-msg').style.display='none';
+  document.getElementById('nb-submit-btn').disabled=false;
+  document.getElementById('nb-submit-btn').textContent='Submit';
+  document.getElementById('new-bug-modal').classList.add('open');
 }
+function closeNewBugModal(){ document.getElementById('new-bug-modal').classList.remove('open'); }
+document.getElementById('new-bug-modal').addEventListener('click',function(e){ if(e.target===this) closeNewBugModal(); });
 
-function closeModal() {
-  document.getElementById('bug-modal').classList.remove('open');
-}
-
-async function submitBug() {
-  const title = document.getElementById('nb-title').value.trim();
-  if (!title) { showMsg('Title is required.', 'error'); return; }
-  const btn = document.getElementById('nb-submit');
-  btn.disabled = true;
-  btn.textContent = 'Submitting...';
-  try {
-    const resp = await fetch('/api/bug-reports', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({
-        title,
-        description:  document.getElementById('nb-desc').value.trim() || null,
-        module:       document.getElementById('nb-module').value,
-        priority:     document.getElementById('nb-priority').value,
-        order_number: document.getElementById('nb-order').value.trim() || null,
-      })
-    });
-    if (resp.ok) {
-      showMsg('Bug submitted successfully.', 'success');
-      setTimeout(() => { closeModal(); loadBugs(); }, 1000);
-    } else {
-      showMsg('Submission failed. Please try again.', 'error');
-      btn.disabled = false; btn.textContent = 'Submit';
+async function submitNewBug(){
+  const title=document.getElementById('nb-title').value.trim();
+  if(!title){ alert('Please enter a title'); return; }
+  const severityVal=document.getElementById('nb-severity').value;
+  const workstreamId=document.getElementById('nb-workstream').value;
+  const assigneeId=document.getElementById('nb-assignee').value;
+  const reporter=document.getElementById('nb-reporter').value.trim();
+  const dueVal=document.getElementById('nb-due').value;
+  const desc=document.getElementById('nb-desc').value.trim();
+  const fullDesc=reporter?`[Reported by: ${reporter}]\n\n${desc}`:desc;
+  const body={name:title,description:fullDesc,assignees:assigneeId?[parseInt(assigneeId)]:[],
+    due_date:dueVal?new Date(dueVal).getTime():null,priority:severityVal?parseInt(severityVal):null,custom_fields:[]};
+  if(workstreamId) body.custom_fields.push({id:'564243b5-f057-4195-b0b0-fedd4164369d',value:workstreamId});
+  const btn=document.getElementById('nb-submit-btn');
+  btn.disabled=true; btn.textContent='Submitting...';
+  try{
+    const res=await fetch('/api/bug-reports/tasks',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    const data=await res.json();
+    if(data.id){
+      const files=document.getElementById('nb-files').files;
+      if(files.length>0){ btn.textContent='Uploading files...'; await uploadFilesToTask(data.id,files); }
+      const msg=document.getElementById('nb-msg');
+      msg.textContent='✓ Bug submitted to ClickUp'; msg.style.display='block';
+      setTimeout(()=>{ closeNewBugModal(); loadTasks(); },1500);
+    }else{
+      alert('Submit failed: '+JSON.stringify(data)); btn.disabled=false; btn.textContent='Submit';
     }
-  } catch(e) {
-    showMsg('Network error.', 'error');
-    btn.disabled = false; btn.textContent = 'Submit';
+  }catch(e){ alert('Submit failed: '+e.message); btn.disabled=false; btn.textContent='Submit'; }
+}
+
+async function uploadFilesToTask(taskId,files){
+  for(const file of files){
+    const form=new FormData(); form.append('file',file,file.name);
+    try{ await fetch(`/api/bug-reports/task/${taskId}/attachment`,{method:'POST',body:form}); }
+    catch(e){ console.warn('File upload failed:',file.name,e.message); }
+  }
+}
+function handleNewBugFiles(files){
+  const list=document.getElementById('nb-file-list'); list.innerHTML='';
+  for(const file of files){
+    const tag=document.createElement('div');
+    tag.style.cssText='font-size:12px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:3px 10px;color:#334155;';
+    tag.textContent=`📄 ${file.name}`; list.appendChild(tag);
+  }
+}
+function handleExistingBugFiles(taskId,files){
+  const list=document.getElementById(`attach-list-${taskId}`); if(!list) return; list.innerHTML='';
+  for(const file of files){
+    const tag=document.createElement('div');
+    tag.style.cssText='font-size:12px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:3px 10px;color:#334155;';
+    tag.textContent=`📄 ${file.name}`; list.appendChild(tag);
+  }
+}
+async function submitAttachment(taskId){
+  const input=document.getElementById(`attach-input-${taskId}`);
+  if(!input.files.length){ alert('Please select a file first'); return; }
+  const btn=document.getElementById(`attach-btn-${taskId}`);
+  btn.disabled=true; btn.textContent=lang==='zh'?'上传中...':'Uploading...';
+  await uploadFilesToTask(taskId,input.files);
+  btn.disabled=false; btn.textContent=lang==='zh'?'上传附件':'Upload';
+  input.value=''; document.getElementById(`attach-list-${taskId}`).innerHTML='';
+  const msg=document.createElement('div');
+  msg.style.cssText='font-size:12px;color:#16a34a;margin-top:4px;'; msg.textContent='✓ Uploaded';
+  btn.parentElement.appendChild(msg); setTimeout(()=>msg.remove(),2000);
+}
+
+async function loadTasks(){
+  document.getElementById('bug-list').innerHTML=`<div class="bug-loading">${t().loading}</div>`;
+  try{
+    const res=await fetch('/api/bug-reports/tasks');
+    const data=await res.json();
+    allTasks=data.tasks||[];
+    populateAssignees(allTasks);
+    render();
+  }catch(e){
+    document.getElementById('bug-list').innerHTML=`<div class="bug-error">${t().connError}<br><small>${e.message}</small></div>`;
   }
 }
 
-function showMsg(text, type) {
-  const el = document.getElementById('nb-msg');
-  el.textContent = text;
-  el.className = type === 'success' ? 'msg-success' : 'msg-error';
-}
-
-function escHtml(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-document.getElementById('bug-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeModal();
-});
-
-loadBugs();
+loadTasks();
 </script>
 {% endblock %}
