@@ -146,19 +146,19 @@ def _render(booking, tour_config: dict, error_msg: str = "",
     # v4.17.14: YES locked only when already YES; modify_req state can still click YES to cancel
     yes_locked    = booking.confirmation == "yes"
     is_modify_req = booking.confirmation == "modify_req"
-    # v4.17.14: Modify locked based on pickup_time (12h before pickup), not submitted_at
+    # Modify locked from midnight (00:00 AM LA) of the day before tour date
     modify_locked = False
-    if booking.pickup_time and booking.tour_date:
-        pickup_str = f"{booking.tour_date.isoformat()} {booking.pickup_time}"
-        for fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%d %I:%M %p", "%Y-%m-%d %H:%M:%S"):
-            try:
-                pickup_dt = datetime.strptime(pickup_str, fmt)
-                from datetime import timedelta
-                if datetime.now() >= pickup_dt - timedelta(hours=12):
-                    modify_locked = True
-                break
-            except ValueError:
-                continue
+    if booking.tour_date:
+        from datetime import timedelta
+        deadline = datetime(
+            booking.tour_date.year,
+            booking.tour_date.month,
+            booking.tour_date.day,
+            0, 0, 0,
+            tzinfo=LA
+        ) - timedelta(days=1)  # 00:00 AM LA time on the day before tour
+        if datetime.now(LA) >= deadline:
+            modify_locked = True
     # v4.17.14: Count modify submissions for 3-attempt limit
     modify_count    = (booking.notes_history or "").count("] Modify requested")
     modify_maxed    = modify_count >= 3
@@ -219,11 +219,14 @@ def _render(booking, tour_config: dict, error_msg: str = "",
     modify_style_attr = "cursor:not-allowed;opacity:0.5;" if modify_disabled else ""
     modify_dis_attr   = "disabled" if modify_disabled else ""
     if modify_locked:
-        modify_sub = "Locked (within 12h)"
+        modify_sub = "No longer available"
     elif modify_maxed:
         modify_sub = "Max requests reached"
     else:
-        modify_sub = f"my booking ({3 - modify_count} left)"
+        from datetime import timedelta
+        _deadline_day = booking.tour_date - timedelta(days=1) if booking.tour_date else None
+        _deadline_str = _deadline_day.strftime("%b %-d") if _deadline_day else "day before tour"
+        modify_sub = f"Available until {_deadline_str} midnight"
 
     # Lunch section
     lunch_html = ""
@@ -581,19 +584,19 @@ async def guest_confirm_submit(
     qty         = int(booking.quantities or 1)
     has_lunch   = tour_config.get("has_lunch", False)
 
-    # v4.17.14: Compute pickup-based modify_locked and modify_count server-side
+    # Modify locked from midnight (00:00 AM LA) of the day before tour date
     _mod_locked = False
-    if booking.pickup_time and booking.tour_date:
-        _pu_str = f"{booking.tour_date.isoformat()} {booking.pickup_time}"
-        for _fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%d %I:%M %p", "%Y-%m-%d %H:%M:%S"):
-            try:
-                from datetime import timedelta as _td
-                _pu_dt = datetime.strptime(_pu_str, _fmt)
-                if datetime.now() >= _pu_dt - _td(hours=12):
-                    _mod_locked = True
-                break
-            except ValueError:
-                continue
+    if booking.tour_date:
+        from datetime import timedelta as _td
+        _deadline = datetime(
+            booking.tour_date.year,
+            booking.tour_date.month,
+            booking.tour_date.day,
+            0, 0, 0,
+            tzinfo=LA
+        ) - _td(days=1)
+        if datetime.now(LA) >= _deadline:
+            _mod_locked = True
     _modify_count = (booking.notes_history or "").count("] Modify requested")
 
     # v4.17.14: Already-YES guest submits without radio — treat as lunch update
@@ -609,9 +612,9 @@ async def guest_confirm_submit(
     elif confirmation not in ("yes", "modify_req"):
         error_msg = "Please select YES or Modify."
     elif confirmation == "yes" and is_yes_confirmed and _mod_locked:
-        error_msg = "Lunch selection is locked within 12 hours of your pickup time."
+        error_msg = "Lunch selection is locked. Changes are no longer accepted after midnight the day before your tour."
     elif confirmation == "modify_req" and _mod_locked:
-        error_msg = "The Modify option is no longer available within 12 hours of your pickup time."
+        error_msg = "The Modify option is no longer available. Date change requests must be submitted before midnight the day before your tour."
     elif confirmation == "modify_req" and _modify_count >= 3:
         error_msg = "You have reached the maximum number of date change requests (3). Please contact us at reservations@nationalparkexpress.com or call 702-948-4190."
     elif confirmation == "modify_req" and not reschedule_date:

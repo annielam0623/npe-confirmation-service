@@ -450,6 +450,7 @@ async def update_mtlv_ticket_status(
     """Update MTLV ticket send status. Values: pending_send | sent"""
     from zoneinfo import ZoneInfo
     LA = ZoneInfo("America/Los_Angeles")
+    now_la = datetime.now(LA).replace(tzinfo=None)
 
     result = await db.execute(select(Booking).where(Booking.id == booking_id))
     booking = result.scalar_one_or_none()
@@ -463,16 +464,34 @@ async def update_mtlv_ticket_status(
         raise HTTPException(status_code=400, detail="Invalid status. Use pending_send or sent.")
 
     booking.mtlv_ticket_status = new_status
-    booking.updated_at = datetime.now(ZoneInfo("America/Los_Angeles")).replace(tzinfo=None)
+    booking.updated_at = now_la
+
+    # Record who sent and when
+    display_name = getattr(current_user, "full_name", None) or getattr(current_user, "display_name", None) or current_user.username
+    if new_status == "sent":
+        booking.mtlv_ticket_sent_by = display_name
+        booking.mtlv_ticket_sent_at = now_la
+    else:
+        # Reverted to pending — clear sent_by/sent_at
+        booking.mtlv_ticket_sent_by = None
+        booking.mtlv_ticket_sent_at = None
+
     await _log_activity(db,
-    order_number = booking.order_number,
-    event_type   = "mtlv_ticket_sent",
-    detail       = f"MTLV ticket status set to {new_status}",
-    actor        = current_user.username,
-    actor_type   = "staff",
-)
+        order_number = booking.order_number,
+        event_type   = "mtlv_ticket_sent",
+        detail       = f"MTLV ticket status set to {new_status} by {display_name}",
+        actor        = current_user.username,
+        actor_type   = "staff",
+    )
     await db.commit()
-    return {"ok": True, "mtlv_ticket_status": booking.mtlv_ticket_status}
+
+    sent_at_str = now_la.strftime("%-m/%-d/%y %-I:%M %p") if new_status == "sent" else None
+    return {
+        "ok":                  True,
+        "mtlv_ticket_status":  booking.mtlv_ticket_status,
+        "sent_by":             booking.mtlv_ticket_sent_by,
+        "sent_at":             sent_at_str,
+    }
 
 
 @router.delete("/{booking_id}/handle")

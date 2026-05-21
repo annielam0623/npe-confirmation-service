@@ -791,7 +791,7 @@
               <td style="width:40px">🦃 T<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
               <td style="width:40px">🥗 V<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
               <td style="width:40px">🥩 B<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
-              <td style="width:55px">🏛️ MTLV<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
+              <td style="width:55px">🏛️ MTLV <span id="mtlv-hdr-bubble" style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#fff;border:1.5px solid #ced4da;color:#aaa;vertical-align:middle;margin-left:2px;">0</span><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
               <td style="width:65px">🎟️ Tickets<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
               <td style="width:200px">Notes <span id="notes-hdr-bubble" style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#fff;border:1.5px solid #ced4da;color:#aaa;vertical-align:middle;margin-left:2px;">0</span><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
               <td style="width:100px">Submitted<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
@@ -1023,10 +1023,18 @@
             mtlvCell = `<span class="sp sp-mtlv-num">🎫 ${r.mtlv_qty}</span>`;
             const tktStatus = r.mtlv_ticket_status || 'pending_send';
             const isSent = tktStatus === 'sent';
-            ticketsCell = `<select class="tkt-select${isSent ? ' v-sent' : ''}" data-id="${r.id}" onchange="saveMtlvTicketStatus(this)">
-          <option value="pending_send" ${!isSent ? 'selected' : ''}>Pending</option>
-          <option value="sent" ${isSent ? 'selected' : ''}>Sent</option>
-        </select>`;
+            const sentByHtml = (isSent && r.mtlv_ticket_sent_by)
+              ? `<div class="mtlv-sent-by"><div style="font-size:10px;color:#2F7851;font-weight:600;white-space:nowrap;">✓ ${escHtml(r.mtlv_ticket_sent_by)}</div>`
+                + (r.mtlv_ticket_sent_at ? `<div style="font-size:10px;color:#aaa;white-space:nowrap;">${escHtml(r.mtlv_ticket_sent_at)}</div>` : '')
+                + `</div>`
+              : '<div class="mtlv-sent-by"></div>';
+            ticketsCell = `<div style="display:flex;flex-direction:column;align-items:flex-start;gap:1px;">
+              <select class="tkt-select${isSent ? ' v-sent' : ''}" data-id="${r.id}" onchange="saveMtlvTicketStatus(this)">
+                <option value="pending_send" ${!isSent ? 'selected' : ''}>Pending</option>
+                <option value="sent" ${isSent ? 'selected' : ''}>Sent</option>
+              </select>
+              ${sentByHtml}
+            </div>`;
           }
         }
 
@@ -1065,6 +1073,30 @@
         } else {
           bubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#28a745;border:1.5px solid #28a745;color:#fff;vertical-align:middle;margin-left:2px;';
           bubble.textContent = handled;
+        }
+      }
+
+      // ── MTLV header bubble ───────────────────────────────────────────────
+      // Any row with mtlv_eligible triggers the bubble (regardless of qty 0 or n)
+      const mtlvRows    = rows.filter(r => r.mtlv_eligible);
+      const mtlvPending = mtlvRows.filter(r => {
+        // pending = guest hasn't replied yet (no qty), OR has qty but ticket not sent yet
+        const noQty   = r.mtlv_qty === null || r.mtlv_qty === undefined;
+        const notSent = (r.mtlv_ticket_status || 'pending_send') !== 'sent';
+        return noQty || notSent;
+      }).length;
+      const mtlvSent = mtlvRows.length - mtlvPending;
+      const mtlvBubble = document.getElementById('mtlv-hdr-bubble');
+      if (mtlvBubble) {
+        if (mtlvRows.length === 0) {
+          mtlvBubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#fff;border:1.5px solid #ced4da;color:#aaa;vertical-align:middle;margin-left:2px;';
+          mtlvBubble.textContent = '0';
+        } else if (mtlvPending > 0) {
+          mtlvBubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#dc3545;border:1.5px solid #dc3545;color:#fff;vertical-align:middle;margin-left:2px;';
+          mtlvBubble.textContent = mtlvPending;
+        } else {
+          mtlvBubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#28a745;border:1.5px solid #28a745;color:#fff;vertical-align:middle;margin-left:2px;';
+          mtlvBubble.textContent = mtlvSent;
         }
       }
     }
@@ -1161,9 +1193,62 @@
         body: JSON.stringify({ mtlv_ticket_status: status }),
       });
       if (res.ok) {
+        const data = await res.json();
         const row = allRows.find(r => r.id === parseInt(id));
-        if (row) row.mtlv_ticket_status = status;
+        if (row) {
+          row.mtlv_ticket_status = status;
+          if (status === 'sent') {
+            row.mtlv_ticket_sent_by = data.sent_by || data.action_taken_by || '';
+            row.mtlv_ticket_sent_at = data.sent_at || data.action_taken_at || '';
+          } else {
+            row.mtlv_ticket_sent_by = null;
+            row.mtlv_ticket_sent_at = null;
+          }
+        }
         sel.className = `tkt-select${status === 'sent' ? ' v-sent' : ''}`;
+        // Update the "Sent by" line below the select
+        const cell = sel.closest('td');
+        if (cell) {
+          const sentDiv = cell.querySelector('.mtlv-sent-by');
+          if (status === 'sent' && row?.mtlv_ticket_sent_by) {
+            if (sentDiv) {
+              sentDiv.innerHTML = `<div style="font-size:10px;color:#2F7851;font-weight:600;white-space:nowrap;">✓ ${escHtml(row.mtlv_ticket_sent_by)}</div>`
+                + (row.mtlv_ticket_sent_at ? `<div style="font-size:10px;color:#aaa;white-space:nowrap;">${escHtml(row.mtlv_ticket_sent_at)}</div>` : '');
+            } else {
+              const wrapper = sel.parentElement;
+              if (wrapper) {
+                const d = document.createElement('div');
+                d.className = 'mtlv-sent-by';
+                d.innerHTML = `<div style="font-size:10px;color:#2F7851;font-weight:600;white-space:nowrap;">✓ ${escHtml(row.mtlv_ticket_sent_by)}</div>`
+                  + (row.mtlv_ticket_sent_at ? `<div style="font-size:10px;color:#aaa;white-space:nowrap;">${escHtml(row.mtlv_ticket_sent_at)}</div>` : '');
+                wrapper.appendChild(d);
+              }
+            }
+          } else if (sentDiv) {
+            sentDiv.innerHTML = '';
+          }
+        }
+        // Refresh MTLV header bubble
+        const mtlvRows    = allRows.filter(r => r.mtlv_eligible);
+        const mtlvPending = mtlvRows.filter(r => {
+          const noQty   = r.mtlv_qty === null || r.mtlv_qty === undefined;
+          const notSent = (r.mtlv_ticket_status || 'pending_send') !== 'sent';
+          return noQty || notSent;
+        }).length;
+        const mtlvSent2 = mtlvRows.length - mtlvPending;
+        const mtlvBubble = document.getElementById('mtlv-hdr-bubble');
+        if (mtlvBubble) {
+          if (mtlvRows.length === 0) {
+            mtlvBubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#fff;border:1.5px solid #ced4da;color:#aaa;vertical-align:middle;margin-left:2px;';
+            mtlvBubble.textContent = '0';
+          } else if (mtlvPending > 0) {
+            mtlvBubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#dc3545;border:1.5px solid #dc3545;color:#fff;vertical-align:middle;margin-left:2px;';
+            mtlvBubble.textContent = mtlvPending;
+          } else {
+            mtlvBubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#28a745;border:1.5px solid #28a745;color:#fff;vertical-align:middle;margin-left:2px;';
+            mtlvBubble.textContent = mtlvSent2;
+          }
+        }
       } else {
         alert('Failed to update ticket status. Please try again.');
         // revert

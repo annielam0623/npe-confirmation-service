@@ -185,9 +185,11 @@ class Booking(Base):
     mtlv_promo    = Column(String(10), nullable=True)     # "YES" / "Eligible" / null from Excel
 
     # MTLV (Madame Tussauds) — Eligible flow
-    mtlv_eligible      = Column(Boolean, default=False)   # True when mtlv_promo == "Eligible"
-    mtlv_qty           = Column(Integer, nullable=True)   # Guest-selected qty (null = not replied)
-    mtlv_ticket_status = Column(String(20), nullable=True)  # null / "pending_send" / "sent"
+    mtlv_eligible          = Column(Boolean, default=False)   # True when mtlv_promo == "Eligible"
+    mtlv_qty               = Column(Integer, nullable=True)   # Guest-selected qty (null = not replied)
+    mtlv_ticket_status     = Column(String(20), nullable=True)  # null / "pending_send" / "sent"
+    mtlv_ticket_sent_by    = Column(String(100), nullable=True)  # display name of staff who sent
+    mtlv_ticket_sent_at    = Column(DateTime, nullable=True)     # timestamp when sent
 
     # Lunch (bus_tour with lunch)
     lunch_turkey = Column(Integer, default=0)
