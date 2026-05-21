@@ -200,7 +200,7 @@ async def send_tour_confirmation(
         # Short link — expires day-before tour at 18:00 LA (same as token)
         from datetime import time as dtime, timedelta
         _day_before = _to_date(tour_date) - timedelta(days=1)
-        _tc_expires = datetime.combine(_day_before, dtime(18, 0, 0))
+        _tc_expires = datetime(_day_before.year, _day_before.month, _day_before.day, 18, 0, 0, tzinfo=LA)
         email_url = await upsert_short_link(db, order_num, "tour_confirmation",
                                             tc.confirm_url(token, src="email"), _tc_expires)
         sms_url   = await upsert_short_link(db, order_num, "tour_confirmation",
@@ -332,7 +332,7 @@ async def send_tour_confirmation_bulk(
 
         from datetime import time as dtime, timedelta
         _day_before = _to_date(tour_date) - timedelta(days=1)
-        _tc_expires = datetime.combine(_day_before, dtime(18, 0, 0))
+        _tc_expires = datetime(_day_before.year, _day_before.month, _day_before.day, 18, 0, 0, tzinfo=LA)
         email_url = await upsert_short_link(db, order_num, "tour_confirmation",
                                             tc.confirm_url(token, src="email"), _tc_expires)
         sms_url   = await upsert_short_link(db, order_num, "tour_confirmation",
