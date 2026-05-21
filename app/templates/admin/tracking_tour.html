@@ -1173,7 +1173,7 @@
     }
 
     // ── js-open-notes click handler (tickets style) ───────────────────────────
-    document.getElementById('tbody').addEventListener('click', function(e) {
+    document.getElementById('track-tbody').addEventListener('click', function(e) {
       const td = e.target.closest('.js-open-notes');
       if (!td) return;
       const bid = parseInt(td.dataset.bid);
