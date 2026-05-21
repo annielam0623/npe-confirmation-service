@@ -172,18 +172,32 @@ th.notes-hdr.hdr-dirty{background:#fff3cd !important;color:#856404;}
 
 <div class="top-bar">
   <img src="https://nationalparkexpress.com/wp-content/uploads/2026/03/image002.png" alt="NPE">
-  <h1>Tickets Reminder Log</h1>
+  <div style="flex:1;position:relative;z-index:1;">
+    <h1>Tickets Reminder Log</h1>
+    <div style="font-size:12px;color:rgba(167,184,211,0.75);margin-top:2px;font-weight:400;">Stay on top of every ticket. Never miss a guest.</div>
+  </div>
   <button class="logout-btn" onclick="location.href='/auth/logout'">Logout</button>
 </div>
 
-<div class="toolbar">
-  <button class="btn-today" onclick="goToday()">Today</button>
-  <button class="btn-tmr"   onclick="goTomorrow()">Tomorrow</button>
-  <button class="btn-nav"   onclick="changeDate(-1)">&#8249;</button>
-  <div class="date-wrap" id="date-wrap">
-    <input type="date" id="date-input" onchange="loadData()">
+<div class="toolbar" style="justify-content:space-between;">
+  <div style="display:flex;align-items:center;gap:8px;">
+    <button class="btn-today" onclick="goToday()">Today</button>
+    <button class="btn-tmr"   onclick="goTomorrow()">Tomorrow</button>
+    <button class="btn-nav"   onclick="changeDate(-1)">&#8249;</button>
+    <div class="date-wrap" id="date-wrap">
+      <input type="date" id="date-input" onchange="loadData()">
+    </div>
+    <button class="btn-nav" onclick="changeDate(1)">&#8250;</button>
   </div>
-  <button class="btn-nav"     onclick="changeDate(1)">&#8250;</button>
+  <div style="position:relative;">
+    <button id="broadcastBtn" onclick="toggleBroadcastMenu()" style="height:32px;padding:0 16px;background:linear-gradient(135deg,#f7cf6d,#f4b23c);color:#2c1b00;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(244,178,60,0.3);display:flex;align-items:center;gap:6px;">&#128227; Broadcast</button>
+    <div id="broadcastMenu" style="display:none;position:absolute;top:38px;right:0;background:#111a2b;border:1px solid rgba(255,255,255,0.12);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,0.6);z-index:200;min-width:190px;overflow:hidden;">
+      <div style="padding:8px 12px;font-size:11px;color:rgba(255,255,255,0.4);font-weight:600;border-bottom:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);letter-spacing:0.05em;">SEND TO</div>
+      <div onclick="openBroadcast('all')"     style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;color:#d9e8ff;" onmouseover="this.style.background='rgba(95,168,255,0.1)'" onmouseout="this.style.background=''">All guests <span id="bc-cnt-all"     style="font-size:11px;color:rgba(255,255,255,0.35);"></span></div>
+      <div onclick="openBroadcast('pending')" style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;color:#d9e8ff;" onmouseover="this.style.background='rgba(95,168,255,0.1)'" onmouseout="this.style.background=''">Pending    <span id="bc-cnt-pending" style="font-size:11px;color:rgba(255,255,255,0.35);"></span></div>
+      <div onclick="openBroadcast('yes')"     style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;color:#d9e8ff;" onmouseover="this.style.background='rgba(95,168,255,0.1)'" onmouseout="this.style.background=''">Yes        <span id="bc-cnt-yes"     style="font-size:11px;color:rgba(255,255,255,0.35);"></span></div>
+    </div>
+  </div>
 </div>
 
 <div class="pills-bar">
@@ -199,29 +213,48 @@ th.notes-hdr.hdr-dirty{background:#fff3cd !important;color:#856404;}
   <span class="pill" data-tour="rattlesnake_aact"               onclick="filterTour(this,'rattlesnake_aact')">R-AA <span class="cnt" id="p-raa">0/0</span></span>
 </div>
 
-<div class="stats-bar">
-  <div class="stat s-total"><div class="num" id="s-total">0</div><div class="lbl">Total</div></div>
-  <div class="stat s-yes">  <div class="num" id="s-yes">0</div>  <div class="lbl">YES</div></div>
-  <div class="stat s-resc"> <div class="num" id="s-resc">0</div> <div class="lbl">Reschedule</div></div>
-  <div class="stat s-pend"> <div class="num" id="s-pend">0</div> <div class="lbl">Pending</div></div>
-</div>
-
-<div class="records-bar" style="justify-content:flex-start;gap:8px;align-items:center;padding:6px 20px;">
-  <span id="rec-label" style="white-space:nowrap;font-size:12px;color:#6c757d;">0 records</span>
-  <input type="text" id="search-input" placeholder="Search order #, name, phone…"
-    oninput="renderTable()"
-    style="padding:0 10px;height:30px;border:0.5px solid #ced4da;border-radius:7px;font-size:12px;width:220px;outline:none;box-sizing:border-box;">
-  <button class="btn-export" onclick="exportXLSX()" style="height:30px;padding:0 12px;">&#128196; Export Excel</button>
-  <button class="btn-refresh" onclick="loadData()" style="height:30px;padding:0 12px;">&#x21bb; Refresh</button>
-  <div style="position:relative;margin-left:auto;">
-    <button id="broadcastBtn" onclick="toggleBroadcastMenu()" style="height:30px;padding:0 14px;background:linear-gradient(135deg,#ffce21,#ee8e00);color:#000;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;">&#128227; Broadcast</button>
-    <div id="broadcastMenu" style="display:none;position:absolute;top:36px;right:0;background:#fff;border:1px solid #dee2e6;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.12);z-index:200;min-width:190px;overflow:hidden;">
-      <div style="padding:8px 12px;font-size:11px;color:#6c757d;font-weight:600;border-bottom:1px solid #f0f0f0;background:#f8f9fa;">SEND TO</div>
-      <div onclick="openBroadcast('all')"     style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background=''">All guests <span id="bc-cnt-all"     style="font-size:11px;color:#6c757d;"></span></div>
-      <div onclick="openBroadcast('pending')" style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background=''">Pending    <span id="bc-cnt-pending" style="font-size:11px;color:#6c757d;"></span></div>
-      <div onclick="openBroadcast('yes')"     style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;" onmouseover="this.style.background='#f0f7ff'" onmouseout="this.style.background=''">Yes        <span id="bc-cnt-yes"     style="font-size:11px;color:#6c757d;"></span></div>
+<div class="stats-bar" style="padding:16px 20px;gap:12px;">
+  <div class="stat s-total" style="flex:1;flex-direction:row;align-items:center;gap:16px;padding:16px 20px;min-width:160px;">
+    <div style="width:48px;height:48px;border-radius:12px;background:rgba(95,168,255,0.12);border:1px solid rgba(95,168,255,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🎟️</div>
+    <div style="text-align:left;">
+      <div class="num" id="s-total" style="font-size:28px;">0</div>
+      <div class="lbl" style="font-size:12px;font-weight:600;">Total</div>
+      <div style="font-size:11px;color:rgba(167,184,211,0.6);margin-top:1px;">All tickets</div>
     </div>
   </div>
+  <div class="stat s-yes" style="flex:1;flex-direction:row;align-items:center;gap:16px;padding:16px 20px;min-width:160px;">
+    <div style="width:48px;height:48px;border-radius:12px;background:rgba(91,227,142,0.12);border:1px solid rgba(91,227,142,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">✅</div>
+    <div style="text-align:left;">
+      <div class="num" id="s-yes" style="font-size:28px;">0</div>
+      <div class="lbl" style="font-size:12px;font-weight:600;">YES</div>
+      <div style="font-size:11px;color:rgba(167,184,211,0.6);margin-top:1px;">Confirmed</div>
+    </div>
+  </div>
+  <div class="stat s-resc" style="flex:1;flex-direction:row;align-items:center;gap:16px;padding:16px 20px;min-width:160px;">
+    <div style="width:48px;height:48px;border-radius:12px;background:rgba(255,193,93,0.12);border:1px solid rgba(255,193,93,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🔄</div>
+    <div style="text-align:left;">
+      <div class="num" id="s-resc" style="font-size:28px;">0</div>
+      <div class="lbl" style="font-size:12px;font-weight:600;">Reschedule</div>
+      <div style="font-size:11px;color:rgba(167,184,211,0.6);margin-top:1px;">Need attention</div>
+    </div>
+  </div>
+  <div class="stat s-pend" style="flex:1;flex-direction:row;align-items:center;gap:16px;padding:16px 20px;min-width:160px;">
+    <div style="width:48px;height:48px;border-radius:12px;background:rgba(115,184,255,0.12);border:1px solid rgba(115,184,255,0.2);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">⏳</div>
+    <div style="text-align:left;">
+      <div class="num" id="s-pend" style="font-size:28px;">0</div>
+      <div class="lbl" style="font-size:12px;font-weight:600;">Pending</div>
+      <div style="font-size:11px;color:rgba(167,184,211,0.6);margin-top:1px;">Awaiting action</div>
+    </div>
+  </div>
+</div>
+
+<div class="records-bar" style="justify-content:flex-start;gap:8px;align-items:center;padding:8px 20px 12px;">
+  <input type="text" id="search-input" placeholder="🔍  Search order #, name, phone…"
+    oninput="renderTable()"
+    style="padding:0 12px;height:32px;border:1px solid rgba(255,255,255,0.12);border-radius:8px;font-size:12px;width:240px;outline:none;box-sizing:border-box;background:rgba(255,255,255,0.06);color:#fff;font-family:inherit;">
+  <button class="btn-export" onclick="exportXLSX()" style="height:32px;padding:0 14px;">&#128196; Export Excel</button>
+  <button class="btn-refresh" onclick="loadData()" style="height:32px;padding:0 14px;">&#x21bb; Refresh</button>
+  <span id="rec-label" style="white-space:nowrap;font-size:12px;color:rgba(255,255,255,0.35);margin-left:4px;">0 records</span>
 </div>
 
 <div style="padding:0 20px 6px;">
