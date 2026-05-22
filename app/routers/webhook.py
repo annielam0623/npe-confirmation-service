@@ -223,8 +223,8 @@ def _parse_order(payload: dict) -> Optional[dict]:
         "product_name": product_name or None,
         "tt_number": tt_number,
         "confirmation_no": confirmation_no,
-        "first_name": first_name or "Guest",
-        "last_name": last_name or "",
+        "first_name": first_name or None,
+        "last_name": last_name or None,
         "customer_email": email or "",
         "phone": phone or None,
         "quantities": quantities,
@@ -341,8 +341,10 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
         existing.product_code   = fields["product_code"]
         existing.product_name   = fields["product_name"]
         existing.tt_number      = fields["tt_number"]
-        existing.first_name     = fields["first_name"]
-        existing.last_name      = fields["last_name"]
+        if fields["first_name"] and fields["first_name"].lower() != "unknown":
+            existing.first_name = fields["first_name"]
+        if fields["last_name"] and fields["last_name"].lower() != "unknown":
+            existing.last_name  = fields["last_name"]
         existing.customer_email = fields["customer_email"]
         existing.phone          = fields["phone"]
         existing.quantities     = fields["quantities"]
