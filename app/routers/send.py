@@ -44,10 +44,10 @@ def _to_date(d: str) -> date:
 
 
 def _tour_confirmation_expires(tour_date: str) -> datetime:
-    """Tour confirmation link 过期时间：tour 前一天 LA 时间 18:00"""
+    """Tour confirmation link 过期时间：tour 前一天 LA 时间 22:00"""
     from datetime import timedelta
     day_before = _to_date(tour_date) - timedelta(days=1)
-    return datetime(day_before.year, day_before.month, day_before.day, 18, 0, 0, tzinfo=LA)
+    return datetime(day_before.year, day_before.month, day_before.day, 22, 0, 0, tzinfo=LA)
 
 
 def _fmt_date(date_str: str) -> str:
