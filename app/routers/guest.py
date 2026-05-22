@@ -664,6 +664,9 @@ async def guest_confirm_submit(
     elif confirmation == "yes" and is_yes_confirmed:
         # Lunch update — log with diff
         pt = int(booking.lunch_turkey or 0); pv = int(booking.lunch_veggie or 0); pb = int(booking.lunch_beef or 0)
+        # No-op guard: if lunch values are identical and no notes, skip all writes
+        if lunch_turkey == pt and lunch_veggie == pv and lunch_beef == pb and not notes:
+            return _thanks(booking)
         entry = f"[{ts}] Lunch updated: T×{lunch_turkey} V×{lunch_veggie} B×{lunch_beef} (was T×{pt} V×{pv} B×{pb})" + (f" — {notes}" if notes else "")
         final_notes = entry
         new_history = (entry + "\n" + new_history).strip() if new_history else entry
