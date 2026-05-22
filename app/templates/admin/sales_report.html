@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+{% block title %}Sales Report{% endblock %}
+{% block page_title %}Sales Report{% endblock %}
+{% block extra_styles %}
+.sr-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px;}
+.sr-controls select,.sr-controls input{height:32px;padding:0 10px;border:0.5px solid rgba(0,0,0,0.15);border-radius:7px;font-size:13px;background:#fff;color:#1a1a1a;cursor:pointer;}
+.sr-toggle{display:flex;border:0.5px solid rgba(0,0,0,0.15);border-radius:7px;overflow:hidden;}
+.sr-toggle button{height:32px;padding:0 14px;font-size:13px;border:none;background:#fff;color:#555;cursor:pointer;transition:background 0.1s;}
+.sr-toggle button.active{background:#1a1a1a;color:#fff;}
+.sr-section{margin-bottom:32px;}
+.sr-section-title{font-size:13px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;}
+.sr-tabs{display:flex;gap:0;border-bottom:1.5px solid rgba(0,0,0,0.1);margin-bottom:20px;}
+.sr-tab{padding:8px 20px;font-size:14px;font-weight:500;color:#888;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1.5px;transition:color 0.1s;}
+.sr-tab.active{color:#1a1a1a;border-bottom-color:#1a1a1a;}
+.sr-card{background:#fff;border-radius:10px;border:0.5px solid rgba(0,0,0,0.1);padding:18px 20px;margin-bottom:16px;}
+.sr-card-title{font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;}
+.sr-table-wrap{overflow-x:auto;}
+table.sr-table{width:100%;border-collapse:collapse;font-size:13px;}
+table.sr-table th{padding:7px 10px;text-align:right;font-weight:600;color:#555;border-bottom:1px solid rgba(0,0,0,0.08);white-space:nowrap;}
+table.sr-table th:first-child{text-align:left;}
+table.sr-table td{padding:6px 10px;text-align:right;border-bottom:0.5px solid rgba(0,0,0,0.05);color:#1a1a1a;white-space:nowrap;}
+table.sr-table td:first-child{text-align:left;font-weight:500;color:#444;}
+table.sr-table tr.total-row td{font-weight:600;border-top:1.5px solid rgba(0,0,0,0.12);background:#f9f9f7;}
+table.sr-table td.zero{color:#ccc;}
+table.sr-table td.highlight{background:#F0F7E8;color:#3B6D11;font-weight:500;}
+.sr-loading{color:#aaa;font-size:13px;padding:20px 0;}
+.sr-empty{color:#bbb;font-size:13px;padding:16px 0;text-align:center;}
+{% endblock %}
+{% block content %}
+<div class="sr-controls">
+  <select id="sel-year" onchange="loadAll()"></select>
+  <select id="sel-month" onchange="loadWeekly()">
+    <option value="1">January</option><option value="2">February</option>
+    <option value="3">March</option><option value="4">April</option>
+    <option value="5">May</option><option value="6">June</option>
+    <option value="7">July</option><option value="8">August</option>
+    <option value="9">September</option><option value="10">October</option>
+    <option value="11">November</option><option value="12">December</option>
+  </select>
+  <div class="sr-toggle">
+    <button id="btn-orders" class="active" onclick="setMetric('orders')">Orders</button>
+    <button id="btn-pax" onclick="setMetric('pax')">Pax</button>
+  </div>
+</div>
+
+<div class="sr-tabs">
+  <div class="sr-tab active" onclick="setTab('tour',this)">Bus Tour</div>
+  <div class="sr-tab" onclick="setTab('tickets',this)">Tickets</div>
+</div>
+
+<div id="tab-tour">
+  <div class="sr-card">
+    <div class="sr-card-title">Monthly — by Agent</div>
+    <div class="sr-table-wrap"><div id="monthly-tour" class="sr-loading">Loading...</div></div>
+  </div>
+  <div class="sr-card">
+    <div class="sr-card-title">Weekly — by Agent <span id="weekly-tour-subtitle" style="font-weight:400;color:#aaa;font-size:11px;"></span></div>
+    <div class="sr-table-wrap"><div id="weekly-tour" class="sr-loading">Loading...</div></div>
+  </div>
+</div>
+
+<div id="tab-tickets" style="display:none">
+  <div class="sr-card">
+    <div class="sr-card-title">Monthly — by Agent</div>
+    <div class="sr-table-wrap"><div id="monthly-tickets" class="sr-loading">Loading...</div></div>
+  </div>
+  <div class="sr-card">
+    <div class="sr-card-title">Weekly — by Agent <span id="weekly-tickets-subtitle" style="font-weight:400;color:#aaa;font-size:11px;"></span></div>
+    <div class="sr-table-wrap"><div id="weekly-tickets" class="sr-loading">Loading...</div></div>
+  </div>
+</div>
+
+<script>
+let metric = 'orders';
+let activeTab = 'tour';
+
+// Init year selector
+(function(){
+  const sel = document.getElementById('sel-year');
+  const now = new Date();
+  for(let y = now.getFullYear(); y >= 2024; y--){
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y;
+    sel.appendChild(o);
+  }
+  // Set current month
+  document.getElementById('sel-month').value = now.getMonth() + 1;
+})();
+
+function setMetric(m){
+  metric = m;
+  document.getElementById('btn-orders').classList.toggle('active', m === 'orders');
+  document.getElementById('btn-pax').classList.toggle('active', m === 'pax');
+  loadAll();
+}
+
+function setTab(tab, el){
+  activeTab = tab;
+  document.querySelectorAll('.sr-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-tour').style.display = tab === 'tour' ? '' : 'none';
+  document.getElementById('tab-tickets').style.display = tab === 'tickets' ? '' : 'none';
+}
+
+function getYear(){ return document.getElementById('sel-year').value; }
+function getMonth(){ return document.getElementById('sel-month').value; }
+
+function buildTable(data, colNames, showTotal){
+  if(!data.agents || data.agents.length === 0) return '<div class="sr-empty">No data</div>';
+  const cols = data[colNames] || data.month_names || data.week_names || [];
+  const keys = data.months || data.weeks || [];
+  let html = '<table class="sr-table"><thead><tr><th>Agent</th>';
+  cols.forEach(c => { html += `<th>${c}</th>`; });
+  html += '<th>Total</th></tr></thead><tbody>';
+  const colTotals = {};
+  keys.forEach(k => { colTotals[k] = 0; });
+  let grandTotal = 0;
+  data.agents.forEach(agent => {
+    const row = data.data[agent] || {};
+    let rowTotal = 0;
+    html += `<tr><td>${agent}</td>`;
+    keys.forEach(k => {
+      const v = row[k] || 0;
+      rowTotal += v;
+      colTotals[k] += v;
+      html += v === 0 ? '<td class="zero">—</td>' : `<td>${v.toLocaleString()}</td>`;
+    });
+    grandTotal += rowTotal;
+    html += `<td><strong>${rowTotal.toLocaleString()}</strong></td></tr>`;
+  });
+  // Total row
+  html += '<tr class="total-row"><td>Total</td>';
+  keys.forEach(k => {
+    html += `<td>${(colTotals[k]||0).toLocaleString()}</td>`;
+  });
+  html += `<td>${grandTotal.toLocaleString()}</td></tr>`;
+  html += '</tbody></table>';
+  return html;
+}
+
+async function loadMonthly(productType){
+  const el = document.getElementById(`monthly-${productType === 'bus_tour' ? 'tour' : 'tickets'}`);
+  el.innerHTML = '<div class="sr-loading">Loading...</div>';
+  try {
+    const r = await fetch(`/api/sales-report/monthly?year=${getYear()}&product_type=${productType}&metric=${metric}`);
+    const data = await r.json();
+    el.innerHTML = buildTable(data, 'month_names');
+  } catch(e){ el.innerHTML = '<div class="sr-empty">Failed to load</div>'; }
+}
+
+async function loadWeeklyOne(productType){
+  const key = productType === 'bus_tour' ? 'tour' : 'tickets';
+  const el = document.getElementById(`weekly-${key}`);
+  const subtitle = document.getElementById(`weekly-${key}-subtitle`);
+  el.innerHTML = '<div class="sr-loading">Loading...</div>';
+  try {
+    const r = await fetch(`/api/sales-report/weekly?year=${getYear()}&month=${getMonth()}&product_type=${productType}&metric=${metric}`);
+    const data = await r.json();
+    if(subtitle) subtitle.textContent = `${data.month_name} ${data.year}`;
+    el.innerHTML = buildTable(data, 'week_names');
+  } catch(e){ el.innerHTML = '<div class="sr-empty">Failed to load</div>'; }
+}
+
+function loadWeekly(){
+  loadWeeklyOne('bus_tour');
+  loadWeeklyOne('self_drive');
+}
+
+function loadAll(){
+  loadMonthly('bus_tour');
+  loadMonthly('self_drive');
+  loadWeekly();
+}
+
+loadAll();
+</script>
+{% endblock %}
