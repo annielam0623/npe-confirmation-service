@@ -92,17 +92,19 @@
   {% elif window == "in" %}
     <!-- In tracking window -->
 
+  <!-- Check-in section -->
+    {% if already_checked_in %}
+      <div class="box box-green" style="text-align: center;">
+        <p>✅ Thank you for checking in!</p>
+        <p class="sub">Your driver has been notified.</p>
+      </div>
+
     <!-- Track button — always visible -->
     <a href="{{ samsara_url }}" target="_blank" class="btn-track">
       Click here to track Bus Location in real time
     </a>
 
-    <!-- Check-in section -->
-    {% if already_checked_in %}
-      <div class="box box-green">
-        <p>✅ Thank you for checking in!</p>
-        <p class="sub">Your driver has been notified.</p>
-      </div>
+    
     {% else %}
       <div class="checkin-form">
         <p>Please click the button below when you arrive at the pickup point.</p>
