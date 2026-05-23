@@ -236,7 +236,10 @@ function selectRange(range,el){
     document.getElementById('dr-label').textContent=rangeLabelText();
     document.getElementById('dr-dropdown').classList.add('hidden');
     document.getElementById('dr-trigger').classList.remove('active');
-    currentPage=1; function filterByCard(module){
+    currentPage=1; loadLog();
+}
+
+function filterByCard(module){
   document.getElementById('f-module').value = module;
   // Update active card highlight
   ['total','tour','morning','tickets','mtlv'].forEach(id=>{
@@ -247,10 +250,6 @@ function selectRange(range,el){
   const activeId = map[module];
   if(activeId){ const el=document.getElementById('card-'+activeId); if(el) el.classList.add('active'); }
   currentPage=1; loadLog();
-}
-
-loadLog();
-  }
 }
 function applyCustom(){
   drFrom=document.getElementById('dr-from').value;
@@ -318,7 +317,7 @@ function renderRows(rows){
       <td style="font-size:11px;">${r.tour_type||'—'}</td>
       <td>${r.email_status?`<span class="sp ${emailCls}">${r.email_status.startsWith('sent')?'Sent':r.email_status.startsWith('failed')?'Failed':'—'}</span>`:'<span style="color:#ccc">—</span>'}</td>
       <td>${r.sms_status?`<span class="sp ${smsCls}">${smsLbl}</span>`:'<span style="color:#ccc">—</span>'}</td>
-      <td>${r.mtlv_eligible?'<span class="sp pill-mtlv pill-filter" onclick="filterByCard('mtlv');event.stopPropagation()">MTLV</span>':'<span style="color:#ccc">—</span>'}</td>
+      <td>${r.mtlv_eligible?'<span class="sp pill-mtlv" style="cursor:pointer" onclick="filterByCard(&quot;mtlv&quot;)">MTLV</span>':'<span style="color:#ccc">—</span>'}</td>
       <td style="font-size:11px;color:#888;white-space:nowrap;">${r.sent_by||'—'}</td>
     </tr>`;
   }).join('');
