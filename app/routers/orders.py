@@ -36,7 +36,7 @@ async def orders_page(
 
 @router.get("/api/operations/orders")
 async def orders_api(
-    q:         Optional[str] = Query(None),   # order#, name, email, phone
+    q:         Optional[str] = Query(None),
     date_from: Optional[str] = Query(None),
     date_to:   Optional[str] = Query(None),
     page:      int           = Query(1, ge=1),
@@ -83,7 +83,7 @@ async def orders_api(
                 b.customer_email,
                 b.phone,
                 b.product_name,
-                b.product_type,
+                b.tour_type,
                 b.tour_date,
                 b.pickup_time,
                 b.pickup_location,
@@ -125,7 +125,7 @@ async def orders_api(
             "email":           r["customer_email"] or "—",
             "phone":           r["phone"] or "—",
             "product_name":    r["product_name"] or "—",
-            "product_type":    r["product_type"] or "—",
+            "product_type":    r["tour_type"] or "—",   # DB column is tour_type
             "tour_date":       fmt_date(r["tour_date"]),
             "pickup_time":     r["pickup_time"] or "—",
             "pickup_location": r["pickup_location"] or "—",
