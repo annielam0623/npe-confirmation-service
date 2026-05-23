@@ -11,12 +11,12 @@ from app.database import get_db
 from app.auth import require_staff
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates/admin")
+templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/admin/system/promotion-stats", response_class=HTMLResponse)
 async def promotion_stats_page(request: Request, _user=Depends(require_staff)):
-    return templates.TemplateResponse("promotion_stats.html", {
+    return templates.TemplateResponse("admin/promotion_stats.html", {
         "request": request,
         "current_user": _user,
         "active_page": "promotion_stats",

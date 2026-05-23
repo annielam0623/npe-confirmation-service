@@ -12,12 +12,12 @@ from app.auth import require_staff
 import calendar
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates/admin")
+templates = Jinja2Templates(directory="app/templates")
 
 
 @router.get("/admin/system/sales-report", response_class=HTMLResponse)
 async def sales_report_page(request: Request, _user=Depends(require_staff)):
-    return templates.TemplateResponse("sales_report.html", {
+    return templates.TemplateResponse("admin/sales_report.html", {
         "request": request,
         "current_user": _user,
         "active_page": "sales_report",
