@@ -707,7 +707,7 @@
         const nCount   = r.notes_count || 0;
         const hasAny   = nCount > 0 || !!r.notes;
         const actioned = !!r.action_taken_by;
-        const previewBody = r.latest_note_body || r.guest_notes || '';
+        const previewBody = r.latest_note_body || r.guest_notes || r.notes || '';
         let notesCell;
         if (hasAny) {
           const actionPart = actioned
