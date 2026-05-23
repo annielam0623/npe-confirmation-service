@@ -24,7 +24,8 @@ async def process_queue() -> dict:
     Called every 5 minutes.
     Returns summary of processed items.
     """
-    now = datetime.now(timezone.utc)
+    from zoneinfo import ZoneInfo
+    now = datetime.now(ZoneInfo("America/Los_Angeles")).replace(tzinfo=None)
     sent = 0
     failed = 0
 
