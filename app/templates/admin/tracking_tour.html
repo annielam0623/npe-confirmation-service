@@ -707,7 +707,7 @@
         const nCount   = r.notes_count || 0;
         const hasAny   = nCount > 0 || !!r.notes;
         const actioned = !!r.action_taken_by;
-        const previewBody = r.latest_note_body || r.notes || '';
+        const previewBody = r.latest_note_body || r.guest_notes || '';
         let notesCell;
         if (hasAny) {
           const actionPart = actioned
@@ -1648,7 +1648,7 @@ function _renderNotes(notes){
   (notes || []).forEach(function(n){
     msgs.push(Object.assign({}, n, {_sort: n.created_at ? new Date(n.created_at).getTime() : 1}));
   });
-  msgs.sort(function(a, b){ return (b._sort||0) - (a._sort||0); });
+  msgs.sort(function(a, b){ return (a._sort||0) - (b._sort||0); });
   if (!msgs.length) {
     container.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;padding:20px 0;">No messages yet.</div>';
     return;
@@ -1673,7 +1673,7 @@ function _renderNotes(notes){
       +'</div>'
       +'</div>';
   }).join('');
-  container.scrollTop = 0;
+  container.scrollTop = container.scrollHeight;
 }
 
 async function submitNote(dir){

@@ -234,7 +234,9 @@ async def tracking_tour_confirmation(
             b.mtlv_ticket_sent_by, b.mtlv_ticket_sent_at,
             b.action_taken_by,
             (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id) AS notes_count,
-            (SELECT author_username FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author
+            (SELECT author_username FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author,
+            (SELECT body      FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_body,
+            (SELECT direction FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_direction
         FROM bookings b
         LEFT JOIN LATERAL (
             SELECT sms_status
@@ -289,6 +291,8 @@ async def tracking_tour_confirmation(
                 "action_taken_by":      r["action_taken_by"] or "",
                 "notes_count":         r["notes_count"] or 0,
                 "latest_note_author":  r["latest_note_author"] or "",
+                "latest_note_body":    r["latest_note_body"] or "",
+                "latest_note_direction": r["latest_note_direction"] or "",
             }
             for r in rows
         ],
@@ -309,6 +313,8 @@ async def tracking_morning_pickup(
             b.action_taken_by,
             (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id) AS notes_count,
             (SELECT author_username FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author,
+            (SELECT body      FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_body,
+            (SELECT direction FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_direction,
             COALESCE(sl.sms_status, b.sms_status) AS sms_status,
             COALESCE(sl.agent_name, '') AS agent_name,
             c.checkin_time
@@ -350,6 +356,8 @@ async def tracking_morning_pickup(
                 "id":                   r["id"],
                 "notes_count":          r["notes_count"] or 0,
                 "latest_note_author":   r["latest_note_author"] or "",
+                "latest_note_body":     r["latest_note_body"] or "",
+                "latest_note_direction": r["latest_note_direction"] or "",
             }
             for r in rows
         ],
