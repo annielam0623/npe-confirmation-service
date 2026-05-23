@@ -141,7 +141,7 @@ class Booking(Base):
 
     # Type & Source
     booking_type = Column(String(20), nullable=False, default=BookingType.bus_tour.value)
-    source       = Column(String(20), default=BookingSource.manual.value)
+    source       = Column(Enum(BookingSource, name="bookingsource"), default=BookingSource.manual)
     status       = Column(String(20), default=BookingStatus.pending.value)
 
     # Identifiers
