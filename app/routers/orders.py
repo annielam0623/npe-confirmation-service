@@ -44,7 +44,7 @@ async def orders_api(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    filters = ["1=1"]
+    filters = ["1=1","b.source = 'rezdy'"]
     params: dict = {}
 
     if q:
