@@ -46,7 +46,7 @@ async def get_monthly_data(
         FROM bookings b
         WHERE b.tour_type = :product_type
           AND EXTRACT(YEAR FROM b.tour_date) = :year
-          AND b.status != 'Cancelled'
+          AND b.status != 'cancelled'
         GROUP BY agent, month
         ORDER BY agent, month
     """), {"product_type": product_type, "year": year})
