@@ -140,9 +140,9 @@ class Booking(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     # Type & Source
-    booking_type = Column(String(20), nullable=False, default=BookingType.bus_tour.value)
+    booking_type = Column(Enum(BookingType, name="bookingtype"), nullable=False, default=BookingType.bus_tour)
     source       = Column(Enum(BookingSource, name="bookingsource"), default=BookingSource.manual)
-    status       = Column(String(20), default=BookingStatus.pending.value)
+    status       = Column(Enum(BookingStatus, name="bookingstatus"), default=BookingStatus.pending)
 
     # Identifiers
     confirm_token   = Column(String(64), unique=True, index=True,
