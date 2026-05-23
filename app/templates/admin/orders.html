@@ -3,9 +3,7 @@
 {% block page_title %}Orders{% endblock %}
 {% block extra_styles %}
 .ord-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
-.ord-controls input{height:32px;padding:0 10px;border:0.5px solid rgba(0,0,0,0.15);border-radius:7px;font-size:13px;background:#fff;color:#1a1a1a;min-width:200px;}
-.ord-controls input[type=date]{min-width:130px;}
-.ord-controls label{font-size:13px;color:#666;}
+.ord-controls input[type=text]{height:32px;padding:0 10px;border:0.5px solid rgba(0,0,0,0.15);border-radius:7px;font-size:13px;background:#fff;color:#1a1a1a;min-width:200px;}
 .ord-count{font-size:13px;color:#888;margin-left:auto;}
 .ord-wrap{background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:10px;overflow:hidden;}
 table.ord-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:900px;}
@@ -26,15 +24,55 @@ table.ord-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:900px
 .ord-pagination button:disabled{opacity:0.4;cursor:default;}
 .ord-pagination span{font-size:12px;color:#888;}
 .ord-loading{padding:24px;text-align:center;color:#ccc;font-size:13px;}
+/* ── Date range picker ── */
+.dr-wrap{position:relative;display:inline-block;}
+.dr-trigger{height:32px;padding:0 12px;border:0.5px solid rgba(0,0,0,0.18);border-radius:7px;font-size:13px;background:#fff;color:#1a1a1a;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;user-select:none;}
+.dr-trigger:hover{border-color:rgba(0,0,0,0.35);}
+.dr-trigger.active{border-color:#1a1a1a;background:#fafaf8;}
+.dr-dropdown{position:absolute;top:calc(100% + 4px);left:0;z-index:999;background:#fff;border:0.5px solid rgba(0,0,0,0.15);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.12);padding:6px;min-width:220px;}
+.dr-dropdown.hidden{display:none;}
+.dr-option{padding:8px 12px;font-size:13px;border-radius:6px;cursor:pointer;color:#333;}
+.dr-option:hover{background:#f5f5f3;}
+.dr-option.selected{background:#1a1a1a;color:#fff;}
+.dr-custom{padding:8px 6px 4px;border-top:0.5px solid rgba(0,0,0,0.08);margin-top:4px;}
+.dr-custom label{font-size:11px;color:#888;display:block;margin-bottom:6px;}
+.dr-custom-row{display:flex;align-items:center;gap:6px;}
+.dr-date-wrap{position:relative;flex:1;}
+.dr-date-wrap input[type=date]{width:100%;height:28px;padding:0 8px;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;font-size:12px;background:#fff;box-sizing:border-box;cursor:pointer;}
+.dr-date-wrap input[type=date]:focus{outline:none;border-color:#1a1a1a;}
+.dr-apply{height:28px;padding:0 12px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;margin-top:8px;width:100%;}
+.dr-apply:hover{background:#333;}
+.btn-export{height:32px;padding:0 14px;background:#fff;border:0.5px solid rgba(0,0,0,0.2);border-radius:7px;font-size:12px;cursor:pointer;color:#444;}
+.btn-export:hover{background:#f5f5f3;}
 {% endblock %}
+
 {% block content %}
 <div class="ord-controls">
   <input type="text" id="q" placeholder="Search order#, name, email, phone, product..." oninput="debounceLoad()">
-  <label>From</label>
-  <input type="date" id="date-from" onchange="loadOrders()">
-  <label>To</label>
-  <input type="date" id="date-to" onchange="loadOrders()">
+
+  <div class="dr-wrap" id="dr-wrap">
+    <div class="dr-trigger" id="dr-trigger" onclick="toggleDR(event)">
+      <span>📅</span><span id="dr-label">This Month</span><span style="color:#aaa;font-size:10px;">▾</span>
+    </div>
+    <div class="dr-dropdown hidden" id="dr-dropdown">
+      <div class="dr-option" data-range="today"  onclick="selectRange('today',this)">Today</div>
+      <div class="dr-option" data-range="week"   onclick="selectRange('week',this)">This Week</div>
+      <div class="dr-option selected" data-range="month"  onclick="selectRange('month',this)">This Month</div>
+      <div class="dr-option" data-range="custom" onclick="selectRange('custom',this)">Custom</div>
+      <div class="dr-custom" id="dr-custom" style="display:none;">
+        <label>Date range</label>
+        <div class="dr-custom-row">
+          <div class="dr-date-wrap"><input type="date" id="dr-from"></div>
+          <span style="font-size:12px;color:#aaa;">–</span>
+          <div class="dr-date-wrap"><input type="date" id="dr-to"></div>
+        </div>
+        <button class="dr-apply" onclick="applyCustom()">Apply</button>
+      </div>
+    </div>
+  </div>
+
   <button class="btn" onclick="clearFilters()" style="height:32px;">Clear</button>
+  <button class="btn-export" onclick="exportExcel()">⬇ Export</button>
   <span class="ord-count" id="ord-count"></span>
 </div>
 
@@ -43,17 +81,9 @@ table.ord-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:900px
     <table class="ord-tbl">
       <thead>
         <tr>
-          <td>Order #</td>
-          <td>Guest</td>
-          <td>Product</td>
-          <td>Type</td>
-          <td>Tour Date</td>
-          <td>Pickup</td>
-          <td>Pax</td>
-          <td>Agent</td>
-          <td>Source</td>
-          <td>Created</td>
-          <td>Updated</td>
+          <td>Order #</td><td>Guest</td><td>Product</td><td>Type</td>
+          <td>Tour Date</td><td>Pickup</td><td>Pax</td><td>Agent</td>
+          <td>Source</td><td>Created</td><td>Updated</td>
         </tr>
       </thead>
       <tbody id="ord-tbody">
@@ -68,89 +98,150 @@ table.ord-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:900px
   </div>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-let currentPage = 1;
-let totalPages  = 1;
-let debounceTimer = null;
+let currentPage = 1, totalPages = 1, debounceTimer = null, allRecords = [];
+let drRange = 'month', drFrom = '', drTo = '';
 
-function debounceLoad(){
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => { currentPage = 1; loadOrders(); }, 400);
+function laToday(){ return new Date().toLocaleDateString('en-CA',{timeZone:'America/Los_Angeles'}); }
+function laWeekStart(){
+  const d = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
+  d.setDate(d.getDate()-d.getDay()); return d.toLocaleDateString('en-CA');
+}
+function laMonthStart(){
+  const d = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
+  d.setDate(1); return d.toLocaleDateString('en-CA');
+}
+function getDateRange(){
+  const t = laToday();
+  if(drRange==='today')  return {from:t,to:t};
+  if(drRange==='week')   return {from:laWeekStart(),to:t};
+  if(drRange==='month')  return {from:laMonthStart(),to:t};
+  if(drRange==='custom') return {from:drFrom,to:drTo};
+  return {from:'',to:''};
+}
+function rangeLabelText(){
+  if(drRange==='today')  return 'Today';
+  if(drRange==='week')   return 'This Week';
+  if(drRange==='month')  return 'This Month';
+  const {from,to}=getDateRange();
+  return (from&&to) ? `${from} – ${to}` : 'Custom';
 }
 
+function toggleDR(e){
+  e && e.stopPropagation();
+  const dd=document.getElementById('dr-dropdown'), tr=document.getElementById('dr-trigger');
+  const opening=dd.classList.contains('hidden');
+  dd.classList.toggle('hidden',!opening);
+  tr.classList.toggle('active',opening);
+}
+function selectRange(range,el){
+  drRange=range;
+  document.querySelectorAll('.dr-option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('dr-custom').style.display=range==='custom'?'':'none';
+  if(range!=='custom'){
+    document.getElementById('dr-label').textContent=rangeLabelText();
+    document.getElementById('dr-dropdown').classList.add('hidden');
+    document.getElementById('dr-trigger').classList.remove('active');
+    currentPage=1; loadOrders();
+  }
+}
+function applyCustom(){
+  drFrom=document.getElementById('dr-from').value;
+  drTo=document.getElementById('dr-to').value;
+  if(!drFrom||!drTo){alert('Please select both dates.');return;}
+  document.getElementById('dr-label').textContent=rangeLabelText();
+  document.getElementById('dr-dropdown').classList.add('hidden');
+  document.getElementById('dr-trigger').classList.remove('active');
+  currentPage=1; loadOrders();
+}
+document.addEventListener('click',e=>{
+  if(!document.getElementById('dr-wrap').contains(e.target)){
+    document.getElementById('dr-dropdown').classList.add('hidden');
+    document.getElementById('dr-trigger').classList.remove('active');
+  }
+});
+
+function debounceLoad(){ clearTimeout(debounceTimer); debounceTimer=setTimeout(()=>{currentPage=1;loadOrders();},400); }
 function clearFilters(){
-  document.getElementById('q').value = '';
-  document.getElementById('date-from').value = '';
-  document.getElementById('date-to').value = '';
-  currentPage = 1;
-  loadOrders();
+  document.getElementById('q').value='';
+  drRange='month';
+  document.getElementById('dr-label').textContent='This Month';
+  document.querySelectorAll('.dr-option').forEach(o=>o.classList.toggle('selected',o.dataset.range==='month'));
+  currentPage=1; loadOrders();
 }
+function changePage(dir){ currentPage=Math.max(1,Math.min(totalPages,currentPage+dir)); loadOrders(); }
 
-function changePage(dir){
-  currentPage = Math.max(1, Math.min(totalPages, currentPage + dir));
-  loadOrders();
+function typeTag(t){
+  if(!t||t==='—') return '<span style="color:#ccc;">—</span>';
+  if(t==='bus_tour')   return '<span class="sp sp-bus">Bus Tour</span>';
+  if(t==='self_drive') return '<span class="sp sp-self">Tickets</span>';
+  return `<span class="sp">${t}</span>`;
 }
-
-function sourceTag(s){
-  if(!s || s === '—') return '<span style="color:#ccc;">—</span>';
-  const cls = s === 'rezdy' ? 'sp-rezdy' : s === 'excel' ? 'sp-excel' : '';
+function sourceTagHtml(s){
+  if(!s||s==='—') return '<span style="color:#ccc;">—</span>';
+  const cls=s==='rezdy'?'sp-rezdy':s==='excel'?'sp-excel':'';
   return `<span class="sp ${cls}">${s}</span>`;
 }
 
-function typeTag(t){
-  if(!t || t === '—') return '<span style="color:#ccc;">—</span>';
-  if(t === 'bus_tour') return '<span class="sp sp-bus">Bus Tour</span>';
-  if(t === 'self_drive') return '<span class="sp sp-self">Tickets</span>';
-  return `<span class="sp">${t}</span>`;
-}
-
 async function loadOrders(){
-  const q   = document.getElementById('q').value.trim();
-  const df  = document.getElementById('date-from').value;
-  const dt  = document.getElementById('date-to').value;
-  const params = new URLSearchParams({ page: currentPage, page_size: 50 });
-  if(q)  params.set('q', q);
-  if(df) params.set('date_from', df);
-  if(dt) params.set('date_to', dt);
+  const q=document.getElementById('q').value.trim();
+  const {from,to}=getDateRange();
+  const params=new URLSearchParams({page:currentPage,page_size:50});
+  if(q)    params.set('q',q);
+  if(from) params.set('date_from',from);
+  if(to)   params.set('date_to',to);
 
-  document.getElementById('ord-tbody').innerHTML =
-    '<tr><td colspan="11" class="ord-loading">Loading...</td></tr>';
+  document.getElementById('ord-tbody').innerHTML='<tr><td colspan="11" class="ord-loading">Loading...</td></tr>';
+  const res=await fetch(`/api/operations/orders?${params}`);
+  const data=await res.json();
 
-  const res  = await fetch(`/api/operations/orders?${params}`);
-  const data = await res.json();
+  allRecords=data.records||[];
+  totalPages=data.pages||1;
+  document.getElementById('ord-count').textContent=`${data.total.toLocaleString()} orders`;
 
-  totalPages = data.pages || 1;
-  document.getElementById('ord-count').textContent =
-    `${data.total.toLocaleString()} orders`;
-
-  if(!data.records.length){
-    document.getElementById('ord-tbody').innerHTML =
-      '<tr><td colspan="11" class="ord-loading">No orders found</td></tr>';
-    document.getElementById('ord-pagination').style.display = 'none';
+  if(!allRecords.length){
+    document.getElementById('ord-tbody').innerHTML='<tr><td colspan="11" class="ord-loading">No orders found</td></tr>';
+    document.getElementById('ord-pagination').style.display='none';
     return;
   }
-
-  document.getElementById('ord-tbody').innerHTML = data.records.map(r => `
+  document.getElementById('ord-tbody').innerHTML=allRecords.map(r=>`
     <tr>
       <td><span class="ord-no">${r.order_number}</span></td>
-      <td>${r.name}<br><span style="font-size:11px;color:#aaa;">${r.phone !== '—' ? r.phone : r.email}</span></td>
+      <td>${r.name}<br><span style="font-size:11px;color:#aaa;">${r.phone!=='—'?r.phone:r.email}</span></td>
       <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.product_name}">${r.product_name}</td>
       <td>${typeTag(r.product_type)}</td>
       <td style="white-space:nowrap;">${r.tour_date}</td>
-      <td style="font-size:11px;color:#666;">${r.pickup_time !== '—' ? r.pickup_time : ''}${r.pickup_location !== '—' ? '<br>'+r.pickup_location : ''}</td>
+      <td style="font-size:11px;color:#666;">${r.pickup_time!=='—'?r.pickup_time:''}${r.pickup_location!=='—'?'<br>'+r.pickup_location:''}</td>
       <td>${r.quantities}</td>
       <td style="font-size:11px;">${r.agent_name}</td>
-      <td>${sourceTag(r.source)}</td>
+      <td>${sourceTagHtml(r.source)}</td>
       <td style="white-space:nowrap;font-size:11px;">${r.created_at}</td>
       <td style="white-space:nowrap;font-size:11px;">${r.updated_at}</td>
-    </tr>
-  `).join('');
+    </tr>`).join('');
 
-  const pg = document.getElementById('ord-pagination');
-  pg.style.display = totalPages > 1 ? 'flex' : 'none';
-  document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
-  document.getElementById('btn-prev').disabled = currentPage <= 1;
-  document.getElementById('btn-next').disabled = currentPage >= totalPages;
+  const pg=document.getElementById('ord-pagination');
+  pg.style.display=totalPages>1?'flex':'none';
+  document.getElementById('page-info').textContent=`Page ${currentPage} of ${totalPages}`;
+  document.getElementById('btn-prev').disabled=currentPage<=1;
+  document.getElementById('btn-next').disabled=currentPage>=totalPages;
+}
+
+function exportExcel(){
+  if(!allRecords.length){alert('No data to export.');return;}
+  const headers=['Order #','Guest','Phone/Email','Product','Type','Tour Date',
+                 'Pickup Time','Pickup Location','Pax','Agent','Source','Created','Updated'];
+  const rows=allRecords.map(r=>[
+    r.order_number,r.name,r.phone!=='—'?r.phone:r.email,
+    r.product_name,r.product_type,r.tour_date,
+    r.pickup_time,r.pickup_location,r.quantities,
+    r.agent_name,r.source,r.created_at,r.updated_at
+  ]);
+  const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Orders');
+  XLSX.writeFile(wb,`orders_${laToday()}.xlsx`);
 }
 
 loadOrders();

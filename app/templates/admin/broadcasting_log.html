@@ -3,7 +3,7 @@
 {% block page_title %}Broadcasting Log{% endblock %}
 {% block extra_styles %}
 .filter-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
-.filter-row input[type=date],.filter-row select{padding:6px 10px;border:0.5px solid rgba(0,0,0,0.15);border-radius:7px;font-size:13px;background:#fff;}
+.filter-row select{padding:6px 10px;border:0.5px solid rgba(0,0,0,0.15);border-radius:7px;font-size:13px;background:#fff;}
 .table-card{background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;overflow:hidden;}
 .table-header{padding:10px 16px;background:#f5f5f3;border-bottom:0.5px solid rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;}
 .table-header span{font-size:13px;font-weight:600;color:#1a1a1a;}
@@ -30,10 +30,50 @@ table.bcast-tbl{width:100%;border-collapse:collapse;font-size:13px;}
 .rec-table td{padding:5px 10px;border-bottom:0.5px solid rgba(0,0,0,0.06);}
 .rec-table tr:last-child td{border-bottom:none;}
 .empty-state{padding:40px;text-align:center;color:#aaa;font-size:14px;}
+.btn-export{background:#fff;color:#444;border:0.5px solid rgba(0,0,0,0.2);padding:6px 14px;border-radius:7px;font-size:12px;cursor:pointer;}
+.btn-export:hover{background:#f5f5f3;}
+/* Date range picker */
+.dr-wrap{position:relative;display:inline-block;}
+.dr-trigger{height:32px;padding:0 12px;border:0.5px solid rgba(0,0,0,0.18);border-radius:7px;font-size:13px;background:#fff;color:#1a1a1a;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;user-select:none;}
+.dr-trigger:hover{border-color:rgba(0,0,0,0.35);}
+.dr-trigger.active{border-color:#1a1a1a;background:#fafaf8;}
+.dr-dropdown{position:absolute;top:calc(100% + 4px);left:0;z-index:999;background:#fff;border:0.5px solid rgba(0,0,0,0.15);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.12);padding:6px;min-width:220px;}
+.dr-dropdown.hidden{display:none;}
+.dr-option{padding:8px 12px;font-size:13px;border-radius:6px;cursor:pointer;color:#333;}
+.dr-option:hover{background:#f5f5f3;}
+.dr-option.selected{background:#1a1a1a;color:#fff;}
+.dr-custom{padding:8px 6px 4px;border-top:0.5px solid rgba(0,0,0,0.08);margin-top:4px;}
+.dr-custom label{font-size:11px;color:#888;display:block;margin-bottom:6px;}
+.dr-custom-row{display:flex;align-items:center;gap:6px;}
+.dr-date-wrap{position:relative;flex:1;}
+.dr-date-wrap input[type=date]{width:100%;height:28px;padding:0 8px;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;font-size:12px;background:#fff;box-sizing:border-box;cursor:pointer;}
+.dr-date-wrap input[type=date]:focus{outline:none;border-color:#1a1a1a;}
+.dr-apply{height:28px;padding:0 12px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;margin-top:8px;width:100%;}
+.dr-apply:hover{background:#333;}
 {% endblock %}
 {% block content %}
 <div class="filter-row">
-  <input type="date" id="filter-date" onchange="loadLog()">
+  <div class="dr-wrap" id="dr-wrap">
+    <div class="dr-trigger" id="dr-trigger" onclick="toggleDR(event)">
+      <span>📅</span><span id="dr-label">Today</span><span style="color:#aaa;font-size:10px;">▾</span>
+    </div>
+    <div class="dr-dropdown hidden" id="dr-dropdown">
+      <div class="dr-option selected" data-range="today"  onclick="selectRange('today',this)">Today</div>
+      <div class="dr-option" data-range="week"   onclick="selectRange('week',this)">This Week</div>
+      <div class="dr-option" data-range="month"  onclick="selectRange('month',this)">This Month</div>
+      <div class="dr-option" data-range="custom" onclick="selectRange('custom',this)">Custom</div>
+      <div class="dr-custom" id="dr-custom" style="display:none;">
+        <label>Date range</label>
+        <div class="dr-custom-row">
+          <div class="dr-date-wrap"><input type="date" id="dr-from"></div>
+          <span style="font-size:12px;color:#aaa;">–</span>
+          <div class="dr-date-wrap"><input type="date" id="dr-to"></div>
+        </div>
+        <button class="dr-apply" onclick="applyCustom()">Apply</button>
+      </div>
+    </div>
+  </div>
+
   <select id="filter-module" onchange="loadLog()">
     <option value="">All modules</option>
     <option value="tour">Tour Confirmation</option>
@@ -50,23 +90,18 @@ table.bcast-tbl{width:100%;border-collapse:collapse;font-size:13px;}
 </div>
 
 <div class="table-card">
-  <div class="table-header"><span>Broadcasting Log</span></div>
+  <div class="table-header">
+    <span>Broadcasting Log</span>
+    <button class="btn-export" onclick="exportExcel()">⬇ Export</button>
+  </div>
   <div style="overflow-x:auto;">
     <table class="bcast-tbl">
       <thead>
         <tr>
-          <td>Date</td>
-          <td>Time</td>
-          <td>Sent by</td>
-          <td>Module</td>
-          <td>Group</td>
-          <td>Template</td>
-          <td>Message</td>
-          <td>Recipients</td>
-          <td style="text-align:center;">SMS ✓</td>
-          <td style="text-align:center;">SMS ✗</td>
-          <td style="text-align:center;">Email ✓</td>
-          <td style="text-align:center;">Email ✗</td>
+          <td>Date</td><td>Time</td><td>Sent by</td><td>Module</td><td>Group</td>
+          <td>Template</td><td>Message</td><td>Recipients</td>
+          <td style="text-align:center;">SMS ✓</td><td style="text-align:center;">SMS ✗</td>
+          <td style="text-align:center;">Email ✓</td><td style="text-align:center;">Email ✗</td>
           <td></td>
         </tr>
       </thead>
@@ -78,52 +113,104 @@ table.bcast-tbl{width:100%;border-collapse:collapse;font-size:13px;}
 </div>
 {% endblock %}
 {% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
+let allRows=[], drRange='today', drFrom='', drTo='';
+
+function laToday(){ return new Date().toLocaleDateString('en-CA',{timeZone:'America/Los_Angeles'}); }
+function laWeekStart(){
+  const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
+  d.setDate(d.getDate()-d.getDay()); return d.toLocaleDateString('en-CA');
+}
+function laMonthStart(){
+  const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
+  d.setDate(1); return d.toLocaleDateString('en-CA');
+}
+function getDateRange(){
+  const t=laToday();
+  if(drRange==='today')  return {from:t,to:t};
+  if(drRange==='week')   return {from:laWeekStart(),to:t};
+  if(drRange==='month')  return {from:laMonthStart(),to:t};
+  if(drRange==='custom') return {from:drFrom,to:drTo};
+  return {from:'',to:''};
+}
+function rangeLabelText(){
+  if(drRange==='today') return 'Today';
+  if(drRange==='week')  return 'This Week';
+  if(drRange==='month') return 'This Month';
+  const {from,to}=getDateRange();
+  return (from&&to)?`${from} – ${to}`:'Custom';
+}
+function toggleDR(e){
+  e&&e.stopPropagation();
+  const dd=document.getElementById('dr-dropdown'),tr=document.getElementById('dr-trigger');
+  const opening=dd.classList.contains('hidden');
+  dd.classList.toggle('hidden',!opening); tr.classList.toggle('active',opening);
+}
+function selectRange(range,el){
+  drRange=range;
+  document.querySelectorAll('.dr-option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('dr-custom').style.display=range==='custom'?'':'none';
+  if(range!=='custom'){
+    document.getElementById('dr-label').textContent=rangeLabelText();
+    document.getElementById('dr-dropdown').classList.add('hidden');
+    document.getElementById('dr-trigger').classList.remove('active');
+    loadLog();
+  }
+}
+function applyCustom(){
+  drFrom=document.getElementById('dr-from').value;
+  drTo=document.getElementById('dr-to').value;
+  if(!drFrom||!drTo){alert('Please select both dates.');return;}
+  document.getElementById('dr-label').textContent=rangeLabelText();
+  document.getElementById('dr-dropdown').classList.add('hidden');
+  document.getElementById('dr-trigger').classList.remove('active');
+  loadLog();
+}
+document.addEventListener('click',e=>{
+  if(!document.getElementById('dr-wrap').contains(e.target)){
+    document.getElementById('dr-dropdown').classList.add('hidden');
+    document.getElementById('dr-trigger').classList.remove('active');
+  }
+});
+
 function escHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-async function loadLog() {
-  const dateVal   = document.getElementById('filter-date').value;
-  const moduleVal = document.getElementById('filter-module').value;
-  const groupVal  = document.getElementById('filter-group').value;
-
-  let url = '/api/broadcasting-log?';
-  if (dateVal)   url += `date=${dateVal}&`;
-  if (moduleVal) url += `module=${moduleVal}&`;
-  if (groupVal)  url += `group=${groupVal}&`;
-
-  document.getElementById('bcast-tbody').innerHTML = '<tr><td colspan="13" class="empty-state">Loading…</td></tr>';
-
-  try {
-    const res  = await fetch(url);
-    const data = await res.json();
-    renderLog(data.rows || []);
-  } catch(e) {
-    document.getElementById('bcast-tbody').innerHTML = '<tr><td colspan="13" class="empty-state">Failed to load.</td></tr>';
+async function loadLog(){
+  const {from}=getDateRange();
+  const moduleVal=document.getElementById('filter-module').value;
+  const groupVal=document.getElementById('filter-group').value;
+  let url='/api/broadcasting-log?';
+  if(from)      url+=`date=${from}&`;
+  if(moduleVal) url+=`module=${moduleVal}&`;
+  if(groupVal)  url+=`group=${groupVal}&`;
+  document.getElementById('bcast-tbody').innerHTML='<tr><td colspan="13" class="empty-state">Loading…</td></tr>';
+  try{
+    const res=await fetch(url);
+    const data=await res.json();
+    allRows=data.rows||[];
+    renderLog(allRows);
+  }catch(e){
+    document.getElementById('bcast-tbody').innerHTML='<tr><td colspan="13" class="empty-state">Failed to load.</td></tr>';
   }
 }
 
-function renderLog(rows) {
-  document.getElementById('records-count').textContent = rows.length + ' records';
-  if (!rows.length) {
-    document.getElementById('bcast-tbody').innerHTML = '<tr><td colspan="13" class="empty-state">No records found.</td></tr>';
-    return;
-  }
-
-  const moduleLabel = { tour: 'Tour', morning: 'Morning', tickets: 'Tickets' };
-  const moduleCls   = { tour: 'tag-tour', morning: 'tag-morning', tickets: 'tag-tickets' };
-
-  document.getElementById('bcast-tbody').innerHTML = rows.map(r => {
-    const dt = r.created_at ? r.created_at.split(' ') : ['—',''];
-    const modTag   = `<span class="tag ${moduleCls[r.module]||''}">${moduleLabel[r.module]||r.module}</span>`;
-    const grpTag   = `<span class="tag ${r.group_filter==='mtlv'?'tag-mtlv':'tag-general'}">${r.group_filter==='mtlv'?'MTLV':'General'}</span>`;
-    const msgShort = (r.message_body||'').length > 60 ? escHtml(r.message_body.slice(0,60))+'…' : escHtml(r.message_body||'—');
-    return `
-    <tr>
+function renderLog(rows){
+  document.getElementById('records-count').textContent=rows.length+' records';
+  if(!rows.length){document.getElementById('bcast-tbody').innerHTML='<tr><td colspan="13" class="empty-state">No records found.</td></tr>';return;}
+  const moduleLabel={tour:'Tour',morning:'Morning',tickets:'Tickets'};
+  const moduleCls={tour:'tag-tour',morning:'tag-morning',tickets:'tag-tickets'};
+  document.getElementById('bcast-tbody').innerHTML=rows.map(r=>{
+    const dt=r.created_at?r.created_at.split(' '):['—',''];
+    const modTag=`<span class="tag ${moduleCls[r.module]||''}">${moduleLabel[r.module]||r.module}</span>`;
+    const grpTag=`<span class="tag ${r.group_filter==='mtlv'?'tag-mtlv':'tag-general'}">${r.group_filter==='mtlv'?'MTLV':'General'}</span>`;
+    const msgShort=(r.message_body||'').length>60?escHtml(r.message_body.slice(0,60))+'…':escHtml(r.message_body||'—');
+    return `<tr>
       <td style="white-space:nowrap;color:#888;">${escHtml(dt[0])}</td>
       <td style="white-space:nowrap;color:#888;">${escHtml(dt[1])}</td>
       <td style="font-weight:500;">${escHtml(r.sent_by||'—')}</td>
-      <td>${modTag}</td>
-      <td>${grpTag}</td>
+      <td>${modTag}</td><td>${grpTag}</td>
       <td style="font-size:12px;color:#888;">${escHtml(r.template_name||'custom')}</td>
       <td style="max-width:220px;font-size:12px;" title="${escHtml(r.message_body||'')}">${msgShort}</td>
       <td style="text-align:center;">${r.recipient_count||0}</td>
@@ -131,40 +218,29 @@ function renderLog(rows) {
       <td style="text-align:center;" class="num-fail">${r.sms_failed||0}</td>
       <td style="text-align:center;" class="num-ok">${r.email_sent||0}</td>
       <td style="text-align:center;" class="num-fail">${r.email_failed||0}</td>
-      <td><button class="expand-btn" onclick="toggleRecipients(${r.id}, this)">▶ Details</button></td>
+      <td><button class="expand-btn" onclick="toggleRecipients(${r.id},this)">▶ Details</button></td>
     </tr>
     <tr class="recipients-row" id="rec-row-${r.id}">
-      <td colspan="13">
-        <div class="recipients-inner" id="rec-inner-${r.id}">Loading…</div>
-      </td>
+      <td colspan="13"><div class="recipients-inner" id="rec-inner-${r.id}">Loading…</div></td>
     </tr>`;
   }).join('');
 }
 
-async function toggleRecipients(id, btn) {
-  const row = document.getElementById(`rec-row-${id}`);
-  const inner = document.getElementById(`rec-inner-${id}`);
-  const isOpen = row.classList.contains('open');
-  if (isOpen) {
-    row.classList.remove('open');
-    btn.textContent = '▶ Details';
-    return;
-  }
-  row.classList.add('open');
-  btn.textContent = '▼ Details';
-
-  if (inner.dataset.loaded) return;
-  try {
-    const res  = await fetch(`/api/broadcasting-log/${id}/recipients`);
-    const data = await res.json();
-    const recs = data.recipients || [];
-    if (!recs.length) { inner.innerHTML = '<span style="color:#aaa;font-size:12px;">No recipients recorded.</span>'; }
-    else {
-      inner.innerHTML = `<table class="rec-table">
-        <tr style="font-size:11px;color:#888;font-weight:600;">
-          <td>Order #</td><td>Name</td><td>Phone</td><td>Email</td><td>SMS</td><td>Email</td>
-        </tr>
-        ${recs.map(r => `<tr>
+async function toggleRecipients(id,btn){
+  const row=document.getElementById(`rec-row-${id}`);
+  const inner=document.getElementById(`rec-inner-${id}`);
+  if(row.classList.contains('open')){row.classList.remove('open');btn.textContent='▶ Details';return;}
+  row.classList.add('open');btn.textContent='▼ Details';
+  if(inner.dataset.loaded) return;
+  try{
+    const res=await fetch(`/api/broadcasting-log/${id}/recipients`);
+    const data=await res.json();
+    const recs=data.recipients||[];
+    if(!recs.length){inner.innerHTML='<span style="color:#aaa;font-size:12px;">No recipients recorded.</span>';}
+    else{
+      inner.innerHTML=`<table class="rec-table">
+        <tr style="font-size:11px;color:#888;font-weight:600;"><td>Order #</td><td>Name</td><td>Phone</td><td>Email</td><td>SMS</td><td>Email</td></tr>
+        ${recs.map(r=>`<tr>
           <td style="color:#2F7851;font-weight:500;">${escHtml(r.order_number||'—')}</td>
           <td>${escHtml(r.customer_name||'—')}</td>
           <td style="color:#888;">${escHtml(r.phone||'—')}</td>
@@ -174,14 +250,24 @@ async function toggleRecipients(id, btn) {
         </tr>`).join('')}
       </table>`;
     }
-    inner.dataset.loaded = '1';
-  } catch(e) {
-    inner.innerHTML = '<span style="color:#A32D2D;font-size:12px;">Failed to load recipients.</span>';
-  }
+    inner.dataset.loaded='1';
+  }catch(e){inner.innerHTML='<span style="color:#A32D2D;font-size:12px;">Failed to load recipients.</span>';}
 }
 
-// Set default date to today (LA time)
-document.getElementById('filter-date').value = new Date().toLocaleDateString('en-CA', {timeZone:'America/Los_Angeles'});
+function exportExcel(){
+  if(!allRows.length){alert('No data to export.');return;}
+  const headers=['Date','Time','Sent By','Module','Group','Template','Message','Recipients','SMS Sent','SMS Failed','Email Sent','Email Failed'];
+  const rows=allRows.map(r=>{
+    const dt=r.created_at?r.created_at.split(' '):['',''];
+    return [dt[0],dt[1],r.sent_by,r.module,r.group_filter,r.template_name||'custom',
+            r.message_body,r.recipient_count,r.sms_sent,r.sms_failed,r.email_sent,r.email_failed];
+  });
+  const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Broadcasting Log');
+  XLSX.writeFile(wb,`broadcasting_log_${laToday()}.xlsx`);
+}
+
 loadLog();
 </script>
 {% endblock %}

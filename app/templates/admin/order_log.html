@@ -9,13 +9,12 @@
 .stat-card .lbl{font-size:11px;color:#aaa;margin-top:2px;}
 .filter-bar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:10px;padding:12px 16px;}
 .filter-bar label{font-size:12px;color:#888;margin-right:4px;}
-.filter-bar input,.filter-bar select{padding:6px 10px;border:0.5px solid rgba(0,0,0,0.2);border-radius:7px;font-size:13px;background:#fff;font-family:inherit;}
-.filter-bar input:focus,.filter-bar select:focus{outline:none;border-color:#1a1a1a;}
+.filter-bar input[type=text],.filter-bar select{padding:6px 10px;border:0.5px solid rgba(0,0,0,0.2);border-radius:7px;font-size:13px;background:#fff;font-family:inherit;}
 .btn-filter{background:#1a1a1a;color:#fff;border:none;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;}
 .btn-filter:hover{background:#333;}
 .btn-reset{background:#fff;color:#888;border:0.5px solid rgba(0,0,0,0.15);padding:7px 14px;border-radius:7px;font-size:12px;cursor:pointer;}
-.btn-today{background:#fff;color:#185FA5;border:0.5px solid #185FA5;padding:7px 14px;border-radius:7px;font-size:12px;cursor:pointer;font-weight:600;}
-.btn-today:hover{background:#E6F1FB;}
+.btn-export{background:#fff;color:#444;border:0.5px solid rgba(0,0,0,0.2);padding:7px 14px;border-radius:7px;font-size:12px;cursor:pointer;}
+.btn-export:hover{background:#f5f5f3;}
 .records-count{font-size:12px;color:#aaa;margin-left:auto;}
 .table-card{background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;overflow:hidden;}
 .table-header{padding:10px 16px;background:#f9f9f7;border-bottom:0.5px solid rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;}
@@ -35,6 +34,24 @@ table.log-tbl{width:100%;border-collapse:collapse;font-size:12px;}
 .page-btn{padding:4px 10px;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;font-size:12px;cursor:pointer;background:#fff;color:#555;}
 .page-btn:hover{background:#f5f5f3;}
 .page-info{font-size:12px;color:#aaa;}
+/* Date range picker */
+.dr-wrap{position:relative;display:inline-block;}
+.dr-trigger{height:32px;padding:0 12px;border:0.5px solid rgba(0,0,0,0.18);border-radius:7px;font-size:13px;background:#fff;color:#1a1a1a;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;user-select:none;}
+.dr-trigger:hover{border-color:rgba(0,0,0,0.35);}
+.dr-trigger.active{border-color:#1a1a1a;background:#fafaf8;}
+.dr-dropdown{position:absolute;top:calc(100% + 4px);left:0;z-index:999;background:#fff;border:0.5px solid rgba(0,0,0,0.15);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.12);padding:6px;min-width:220px;}
+.dr-dropdown.hidden{display:none;}
+.dr-option{padding:8px 12px;font-size:13px;border-radius:6px;cursor:pointer;color:#333;}
+.dr-option:hover{background:#f5f5f3;}
+.dr-option.selected{background:#1a1a1a;color:#fff;}
+.dr-custom{padding:8px 6px 4px;border-top:0.5px solid rgba(0,0,0,0.08);margin-top:4px;}
+.dr-custom label{font-size:11px;color:#888;display:block;margin-bottom:6px;}
+.dr-custom-row{display:flex;align-items:center;gap:6px;}
+.dr-date-wrap{position:relative;flex:1;}
+.dr-date-wrap input[type=date]{width:100%;height:28px;padding:0 8px;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;font-size:12px;background:#fff;box-sizing:border-box;cursor:pointer;}
+.dr-date-wrap input[type=date]:focus{outline:none;border-color:#1a1a1a;}
+.dr-apply{height:28px;padding:0 12px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;margin-top:8px;width:100%;}
+.dr-apply:hover{background:#333;}
 {% endblock %}
 
 {% block content %}
@@ -45,10 +62,28 @@ table.log-tbl{width:100%;border-collapse:collapse;font-size:12px;}
 </div>
 
 <div class="filter-bar">
-  <div>
-    <label>Tour Date</label>
-    <input type="date" id="f-date" value="">
+  <!-- Date range picker -->
+  <div class="dr-wrap" id="dr-wrap">
+    <div class="dr-trigger" id="dr-trigger" onclick="toggleDR(event)">
+      <span>📅</span><span id="dr-label">Today</span><span style="color:#aaa;font-size:10px;">▾</span>
+    </div>
+    <div class="dr-dropdown hidden" id="dr-dropdown">
+      <div class="dr-option selected" data-range="today" onclick="selectRange('today',this)">Today</div>
+      <div class="dr-option" data-range="week"   onclick="selectRange('week',this)">This Week</div>
+      <div class="dr-option" data-range="month"  onclick="selectRange('month',this)">This Month</div>
+      <div class="dr-option" data-range="custom" onclick="selectRange('custom',this)">Custom</div>
+      <div class="dr-custom" id="dr-custom" style="display:none;">
+        <label>Date range</label>
+        <div class="dr-custom-row">
+          <div class="dr-date-wrap"><input type="date" id="dr-from"></div>
+          <span style="font-size:12px;color:#aaa;">–</span>
+          <div class="dr-date-wrap"><input type="date" id="dr-to"></div>
+        </div>
+        <button class="dr-apply" onclick="applyCustom()">Apply</button>
+      </div>
+    </div>
   </div>
+
   <div>
     <label>Order #</label>
     <input type="text" id="f-order" placeholder="CHD..." style="width:120px;">
@@ -75,9 +110,9 @@ table.log-tbl{width:100%;border-collapse:collapse;font-size:12px;}
       <option value="guest">Guest</option>
     </select>
   </div>
-  <button class="btn-today" onclick="setToday()">Today</button>
   <button class="btn-filter" onclick="loadLog()">Filter</button>
-  <button class="btn-reset" onclick="resetFilters()">Reset</button>
+  <button class="btn-reset"  onclick="resetFilters()">Reset</button>
+  <button class="btn-export" onclick="exportExcel()">⬇ Export</button>
   <span class="records-count" id="records-count">— records</span>
 </div>
 
@@ -87,13 +122,8 @@ table.log-tbl{width:100%;border-collapse:collapse;font-size:12px;}
     <table class="log-tbl">
       <thead>
         <tr>
-          <td>Tour Date</td>
-          <td>Order #</td>
-          <td>Event</td>
-          <td>Detail</td>
-          <td>By</td>
-          <td>Type</td>
-          <td>Modified At</td>
+          <td>Tour Date</td><td>Order #</td><td>Event</td>
+          <td>Detail</td><td>By</td><td>Type</td><td>Modified At</td>
         </tr>
       </thead>
       <tbody id="log-tbody">
@@ -102,97 +132,149 @@ table.log-tbl{width:100%;border-collapse:collapse;font-size:12px;}
     </table>
   </div>
 </div>
-
 <div class="pagination" id="pagination"></div>
 {% endblock %}
 
 {% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-let currentPage = 1;
-const PAGE_SIZE = 50;
-const TODAY = '{{ today }}';
+let currentPage=1, allRecords=[];
+const PAGE_SIZE=50;
+let drRange='today', drFrom='', drTo='';
 
-async function loadLog(page) {
-  if (page) currentPage = page;
-  const date  = document.getElementById('f-date').value;
-  const order = document.getElementById('f-order').value.trim();
-  const event = document.getElementById('f-event').value;
-  const actor = document.getElementById('f-actor').value;
+function laToday(){ return new Date().toLocaleDateString('en-CA',{timeZone:'America/Los_Angeles'}); }
+function laWeekStart(){
+  const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
+  d.setDate(d.getDate()-d.getDay()); return d.toLocaleDateString('en-CA');
+}
+function laMonthStart(){
+  const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
+  d.setDate(1); return d.toLocaleDateString('en-CA');
+}
+function getDateRange(){
+  const t=laToday();
+  if(drRange==='today')  return {from:t,to:t};
+  if(drRange==='week')   return {from:laWeekStart(),to:t};
+  if(drRange==='month')  return {from:laMonthStart(),to:t};
+  if(drRange==='custom') return {from:drFrom,to:drTo};
+  return {from:'',to:''};
+}
+function rangeLabelText(){
+  if(drRange==='today') return 'Today';
+  if(drRange==='week')  return 'This Week';
+  if(drRange==='month') return 'This Month';
+  const {from,to}=getDateRange();
+  return (from&&to)?`${from} – ${to}`:'Custom';
+}
+function toggleDR(e){
+  e&&e.stopPropagation();
+  const dd=document.getElementById('dr-dropdown'),tr=document.getElementById('dr-trigger');
+  const opening=dd.classList.contains('hidden');
+  dd.classList.toggle('hidden',!opening);
+  tr.classList.toggle('active',opening);
+}
+function selectRange(range,el){
+  drRange=range;
+  document.querySelectorAll('.dr-option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('dr-custom').style.display=range==='custom'?'':'none';
+  if(range!=='custom'){
+    document.getElementById('dr-label').textContent=rangeLabelText();
+    document.getElementById('dr-dropdown').classList.add('hidden');
+    document.getElementById('dr-trigger').classList.remove('active');
+    currentPage=1; loadLog();
+  }
+}
+function applyCustom(){
+  drFrom=document.getElementById('dr-from').value;
+  drTo=document.getElementById('dr-to').value;
+  if(!drFrom||!drTo){alert('Please select both dates.');return;}
+  document.getElementById('dr-label').textContent=rangeLabelText();
+  document.getElementById('dr-dropdown').classList.add('hidden');
+  document.getElementById('dr-trigger').classList.remove('active');
+  currentPage=1; loadLog();
+}
+document.addEventListener('click',e=>{
+  if(!document.getElementById('dr-wrap').contains(e.target)){
+    document.getElementById('dr-dropdown').classList.add('hidden');
+    document.getElementById('dr-trigger').classList.remove('active');
+  }
+});
 
-  document.getElementById('log-tbody').innerHTML =
-    '<tr><td colspan="7" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
-
-  const qs = new URLSearchParams({
-    ...(date  && { date }),
-    ...(order && { order_number: order }),
-    ...(event && { event_type: event }),
-    ...(actor && { actor_type: actor }),
-    page:      currentPage,
-    page_size: PAGE_SIZE,
+async function loadLog(page){
+  if(page) currentPage=page;
+  const {from,to}=getDateRange();
+  const order=document.getElementById('f-order').value.trim();
+  const event=document.getElementById('f-event').value;
+  const actor=document.getElementById('f-actor').value;
+  document.getElementById('log-tbody').innerHTML='<tr><td colspan="7" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
+  const qs=new URLSearchParams({
+    ...(from&&{date:from}),
+    ...(order&&{order_number:order}),
+    ...(event&&{event_type:event}),
+    ...(actor&&{actor_type:actor}),
+    page:currentPage, page_size:PAGE_SIZE,
   });
-
-  try {
-    const res  = await fetch(`/api/activities/order-log?${qs}`);
-    const data = await res.json();
-    renderRows(data.records || []);
-    renderStats(data.total || 0, data.stats || {});
-    renderPagination(data.total || 0);
-    document.getElementById('records-count').textContent = `${data.total || 0} records`;
-  } catch (e) {
-    document.getElementById('log-tbody').innerHTML =
-      '<tr><td colspan="7" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
+  try{
+    const res=await fetch(`/api/activities/order-log?${qs}`);
+    const data=await res.json();
+    allRecords=data.records||[];
+    renderRows(allRecords);
+    renderStats(data.total||0, data.stats||{});
+    renderPagination(data.total||0);
+    document.getElementById('records-count').textContent=`${data.total||0} records`;
+  }catch(e){
+    document.getElementById('log-tbody').innerHTML='<tr><td colspan="7" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
   }
 }
 
-function renderRows(records) {
-  const tbody = document.getElementById('log-tbody');
-  if (!records.length) {
-    tbody.innerHTML = '<tr><td colspan="7" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';
-    return;
-  }
-  tbody.innerHTML = records.map(r => `<tr>
-    <td style="white-space:nowrap;font-size:12px;font-weight:500;color:#1a1a1a;">${r.tour_date}</td>
+function renderRows(records){
+  const tbody=document.getElementById('log-tbody');
+  if(!records.length){tbody.innerHTML='<tr><td colspan="7" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';return;}
+  tbody.innerHTML=records.map(r=>`<tr>
+    <td style="white-space:nowrap;font-size:12px;font-weight:500;">${r.tour_date}</td>
     <td style="font-family:monospace;font-size:12px;color:#378ADD;font-weight:500;">${r.order_number}</td>
     <td><span class="event-badge" style="background:${r.event_color}18;color:${r.event_color};">${r.event_label}</span></td>
     <td style="font-size:12px;color:#555;max-width:300px;">${r.detail}</td>
-    <td style="font-size:12px;color:#444;">${r.actor}</td>
+    <td style="font-size:12px;">${r.actor}</td>
     <td><span class="actor-badge ${r.actor_type}">${r.actor_type}</span></td>
     <td style="white-space:nowrap;font-size:11px;color:#aaa;">${r.modified_at}</td>
   </tr>`).join('');
 }
-
-function renderStats(total, stats) {
-  document.getElementById('stat-total').textContent = total;
-  const guestEvents = ['guest_confirmed','guest_modify_requested','lunch_selected','mtlv_qty_selected'];
-  const staffEvents = ['status_changed','booking_handled','mtlv_ticket_sent','action_taken'];
-  const sum = keys => keys.reduce((a,k) => a + (stats[k]||0), 0);
-  document.getElementById('stat-guest').textContent = sum(guestEvents);
-  document.getElementById('stat-staff').textContent = sum(staffEvents);
+function renderStats(total,stats){
+  document.getElementById('stat-total').textContent=total;
+  const gE=['guest_confirmed','guest_modify_requested','lunch_selected','mtlv_qty_selected'];
+  const sE=['status_changed','booking_handled','mtlv_ticket_sent','action_taken'];
+  const sum=keys=>keys.reduce((a,k)=>a+(stats[k]||0),0);
+  document.getElementById('stat-guest').textContent=sum(gE);
+  document.getElementById('stat-staff').textContent=sum(sE);
 }
-
-function renderPagination(total) {
-  const pages = Math.ceil(total / PAGE_SIZE);
-  const pag = document.getElementById('pagination');
-  if (pages <= 1) { pag.innerHTML = ''; return; }
-  let html = `<span class="page-info">Page ${currentPage} of ${pages}</span>`;
-  if (currentPage > 1)     html += `<button class="page-btn" onclick="loadLog(${currentPage-1})">← Prev</button>`;
-  if (currentPage < pages) html += `<button class="page-btn" onclick="loadLog(${currentPage+1})">Next →</button>`;
-  pag.innerHTML = html;
+function renderPagination(total){
+  const pages=Math.ceil(total/PAGE_SIZE);
+  const pag=document.getElementById('pagination');
+  if(pages<=1){pag.innerHTML='';return;}
+  let html=`<span class="page-info">Page ${currentPage} of ${pages}</span>`;
+  if(currentPage>1)     html+=`<button class="page-btn" onclick="loadLog(${currentPage-1})">← Prev</button>`;
+  if(currentPage<pages) html+=`<button class="page-btn" onclick="loadLog(${currentPage+1})">Next →</button>`;
+  pag.innerHTML=html;
 }
-
-function setToday() {
-  document.getElementById('f-date').value = TODAY;
-  currentPage = 1;
-  loadLog();
+function resetFilters(){
+  drRange='today';
+  document.getElementById('dr-label').textContent='Today';
+  document.querySelectorAll('.dr-option').forEach(o=>o.classList.toggle('selected',o.dataset.range==='today'));
+  document.getElementById('f-order').value='';
+  document.getElementById('f-event').value='';
+  document.getElementById('f-actor').value='';
+  currentPage=1; loadLog();
 }
-
-function resetFilters() {
-  document.getElementById('f-date').value  = '';
-  document.getElementById('f-order').value = '';
-  document.getElementById('f-event').value = '';
-  document.getElementById('f-actor').value = '';
-  currentPage = 1;
-  loadLog();
+function exportExcel(){
+  if(!allRecords.length){alert('No data to export.');return;}
+  const headers=['Tour Date','Order #','Event','Detail','By','Type','Modified At'];
+  const rows=allRecords.map(r=>[r.tour_date,r.order_number,r.event_label,r.detail,r.actor,r.actor_type,r.modified_at]);
+  const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Order Log');
+  XLSX.writeFile(wb,`order_log_${laToday()}.xlsx`);
 }
 
 loadLog();

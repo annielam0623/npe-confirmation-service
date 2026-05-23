@@ -3,157 +3,108 @@
 {% block page_title %}Send Log{% endblock %}
 
 {% block extra_styles %}
-/* Stats row */
-.stats-row { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
-.stat-card {
-background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
-border-radius: 10px; padding: 12px 20px; text-align: center; min-width: 100px;
-}
-.stat-card .num { font-size: 22px; font-weight: 700; }
-.stat-card .lbl { font-size: 11px; color: #aaa; margin-top: 2px; }
-.stat-card.tour .num { color: #3B6D11; }
-.stat-card.morning .num { color: #185FA5; }
-.stat-card.tickets .num { color: #BA7517; }
-.stat-card.total .num { color: #1a1a1a; }
-
-/* Filter bar */
-.filter-bar {
-display: flex; gap: 10px; align-items: center;
-margin-bottom: 16px; flex-wrap: wrap;
-background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
-border-radius: 10px; padding: 12px 16px;
-}
-.filter-bar label { font-size: 12px; color: #888; margin-right: 4px; }
-.filter-bar input[type="date"],
-.filter-bar select {
-padding: 6px 10px; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 7px;
-font-size: 13px; background: #fff; font-family: inherit;
-}
-.filter-bar input[type="date"]:focus,
-.filter-bar select:focus { outline: none; border-color: #1a1a1a; }
-.btn-filter {
-background: #1a1a1a; color: #fff; border: none;
-padding: 7px 16px; border-radius: 7px; font-size: 12px;
-font-weight: 600; cursor: pointer;
-}
-.btn-filter:hover { background: #333; }
-.btn-reset {
-background: #fff; color: #888; border: 0.5px solid rgba(0,0,0,0.15);
-padding: 7px 14px; border-radius: 7px; font-size: 12px; cursor: pointer;
-}
-.records-count { font-size: 12px; color: #aaa; margin-left: auto; }
-
-/* Table */
-.table-card {
-background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
-border-radius: 12px; overflow: hidden;
-}
-.table-header {
-padding: 10px 16px; background: #f9f9f7;
-border-bottom: 0.5px solid rgba(0,0,0,0.08);
-display: flex; align-items: center; justify-content: space-between;
-}
-.table-header span { font-size: 13px; font-weight: 600; }
-
-table.log-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
-.log-tbl thead td {
-padding: 8px 10px; font-size: 11px; font-weight: 600; color: #999;
-background: #f9f9f7; border-bottom: 0.5px solid rgba(0,0,0,0.08);
-white-space: nowrap;
-}
-.log-tbl tbody tr { border-bottom: 0.5px solid rgba(0,0,0,0.06); }
-.log-tbl tbody tr:last-child { border-bottom: none; }
-.log-tbl tbody tr:hover { background: #fafaf8; }
-.log-tbl tbody td { padding: 8px 10px; color: #444; vertical-align: middle; }
-
-/* Module badge */
-.mod-badge {
-display: inline-flex; align-items: center; gap: 5px;
-padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600;
-}
-.mod-tour { background: #EAF3DE; color: #3B6D11; }
-.mod-morning { background: #E6F1FB; color: #185FA5; }
-.mod-tickets { background: #FAEEDA; color: #BA7517; }
-
-/* Status */
-.sp { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; }
-.sp-ok { background: #EAF3DE; color: #3B6D11; }
-.sp-fail { background: #FCEBEB; color: #A32D2D; }
-.sp-skip { background: #f1efe8; color: #5f5e5a; }
-.sp-del { background: #EAF3DE; color: #3B6D11; }
-.sp-sent { background: #EEEDFE; color: #534AB7; }
-.sp-und { background: #FCEBEB; color: #A32D2D; }
-.sp-pend { background: #E6F1FB; color: #185FA5; }
-
-/* Pagination */
-.pagination { display: flex; gap: 6px; align-items: center; margin-top: 14px; }
-.page-btn {
-padding: 4px 10px; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 6px;
-font-size: 12px; cursor: pointer; background: #fff; color: #555;
-}
-.page-btn:hover { background: #f5f5f3; }
-.page-btn.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
-.page-info { font-size: 12px; color: #aaa; }
-
-/* Error section */
-.error-section {
-margin-top: 24px;
-background: #fff8f8;
-border: 0.5px solid rgba(163,45,45,0.2);
-border-radius: 12px;
-overflow: hidden;
-}
-.error-section-header {
-padding: 10px 16px;
-background: #FCEBEB;
-border-bottom: 0.5px solid rgba(163,45,45,0.15);
-display: flex; align-items: center; gap: 8px;
-}
-.error-section-header span { font-size: 13px; font-weight: 600; color: #A32D2D; }
-.err-count {
-background: #A32D2D; color: #fff;
-font-size: 11px; font-weight: 700;
-padding: 1px 7px; border-radius: 10px;
-}
-table.err-tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
-.err-tbl thead td {
-padding: 8px 12px; font-size: 11px; font-weight: 600; color: #999;
-background: #fff8f8; border-bottom: 0.5px solid rgba(163,45,45,0.1);
-white-space: nowrap;
-}
-.err-tbl tbody tr { border-bottom: 0.5px solid rgba(163,45,45,0.08); }
-.err-tbl tbody tr:last-child { border-bottom: none; }
-.err-tbl tbody td { padding: 8px 12px; color: #444; vertical-align: top; }
-.err-msg { color: #A32D2D; font-size: 11px; line-height: 1.4; }
+.stats-row{display:flex;gap:10px;margin-bottom:18px;flex-wrap:wrap;}
+.stat-card{background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:10px;padding:12px 20px;text-align:center;min-width:100px;}
+.stat-card .num{font-size:22px;font-weight:700;}
+.stat-card .lbl{font-size:11px;color:#aaa;margin-top:2px;}
+.stat-card.tour .num{color:#3B6D11;}
+.stat-card.morning .num{color:#185FA5;}
+.stat-card.tickets .num{color:#BA7517;}
+.stat-card.total .num{color:#1a1a1a;}
+.filter-bar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:10px;padding:12px 16px;}
+.filter-bar label{font-size:12px;color:#888;margin-right:4px;}
+.filter-bar select{padding:6px 10px;border:0.5px solid rgba(0,0,0,0.2);border-radius:7px;font-size:13px;background:#fff;font-family:inherit;}
+.filter-bar select:focus{outline:none;border-color:#1a1a1a;}
+.btn-filter{background:#1a1a1a;color:#fff;border:none;padding:7px 16px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;}
+.btn-filter:hover{background:#333;}
+.btn-reset{background:#fff;color:#888;border:0.5px solid rgba(0,0,0,0.15);padding:7px 14px;border-radius:7px;font-size:12px;cursor:pointer;}
+.records-count{font-size:12px;color:#aaa;margin-left:auto;}
+.table-card{background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:12px;overflow:hidden;}
+.table-header{padding:10px 16px;background:#f9f9f7;border-bottom:0.5px solid rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;}
+.table-header span{font-size:13px;font-weight:600;}
+table.log-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.log-tbl thead td{padding:8px 10px;font-size:11px;font-weight:600;color:#999;background:#f9f9f7;border-bottom:0.5px solid rgba(0,0,0,0.08);white-space:nowrap;}
+.log-tbl tbody tr{border-bottom:0.5px solid rgba(0,0,0,0.06);}
+.log-tbl tbody tr:last-child{border-bottom:none;}
+.log-tbl tbody tr:hover{background:#fafaf8;}
+.log-tbl tbody td{padding:8px 10px;color:#444;vertical-align:middle;}
+.mod-badge{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;}
+.mod-tour{background:#EAF3DE;color:#3B6D11;}
+.mod-morning{background:#E6F1FB;color:#185FA5;}
+.mod-tickets{background:#FAEEDA;color:#BA7517;}
+.sp{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;}
+.sp-ok{background:#EAF3DE;color:#3B6D11;}
+.sp-fail{background:#FCEBEB;color:#A32D2D;}
+.sp-skip{background:#f1efe8;color:#5f5e5a;}
+.sp-del{background:#EAF3DE;color:#3B6D11;}
+.sp-sent{background:#EEEDFE;color:#534AB7;}
+.sp-und{background:#FCEBEB;color:#A32D2D;}
+.sp-pend{background:#E6F1FB;color:#185FA5;}
+.pagination{display:flex;gap:6px;align-items:center;margin-top:14px;}
+.page-btn{padding:4px 10px;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;font-size:12px;cursor:pointer;background:#fff;color:#555;}
+.page-btn:hover{background:#f5f5f3;}
+.page-btn.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a;}
+.page-info{font-size:12px;color:#aaa;}
+.error-section{margin-top:24px;background:#fff8f8;border:0.5px solid rgba(163,45,45,0.2);border-radius:12px;overflow:hidden;}
+.error-section-header{padding:10px 16px;background:#FCEBEB;border-bottom:0.5px solid rgba(163,45,45,0.15);display:flex;align-items:center;gap:8px;}
+.error-section-header span{font-size:13px;font-weight:600;color:#A32D2D;}
+.err-count{background:#A32D2D;color:#fff;font-size:11px;font-weight:700;padding:1px 7px;border-radius:10px;}
+table.err-tbl{width:100%;border-collapse:collapse;font-size:12px;}
+.err-tbl thead td{padding:8px 12px;font-size:11px;font-weight:600;color:#999;background:#fff8f8;border-bottom:0.5px solid rgba(163,45,45,0.1);white-space:nowrap;}
+.err-tbl tbody tr{border-bottom:0.5px solid rgba(163,45,45,0.08);}
+.err-tbl tbody tr:last-child{border-bottom:none;}
+.err-tbl tbody td{padding:8px 12px;color:#444;vertical-align:top;}
+.err-msg{color:#A32D2D;font-size:11px;line-height:1.4;}
+/* Date range picker */
+.dr-wrap{position:relative;display:inline-block;}
+.dr-trigger{height:32px;padding:0 12px;border:0.5px solid rgba(0,0,0,0.18);border-radius:7px;font-size:13px;background:#fff;color:#1a1a1a;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;user-select:none;}
+.dr-trigger:hover{border-color:rgba(0,0,0,0.35);}
+.dr-trigger.active{border-color:#1a1a1a;background:#fafaf8;}
+.dr-dropdown{position:absolute;top:calc(100% + 4px);left:0;z-index:999;background:#fff;border:0.5px solid rgba(0,0,0,0.15);border-radius:10px;box-shadow:0 4px 20px rgba(0,0,0,0.12);padding:6px;min-width:220px;}
+.dr-dropdown.hidden{display:none;}
+.dr-option{padding:8px 12px;font-size:13px;border-radius:6px;cursor:pointer;color:#333;}
+.dr-option:hover{background:#f5f5f3;}
+.dr-option.selected{background:#1a1a1a;color:#fff;}
+.dr-custom{padding:8px 6px 4px;border-top:0.5px solid rgba(0,0,0,0.08);margin-top:4px;}
+.dr-custom label{font-size:11px;color:#888;display:block;margin-bottom:6px;}
+.dr-custom-row{display:flex;align-items:center;gap:6px;}
+.dr-date-wrap{position:relative;flex:1;}
+.dr-date-wrap input[type=date]{width:100%;height:28px;padding:0 8px;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;font-size:12px;background:#fff;box-sizing:border-box;cursor:pointer;}
+.dr-date-wrap input[type=date]:focus{outline:none;border-color:#1a1a1a;}
+.dr-apply{height:28px;padding:0 12px;background:#1a1a1a;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;margin-top:8px;width:100%;}
+.dr-apply:hover{background:#333;}
 {% endblock %}
 
 {% block content %}
-<!-- Stats -->
 <div class="stats-row" id="stats-row">
-  <div class="stat-card total">
-    <div class="num" id="stat-total">—</div>
-    <div class="lbl">Total Sent</div>
-  </div>
-  <div class="stat-card tour">
-    <div class="num" id="stat-tour">—</div>
-    <div class="lbl">Tour Conf</div>
-  </div>
-  <div class="stat-card morning">
-    <div class="num" id="stat-morning">—</div>
-    <div class="lbl">Morning P/U</div>
-  </div>
-  <div class="stat-card tickets">
-    <div class="num" id="stat-tickets">—</div>
-    <div class="lbl">Tickets</div>
-  </div>
+  <div class="stat-card total"><div class="num" id="stat-total">—</div><div class="lbl">Total Sent</div></div>
+  <div class="stat-card tour"><div class="num" id="stat-tour">—</div><div class="lbl">Tour Conf</div></div>
+  <div class="stat-card morning"><div class="num" id="stat-morning">—</div><div class="lbl">Morning P/U</div></div>
+  <div class="stat-card tickets"><div class="num" id="stat-tickets">—</div><div class="lbl">Tickets</div></div>
 </div>
 
-<!-- Filters -->
 <div class="filter-bar">
-  <div>
-    <label>Date</label>
-    <input type="date" id="f-date" value="{{ today }}">
+  <div class="dr-wrap" id="dr-wrap">
+    <div class="dr-trigger" id="dr-trigger" onclick="toggleDR(event)">
+      <span>📅</span><span id="dr-label">Today</span><span style="color:#aaa;font-size:10px;">▾</span>
+    </div>
+    <div class="dr-dropdown hidden" id="dr-dropdown">
+      <div class="dr-option selected" data-range="today"  onclick="selectRange('today',this)">Today</div>
+      <div class="dr-option" data-range="week"   onclick="selectRange('week',this)">This Week</div>
+      <div class="dr-option" data-range="month"  onclick="selectRange('month',this)">This Month</div>
+      <div class="dr-option" data-range="custom" onclick="selectRange('custom',this)">Custom</div>
+      <div class="dr-custom" id="dr-custom" style="display:none;">
+        <label>Date range</label>
+        <div class="dr-custom-row">
+          <div class="dr-date-wrap"><input type="date" id="dr-from"></div>
+          <span style="font-size:12px;color:#aaa;">–</span>
+          <div class="dr-date-wrap"><input type="date" id="dr-to"></div>
+        </div>
+        <button class="dr-apply" onclick="applyCustom()">Apply</button>
+      </div>
+    </div>
   </div>
+
   <div>
     <label>Module</label>
     <select id="f-module">
@@ -186,7 +137,6 @@ white-space: nowrap;
   <span class="records-count" id="records-count">— records</span>
 </div>
 
-<!-- Table -->
 <div class="table-card">
   <div class="table-header">
     <span>📋 Send Log</span>
@@ -196,31 +146,20 @@ white-space: nowrap;
     <table class="log-tbl">
       <thead>
         <tr>
-          <td>Sent At</td>
-          <td>Module</td>
-          <td>Order #</td>
-          <td>Name</td>
-          <td>Phone / Email</td>
-          <td>Tour Date</td>
-          <td>Tour Type</td>
-          <td>📧 Email</td>
-          <td>📱 SMS</td>
-          <td>By</td>
+          <td>Sent At</td><td>Module</td><td>Order #</td><td>Name</td>
+          <td>Phone / Email</td><td>Tour Date</td><td>Tour Type</td>
+          <td>📧 Email</td><td>📱 SMS</td><td>By</td>
         </tr>
       </thead>
       <tbody id="log-tbody">
-        <tr>
-          <td colspan="10" style="padding:24px;text-align:center;color:#ccc;">Loading…</td>
-        </tr>
+        <tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>
       </tbody>
     </table>
   </div>
 </div>
 
-<!-- Pagination -->
 <div class="pagination" id="pagination"></div>
 
-<!-- Error Section — only shown when errors exist -->
 <div class="error-section" id="error-section" style="display:none;">
   <div class="error-section-header">
     <span>⚠️ Errors</span>
@@ -229,14 +168,7 @@ white-space: nowrap;
   <div style="overflow-x:auto;">
     <table class="err-tbl">
       <thead>
-        <tr>
-          <td>Sent At</td>
-          <td>Module</td>
-          <td>Order #</td>
-          <td>Name</td>
-          <td>Channel</td>
-          <td>Error</td>
-        </tr>
+        <tr><td>Sent At</td><td>Module</td><td>Order #</td><td>Name</td><td>Channel</td><td>Error</td></tr>
       </thead>
       <tbody id="err-tbody"></tbody>
     </table>
@@ -246,167 +178,206 @@ white-space: nowrap;
 
 {% block scripts %}
 <script>
-  let currentPage = 1;
-  const PAGE_SIZE = 50;
+let currentPage=1;
+const PAGE_SIZE=50;
+let drRange='today', drFrom='', drTo='';
 
-  const MODULE_LABELS = {
-    tour_confirmation: '🟢 Tour Conf',
-    morning_pickup: '🔵 Morning P/U',
-    tickets_reminder: '🟠 Tickets',
-  };
-  const MODULE_CLS = {
-    tour_confirmation: 'mod-tour',
-    morning_pickup: 'mod-morning',
-    tickets_reminder: 'mod-tickets',
-  };
+const MODULE_LABELS={tour_confirmation:'🟢 Tour Conf',morning_pickup:'🔵 Morning P/U',tickets_reminder:'🟠 Tickets'};
+const MODULE_CLS={tour_confirmation:'mod-tour',morning_pickup:'mod-morning',tickets_reminder:'mod-tickets'};
 
-  async function loadLog(page) {
-    if (page) currentPage = page;
-    const date = document.getElementById('f-date').value;
-    const module = document.getElementById('f-module').value;
-    const type = document.getElementById('f-type').value;
-    const status = document.getElementById('f-status').value;
-
-    document.getElementById('log-tbody').innerHTML =
-      '<tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
-
-    const qs = new URLSearchParams({
-      ...(date && { date }),
-      ...(module && { module }),
-      ...(type && { channel: type }),
-      ...(status && { status }),
-      page: currentPage,
-      page_size: PAGE_SIZE,
-    });
-
-    try {
-      const res = await fetch(`/api/notifications/send-log?${qs}`);
-      const data = await res.json();
-      renderRows(data.rows || []);
-      renderStats(data.stats || {});
-      renderPagination(data.total || 0);
-      renderErrors(data.rows || []); 
-      document.getElementById('records-count').textContent = `${data.total || 0} records`;
-    } catch (e) {
-      document.getElementById('log-tbody').innerHTML =
-        '<tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
-    }
+// ── Date range ────────────────────────────────────────────────────────────────
+function laToday(){ return new Date().toLocaleDateString('en-CA',{timeZone:'America/Los_Angeles'}); }
+function laWeekStart(){
+  const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
+  d.setDate(d.getDate()-d.getDay()); return d.toLocaleDateString('en-CA');
+}
+function laMonthStart(){
+  const d=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
+  d.setDate(1); return d.toLocaleDateString('en-CA');
+}
+function getDateRange(){
+  const t=laToday();
+  if(drRange==='today')  return {from:t,to:t};
+  if(drRange==='week')   return {from:laWeekStart(),to:t};
+  if(drRange==='month')  return {from:laMonthStart(),to:t};
+  if(drRange==='custom') return {from:drFrom,to:drTo};
+  return {from:'',to:''};
+}
+function rangeLabelText(){
+  if(drRange==='today') return 'Today';
+  if(drRange==='week')  return 'This Week';
+  if(drRange==='month') return 'This Month';
+  const {from,to}=getDateRange();
+  return (from&&to)?`${from} – ${to}`:'Custom';
+}
+function toggleDR(e){
+  e&&e.stopPropagation();
+  const dd=document.getElementById('dr-dropdown'),tr=document.getElementById('dr-trigger');
+  const opening=dd.classList.contains('hidden');
+  dd.classList.toggle('hidden',!opening); tr.classList.toggle('active',opening);
+}
+function selectRange(range,el){
+  drRange=range;
+  document.querySelectorAll('.dr-option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('dr-custom').style.display=range==='custom'?'':'none';
+  if(range!=='custom'){
+    document.getElementById('dr-label').textContent=rangeLabelText();
+    document.getElementById('dr-dropdown').classList.add('hidden');
+    document.getElementById('dr-trigger').classList.remove('active');
+    currentPage=1; loadLog();
   }
+}
+function applyCustom(){
+  drFrom=document.getElementById('dr-from').value;
+  drTo=document.getElementById('dr-to').value;
+  if(!drFrom||!drTo){alert('Please select both dates.');return;}
+  document.getElementById('dr-label').textContent=rangeLabelText();
+  document.getElementById('dr-dropdown').classList.add('hidden');
+  document.getElementById('dr-trigger').classList.remove('active');
+  currentPage=1; loadLog();
+}
+document.addEventListener('click',e=>{
+  if(!document.getElementById('dr-wrap').contains(e.target)){
+    document.getElementById('dr-dropdown').classList.add('hidden');
+    document.getElementById('dr-trigger').classList.remove('active');
+  }
+});
 
-  function renderRows(rows) {
-    const tbody = document.getElementById('log-tbody');
-    if (!rows.length) {
-      tbody.innerHTML = '<tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';
-      return;
-    }
-    tbody.innerHTML = rows.map(r => {
-      const modCls = MODULE_CLS[r.module] || '';
-      const modLbl = MODULE_LABELS[r.module] || r.module;
-      const emailCls = r.email_status?.startsWith('sent') ? 'sp-ok' : r.email_status?.startsWith('failed') ? 'sp-fail' : 'sp-pend';
-      const smsCls = smsStatusClass(r.sms_status);
-      const smsLbl = smsLabel(r.sms_status);
-      const sentAt = r.sent_at ? new Date(r.sent_at).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'numeric', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }) : '—';
-      const sentBy = r.sent_by || '—';
+// ── Load ──────────────────────────────────────────────────────────────────────
+async function loadLog(page){
+  if(page) currentPage=page;
+  const {from,to}=getDateRange();
+  const module=document.getElementById('f-module').value;
+  const type=document.getElementById('f-type').value;
+  const status=document.getElementById('f-status').value;
+  document.getElementById('log-tbody').innerHTML=
+    '<tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
+  const qs=new URLSearchParams({
+    ...(from&&{date:from}),
+    ...(module&&{module}),
+    ...(type&&{channel:type}),
+    ...(status&&{status}),
+    page:currentPage, page_size:PAGE_SIZE,
+  });
+  try{
+    const res=await fetch(`/api/notifications/send-log?${qs}`);
+    const data=await res.json();
+    renderRows(data.rows||[]);
+    renderStats(data.stats||{});
+    renderPagination(data.total||0);
+    renderErrors(data.rows||[]);
+    document.getElementById('records-count').textContent=`${data.total||0} records`;
+  }catch(e){
+    document.getElementById('log-tbody').innerHTML=
+      '<tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
+  }
+}
 
-      return `<tr>
+function renderRows(rows){
+  const tbody=document.getElementById('log-tbody');
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';return;}
+  tbody.innerHTML=rows.map(r=>{
+    const modCls=MODULE_CLS[r.module]||'';
+    const modLbl=MODULE_LABELS[r.module]||r.module;
+    const emailCls=r.email_status?.startsWith('sent')?'sp-ok':r.email_status?.startsWith('failed')?'sp-fail':'sp-pend';
+    const smsCls=smsStatusClass(r.sms_status);
+    const smsLbl=smsLabel(r.sms_status);
+    const sentAt=r.sent_at?new Date(r.sent_at).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'numeric',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}):'—';
+    return `<tr>
       <td style="white-space:nowrap;font-size:11px;">${sentAt}</td>
       <td><span class="mod-badge ${modCls}">${modLbl}</span></td>
-      <td style="color:#378ADD;font-weight:500;">${r.order_number || '—'}</td>
-      <td>${r.first_name || ''} ${r.last_name || ''}</td>
-      <td style="font-size:11px;">${r.phone || ''}<br>${r.email || ''}</td>
-      <td style="white-space:nowrap;">${r.tour_date || '—'}</td>
-      <td style="font-size:11px;">${r.tour_type || '—'}</td>
-      <td>${r.email_status ? `<span class="sp ${emailCls}">${r.email_status.startsWith('sent') ? 'Sent' : r.email_status.startsWith('failed') ? 'Failed' : '—'}</span>` : '<span style="color:#ccc">—</span>'}</td>
-      <td>${r.sms_status ? `<span class="sp ${smsCls}">${smsLbl}</span>` : '<span style="color:#ccc">—</span>'}</td>
-      <td style="font-size:11px;color:#888;white-space:nowrap;">${sentBy}</td>
+      <td style="color:#378ADD;font-weight:500;">${r.order_number||'—'}</td>
+      <td>${r.first_name||''} ${r.last_name||''}</td>
+      <td style="font-size:11px;">${r.phone||''}<br>${r.email||''}</td>
+      <td style="white-space:nowrap;">${r.tour_date||'—'}</td>
+      <td style="font-size:11px;">${r.tour_type||'—'}</td>
+      <td>${r.email_status?`<span class="sp ${emailCls}">${r.email_status.startsWith('sent')?'Sent':r.email_status.startsWith('failed')?'Failed':'—'}</span>`:'<span style="color:#ccc">—</span>'}</td>
+      <td>${r.sms_status?`<span class="sp ${smsCls}">${smsLbl}</span>`:'<span style="color:#ccc">—</span>'}</td>
+      <td style="font-size:11px;color:#888;white-space:nowrap;">${r.sent_by||'—'}</td>
     </tr>`;
-    }).join('');
-  }
+  }).join('');
+}
 
-  function renderErrors(rows) {
-    const errRows = rows.filter(r => r.error_msg && r.error_msg.trim());
-    const section = document.getElementById('error-section');
-
-    if (!errRows.length) {
-      section.style.display = 'none';
-      return;
-    }
-
-    section.style.display = 'block';
-    document.getElementById('err-count').textContent = errRows.length;
-
-    document.getElementById('err-tbody').innerHTML = errRows.map(r => {
-      const sentAt = r.sent_at ? new Date(r.sent_at).toLocaleString('en-US', { month: 'numeric', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—';
-      const modCls = MODULE_CLS[r.module] || '';
-      const modLbl = MODULE_LABELS[r.module] || r.module;
-      const channels = [];
-      if (r.email_status === 'failed') channels.push('📧 Email');
-      if (r.sms_status === 'failed' || r.sms_status === 'undelivered') channels.push('📱 SMS');
-      return `<tr>
+function renderErrors(rows){
+  const errRows=rows.filter(r=>r.error_msg&&r.error_msg.trim());
+  const section=document.getElementById('error-section');
+  if(!errRows.length){section.style.display='none';return;}
+  section.style.display='block';
+  document.getElementById('err-count').textContent=errRows.length;
+  document.getElementById('err-tbody').innerHTML=errRows.map(r=>{
+    const sentAt=r.sent_at?new Date(r.sent_at).toLocaleString('en-US',{month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'}):'—';
+    const modCls=MODULE_CLS[r.module]||'';
+    const modLbl=MODULE_LABELS[r.module]||r.module;
+    const channels=[];
+    if(r.email_status==='failed') channels.push('📧 Email');
+    if(r.sms_status==='failed'||r.sms_status==='undelivered') channels.push('📱 SMS');
+    return `<tr>
       <td style="white-space:nowrap;font-size:11px;">${sentAt}</td>
       <td><span class="mod-badge ${modCls}">${modLbl}</span></td>
-      <td style="color:#378ADD;font-weight:500;">${r.order_number || '—'}</td>
-      <td>${r.first_name || ''} ${r.last_name || ''}</td>
-      <td style="font-size:11px;">${channels.join(', ') || '—'}</td>
+      <td style="color:#378ADD;font-weight:500;">${r.order_number||'—'}</td>
+      <td>${r.first_name||''} ${r.last_name||''}</td>
+      <td style="font-size:11px;">${channels.join(', ')||'—'}</td>
       <td class="err-msg">${r.error_msg}</td>
     </tr>`;
-    }).join('');
-  }
+  }).join('');
+}
 
-  function renderStats(stats) {
-    document.getElementById('stat-total').textContent = stats.total || 0;
-    document.getElementById('stat-tour').textContent = stats.tour_confirmation || 0;
-    document.getElementById('stat-morning').textContent = stats.morning_pickup || 0;
-    document.getElementById('stat-tickets').textContent = stats.tickets_reminder || 0;
-  }
+function renderStats(stats){
+  document.getElementById('stat-total').textContent=stats.total||0;
+  document.getElementById('stat-tour').textContent=stats.tour_confirmation||0;
+  document.getElementById('stat-morning').textContent=stats.morning_pickup||0;
+  document.getElementById('stat-tickets').textContent=stats.tickets_reminder||0;
+}
 
-  function renderPagination(total) {
-    const pages = Math.ceil(total / PAGE_SIZE);
-    const pag = document.getElementById('pagination');
-    if (pages <= 1) { pag.innerHTML = ''; return; }
+function renderPagination(total){
+  const pages=Math.ceil(total/PAGE_SIZE);
+  const pag=document.getElementById('pagination');
+  if(pages<=1){pag.innerHTML='';return;}
+  let html=`<span class="page-info">Page ${currentPage} of ${pages}</span>`;
+  if(currentPage>1)     html+=`<button class="page-btn" onclick="loadLog(${currentPage-1})">← Prev</button>`;
+  if(currentPage<pages) html+=`<button class="page-btn" onclick="loadLog(${currentPage+1})">Next →</button>`;
+  pag.innerHTML=html;
+}
 
-    let html = `<span class="page-info">Page ${currentPage} of ${pages}</span>`;
-    if (currentPage > 1) html += `<button class="page-btn" onclick="loadLog(${currentPage - 1})">← Prev</button>`;
-    if (currentPage < pages) html += `<button class="page-btn" onclick="loadLog(${currentPage + 1})">Next →</button>`;
-    pag.innerHTML = html;
-  }
+function resetFilters(){
+  drRange='today';
+  document.getElementById('dr-label').textContent='Today';
+  document.querySelectorAll('.dr-option').forEach(o=>o.classList.toggle('selected',o.dataset.range==='today'));
+  document.getElementById('f-module').value='';
+  document.getElementById('f-type').value='';
+  document.getElementById('f-status').value='';
+  currentPage=1; loadLog();
+}
 
-  function resetFilters() {
-    document.getElementById('f-date').value = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
-    document.getElementById('f-module').value = '';
-    document.getElementById('f-type').value = '';
-    document.getElementById('f-status').value = '';
-    currentPage = 1;
-    loadLog();
-  }
+function exportLog(){
+  const {from,to}=getDateRange();
+  const module=document.getElementById('f-module').value;
+  const type=document.getElementById('f-type').value;
+  const qs=new URLSearchParams({
+    ...(from&&{date:from}),
+    ...(module&&{module}),
+    ...(type&&{channel:type}),
+  });
+  location.href=`/api/notifications/send-log/export?${qs}`;
+}
 
-  function exportLog() {
-    const date = document.getElementById('f-date').value;
-    const module = document.getElementById('f-module').value;
-    const type = document.getElementById('f-type').value;
-    const qs = new URLSearchParams({ ...(date && { date }), ...(module && { module }), ...(type && { channel: type }) });
-    location.href = `/api/notifications/send-log/export?${qs}`;
-  }
+function smsStatusClass(s){
+  if(!s) return 'sp-pend';
+  if(s.includes('delivered')) return 'sp-del';
+  if(s.includes('sent'))      return 'sp-sent';
+  if(s.includes('undelivered')||s.includes('failed')) return 'sp-und';
+  return 'sp-pend';
+}
+function smsLabel(s){
+  if(!s) return '—';
+  if(s.includes('delivered'))   return 'Delivered';
+  if(s.includes('sent'))        return 'Sent';
+  if(s.includes('undelivered')) return 'Undelivered';
+  if(s.includes('failed'))      return 'Failed';
+  return s;
+}
 
-  function smsStatusClass(s) {
-    if (!s) return 'sp-pend';
-    if (s.includes('delivered')) return 'sp-del';
-    if (s.includes('sent')) return 'sp-sent';
-    if (s.includes('undelivered') || s.includes('failed')) return 'sp-und';
-    return 'sp-pend';
-  }
-
-  function smsLabel(s) {
-    if (!s) return '—';
-    if (s.includes('delivered')) return 'Delivered';
-    if (s.includes('sent')) return 'Sent';
-    if (s.includes('undelivered')) return 'Undelivered';
-    if (s.includes('failed')) return 'Failed';
-    return s;
-  }
-
-  // Init
-  document.getElementById('f-date').value = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
-  loadLog();
+loadLog();
 </script>
 {% endblock %}
