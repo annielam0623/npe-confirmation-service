@@ -47,7 +47,7 @@ async def get_dashboard_stats(db: AsyncSession, dates: list[datetime]) -> dict:
             .where(
                 and_(
                     Booking.tour_date == d.date(),
-                    Booking.booking_type == BookingType.bus_tour,
+                    Booking.booking_type == BookingType.bus_tour.value,
                 )
             )
             .group_by(Booking.product_code)
@@ -210,7 +210,7 @@ async def dispatch(
         .where(
             and_(
                 Booking.tour_date == view_date,
-                Booking.booking_type == BookingType.bus_tour,
+                Booking.booking_type == BookingType.bus_tour.value,
             )
         )
         .order_by(Booking.pickup_time.asc().nullslast())
@@ -259,10 +259,10 @@ async def logs(
     # Fetch notification logs for this date + type
     from app.models import NotificationLog, NotificationType
     ntype_map = {
-        "tour-confirmation": NotificationType.tour_confirmation,
-        "morning-reminder":  NotificationType.morning_reminder,
-        "ticket-reminder":   NotificationType.ticket_reminder,
-        "shuttle-confirmation": NotificationType.tour_confirmation,  # extend later
+        "tour-confirmation": NotificationType.tour_confirmation.value,
+        "morning-reminder":  NotificationType.morning_reminder.value,
+        "ticket-reminder":   NotificationType.ticket_reminder.value,
+        "shuttle-confirmation": NotificationType.tour_confirmation.value,  # extend later
     }
 
     result = await db.execute(

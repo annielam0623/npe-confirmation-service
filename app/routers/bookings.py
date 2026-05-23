@@ -139,7 +139,7 @@ def booking_to_dict(b: Booking, dismissed_ids: set) -> dict:
         "quantities":      b.quantities or 1,
         "rezdy_status":    b.rezdy_status if hasattr(b, "rezdy_status") else None,
         "confirmation_no": b.confirmation_no,
-        "source":          b.source.value if b.source else None,
+        "source":          b.source if b.source else None,
         "agent_name":      b.agent_name,
         "email_sent_at":   b.email_sent_at.isoformat() if b.email_sent_at else None,
         "sms_sent_at":     b.sms_sent_at.isoformat()   if b.sms_sent_at   else None,

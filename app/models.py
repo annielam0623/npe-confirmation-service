@@ -140,9 +140,9 @@ class Booking(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     # Type & Source
-    booking_type = Column(Enum(BookingType), nullable=False, default=BookingType.bus_tour)
-    source       = Column(Enum(BookingSource), default=BookingSource.manual)
-    status       = Column(Enum(BookingStatus), default=BookingStatus.pending)
+    booking_type = Column(String(20), nullable=False, default=BookingType.bus_tour.value)
+    source       = Column(String(20), default=BookingSource.manual.value)
+    status       = Column(String(20), default=BookingStatus.pending.value)
 
     # Identifiers
     confirm_token   = Column(String(64), unique=True, index=True,
@@ -301,8 +301,8 @@ class EmailQueue(Base):
     id         = Column(Integer, primary_key=True, index=True)
     booking_id = Column(Integer, ForeignKey("bookings.id"), nullable=True)
 
-    notification_type = Column(Enum(NotificationType), nullable=False)
-    channel           = Column(Enum(NotificationChannel), nullable=False)
+    notification_type = Column(String(30), nullable=False)
+    channel           = Column(String(10), nullable=False)
 
     scheduled_at = Column(DateTime, nullable=False, index=True)
     sent_at      = Column(DateTime, nullable=True)
@@ -331,9 +331,9 @@ class NotificationLog(Base):
 
     id                = Column(Integer, primary_key=True, index=True)
     booking_id        = Column(Integer, ForeignKey("bookings.id"), nullable=True)
-    notification_type = Column(Enum(NotificationType), nullable=False)
-    channel           = Column(Enum(NotificationChannel), nullable=False)
-    status            = Column(Enum(NotificationStatus), default=NotificationStatus.pending)
+    notification_type = Column(String(30), nullable=False)
+    channel           = Column(String(10), nullable=False)
+    status            = Column(String(20), default=NotificationStatus.pending.value)
     recipient         = Column(String(256), nullable=True)
     external_id       = Column(String(256), nullable=True)
     error_message     = Column(Text, nullable=True)
