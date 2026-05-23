@@ -346,6 +346,8 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
     # ── Parse body ──
     try:
         payload = await request.json()
+         print(f"[webhook] payload keys: {list(payload.keys())}")
+         print(f"[webhook] payload sample: {json.dumps(payload)[:500]}")
     except Exception as e:
         print(f"[webhook] JSON parse error: {e}")
         return {"status": "error", "reason": "invalid json"}
