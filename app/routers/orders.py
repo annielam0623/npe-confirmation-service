@@ -60,10 +60,11 @@ async def orders_api(
 
     if date_from:
         filters.append("b.created_at >= :date_from")
-        params["date_from"] = date_from
+        params["date_from"] = date_type.fromisoformat(date_from)
+
     if date_to:
-        filters.append("b.created_at < CAST(:date_to AS date) + interval '1 day'")
-        params["date_to"] = date_to
+        filters.append("b.created_at < :date_to + interval '1 day'")
+        params["date_to"] = date_type.fromisoformat(date_to)
 
     where = " AND ".join(filters)
     offset = (page - 1) * page_size
@@ -125,7 +126,7 @@ async def orders_api(
             "email":           r["customer_email"] or "—",
             "phone":           r["phone"] or "—",
             "product_name":    r["product_name"] or "—",
-            "product_type":    r["tour_type"] or "—",   # DB column is tour_type
+            "product_type":    r["tour_type"] or "—",
             "tour_date":       fmt_date(r["tour_date"]),
             "pickup_time":     r["pickup_time"] or "—",
             "pickup_location": r["pickup_location"] or "—",
