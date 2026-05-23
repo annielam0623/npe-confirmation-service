@@ -4,7 +4,7 @@ Orders — live feed from bookings table (Rezdy + Excel)
 GET  /admin/operations/orders  — HTML page
 GET  /api/operations/orders    — JSON data
 """
-from datetime import datetime, date as date_type
+from datetime import datetime, date as date_type, timedelta
 from typing import Optional
 from zoneinfo import ZoneInfo
 
@@ -63,8 +63,9 @@ async def orders_api(
         params["date_from"] = date_type.fromisoformat(date_from)
 
     if date_to:
-        filters.append("b.created_at < :date_to + interval '1 day'")
-        params["date_to"] = date_type.fromisoformat(date_to)
+        # Add 1 day in Python so asyncpg gets a plain date, no interval arithmetic in SQL
+        filters.append("b.created_at < :date_to")
+        params["date_to"] = date_type.fromisoformat(date_to) + timedelta(days=1)
 
     where = " AND ".join(filters)
     offset = (page - 1) * page_size
