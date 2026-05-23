@@ -32,11 +32,8 @@ async def get_monthly_data(
     db: AsyncSession = Depends(get_db),
     _user=Depends(require_staff),
 ):
-    """Agent × Month table for the given year and product type."""
-    if metric == "pax":
-        agg = "SUM(b.quantities)"
-    else:
-        agg = "COUNT(*)"
+    """Agent x Month table for the given year and product type."""
+    agg = "SUM(b.quantities)" if metric == "pax" else "COUNT(*)"
 
     rows = await db.execute(text("""
         SELECT
@@ -53,12 +50,13 @@ async def get_monthly_data(
 
     data = rows.mappings().fetchall()
 
-    # Build agent list and pivot
-    agents = sorted(set(r["agent"] for r in data))
+    # Build pivot then sort agents by total high to low
+    all_agents = sorted(set(r["agent"] for r in data))
     months = list(range(1, 13))
-    pivot = {a: {m: 0 for m in months} for a in agents}
+    pivot = {a: {m: 0 for m in months} for a in all_agents}
     for r in data:
         pivot[r["agent"]][r["month"]] = int(r["value"] or 0)
+    agents = sorted(all_agents, key=lambda a: sum(pivot[a].values()), reverse=True)
 
     return {
         "agents": agents,
@@ -77,11 +75,8 @@ async def get_weekly_data(
     db: AsyncSession = Depends(get_db),
     _user=Depends(require_staff),
 ):
-    """Agent × Week table for the given year/month and product type."""
-    if metric == "pax":
-        agg = "SUM(b.quantities)"
-    else:
-        agg = "COUNT(*)"
+    """Agent x Week table for the given year/month and product type."""
+    agg = "SUM(b.quantities)" if metric == "pax" else "COUNT(*)"
 
     rows = await db.execute(text("""
         SELECT
@@ -99,18 +94,21 @@ async def get_weekly_data(
 
     data = rows.mappings().fetchall()
 
-    agents = sorted(set(r["agent"] for r in data))
+    # Build pivot then sort agents by total high to low
+    all_agents = sorted(set(r["agent"] for r in data))
     weeks = [1, 2, 3, 4, 5]
-    pivot = {a: {w: 0 for w in weeks} for a in agents}
+    pivot = {a: {w: 0 for w in weeks} for a in all_agents}
     for r in data:
         w = min(int(r["week"]), 5)
         pivot[r["agent"]][w] += int(r["value"] or 0)
 
     # Remove week 5 if all zeros
-    if all(pivot[a][5] == 0 for a in agents):
+    if all_agents and all(pivot[a][5] == 0 for a in all_agents):
         weeks = [1, 2, 3, 4]
-        for a in agents:
+        for a in all_agents:
             del pivot[a][5]
+
+    agents = sorted(all_agents, key=lambda a: sum(pivot[a].values()), reverse=True)
 
     return {
         "agents": agents,
