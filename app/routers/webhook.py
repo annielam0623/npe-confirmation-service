@@ -239,22 +239,95 @@ def _parse_order(payload: dict) -> Optional[dict]:
         "source": BookingSource.rezdy,
     }
 
-# ─── Booking type lookup ──────────────────────────────────────────────────────
+# ─── Product code → booking_type mapping ─────────────────────────────────────
+# Update this list when new products are added in Rezdy.
+# Unknown codes fall back to 'bus_tour' (safe default).
+
+_SELF_DRIVE_CODES = {
+    "P00ZPQ",   # Upper Antelope Canyon Hiking Tour (Hogan)
+    "P0JEQM",   # 2026 Lower Antelope Canyon Admission Ticket (KT)
+    "P0QPP8",   # Upper Antelope Canyon Admission Ticket (AACT)
+    "P0SE0N",   # Antelope Valley Canyon Ligai Si Anii Tour
+    "P8VPVW",   # Waterhole Canyon Experience #1
+    "PK1B2V",   # 2026 Lower Antelope Canyon Admission Ticket (GYG)
+    "PLFHV3",   # Upper Antelope Canyon Admission Ticket (GYG Exclusive)
+    "PMKHS1",   # Lower Antelope Canyon Admission Ticket (DX)
+    "PQFH2D",   # Upper Antelope Canyon Admission Ticket (AS)
+    "PRGC2T",   # Upper Antelope Canyon Admission Ticket (AACT)(GYG)
+    "PSUCDG",   # Waterhole Canyon Experience #4 Canyon O
+    "PT0N8C",   # Antelope Canyon X Admission Ticket
+    "PTTK01",   # Antelope Canyon X Admission Ticket (GYG Exclusive)
+    "PWBSA0",   # Antelope Valley Canyon Ligai Si Anii Stargazing Night Tour
+    "PWUDBV",   # Upper Antelope Canyon Transportation Tour (Hogan)
+    "PY45SW",   # Upper Antelope Canyon Admission Ticket (TB)
+}
+
+_SHUTTLE_CODES = {
+    "P649R9",   # One-way Shuttle: Springdale (Zion area) to Las Vegas
+    "P6BUXR",   # One-way Shuttle: Bryce Canyon Area to Las Vegas
+    "PBKRCW",   # One-way Shuttle: Las Vegas to Page, Arizona
+    "PDBTC8",   # One-way Shuttle: Page, Arizona to Las Vegas
+    "PDHLW9",   # One-way Shuttle: Page to St.George
+    "PDR5BV",   # One-way Shuttle: St. George to Las Vegas
+    "PG41NY",   # One-way Shuttle: Bryce Canyon National Park to Las Vegas
+    "PG8ZGQ",   # One-way Shuttle: Las Vegas to Bryce Canyon National Park
+    "PGP101",   # One-way Shuttle: Las Vegas to Zion National Park
+    "PHN0QB",   # Roundtrip Shuttle: Las Vegas to Grand Canyon South Rim
+    "PKG0MN",   # One-way Shuttle: Page to Kanab
+    "PMDFGV",   # One-way Shuttle: Las Vegas to Tusayan (Grand Canyon Area)
+    "PN5SQN",   # One-way Shuttle: Bryce Canyon Area to Zion NP
+    "PNREDR",   # One-way Shuttle: Kanab to Las Vegas
+    "PP0RZE",   # One-way Shuttle: St. George to Bryce Canyon Area
+    "PQFLY1",   # One-way Shuttle: Las Vegas to Grand Canyon South Rim
+    "PTHWQ1",   # Las Vegas to Grand Canyon South Round-trip Shuttle
+    "PTXGGQ",   # One-way Shuttle: Tusayan to Las Vegas
+    "PU10NT",   # One-way Shuttle: Grand Canyon South Rim to Las Vegas
+    "PV1VFQ",   # One-way Shuttle: Kanab to St.George
+    "PV2LB1",   # One-way Shuttle: Zion National Park to Las Vegas
+    "PW5C8M",   # Grand Canyon West Day Tour with Heli & Boat SB:DP
+    "PW8JBS",   # One-way Shuttle: Grand Canyon West to Las Vegas
+    "PWQPS3",   # One-way Shuttle: Las Vegas to Bryce Canyon Area
+    "PXCBZM",   # Grand Canyon West Rim Day Tour (Musement)
+    "PZK1UA",   # One-way Shuttle: Las Vegas to St.George
+    "PZYTDM",   # One-way Shuttle: Las Vegas to Grand Canyon West
+}
+
+_ADMISSIONS_CODES = {
+    "P56Y49",   # Grand Canyon West Rim Admissions
+}
+
+_OTHER_CODES = {
+    "PFYF01",   # Manual Admin Item
+}
+
+
+def _infer_booking_type(product_code: Optional[str]) -> str:
+    """Look up booking_type from product_code. Falls back to 'bus_tour'."""
+    if product_code in _SELF_DRIVE_CODES:
+        return "self_drive"
+    if product_code in _SHUTTLE_CODES:
+        return "shuttle"
+    if product_code in _ADMISSIONS_CODES:
+        return "admissions"
+    if product_code in _OTHER_CODES:
+        return "other"
+    return "bus_tour"
+
 
 async def _get_booking_type(db: AsyncSession, product_code: Optional[str]) -> str:
     """
-    Look up booking_type via manifest_products → manifests.
-    Falls back to 'bus_tour' if not configured yet.
+    Determine booking_type:
+    1. Try manifest_products table (if populated in future)
+    2. Fall back to product_code lookup
     """
-    if not product_code:
-        return "bus_tour"
-    result = await db.execute(
-        select(ManifestProduct).where(ManifestProduct.product_code == product_code)
-    )
-    mp = result.scalar_one_or_none()
-    if mp and mp.manifest:
-        return mp.manifest.booking_type
-    return "bus_tour"
+    if product_code:
+        result = await db.execute(
+            select(ManifestProduct).where(ManifestProduct.product_code == product_code)
+        )
+        mp = result.scalar_one_or_none()
+        if mp and mp.manifest:
+            return mp.manifest.booking_type
+    return _infer_booking_type(product_code)
 
 
 # ─── Route ────────────────────────────────────────────────────────────────────
