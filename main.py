@@ -4,6 +4,12 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import uvicorn
 import os
+import asyncio
+import logging
+
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
+import pytz
 
 from app.database import init_db
 from app.routers import auth, admin, bookings, notifications, guest, webhook
@@ -25,10 +31,47 @@ from app.routers import sales_report
 from app.routers import ops_summary
 from app.routers import promotion_stats
 
+logger = logging.getLogger(__name__)
+LA_TZ = pytz.timezone("America/Los_Angeles")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+
+    # ── APScheduler ───────────────────────────────────────────────────────────
+    scheduler = AsyncIOScheduler(timezone=LA_TZ)
+
+    # Daily report: 11:59 PM LA time every day
+    from app.services.daily_report import send_daily_report
+    scheduler.add_job(
+        send_daily_report,
+        trigger=CronTrigger(hour=23, minute=59, timezone=LA_TZ),
+        id="daily_report",
+        name="NPE Daily Operations Report",
+        replace_existing=True,
+        misfire_grace_time=300,   # 5-minute grace window
+    )
+
+    # Existing email queue processor: every 5 minutes
+    from app.services.scheduler import process_queue
+    scheduler.add_job(
+        process_queue,
+        trigger=CronTrigger(minute="*/5", timezone=LA_TZ),
+        id="process_queue",
+        name="Email Queue Processor",
+        replace_existing=True,
+        misfire_grace_time=60,
+    )
+
+    scheduler.start()
+    logger.info("APScheduler started — daily report at 23:59 LA, queue every 5 min")
+
     yield
+
+    scheduler.shutdown(wait=False)
+    logger.info("APScheduler stopped")
+
 
 app = FastAPI(
     title="NPE Confirmation Service",
@@ -38,16 +81,12 @@ app = FastAPI(
 )
 
 # ── Docs IP Whitelist ─────────────────────────────────────────────────────────
-# Railway 环境变量 DOCS_ALLOWED_IPS 设置允许访问 /docs 的 IP，逗号分隔
-# 例如：DOCS_ALLOWED_IPS=1.2.3.4,5.6.7.8
-# 留空或不设置 → /docs 对所有人关闭（生产上线后用）
 _raw_ips = os.getenv("DOCS_ALLOWED_IPS", "")
 DOCS_ALLOWED_IPS = {ip.strip() for ip in _raw_ips.split(",") if ip.strip()}
 
 @app.middleware("http")
 async def protect_docs(request: Request, call_next):
     if request.url.path in ("/docs", "/redoc", "/openapi.json"):
-        # Railway 经过代理，真实 IP 在 x-forwarded-for 第一位
         forwarded = request.headers.get("x-forwarded-for", "")
         client_ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "")
         if client_ip not in DOCS_ALLOWED_IPS:
@@ -88,6 +127,14 @@ def home():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+# ── Manual trigger endpoint (for testing) ────────────────────────────────────
+@app.post("/api/admin/trigger-daily-report")
+async def trigger_daily_report(_user=None):
+    """Manually trigger the daily report — for testing only."""
+    from app.services.daily_report import send_daily_report
+    asyncio.create_task(send_daily_report())
+    return {"status": "triggered"}
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8080, reload=True)

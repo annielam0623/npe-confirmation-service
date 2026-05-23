@@ -41,13 +41,13 @@ async def get_promotion_summary(
             COUNT(*) FILTER (WHERE b.mtlv_eligible = TRUE)                                          AS total_eligible,
             COUNT(*) FILTER (WHERE b.mtlv_eligible = TRUE AND b.mtlv_qty > 0)                       AS selected_qty,
             COUNT(*) FILTER (WHERE b.mtlv_eligible = TRUE AND b.confirmation = 'yes'
-                              AND (b.mtlv_qty IS NULL OR b.mtlv_qty = 0))                            AS yes_no_ticket,
+                    AND (b.mtlv_qty IS NULL OR b.mtlv_qty = 0))                            AS yes_no_ticket,
             COUNT(*) FILTER (WHERE b.mtlv_eligible = TRUE
-                              AND b.mtlv_ticket_status = 'pending_send')                             AS pending_send,
+                    AND b.mtlv_ticket_status = 'pending_send')                             AS pending_send,
             COUNT(*) FILTER (WHERE b.mtlv_eligible = TRUE
-                              AND b.mtlv_ticket_status = 'sent')                                     AS sent,
+                    AND b.mtlv_ticket_status = 'sent')                                     AS sent,
             COUNT(*) FILTER (WHERE b.mtlv_eligible = TRUE
-                              AND b.mtlv_ticket_status = 'cancel')                                   AS cancelled
+                    AND b.mtlv_ticket_status = 'cancel')                                   AS cancelled
         FROM bookings b
         WHERE b.mtlv_eligible = TRUE
         {where_date}
