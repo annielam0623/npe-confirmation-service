@@ -22,6 +22,8 @@ from app.routers import settings_teams
 from app.routers import broadcasting_log
 from app.routers import bug_reports
 from app.routers import sales_report
+from app.routers import ops_summary
+from app.routers import promotion_stats
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -76,6 +78,8 @@ app.include_router(settings_teams.router)
 app.include_router(broadcasting_log.router)
 app.include_router(bug_reports.router)
 app.include_router(sales_report.router)
+app.include_router(ops_summary.router)
+app.include_router(promotion_stats.router)
 
 @app.get("/")
 def home():

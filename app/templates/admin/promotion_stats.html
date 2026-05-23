@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+{% block title %}Promotion Stats{% endblock %}
+{% block page_title %}Promotion Stats — MTLV{% endblock %}
+{% block extra_styles %}
+.ps-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:24px;}
+.ps-controls input{height:32px;padding:0 10px;border:0.5px solid rgba(0,0,0,0.15);border-radius:7px;font-size:13px;}
+.ps-controls label{font-size:13px;color:#555;}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:20px;}
+.stat-box{background:#fff;border-radius:10px;border:0.5px solid rgba(0,0,0,0.1);padding:14px 16px;cursor:pointer;transition:border-color 0.15s;}
+.stat-box:hover{border-color:rgba(0,0,0,0.25);}
+.stat-box.active{border-color:#1a1a1a;box-shadow:0 0 0 1px #1a1a1a;}
+.stat-box .lbl{font-size:12px;color:#999;margin-bottom:6px;}
+.stat-box .val{font-size:26px;font-weight:500;color:#1a1a1a;}
+.stat-box.eligible .val{color:#534AB7;}
+.stat-box.selected .val{color:#3B6D11;}
+.stat-box.yes-no .val{color:#BA7517;}
+.stat-box.pending .val{color:#185FA5;}
+.stat-box.sent-box .val{color:#3B6D11;}
+.stat-box.cancel-box .val{color:#A32D2D;}
+.ps-table-wrap{background:#fff;border-radius:10px;border:0.5px solid rgba(0,0,0,0.1);overflow:hidden;}
+.ps-table-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:0.5px solid rgba(0,0,0,0.08);}
+.ps-table-title{font-size:13px;font-weight:600;color:#555;}
+table.ps-table{width:100%;border-collapse:collapse;font-size:13px;}
+table.ps-table th{padding:8px 12px;text-align:left;font-weight:600;color:#555;border-bottom:1px solid rgba(0,0,0,0.08);white-space:nowrap;background:#fafaf8;}
+table.ps-table td{padding:7px 12px;border-bottom:0.5px solid rgba(0,0,0,0.05);color:#1a1a1a;white-space:nowrap;}
+table.ps-table tr:last-child td{border-bottom:none;}
+.badge-conf{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;}
+.badge-yes{background:#EAF3DE;color:#3B6D11;}
+.badge-modify{background:#FAEEDA;color:#BA7517;}
+.badge-pending{background:#E6F1FB;color:#185FA5;}
+.badge-ts{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;}
+.badge-ts-pending{background:#E6F1FB;color:#185FA5;}
+.badge-ts-sent{background:#EAF3DE;color:#3B6D11;}
+.badge-ts-cancel{background:#FCEBEB;color:#A32D2D;}
+.ps-loading{color:#aaa;font-size:13px;padding:20px 16px;}
+{% endblock %}
+{% block content %}
+<div class="ps-controls">
+  <label>From</label>
+  <input type="date" id="date-from">
+  <label>To</label>
+  <input type="date" id="date-to">
+  <button class="btn btn-primary" onclick="loadAll()" style="height:32px;">Apply</button>
+  <button class="btn" onclick="clearDates()" style="height:32px;">Clear</button>
+</div>
+
+<div class="stat-grid" id="summary-cards">
+  <div class="stat-box eligible" onclick="filterDetail('all',this)">
+    <div class="lbl">Total Eligible</div><div class="val" id="s-eligible">—</div>
+  </div>
+  <div class="stat-box selected" onclick="filterDetail('selected',this)">
+    <div class="lbl">Selected Tickets</div><div class="val" id="s-selected">—</div>
+  </div>
+  <div class="stat-box yes-no" onclick="filterDetail('yes_no_ticket',this)">
+    <div class="lbl">YES but No Ticket</div><div class="val" id="s-yes-no">—</div>
+  </div>
+  <div class="stat-box pending" onclick="filterDetail('pending',this)">
+    <div class="lbl">Pending Send</div><div class="val" id="s-pending">—</div>
+  </div>
+  <div class="stat-box sent-box">
+    <div class="lbl">Sent</div><div class="val" id="s-sent">—</div>
+  </div>
+  <div class="stat-box cancel-box">
+    <div class="lbl">Cancelled</div><div class="val" id="s-cancel">—</div>
+  </div>
+</div>
+
+<div class="ps-table-wrap">
+  <div class="ps-table-header">
+    <span class="ps-table-title" id="detail-title">All Eligible Guests</span>
+    <span style="font-size:12px;color:#aaa;" id="detail-count"></span>
+  </div>
+  <div id="detail-wrap"><div class="ps-loading">Loading...</div></div>
+</div>
+
+<script>
+let currentFilter = 'all';
+
+function clearDates(){
+  document.getElementById('date-from').value = '';
+  document.getElementById('date-to').value = '';
+  loadAll();
+}
+
+function dateParams(){
+  const f = document.getElementById('date-from').value;
+  const t = document.getElementById('date-to').value;
+  return f && t ? `&date_from=${f}&date_to=${t}` : '';
+}
+
+function filterDetail(status, el){
+  currentFilter = status;
+  document.querySelectorAll('.stat-box').forEach(b => b.classList.remove('active'));
+  if(el) el.classList.add('active');
+  const titles = {
+    all: 'All Eligible Guests',
+    selected: 'Selected Tickets',
+    yes_no_ticket: 'YES but No Ticket Selected',
+    pending: 'Pending Send',
+  };
+  document.getElementById('detail-title').textContent = titles[status] || 'All';
+  loadDetail();
+}
+
+function confBadge(c){
+  if(c === 'yes') return '<span class="badge-conf badge-yes">YES</span>';
+  if(c === 'modify_req') return '<span class="badge-conf badge-modify">Modify</span>';
+  return '<span class="badge-conf badge-pending">Pending</span>';
+}
+
+function tsBadge(s){
+  if(s === 'sent') return '<span class="badge-ts badge-ts-sent">Sent</span>';
+  if(s === 'cancel') return '<span class="badge-ts badge-ts-cancel">Cancel</span>';
+  if(s === 'pending_send') return '<span class="badge-ts badge-ts-pending">Pending</span>';
+  return `<span style="color:#aaa">${s}</span>`;
+}
+
+function fmtDate(d){ return d ? d.substring(0,10) : '—'; }
+
+async function loadSummary(){
+  const r = await fetch(`/api/promotion-stats/summary?x=1${dateParams()}`);
+  const d = await r.json();
+  document.getElementById('s-eligible').textContent = d.total_eligible.toLocaleString();
+  document.getElementById('s-selected').textContent = d.selected_qty.toLocaleString();
+  document.getElementById('s-yes-no').textContent   = d.yes_no_ticket.toLocaleString();
+  document.getElementById('s-pending').textContent  = d.pending_send.toLocaleString();
+  document.getElementById('s-sent').textContent     = d.sent.toLocaleString();
+  document.getElementById('s-cancel').textContent   = d.cancelled.toLocaleString();
+}
+
+async function loadDetail(){
+  const wrap = document.getElementById('detail-wrap');
+  wrap.innerHTML = '<div class="ps-loading">Loading...</div>';
+  const r = await fetch(`/api/promotion-stats/detail?status=${currentFilter}${dateParams()}`);
+  const data = await r.json();
+  document.getElementById('detail-count').textContent = `${data.length} records`;
+  if(!data.length){ wrap.innerHTML = '<div class="ps-loading">No records</div>'; return; }
+  let html = '<table class="ps-table"><thead><tr>';
+  html += '<th>Order #</th><th>Guest</th><th>Tour Date</th><th>Tour</th><th>Party</th><th>Confirmation</th><th>MTLV Qty</th><th>Ticket Status</th>';
+  html += '</tr></thead><tbody>';
+  data.forEach(r => {
+    html += `<tr>
+      <td><a href="/admin/operations/orders?q=${r.order_number}" style="color:#185FA5;">${r.order_number}</a></td>
+      <td>${r.first_name||''} ${r.last_name||''}<br><span style="font-size:11px;color:#aaa;">${r.phone||''}</span></td>
+      <td>${fmtDate(r.tour_date)}</td>
+      <td style="max-width:160px;overflow:hidden;text-overflow:ellipsis;">${r.tour_type||'—'}</td>
+      <td>${r.quantities||'—'}</td>
+      <td>${confBadge(r.confirmation)}</td>
+      <td style="font-weight:500;">${r.mtlv_qty||0}</td>
+      <td>${tsBadge(r.mtlv_ticket_status)}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+async function loadAll(){
+  await Promise.all([loadSummary(), loadDetail()]);
+}
+
+// Init: default active card
+document.querySelector('.stat-box.eligible').classList.add('active');
+loadAll();
+</script>
+{% endblock %}

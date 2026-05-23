@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}Operations Summary{% endblock %}
+{% block page_title %}Operations Summary{% endblock %}
+{% block extra_styles %}
+.os-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:24px;}
+.os-toggle{display:flex;border:0.5px solid rgba(0,0,0,0.15);border-radius:7px;overflow:hidden;}
+.os-toggle button{height:32px;padding:0 14px;font-size:13px;border:none;background:#fff;color:#555;cursor:pointer;transition:background 0.1s;}
+.os-toggle button.active{background:#1a1a1a;color:#fff;}
+.os-custom{display:none;align-items:center;gap:6px;}
+.os-custom input{height:32px;padding:0 10px;border:0.5px solid rgba(0,0,0,0.15);border-radius:7px;font-size:13px;}
+.os-section{margin-bottom:28px;}
+.os-section-title{font-size:13px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;}
+.os-card{background:#fff;border-radius:10px;border:0.5px solid rgba(0,0,0,0.1);padding:18px 20px;margin-bottom:14px;}
+.os-card-title{font-size:12px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:14px;}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px;}
+.stat-box{background:#f9f8f6;border-radius:8px;padding:12px 14px;}
+.stat-box .lbl{font-size:12px;color:#999;margin-bottom:4px;}
+.stat-box .val{font-size:22px;font-weight:500;color:#1a1a1a;}
+.stat-box .sub{font-size:11px;color:#aaa;margin-top:2px;}
+.stat-box.yes .val{color:#3B6D11;}
+.stat-box.modify .val{color:#BA7517;}
+.stat-box.pending .val{color:#185FA5;}
+.send-table{width:100%;border-collapse:collapse;font-size:13px;}
+.send-table th{padding:7px 12px;text-align:left;font-weight:600;color:#555;border-bottom:1px solid rgba(0,0,0,0.08);}
+.send-table td{padding:7px 12px;border-bottom:0.5px solid rgba(0,0,0,0.05);color:#1a1a1a;}
+.send-table tr:last-child td{border-bottom:none;}
+.rate-bar{display:flex;align-items:center;gap:8px;}
+.rate-fill{height:6px;border-radius:3px;background:#3B6D11;}
+.rate-text{font-size:12px;color:#555;white-space:nowrap;}
+.badge-ch{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:500;}
+.badge-email{background:#E6F1FB;color:#185FA5;}
+.badge-sms{background:#EAF3DE;color:#3B6D11;}
+.badge-both{background:#EEEDFE;color:#534AB7;}
+.os-loading{color:#aaa;font-size:13px;padding:16px 0;}
+{% endblock %}
+{% block content %}
+<div class="os-controls">
+  <div class="os-toggle">
+    <button class="active" onclick="setRange('today',this)">Today</button>
+    <button onclick="setRange('week',this)">This Week</button>
+    <button onclick="setRange('month',this)">This Month</button>
+    <button onclick="setRange('custom',this)">Custom</button>
+  </div>
+  <div class="os-custom" id="custom-range">
+    <input type="date" id="date-from">
+    <span style="color:#aaa;font-size:13px;">to</span>
+    <input type="date" id="date-to">
+    <button class="btn btn-primary" onclick="loadAll()" style="height:32px;">Apply</button>
+  </div>
+</div>
+
+<div class="os-section">
+  <div class="os-section-title">Send Statistics</div>
+  <div id="send-stats-wrap"><div class="os-loading">Loading...</div></div>
+</div>
+
+<div class="os-section">
+  <div class="os-section-title">Guest Response — Tour Confirmation</div>
+  <div id="response-stats-wrap"><div class="os-loading">Loading...</div></div>
+</div>
+
+<script>
+let currentRange = 'today';
+
+function setRange(r, btn){
+  currentRange = r;
+  document.querySelectorAll('.os-toggle button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('custom-range').style.display = r === 'custom' ? 'flex' : 'none';
+  if(r !== 'custom') loadAll();
+}
+
+function rangeParams(){
+  let p = `range=${currentRange}`;
+  if(currentRange === 'custom'){
+    const f = document.getElementById('date-from').value;
+    const t = document.getElementById('date-to').value;
+    if(f && t) p += `&date_from=${f}&date_to=${t}`;
+  }
+  return p;
+}
+
+const MODULE_LABELS = {
+  tour_confirmation: 'Tour Confirmation',
+  morning_pickup: 'Morning Pickup',
+  tickets_reminder: 'Tickets Reminder',
+};
+
+function renderSendStats(data){
+  let html = '';
+  for(const [mod, channels] of Object.entries(data)){
+    const label = MODULE_LABELS[mod] || mod;
+    let rows = '';
+    let grandTotal = 0, grandSuccess = 0;
+    for(const [ch, s] of Object.entries(channels)){
+      if(s.total === 0) continue;
+      grandTotal += s.total;
+      grandSuccess += s.success;
+      const rate = s.total ? Math.round(s.success / s.total * 100) : 0;
+      rows += `<tr>
+        <td><span class="badge-ch badge-${ch}">${ch}</span></td>
+        <td>${s.total.toLocaleString()}</td>
+        <td>${s.success.toLocaleString()}</td>
+        <td>${s.failed.toLocaleString()}</td>
+        <td>
+          <div class="rate-bar">
+            <div class="rate-fill" style="width:${rate}px;max-width:80px;min-width:2px;"></div>
+            <span class="rate-text">${rate}%</span>
+          </div>
+        </td>
+      </tr>`;
+    }
+    if(!rows) continue;
+    const totalRate = grandTotal ? Math.round(grandSuccess / grandTotal * 100) : 0;
+    html += `<div class="os-card">
+      <div class="os-card-title">${label} <span style="font-weight:400;color:#aaa;font-size:11px;margin-left:8px;">${grandTotal.toLocaleString()} sent · ${totalRate}% success</span></div>
+      <table class="send-table">
+        <thead><tr><th>Channel</th><th>Sent</th><th>Success</th><th>Failed</th><th>Rate</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>`;
+  }
+  document.getElementById('send-stats-wrap').innerHTML = html || '<div class="os-loading">No data</div>';
+}
+
+function renderResponseStats(data){
+  const avgYes    = data.avg_hours_yes    ? `avg ${data.avg_hours_yes}h` : '';
+  const avgModify = data.avg_hours_modify ? `avg ${data.avg_hours_modify}h` : '';
+  const html = `<div class="os-card">
+    <div class="stat-grid">
+      <div class="stat-box"><div class="lbl">Total Sent</div><div class="val">${data.total.toLocaleString()}</div></div>
+      <div class="stat-box yes"><div class="lbl">YES</div><div class="val">${data.yes.toLocaleString()}</div><div class="sub">${data.pct_yes}% ${avgYes}</div></div>
+      <div class="stat-box modify"><div class="lbl">Modify</div><div class="val">${data.modify.toLocaleString()}</div><div class="sub">${data.pct_modify}% ${avgModify}</div></div>
+      <div class="stat-box pending"><div class="lbl">No Reply</div><div class="val">${data.pending.toLocaleString()}</div><div class="sub">${data.pct_pending}%</div></div>
+    </div>
+  </div>`;
+  document.getElementById('response-stats-wrap').innerHTML = html;
+}
+
+async function loadAll(){
+  const p = rangeParams();
+  document.getElementById('send-stats-wrap').innerHTML = '<div class="os-loading">Loading...</div>';
+  document.getElementById('response-stats-wrap').innerHTML = '<div class="os-loading">Loading...</div>';
+  try {
+    const [r1, r2] = await Promise.all([
+      fetch(`/api/ops-summary/send-stats?${p}`).then(r => r.json()),
+      fetch(`/api/ops-summary/response-stats?${p}`).then(r => r.json()),
+    ]);
+    renderSendStats(r1);
+    renderResponseStats(r2);
+  } catch(e){
+    document.getElementById('send-stats-wrap').innerHTML = '<div class="os-loading">Failed to load</div>';
+    document.getElementById('response-stats-wrap').innerHTML = '<div class="os-loading">Failed to load</div>';
+  }
+}
+
+loadAll();
+</script>
+{% endblock %}
