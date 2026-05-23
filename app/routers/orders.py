@@ -58,15 +58,6 @@ async def orders_api(
         )""")
         params["q"] = f"%{q}%"
 
-    if date_from:
-        filters.append("b.created_at >= :date_from")
-        params["date_from"] = date_type.fromisoformat(date_from)
-
-    if date_to:
-        # Add 1 day in Python so asyncpg gets a plain date, no interval arithmetic in SQL
-        filters.append("b.created_at < :date_to")
-        params["date_to"] = date_type.fromisoformat(date_to) + timedelta(days=1)
-
     where = " AND ".join(filters)
     offset = (page - 1) * page_size
 
