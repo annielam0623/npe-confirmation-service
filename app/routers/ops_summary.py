@@ -99,7 +99,7 @@ async def get_response_stats(
                 ELSE NULL
             END) AS avg_hours
         FROM send_log sl
-        JOIN bookings b ON b.id = sl.booking_id
+        JOIN bookings b ON b.order_number = sl.order_number
         WHERE {where}
           AND sl.module = 'tour_confirmation'
         GROUP BY b.confirmation
