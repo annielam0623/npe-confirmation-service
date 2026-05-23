@@ -44,7 +44,7 @@ async def get_monthly_data(
             EXTRACT(MONTH FROM b.tour_date)::int AS month,
             """ + agg + """ AS value
         FROM bookings b
-        WHERE b.tour_type = :product_type
+        WHERE b.booking_type = :product_type
           AND EXTRACT(YEAR FROM b.tour_date) = :year
           AND b.status != 'cancelled'
         GROUP BY agent, month
@@ -89,7 +89,7 @@ async def get_weekly_data(
             CEIL(EXTRACT(DAY FROM b.tour_date) / 7.0)::int AS week,
             """ + agg + """ AS value
         FROM bookings b
-        WHERE b.tour_type = :product_type
+        WHERE b.booking_type = :product_type
           AND EXTRACT(YEAR FROM b.tour_date) = :year
           AND EXTRACT(MONTH FROM b.tour_date) = :month
           AND b.status != 'cancelled'
