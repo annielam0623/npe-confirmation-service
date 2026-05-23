@@ -283,19 +283,17 @@ async def broadcast_counts(
 ):
     """
     Returns counts per group_filter + status_filter for the dropdown.
-    Data comes from bookings table (all three modules store data there via webhook/upload).
-    For morning/tickets where status may differ, we use the confirmation field.
     """
     if module not in ("tour", "morning", "tickets"):
         raise HTTPException(status_code=400, detail="Invalid module")
 
-    # Map module to product_type
+    # Map module to tour_type (DB column name)
     type_map = {
         "tour":    "bus_tour",
         "morning": "bus_tour",
         "tickets": "self_drive",
     }
-    product_type = type_map[module]
+    tour_type = type_map[module]
 
     base_q = (
         select(
@@ -304,7 +302,7 @@ async def broadcast_counts(
             func.count(Booking.id).label("cnt"),
         )
         .where(Booking.tour_date == tour_date)
-        .where(Booking.product_type == product_type)
+        .where(Booking.tour_type == tour_type)
         .group_by(Booking.confirmation, Booking.mtlv_eligible)
     )
 
