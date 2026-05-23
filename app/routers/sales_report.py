@@ -92,7 +92,7 @@ async def get_weekly_data(
         WHERE b.tour_type = :product_type
           AND EXTRACT(YEAR FROM b.tour_date) = :year
           AND EXTRACT(MONTH FROM b.tour_date) = :month
-          AND b.status != 'Cancelled'
+          AND b.status != 'cancelled'
         GROUP BY agent, week
         ORDER BY agent, week
     """), {"product_type": product_type, "year": year, "month": month})
