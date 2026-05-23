@@ -145,7 +145,6 @@ function selectRange(range,el){
     document.getElementById('dr-label').textContent=rangeLabelText();
     document.getElementById('dr-dropdown').classList.add('hidden');
     document.getElementById('dr-trigger').classList.remove('active');
-    currentPage=1; loadOrders();
   }
 }
 function applyCustom(){
@@ -155,8 +154,7 @@ function applyCustom(){
   document.getElementById('dr-label').textContent=rangeLabelText();
   document.getElementById('dr-dropdown').classList.add('hidden');
   document.getElementById('dr-trigger').classList.remove('active');
-  currentPage=1; loadOrders();
-}
+  }
 document.addEventListener('click',e=>{
   if(!document.getElementById('dr-wrap').contains(e.target)){
     document.getElementById('dr-dropdown').classList.add('hidden');
