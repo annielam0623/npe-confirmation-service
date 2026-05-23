@@ -236,7 +236,7 @@ def _parse_order(payload: dict) -> Optional[dict]:
         "lunch_turkey": lunch["lunch_turkey"],
         "lunch_veggie": lunch["lunch_veggie"],
         "lunch_beef": lunch["lunch_beef"],
-        "source": BookingSource.rezdy,
+        "source": BookingSource.rezdy.value,
     }
 
 # ─── Product code → booking_type mapping ─────────────────────────────────────
@@ -368,7 +368,7 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
         )
         booking = result.scalar_one_or_none()
         if booking:
-            booking.status = BookingStatus.cancelled
+            booking.status = BookingStatus.cancelled.value
             await db.commit()
             print(f"[webhook] cancelled booking id={booking.id}")
             return {"status": "cancelled", "order_number": order_number}
@@ -440,8 +440,8 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
             existing.lunch_beef   = fields["lunch_beef"]
 
         # If status was cancelled and order comes back, re-activate
-        if existing.status == BookingStatus.cancelled:
-            existing.status = BookingStatus.pending
+        if existing.status == BookingStatus.cancelled.value:
+            existing.status = BookingStatus.pending.value
 
         # Record the time Rezdy pushed this update
         from zoneinfo import ZoneInfo as _ZI
@@ -462,8 +462,8 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
         # Insert new booking
         booking = Booking(
             booking_type     = booking_type,
-            source           = BookingSource.rezdy,
-            status           = BookingStatus.pending,
+            source           = BookingSource.rezdy.value,
+            status           = BookingStatus.pending.value,
             confirm_token    = secrets.token_urlsafe(32),
             order_number     = order_number,
             rezdy_order_id   = order_number,

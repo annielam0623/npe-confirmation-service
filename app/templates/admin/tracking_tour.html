@@ -1584,7 +1584,7 @@ async function sendBroadcast() {
 }
 
 // ── Notes dialog ──────────────────────────────────────
-let _notesBookingId = null, _notesPollTimer = null;
+let _notesBookingId = null, _notesOrderNumber = null, _notesPollTimer = null;
 
 let _notesGuestNotes = '';
 async function openNotes(bookingId, orderNum, name, guestNotes) {
@@ -1592,6 +1592,7 @@ async function openNotes(bookingId, orderNum, name, guestNotes) {
   // Stop any existing poll timer first
   if (_notesPollTimer){ clearInterval(_notesPollTimer); _notesPollTimer = null; }
   _notesBookingId = bookingId;
+  _notesOrderNumber = orderNum;
   document.getElementById("notesTitle").textContent = "Order " + orderNum;
   document.getElementById("notesSubtitle").textContent = name;
   document.getElementById("noteInput").value = "";
@@ -1624,10 +1625,12 @@ function closeNotes(){
   if (_notesPollTimer){ clearInterval(_notesPollTimer); _notesPollTimer = null; }
 }
 async function _fetchNotes(){
-  if (!_notesBookingId) return;
+  if (!_notesOrderNumber) return;
   try {
-    var res  = await fetch("/booking-notes/" + _notesBookingId);
+    var res  = await fetch("/booking-notes/by-order/" + encodeURIComponent(_notesOrderNumber));
     var data = await res.json();
+    // Use guest_note from backend (bookings.notes) as the authoritative guest content
+    if (data.guest_note) _notesGuestNotes = data.guest_note;
     _renderNotes(data.notes);
   } catch(e){}
 }
@@ -1680,7 +1683,7 @@ async function submitNote(dir){
   var body = document.getElementById("noteInput").value.trim();
   if (!body || !_notesBookingId) return;
   try {
-    await fetch("/booking-notes/" + _notesBookingId, {
+    await fetch("/booking-notes/by-order/" + encodeURIComponent(_notesOrderNumber), {
       method:"POST", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({body:body, direction:dir, send_sms:document.getElementById("sendSmsCheck").checked, send_email:document.getElementById("sendEmailCheck").checked})
     });

@@ -176,6 +176,118 @@ async def get_notes(
     return {"notes": [_serialize_note(n) for n in notes]}
 
 
+# ── GET / POST notes by order_number (tour/morning — Excel upload flow) ─────────
+
+@router.get("/by-order/{order_number}")
+async def get_notes_by_order(
+    order_number: str,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_staff),
+):
+    booking_res = await db.execute(
+        text("SELECT id, notes FROM bookings WHERE order_number = :on ORDER BY id DESC LIMIT 1"),
+        {"on": order_number}
+    )
+    booking_row = booking_res.mappings().first()
+    guest_note = (booking_row["notes"] or "") if booking_row else ""
+
+    notes_res = await db.execute(
+        text("""
+            SELECT bn.id, bn.booking_id, bn.author_username, bn.direction,
+                   bn.body, bn.sms_status, bn.email_status, bn.created_at
+            FROM booking_notes bn
+            WHERE bn.booking_id = (
+                SELECT id FROM bookings WHERE order_number = :on ORDER BY id DESC LIMIT 1
+            )
+            ORDER BY bn.created_at ASC
+        """),
+        {"on": order_number}
+    )
+    notes_rows = notes_res.mappings().all()
+
+    notes = [
+        {
+            "id":              r["id"],
+            "booking_id":      r["booking_id"],
+            "author_username": r["author_username"],
+            "direction":       r["direction"],
+            "body":            r["body"],
+            "sms_status":      r["sms_status"],
+            "email_status":    r["email_status"],
+            "created_at":      r["created_at"].astimezone(LA).strftime("%Y-%m-%d %H:%M") if r["created_at"] else None,
+        }
+        for r in notes_rows
+    ]
+
+    return {"notes": notes, "guest_note": guest_note}
+
+
+@router.post("/by-order/{order_number}")
+async def add_note_by_order(
+    order_number: str,
+    payload: NoteCreate,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_staff),
+):
+    result = await db.execute(
+        select(Booking).where(Booking.order_number == order_number).order_by(Booking.id.desc()).limit(1)
+    )
+    booking = result.scalar_one_or_none()
+    if not booking:
+        raise HTTPException(status_code=404, detail="Booking not found")
+
+    sms_status = None
+    email_status = None
+
+    if payload.send_sms and booking.phone:
+        try:
+            await send_sms_async(booking.phone, payload.body)
+            sms_status = "sent"
+        except Exception:
+            sms_status = "failed"
+
+    if payload.send_email and booking.customer_email:
+        try:
+            subject = f"Update on your National Park Express tour — Order {booking.order_number}"
+            html = f"<p>Hi {booking.first_name},</p><p>{payload.body}</p><p>If you have any questions, please contact us at 702-948-4190.</p><p>National Park Express</p>"
+            await send_email(booking.customer_email, subject, html)
+            email_status = "sent"
+        except Exception:
+            email_status = "failed"
+
+    direction = payload.direction
+    if payload.send_sms and payload.send_email:
+        direction = "sms_out"
+    elif payload.send_sms:
+        direction = "sms_out"
+    elif payload.send_email:
+        direction = "email_out"
+
+    note = BookingNote(
+        booking_id=booking.id,
+        author_username=user.username,
+        direction=direction,
+        body=payload.body,
+        sms_status=sms_status,
+        email_status=email_status,
+        created_at=_now_la(),
+    )
+    db.add(note)
+
+    inbound_directions = {"sms_in", "email_in", "guest_reply"}
+    if direction in inbound_directions:
+        await db.execute(
+            update(Booking)
+            .where(Booking.order_number == order_number)
+            .values(action_taken_by=None, action_taken_at=None)
+        )
+
+    await db.commit()
+    await db.refresh(note)
+
+    return {"note": _serialize_note(note)}
+
+
 # ── POST new note ─────────────────────────────────────────────────────────────
 
 @router.post("/{booking_id}")
