@@ -116,6 +116,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;backgrou
  </div>
   <div class="nav-group">
     <div class="nav-module-label" style="color:#fff;background:#64748b;padding:5px 16px;margin:4px 0;">System</div>
+    <a href="/admin/system/sales-report" class="nav-item sub {% if active_page == 'sales_report' %}active{% endif %}"><span class="dot"></span>Sales Report</a>
+    <a href="/admin/system/ops-summary" class="nav-item sub {% if active_page == 'ops_summary' %}active{% endif %}"><span class="dot"></span>Operations Summary</a>
+    <a href="/admin/system/promotion-stats" class="nav-item sub {% if active_page == 'promotion_stats' %}active{% endif %}"><span class="dot"></span>Promotion Stats</a>
     <a href="/admin/system/bug-reports" class="nav-item sub {% if active_page == 'bug_reports' %}active{% endif %}"><span class="dot"></span>Bug Reports</a>
   </div>
   {% if current_user and current_user.role in ('admin', 'superadmin') %}
