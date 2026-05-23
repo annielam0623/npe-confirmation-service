@@ -134,12 +134,13 @@ async def _log_send(db: AsyncSession, data: dict):
             INSERT INTO send_log
                 (module, order_number, first_name, last_name, email, phone,
                  tour_date, tour_type, email_status, sms_status,
-                 sms_sid, email_message_id, error_msg, sent_by, sent_at, agent_name)
+                 sms_sid, email_message_id, error_msg, sent_by, sent_at, agent_name,
+                 mtlv_eligible, mtlv_ticket_status)
             VALUES
                 (:module, :order_number, :first_name, :last_name, :email, :phone,
                  :tour_date, :tour_type, :email_status, :sms_status,
                  :sms_sid, :email_message_id, :error_msg, :sent_by, :sent_at,
-                 :agent_name)
+                 :agent_name, :mtlv_eligible, :mtlv_ticket_status)
         """), {**data, "sent_at": datetime.now(LA)})
         await db.commit()
     except Exception as e:
@@ -268,6 +269,8 @@ async def send_tour_confirmation(
             "error_msg":        "" if email_status.startswith("sent") else email_status,
             "sent_by":          user.username,
             "agent_name":       "",
+            "mtlv_eligible":    row.get("mtlv_eligible", False),
+            "mtlv_ticket_status": row.get("mtlv_ticket_status", None),
         })
         results.append({
             "order":        order_num,
@@ -395,6 +398,8 @@ async def send_tour_confirmation_bulk(
             "error_msg":        "" if email_status.startswith("sent") else email_status,
             "sent_by":          user.username,
             "agent_name":       "",
+            "mtlv_eligible":    row.get("mtlv_eligible", False),
+            "mtlv_ticket_status": row.get("mtlv_ticket_status", None),
         })
 
         results.append({
@@ -534,6 +539,8 @@ async def send_morning_pickup(
             "error_msg":        "",
             "sent_by":          user.username,
             "agent_name":       row.get("agent_name", ""),
+            "mtlv_eligible":    False,
+            "mtlv_ticket_status": None,
         })
 
         if "sent" in (sms_status + email_status):
@@ -661,6 +668,8 @@ async def send_tickets_reminder(
             "error_msg":        "",
             "sent_by":          user.username,
             "agent_name":       "",
+            "mtlv_eligible":    False,
+            "mtlv_ticket_status": None,
         })
 
         results.append({
