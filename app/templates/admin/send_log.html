@@ -11,6 +11,13 @@
 .stat-card.morning .num{color:#185FA5;}
 .stat-card.tickets .num{color:#BA7517;}
 .stat-card.total .num{color:#1a1a1a;}
+.stat-card.mtlv .num{color:#b45309;}
+.stat-card.clickable{cursor:pointer;transition:box-shadow 0.15s;}
+.stat-card.clickable:hover{box-shadow:0 2px 8px rgba(0,0,0,0.12);}
+.stat-card.clickable.active{border-color:#1a1a1a;box-shadow:0 0 0 2px #1a1a1a;}
+.pill-mtlv{background:#FEF3C7;color:#b45309;}
+.pill-filter{cursor:pointer;}
+.pill-filter:hover{opacity:0.8;}
 .filter-bar{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;background:#fff;border:0.5px solid rgba(0,0,0,0.1);border-radius:10px;padding:12px 16px;}
 .filter-bar label{font-size:12px;color:#888;margin-right:4px;}
 .filter-bar select{padding:6px 10px;border:0.5px solid rgba(0,0,0,0.2);border-radius:7px;font-size:13px;background:#fff;font-family:inherit;}
@@ -77,10 +84,11 @@ table.err-tbl{width:100%;border-collapse:collapse;font-size:12px;}
 
 {% block content %}
 <div class="stats-row" id="stats-row">
-  <div class="stat-card total"><div class="num" id="stat-total">—</div><div class="lbl">Total Sent</div></div>
-  <div class="stat-card tour"><div class="num" id="stat-tour">—</div><div class="lbl">Tour Conf</div></div>
-  <div class="stat-card morning"><div class="num" id="stat-morning">—</div><div class="lbl">Morning P/U</div></div>
-  <div class="stat-card tickets"><div class="num" id="stat-tickets">—</div><div class="lbl">Tickets</div></div>
+  <div class="stat-card total clickable" id="card-total" onclick="filterByCard('')"><div class="num" id="stat-total">—</div><div class="lbl">Total Sent</div></div>
+  <div class="stat-card tour clickable" id="card-tour" onclick="filterByCard('tour_confirmation')"><div class="num" id="stat-tour">—</div><div class="lbl">Tour Conf</div></div>
+  <div class="stat-card morning clickable" id="card-morning" onclick="filterByCard('morning_pickup')"><div class="num" id="stat-morning">—</div><div class="lbl">Morning P/U</div></div>
+  <div class="stat-card tickets clickable" id="card-tickets" onclick="filterByCard('tickets_reminder')"><div class="num" id="stat-tickets">—</div><div class="lbl">Tickets</div></div>
+  <div class="stat-card mtlv clickable" id="card-mtlv" onclick="filterByCard('mtlv')"><div class="num" id="stat-mtlv">—</div><div class="lbl">MTLV</div></div>
 </div>
 
 <div class="filter-bar">
@@ -90,6 +98,7 @@ table.err-tbl{width:100%;border-collapse:collapse;font-size:12px;}
     </div>
     <div class="dr-dropdown hidden" id="dr-dropdown">
       <div class="dr-option selected" data-range="today"  onclick="selectRange('today',this)">Today</div>
+      <div class="dr-option" data-range="yesterday" onclick="selectRange('yesterday',this)">Yesterday</div>
       <div class="dr-option" data-range="week"   onclick="selectRange('week',this)">This Week</div>
       <div class="dr-option" data-range="month"  onclick="selectRange('month',this)">This Month</div>
       <div class="dr-option" data-range="custom" onclick="selectRange('custom',this)">Custom</div>
@@ -148,11 +157,11 @@ table.err-tbl{width:100%;border-collapse:collapse;font-size:12px;}
         <tr>
           <td>Sent At</td><td>Module</td><td>Order #</td><td>Name</td>
           <td>Phone / Email</td><td>Tour Date</td><td>Tour Type</td>
-          <td>📧 Email</td><td>📱 SMS</td><td>By</td>
+          <td>📧 Email</td><td>📱 SMS</td><td>MTLV</td><td>By</td>
         </tr>
       </thead>
       <tbody id="log-tbody">
-        <tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>
+        <tr><td colspan="11" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>
       </tbody>
     </table>
   </div>
@@ -198,6 +207,7 @@ function laMonthStart(){
 function getDateRange(){
   const t=laToday();
   if(drRange==='today')  return {from:t,to:t};
+  if(drRange==='yesterday'){ const y=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'})); y.setDate(y.getDate()-1); const yd=y.toLocaleDateString('en-CA'); return {from:yd,to:yd}; }
   if(drRange==='week')   return {from:laWeekStart(),to:t};
   if(drRange==='month')  return {from:laMonthStart(),to:t};
   if(drRange==='custom') return {from:drFrom,to:drTo};
@@ -205,6 +215,7 @@ function getDateRange(){
 }
 function rangeLabelText(){
   if(drRange==='today') return 'Today';
+  if(drRange==='yesterday') return 'Yesterday';
   if(drRange==='week')  return 'This Week';
   if(drRange==='month') return 'This Month';
   const {from,to}=getDateRange();
@@ -225,7 +236,20 @@ function selectRange(range,el){
     document.getElementById('dr-label').textContent=rangeLabelText();
     document.getElementById('dr-dropdown').classList.add('hidden');
     document.getElementById('dr-trigger').classList.remove('active');
-    currentPage=1; loadLog();
+    currentPage=1; function filterByCard(module){
+  document.getElementById('f-module').value = module;
+  // Update active card highlight
+  ['total','tour','morning','tickets','mtlv'].forEach(id=>{
+    const el = document.getElementById('card-'+id);
+    if(el) el.classList.remove('active');
+  });
+  const map = {'':'total','tour_confirmation':'tour','morning_pickup':'morning','tickets_reminder':'tickets','mtlv':'mtlv'};
+  const activeId = map[module];
+  if(activeId){ const el=document.getElementById('card-'+activeId); if(el) el.classList.add('active'); }
+  currentPage=1; loadLog();
+}
+
+loadLog();
   }
 }
 function applyCustom(){
@@ -252,7 +276,7 @@ async function loadLog(page){
   const type=document.getElementById('f-type').value;
   const status=document.getElementById('f-status').value;
   document.getElementById('log-tbody').innerHTML=
-    '<tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
+    '<tr><td colspan="11" style="padding:24px;text-align:center;color:#ccc;">Loading…</td></tr>';
   const qs=new URLSearchParams({
     ...(from&&{date:from}),
     ...(module&&{module}),
@@ -270,13 +294,13 @@ async function loadLog(page){
     document.getElementById('records-count').textContent=`${data.total||0} records`;
   }catch(e){
     document.getElementById('log-tbody').innerHTML=
-      '<tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
+      '<tr><td colspan="11" style="padding:24px;text-align:center;color:#ccc;">Failed to load.</td></tr>';
   }
 }
 
 function renderRows(rows){
   const tbody=document.getElementById('log-tbody');
-  if(!rows.length){tbody.innerHTML='<tr><td colspan="10" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';return;}
+  if(!rows.length){tbody.innerHTML='<tr><td colspan="11" style="padding:24px;text-align:center;color:#ccc;">No records found.</td></tr>';return;}
   tbody.innerHTML=rows.map(r=>{
     const modCls=MODULE_CLS[r.module]||'';
     const modLbl=MODULE_LABELS[r.module]||r.module;
@@ -294,6 +318,7 @@ function renderRows(rows){
       <td style="font-size:11px;">${r.tour_type||'—'}</td>
       <td>${r.email_status?`<span class="sp ${emailCls}">${r.email_status.startsWith('sent')?'Sent':r.email_status.startsWith('failed')?'Failed':'—'}</span>`:'<span style="color:#ccc">—</span>'}</td>
       <td>${r.sms_status?`<span class="sp ${smsCls}">${smsLbl}</span>`:'<span style="color:#ccc">—</span>'}</td>
+      <td>${r.mtlv_eligible?'<span class="sp pill-mtlv pill-filter" onclick="filterByCard('mtlv');event.stopPropagation()">MTLV</span>':'<span style="color:#ccc">—</span>'}</td>
       <td style="font-size:11px;color:#888;white-space:nowrap;">${r.sent_by||'—'}</td>
     </tr>`;
   }).join('');
@@ -325,9 +350,10 @@ function renderErrors(rows){
 
 function renderStats(stats){
   document.getElementById('stat-total').textContent=stats.total||0;
-  document.getElementById('stat-tour').textContent=stats.tour_confirmation||0;
-  document.getElementById('stat-morning').textContent=stats.morning_pickup||0;
-  document.getElementById('stat-tickets').textContent=stats.tickets_reminder||0;
+  document.getElementById('stat-tour').textContent=stats.tour_conf_count||0;
+  document.getElementById('stat-morning').textContent=stats.morning_count||0;
+  document.getElementById('stat-tickets').textContent=stats.tickets_count||0;
+  document.getElementById('stat-mtlv').textContent=stats.mtlv_count||0;
 }
 
 function renderPagination(total){

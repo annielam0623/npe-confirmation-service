@@ -39,8 +39,11 @@ async def send_log_api(
         filters.append("DATE(sent_at AT TIME ZONE 'America/Los_Angeles') = CURRENT_DATE AT TIME ZONE 'America/Los_Angeles'")
 
     if module and module != "all":
-        filters.append("module = :module")
-        params["module"] = module
+        if module == "mtlv":
+            filters.append("mtlv_eligible = true")
+        else:
+            filters.append("module = :module")
+            params["module"] = module
 
     if type_filter and type_filter != "all":
         if type_filter == "combined":
@@ -70,7 +73,8 @@ async def send_log_api(
             error_msg,
             email_message_id,
             delivered_at,
-            sent_by
+            sent_by,
+            mtlv_eligible
         FROM send_log
         {where_clause}
         ORDER BY sent_at DESC
@@ -84,6 +88,10 @@ async def send_log_api(
     email_sent = sum(1 for r in rows if r["email_status"] == "sent")
     sms_failed = sum(1 for r in rows if r["sms_status"] == "failed")
     email_failed = sum(1 for r in rows if r["email_status"] == "failed")
+    tour_conf_count = sum(1 for r in rows if r["module"] == "tour_confirmation")
+    morning_count = sum(1 for r in rows if r["module"] == "morning_pickup")
+    tickets_count = sum(1 for r in rows if r["module"] == "tickets_reminder")
+    mtlv_count = sum(1 for r in rows if r["mtlv_eligible"])
 
     records = []
     for r in rows:
@@ -113,6 +121,7 @@ async def send_log_api(
             "sms_status": r["sms_status"] or "",
             "error_msg": r["error_msg"] or "",
             "sent_by": r["sent_by"] or "—",
+            "mtlv_eligible": bool(r["mtlv_eligible"]) if r["mtlv_eligible"] is not None else False,
         })
 
     return JSONResponse({
@@ -122,6 +131,10 @@ async def send_log_api(
             "email_sent": email_sent,
             "sms_failed": sms_failed,
             "email_failed": email_failed,
+            "tour_conf_count": tour_conf_count,
+            "morning_count": morning_count,
+            "tickets_count": tickets_count,
+            "mtlv_count": mtlv_count,
         },
         "records": records
     })
