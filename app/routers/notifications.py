@@ -763,7 +763,7 @@ async def delete_by_date(
     current_user = Depends(require_staff),
 ):
     if current_user.role != "admin":
-        raise HTTPException(403, "Admin only")
+        raise HTTPException(403, "Admin only", "superadmin")
 
     module_map = {
         "tour-confirmation": "tour_confirmation",
