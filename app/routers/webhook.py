@@ -361,8 +361,11 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
 
     print(f"[webhook] order={order_number} status={rezdy_status}")
 
-    # ── Handle cancellation ──
-    if rezdy_status in ("CANCELLED", "DELETED"):
+    # ── Main processing — wrapped so ANY db/parse error returns 200 to Rezdy ──
+    try:
+
+      # ── Handle cancellation ──
+      if rezdy_status in ("CANCELLED", "DELETED"):
         result = await db.execute(
             select(Booking).where(Booking.order_number == order_number)
         )
@@ -374,132 +377,140 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
             return {"status": "cancelled", "order_number": order_number}
         return {"status": "not_found", "order_number": order_number}
 
-    # ── Skip non-actionable statuses ──
-    # PROCESSING = OTA reservation not yet confirmed
-    # We accept PROCESSING so the booking appears in the system early,
-    # but mark it as pending until CONFIRMED arrives via updatedOrder.
-    if rezdy_status not in ("CONFIRMED", "PENDING_SUPPLIER", "PENDING_CUSTOMER", "PROCESSING"):
-        print(f"[webhook] skipped status={rezdy_status}")
-        return {"status": "skipped", "reason": f"status={rezdy_status}"}
+      # ── Skip non-actionable statuses ──
+      # PROCESSING = OTA reservation not yet confirmed
+      # We accept PROCESSING so the booking appears in the system early,
+      # but mark it as pending until CONFIRMED arrives via updatedOrder.
+      if rezdy_status not in ("CONFIRMED", "PENDING_SUPPLIER", "PENDING_CUSTOMER", "PROCESSING"):
+          print(f"[webhook] skipped status={rezdy_status}")
+          return {"status": "skipped", "reason": f"status={rezdy_status}"}
 
-    # ── Parse fields ──
-    fields = _parse_order(payload)
-    if not fields:
-        print(f"[webhook] could not parse order {order_number}")
-        return {"status": "error", "reason": "parse failed"}
+      # ── Parse fields ──
+      fields = _parse_order(payload)
+      if not fields:
+          print(f"[webhook] could not parse order {order_number}")
+          return {"status": "error", "reason": "parse failed"}
 
-    # ── Resolve booking_type from manifest_products table ──
-    booking_type = await _get_booking_type(db, fields.get("product_code"))
+      # ── Resolve booking_type from manifest_products table ──
+      booking_type = await _get_booking_type(db, fields.get("product_code"))
 
-    # ── Update product_name in manifest_products if it changed ──
-    if fields.get("product_code") and fields.get("product_name"):
-        mp_result = await db.execute(
-            select(ManifestProduct).where(
-                ManifestProduct.product_code == fields["product_code"]
-            )
-        )
-        mp = mp_result.scalar_one_or_none()
-        if mp and mp.product_name != fields["product_name"]:
-            mp.product_name = fields["product_name"]
-            print(f"[webhook] updated product_name for {fields['product_code']}")
+      # ── Update product_name in manifest_products if it changed ──
+      if fields.get("product_code") and fields.get("product_name"):
+          mp_result = await db.execute(
+              select(ManifestProduct).where(
+                  ManifestProduct.product_code == fields["product_code"]
+              )
+          )
+          mp = mp_result.scalar_one_or_none()
+          if mp and mp.product_name != fields["product_name"]:
+              mp.product_name = fields["product_name"]
+              print(f"[webhook] updated product_name for {fields['product_code']}")
 
-    # ── UPSERT ──
-    result = await db.execute(
-        select(Booking).where(Booking.order_number == order_number)
-    )
-    existing = result.scalar_one_or_none()
+      # ── UPSERT ──
+      result = await db.execute(
+          select(Booking).where(Booking.order_number == order_number)
+      )
+      existing = result.scalar_one_or_none()
 
-    if existing:
-        # Update — only overwrite fields that Rezdy owns.
-        # Do NOT overwrite: driver, vehicle_no, confirmation_no (if staff filled it),
-        #                   lunch counts (if staff adjusted), notes
-        existing.product_code   = fields["product_code"]
-        existing.product_name   = fields["product_name"]
-        existing.tt_number      = fields["tt_number"]
-        if fields["first_name"] and fields["first_name"].lower() != "unknown":
-            existing.first_name = fields["first_name"]
-        if fields["last_name"] and fields["last_name"].lower() != "unknown":
-            existing.last_name  = fields["last_name"]
-        existing.customer_email = fields["customer_email"]
-        existing.phone          = fields["phone"]
-        existing.quantities     = fields["quantities"]
-        existing.tour_date      = fields["tour_date"]
-        existing.pickup_time    = fields["pickup_time"]
-        existing.pickup_location = fields["pickup_location"]
-        existing.agent_name     = fields["agent_name"]
-        existing.special_requirements = fields["special_requirements"]
+      if existing:
+          # Update — only overwrite fields that Rezdy owns.
+          # Do NOT overwrite: driver, vehicle_no, confirmation_no (if staff filled it),
+          #                   lunch counts (if staff adjusted), notes
+          existing.product_code   = fields["product_code"]
+          existing.product_name   = fields["product_name"]
+          existing.tt_number      = fields["tt_number"]
+          if fields["first_name"] and fields["first_name"].lower() != "unknown":
+              existing.first_name = fields["first_name"]
+          if fields["last_name"] and fields["last_name"].lower() != "unknown":
+              existing.last_name  = fields["last_name"]
+          existing.customer_email = fields["customer_email"]
+          existing.phone          = fields["phone"]
+          existing.quantities     = fields["quantities"]
+          existing.tour_date      = fields["tour_date"]
+          existing.pickup_time    = fields["pickup_time"]
+          existing.pickup_location = fields["pickup_location"]
+          existing.agent_name     = fields["agent_name"]
+          existing.special_requirements = fields["special_requirements"]
 
-        # Only set confirmation_no from Rezdy if staff hasn't already filled it
-        if not existing.confirmation_no and fields["confirmation_no"]:
-            existing.confirmation_no = fields["confirmation_no"]
+          # Only set confirmation_no from Rezdy if staff hasn't already filled it
+          if not existing.confirmation_no and fields["confirmation_no"]:
+              existing.confirmation_no = fields["confirmation_no"]
 
-        # Only set lunch from Rezdy if staff hasn't adjusted
-        if not (existing.lunch_turkey or existing.lunch_veggie or existing.lunch_beef):
-            existing.lunch_turkey = fields["lunch_turkey"]
-            existing.lunch_veggie = fields["lunch_veggie"]
-            existing.lunch_beef   = fields["lunch_beef"]
+          # Only set lunch from Rezdy if staff hasn't adjusted
+          if not (existing.lunch_turkey or existing.lunch_veggie or existing.lunch_beef):
+              existing.lunch_turkey = fields["lunch_turkey"]
+              existing.lunch_veggie = fields["lunch_veggie"]
+              existing.lunch_beef   = fields["lunch_beef"]
 
-        # If status was cancelled and order comes back, re-activate
-        if existing.status == BookingStatus.cancelled.value:
-            existing.status = BookingStatus.pending.value
+          # If status was cancelled and order comes back, re-activate
+          if existing.status == BookingStatus.cancelled.value:
+              existing.status = BookingStatus.pending.value
 
-        # Record the time Rezdy pushed this update
-        from zoneinfo import ZoneInfo as _ZI
-        existing.updated_at = datetime.now(_ZI("America/Los_Angeles")).replace(tzinfo=None)
+          # Record the time Rezdy pushed this update
+          from zoneinfo import ZoneInfo as _ZI
+          existing.updated_at = datetime.now(_ZI("America/Los_Angeles")).replace(tzinfo=None)
 
-        print(f"[webhook] updated booking id={existing.id}")
-        await db.execute(_text("""
-    INSERT INTO activity_log (order_number, event_type, detail, actor, actor_type)
-    VALUES (:order_number, :event_type, :detail, :actor, :actor_type)
-"""), {
-    "order_number": order_number,
-    "event_type":   "booking_updated",
-    "detail":       f"Rezdy updated booking — status: {fields.get('rezdy_status', '')}",
-    "actor":        "rezdy",
-    "actor_type":   "system",
-})
-    else:
-        # Insert new booking
-        booking = Booking(
-            booking_type     = booking_type,
-            source           = BookingSource.rezdy.value,
-            status           = BookingStatus.pending.value,
-            confirm_token    = secrets.token_urlsafe(32),
-            order_number     = order_number,
-            rezdy_order_id   = order_number,
-            product_code     = fields["product_code"],
-            product_name     = fields["product_name"],
-            tt_number        = fields["tt_number"],
-            confirmation_no  = fields["confirmation_no"],
-            first_name       = fields["first_name"],
-            last_name        = fields["last_name"],
-            customer_email   = fields["customer_email"],
-            phone            = fields["phone"],
-            quantities       = fields["quantities"],
-            tour_date        = fields["tour_date"],
-            pickup_time      = fields["pickup_time"],
-            pickup_location  = fields["pickup_location"],
-            agent_name       = fields["agent_name"],
-            special_requirements = fields["special_requirements"],
-            lunch_turkey     = fields["lunch_turkey"],
-            lunch_veggie     = fields["lunch_veggie"],
-            lunch_beef       = fields["lunch_beef"],
-        )
-        db.add(booking)
-        print(f"[webhook] created new booking order={order_number}")
-        await db.execute(_text("""
-    INSERT INTO activity_log (order_number, event_type, detail, actor, actor_type)
-    VALUES (:order_number, :event_type, :detail, :actor, :actor_type)
-"""), {
-    "order_number": order_number,
-    "event_type":   "booking_created",
-    "detail":       f"New booking from Rezdy — {fields.get('product_name', '')}",
-    "actor":        "rezdy",
-    "actor_type":   "system",
-})
+          print(f"[webhook] updated booking id={existing.id}")
+          await db.execute(_text("""
+              INSERT INTO activity_log (order_number, event_type, detail, actor, actor_type)
+              VALUES (:order_number, :event_type, :detail, :actor, :actor_type)
+          """), {
+              "order_number": order_number,
+              "event_type":   "booking_updated",
+              "detail":       f"Rezdy updated booking — status: {fields.get('rezdy_status', '')}",
+              "actor":        "rezdy",
+              "actor_type":   "system",
+          })
+      else:
+          # Insert new booking
+          booking = Booking(
+              booking_type     = booking_type,
+              source           = BookingSource.rezdy.value,
+              status           = BookingStatus.pending.value,
+              confirm_token    = secrets.token_urlsafe(32),
+              order_number     = order_number,
+              rezdy_order_id   = order_number,
+              product_code     = fields["product_code"],
+              product_name     = fields["product_name"],
+              tt_number        = fields["tt_number"],
+              confirmation_no  = fields["confirmation_no"],
+              first_name       = fields["first_name"],
+              last_name        = fields["last_name"],
+              customer_email   = fields["customer_email"],
+              phone            = fields["phone"],
+              quantities       = fields["quantities"],
+              tour_date        = fields["tour_date"],
+              pickup_time      = fields["pickup_time"],
+              pickup_location  = fields["pickup_location"],
+              agent_name       = fields["agent_name"],
+              special_requirements = fields["special_requirements"],
+              lunch_turkey     = fields["lunch_turkey"],
+              lunch_veggie     = fields["lunch_veggie"],
+              lunch_beef       = fields["lunch_beef"],
+          )
+          db.add(booking)
+          print(f"[webhook] created new booking order={order_number}")
+          await db.execute(_text("""
+              INSERT INTO activity_log (order_number, event_type, detail, actor, actor_type)
+              VALUES (:order_number, :event_type, :detail, :actor, :actor_type)
+          """), {
+              "order_number": order_number,
+              "event_type":   "booking_created",
+              "detail":       f"New booking from Rezdy — {fields.get('product_name', '')}",
+              "actor":        "rezdy",
+              "actor_type":   "system",
+          })
 
-    await db.commit()
-    return {"status": "ok", "order_number": order_number}
+      await db.commit()
+      return {"status": "ok", "order_number": order_number}
+
+    except Exception as e:
+        print(f"[webhook] ERROR processing order={order_number} status={rezdy_status}: {e}")
+        try:
+            await db.rollback()
+        except Exception:
+            pass
+        return {"status": "error", "reason": str(e)}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # APPEND THIS BLOCK to the bottom of app/routers/webhook.py
@@ -702,60 +713,67 @@ async def twilio_inbound_sms(request: Request, db: AsyncSession = Depends(get_db
     # so we match on the last 10 digits which are format-independent.
     suffix = clean_from[-10:] if len(clean_from) >= 10 else clean_from
 
-    result = await db.execute(
-    _text("""
-        SELECT b.id as booking_id
-        FROM send_log sl
-        JOIN bookings b ON b.order_number = sl.order_number
-        WHERE RIGHT(REGEXP_REPLACE(sl.phone, '[^0-9]', '', 'g'), 10) = :suffix
-        ORDER BY sl.sent_at DESC
-        LIMIT 1
-    """),
-    {"suffix": suffix},
-)
-    row = result.fetchone()
+    try:
+        result = await db.execute(
+            _text("""
+                SELECT b.id as booking_id
+                FROM send_log sl
+                JOIN bookings b ON b.order_number = sl.order_number
+                WHERE RIGHT(REGEXP_REPLACE(sl.phone, '[^0-9]', '', 'g'), 10) = :suffix
+                ORDER BY sl.sent_at DESC
+                LIMIT 1
+            """),
+            {"suffix": suffix},
+        )
+        row = result.fetchone()
 
-    if not row or not row.booking_id:
-        print(f"[webhook/twilio/inbound] no matching booking for {from_number}")
-        return _twiml_response("")
+        if not row or not row.booking_id:
+            print(f"[webhook/twilio/inbound] no matching booking for {from_number}")
+            return _twiml_response("")
 
-    booking_id = row.booking_id
+        booking_id = row.booking_id
 
-    # ── Write to booking_notes ──
-    now_la = datetime.now(ZoneInfo("America/Los_Angeles"))
-    await db.execute(
-        _text("""
-            INSERT INTO booking_notes
-              (booking_id, author_username, body, direction, channel, created_at)
-            VALUES
-              (:booking_id, 'guest', :body, 'sms_in', 'sms', :created_at)
-        """),
-        {
-            "booking_id": booking_id,
-            "body":       body_text,
-            "created_at": now_la,
-        },
-    )
-    # ── Clear action_taken_by — new inbound message needs staff attention ──
-    await db.execute(
-        _text("""
-            UPDATE tickets_reminders
-            SET action_taken_by = NULL, action_taken_at = NULL
-            WHERE id = :id
-        """),
-        {"id": booking_id}
-    )
-    # Also clear on bookings table if matched there
-    await db.execute(
-        _text("""
-            UPDATE bookings
-            SET action_taken_by = NULL, action_taken_at = NULL
-            WHERE id = :id
-        """),
-        {"id": booking_id}
-    )
-    await db.commit()
-    print(f"[webhook/twilio/inbound] wrote sms_in note for booking_id={booking_id}")
+        # ── Write to booking_notes ──
+        now_la = datetime.now(ZoneInfo("America/Los_Angeles"))
+        await db.execute(
+            _text("""
+                INSERT INTO booking_notes
+                  (booking_id, author_username, body, direction, channel, created_at)
+                VALUES
+                  (:booking_id, 'guest', :body, 'sms_in', 'sms', :created_at)
+            """),
+            {
+                "booking_id": booking_id,
+                "body":       body_text,
+                "created_at": now_la,
+            },
+        )
+        # ── Clear action_taken_by — new inbound message needs staff attention ──
+        await db.execute(
+            _text("""
+                UPDATE tickets_reminders
+                SET action_taken_by = NULL, action_taken_at = NULL
+                WHERE id = :id
+            """),
+            {"id": booking_id}
+        )
+        # Also clear on bookings table if matched there
+        await db.execute(
+            _text("""
+                UPDATE bookings
+                SET action_taken_by = NULL, action_taken_at = NULL
+                WHERE id = :id
+            """),
+            {"id": booking_id}
+        )
+        await db.commit()
+        print(f"[webhook/twilio/inbound] wrote sms_in note for booking_id={booking_id}")
+    except Exception as e:
+        print(f"[webhook/twilio/inbound] db error: {e}")
+        try:
+            await db.rollback()
+        except Exception:
+            pass
 
     # ── Return empty TwiML (no auto-reply) ──
     return _twiml_response("")
