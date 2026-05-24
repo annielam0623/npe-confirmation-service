@@ -287,10 +287,10 @@ async function loadLog(page){
   try{
     const res=await fetch(`/api/notifications/send-log?${qs}`);
     const data=await res.json();
-    renderRows(data.rows||[]);
+    renderRows(data.records||[]);
     renderStats(data.stats||{});
-    renderPagination(data.total||0);
-    renderErrors(data.rows||[]);
+    renderPagination((data.records||[]).length);
+    renderErrors(data.records||[]);
     document.getElementById('records-count').textContent=`${data.total||0} records`;
   }catch(e){
     document.getElementById('log-tbody').innerHTML=
