@@ -336,7 +336,24 @@ function onModify(el){{if(hasLunch){{var ls=document.getElementById('lunch-secti
 function openDateModal(){{document.getElementById('date-modal').style.display='flex';}}
 function closeDateModal(){{document.getElementById('date-modal').style.display='none';var inp=document.getElementById('reschedule-date-input');if(!inp.value){{document.querySelectorAll('input[name="confirmation"]').forEach(function(r){{r.checked=false;}});document.getElementById('reschedule-section').style.display='none';if(hasLunch){{var ls=document.getElementById('lunch-section');if(ls)ls.style.display='none';}}}}}}
 function confirmDate(){{var p=document.getElementById('modal-date-picker');if(!p.value){{alert('Please select a date.');return;}}document.getElementById('reschedule-date-input').value=p.value;document.getElementById('reschedule-display').textContent=p.value;document.getElementById('reschedule-selected').style.display='block';document.getElementById('reschedule-prompt').style.display='none';document.getElementById('date-modal').style.display='none';}}
-var isYesConfirmed={'true' if yes_locked else 'false'};document.querySelector('form').addEventListener('submit',function(e){{var c=document.querySelector('input[name="confirmation"]:checked');if(!c&&!isYesConfirmed){{e.preventDefault();alert('Please select YES or Modify.');return;}}if(c&&c.value==='modify_req'){{var d=document.getElementById('reschedule-date-input').value;if(!d){{e.preventDefault();openDateModal();return;}}}}}});
+var isYesConfirmed={'true' if yes_locked else 'false'},_lunchConfirmed=false;
+document.querySelector('form').addEventListener('submit',function(e){{
+  var c=document.querySelector('input[name="confirmation"]:checked');
+  if(!c&&!isYesConfirmed){{e.preventDefault();alert('Please select YES or Modify.');return;}}
+  if(c&&c.value==='modify_req'){{var d=document.getElementById('reschedule-date-input').value;if(!d){{e.preventDefault();openDateModal();return;}}}}
+  var isYes=(isYesConfirmed||(c&&c.value==='yes'));
+  if(isYes&&hasLunch&&!_lunchConfirmed){{
+    var tot=totL(),diff=partySize-tot;
+    if(diff>0){{
+      e.preventDefault();
+      document.getElementById('lunch-warn-count').textContent=diff;
+      document.getElementById('lunch-warn-modal').style.display='flex';
+      return;
+    }}
+  }}
+}});
+function lunchWarnContinue(){{_lunchConfirmed=true;document.getElementById('lunch-warn-modal').style.display='none';document.querySelector('form').requestSubmit();}}
+function lunchWarnBack(){{document.getElementById('lunch-warn-modal').style.display='none';}}
 function adj(t,d){{var el=document.getElementById('c-'+t),cur=parseInt(el.value)||0,tot=totL();var nv=cur+d;if(nv<0)return;if(d>0&&tot>=partySize)return;el.value=nv;updT();}}
 function totL(){{var t=(parseInt(document.getElementById('c-turkey')?.value)||0)+(parseInt(document.getElementById('c-veggie')?.value)||0);var b=document.getElementById('c-beef');if(b)t+=parseInt(b.value)||0;return t;}}
 function updT(){{var t=totL(),el=document.getElementById('ltotal');if(el){{el.textContent=t;el.style.color=t===partySize?'#27ae60':'#e74c3c';}}}}
@@ -431,6 +448,17 @@ function adjMtlv(d){{var el=document.getElementById('c-mtlv');if(!el)return;var 
         <div style="display:flex;gap:10px;">
           <button type="button" onclick="closeDateModal()" style="flex:1;padding:12px;border:1px solid #ccc;border-radius:8px;background:#f5f5f5;font-size:14px;cursor:pointer;">← Back</button>
           <button type="button" onclick="confirmDate()" style="flex:1;padding:12px;border:none;border-radius:8px;background:#1a3a5c;color:#fff;font-size:14px;font-weight:bold;cursor:pointer;">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="lunch-warn-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+      <div style="background:#fff;border-radius:16px;padding:28px 24px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
+        <h3 style="margin:0 0 10px;color:#b45309;font-size:17px;">&#9888; Lunch Selection Incomplete</h3>
+        <p style="margin:0 0 18px;font-size:14px;color:#444;line-height:1.6;">You have <strong><span id="lunch-warn-count"></span> guest(s)</strong> without a lunch selection. Unselected guests will be noted for your guide to arrange on the day.</p>
+        <div style="display:flex;gap:10px;">
+          <button type="button" onclick="lunchWarnBack()" style="flex:1;padding:12px;border:1px solid #ccc;border-radius:8px;background:#f5f5f5;font-size:14px;cursor:pointer;">&#8592; Go Back</button>
+          <button type="button" onclick="lunchWarnContinue()" style="flex:1;padding:12px;border:none;border-radius:8px;background:#2F7851;color:#fff;font-size:14px;font-weight:bold;cursor:pointer;">Continue</button>
         </div>
       </div>
     </div>
@@ -621,6 +649,14 @@ async def guest_confirm_submit(
     if is_yes_confirmed and not confirmation:
         confirmation = "yes"
 
+    # For already-YES guests: if lunch counters are all 0 (notes-only submit),
+    # fall back to existing lunch values so validation is not triggered.
+    _lunch_submitted = (lunch_turkey + lunch_veggie + lunch_beef) > 0
+    if is_yes_confirmed and not _lunch_submitted:
+        lunch_turkey = int(booking.lunch_turkey or 0)
+        lunch_veggie = int(booking.lunch_veggie or 0)
+        lunch_beef   = int(booking.lunch_beef   or 0)
+
     # Validation
     error_msg = ""
     ts = datetime.now(LA).strftime("%Y-%m-%d %H:%M")
@@ -636,8 +672,7 @@ async def guest_confirm_submit(
         error_msg = "You have reached the maximum number of date change requests (3). Please contact us at reservations@nationalparkexpress.com or call 702-948-4190."
     elif confirmation == "modify_req" and not reschedule_date:
         error_msg = "Please select a new tour date for your Modify request."
-    elif confirmation == "yes" and has_lunch and (lunch_turkey + lunch_veggie + lunch_beef) != qty:
-        error_msg = f"Lunch total must equal your party size of {qty}."
+    # Lunch total validation handled client-side with warning modal; no server-side block
 
     if error_msg:
         pu_inst, pu_photo, pu_label = await _fetch_pickup_info(booking.pickup_location, db)
@@ -662,12 +697,16 @@ async def guest_confirm_submit(
         final_notes = entry
         new_history = (entry + "\n" + new_history).strip() if new_history else entry
     elif confirmation == "yes" and is_yes_confirmed:
-        # Lunch update — log with diff
+        # Lunch update or notes-only update
         pt = int(booking.lunch_turkey or 0); pv = int(booking.lunch_veggie or 0); pb = int(booking.lunch_beef or 0)
         # No-op guard: if lunch values are identical and no notes, skip all writes
         if lunch_turkey == pt and lunch_veggie == pv and lunch_beef == pb and not notes:
             return _thanks(booking)
-        entry = f"[{ts}] Lunch updated: T×{lunch_turkey} V×{lunch_veggie} B×{lunch_beef} (was T×{pt} V×{pv} B×{pb})" + (f" — {notes}" if notes else "")
+        # Notes-only submit (lunch unchanged): log as notes update, not lunch update
+        if lunch_turkey == pt and lunch_veggie == pv and lunch_beef == pb:
+            entry = f"[{ts}] Guest note added." + (f" — {notes}" if notes else "")
+        else:
+            entry = f"[{ts}] Lunch updated: T×{lunch_turkey} V×{lunch_veggie} B×{lunch_beef} (was T×{pt} V×{pv} B×{pb})" + (f" — {notes}" if notes else "")
         final_notes = entry
         new_history = (entry + "\n" + new_history).strip() if new_history else entry
     else:
