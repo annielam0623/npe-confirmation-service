@@ -289,7 +289,7 @@ async function loadLog(page){
     const data=await res.json();
     renderRows(data.records||[]);
     renderStats(data.stats||{});
-    renderPagination((data.records||[]).length);
+    renderPagination(data.total||0);
     renderErrors(data.records||[]);
     document.getElementById('records-count').textContent=`${data.total||0} records`;
   }catch(e){
