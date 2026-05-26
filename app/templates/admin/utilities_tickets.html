@@ -1,846 +1,208 @@
+{% extends "base.html" %}
+{% block title %}Tickets Reminder Utilities — NPE{% endblock %}
+{% block page_title %}Tickets Reminder — Utilities{% endblock %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Dashboard</title>
-<style>
-@import url("https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap");
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:"Rajdhani","Helvetica Neue",Arial,sans-serif;background:#f0f4f8;color:#1a2a3a;font-size:14px;font-weight:500;}
- 
-/* ── Hero Header ── */
-.top-bar{
-  position:relative;overflow:hidden;
-  background:linear-gradient(135deg,#040d1a 0%,#071428 35%,#0d2045 65%,#123366 100%);
-  color:#fff;padding:0 24px;height:88px;
-  display:flex;align-items:center;gap:14px;
-  box-shadow:0 6px 28px rgba(0,0,0,0.45);
+{% block extra_styles %}
+.util-card {
+  background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+  border-radius: 12px; padding: 22px; max-width: 600px; margin-bottom: 18px;
 }
-/* Stars layer */
-.top-bar::before{
-  content:"";position:absolute;inset:0;pointer-events:none;
-  background:
-    radial-gradient(circle at 8% 30%,rgba(255,255,255,0.9) 1px,transparent 2px),
-    radial-gradient(circle at 18% 65%,rgba(255,255,255,0.5) 1px,transparent 2px),
-    radial-gradient(circle at 30% 20%,rgba(255,255,255,0.7) 1px,transparent 2px),
-    radial-gradient(circle at 42% 75%,rgba(255,255,255,0.4) 1px,transparent 2px),
-    radial-gradient(circle at 55% 35%,rgba(255,255,255,0.6) 1px,transparent 2px),
-    radial-gradient(circle at 64% 15%,rgba(255,255,255,0.5) 1px,transparent 2px),
-    radial-gradient(circle at 74% 55%,rgba(255,255,255,0.35) 1px,transparent 2px),
-    radial-gradient(circle at 83% 25%,rgba(255,255,255,0.6) 1px,transparent 2px),
-    radial-gradient(circle at 91% 70%,rgba(255,255,255,0.45) 1px,transparent 2px),
-    radial-gradient(circle at 96% 40%,rgba(255,255,255,0.7) 1px,transparent 2px);
-  opacity:0.6;
+.util-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #1a1a1a; }
+.util-card p  { font-size: 13px; color: #666; margin-bottom: 14px; line-height: 1.6; }
+.form-row { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group label { font-size: 12px; color: #888; }
+.form-group input[type="date"],
+.form-group select {
+  padding: 7px 10px; border: 0.5px solid rgba(0,0,0,0.2); border-radius: 7px;
+  font-size: 13px; background: #fff; font-family: inherit;
 }
-/* SVG mountains right side */
-.top-bar-mountains{
-  position:absolute;right:0;bottom:0;width:52%;height:100%;
-  pointer-events:none;z-index:1;overflow:hidden;
+.form-group input:focus, .form-group select:focus { outline: none; border-color: #BA7517; }
+
+.btn-action {
+  background: #BA7517; color: #fff; border: none;
+  padding: 8px 20px; border-radius: 7px; font-size: 13px;
+  font-weight: 600; cursor: pointer;
 }
-/* White arch bottom */
-.top-bar-arch{
-  position:absolute;bottom:-1px;left:0;right:0;height:32px;
-  pointer-events:none;z-index:2;
+.btn-action:hover { background: #9a6010; }
+.btn-danger-action {
+  background: #A32D2D; color: #fff; border: none;
+  padding: 8px 20px; border-radius: 7px; font-size: 13px;
+  font-weight: 600; cursor: pointer;
 }
-.top-bar img{height:38px;width:auto;position:relative;z-index:3;flex-shrink:0;}
-.top-bar-text{flex:1;position:relative;z-index:3;}
-.top-bar h1{font-size:20px;font-weight:700;margin:0;letter-spacing:1px;text-transform:uppercase;text-shadow:0 2px 14px rgba(95,168,255,0.35);}
-.top-bar-sub{font-size:13px;color:rgba(180,200,230,0.8);margin-top:2px;font-weight:500;letter-spacing:0.5px;}
-.logout-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18);color:#fff;padding:6px 16px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;position:relative;z-index:3;transition:all 0.2s;white-space:nowrap;letter-spacing:0.5px;}
-.logout-btn:hover{background:rgba(255,255,255,0.2);}
- 
-/* ── Toolbar ── */
-.toolbar{background:#fff;border-bottom:1px solid #dde3ea;padding:10px 20px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;box-shadow:0 1px 6px rgba(26,42,60,0.06);}
-.btn-today{background:#1a3a5c;color:#fff;border:none;padding:6px 14px;border-radius:7px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.5px;}
-.btn-today:hover{background:#0f2440;}
-.btn-tmr{background:#f0f4f8;color:#4a6080;border:1px solid #dde3ea;padding:6px 14px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;}
-.btn-tmr:hover{background:#e2e8f0;border-color:#c0cdd9;}
-.btn-nav{background:#fff;border:1px solid #dde3ea;color:#4a6080;width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;line-height:1;}
-.btn-nav:hover{background:#f0f4f8;}
-.date-wrap{position:relative;display:inline-block;cursor:pointer;}
-.date-wrap input[type="date"]{height:30px;padding:0 10px;border:1px solid #dde3ea;border-radius:7px;font-size:13px;font-weight:700;color:#1a3a5c;background:#fff;cursor:pointer;min-width:150px;font-family:inherit;}
-.date-wrap input[type="date"]::-webkit-calendar-picker-indicator{display:none;}
-.btn-refresh{background:#e8f4f8;color:#0e7490;border:1px solid #bae6fd;padding:6px 12px;border-radius:7px;font-size:13px;cursor:pointer;font-weight:600;font-family:inherit;}
-.btn-refresh:hover{background:#cceeff;}
-.btn-export{background:#e8f5ee;color:#166534;border:1px solid #bbf7d0;padding:6px 12px;border-radius:7px;font-size:13px;cursor:pointer;font-weight:600;font-family:inherit;}
-.btn-export:hover{background:#ccf0dc;}
- 
-/* ── Pills ── */
-.pills-bar{background:#fff;border-bottom:1px solid #dde3ea;padding:8px 20px;display:flex;gap:6px;flex-wrap:wrap;}
-.pill{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:16px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid #dde3ea;background:#fff;color:#4a6080;white-space:nowrap;font-family:inherit;letter-spacing:0.3px;transition:all 0.15s;}
-.pill:hover{border-color:#1a3a5c;color:#1a3a5c;background:#f0f4ff;}
-.pill.active{background:#1a3a5c;color:#fff;border-color:#1a3a5c;box-shadow:0 2px 8px rgba(26,58,92,0.2);}
-.pill .cnt{font-size:11px;background:rgba(0,0,0,.08);border-radius:8px;padding:1px 5px;}
-.pill.active .cnt{background:rgba(255,255,255,.25);}
- 
-/* ── Stat cards — size unchanged ── */
-.stats-bar{padding:12px 20px;display:flex;gap:10px;flex-wrap:wrap;}
-.stat{display:flex;flex-direction:column;align-items:center;min-width:76px;padding:8px 14px;border-radius:10px;border:1.5px solid #dde3ea;background:#fff;box-shadow:0 1px 4px rgba(26,42,60,0.06);}
-.stat .num{font-size:26px;font-weight:700;line-height:1.1;font-family:inherit;}
-.stat .lbl{font-size:12px;color:#6c8097;margin-top:2px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;}
-.stat.s-total .num{color:#1a3a5c;}
-.stat.s-yes   .num{color:#166534;}
-.stat.s-resc  .num{color:#c97a00;}
-.stat.s-pend  .num{color:#6c8097;}
- 
-/* ── Table ── */
-.records-bar{padding:6px 20px;display:flex;justify-content:space-between;align-items:center;}
-.records-bar span{font-size:13px;color:#6c8097;font-weight:500;}
-.table-wrap{padding:0 20px 24px;overflow-x:auto;overflow-y:visible;max-height:calc(100vh - 64px - 200px);}
-table{width:max-content;min-width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 10px rgba(26,42,60,0.08);border:1px solid #dde3ea;table-layout:auto;}
-thead tr{background:linear-gradient(180deg,#eef2f7,#e4eaf2);}
-th{padding:8px 10px;text-align:left;font-size:12px;font-weight:700;color:#2a4a6a;white-space:nowrap;border-bottom:1.5px solid #d0dae6;position:relative;user-select:none;letter-spacing:0.4px;text-transform:uppercase;}
-td{padding:8px 10px;border-bottom:1px solid #f0f3f7;vertical-align:middle;font-size:13px;color:#2a3a4a;}
-tbody tr:nth-child(even){background:#fafbfc;}
-tr:hover td{background:#f0f5ff;box-shadow:inset 3px 0 0 #1a3a5c;}
-tr:last-child td{border-bottom:none;}
- 
-/* ── Notes cell ── */
-.notes-cell{min-width:120px;max-width:160px;cursor:pointer;}
-.notes-bubble{display:inline-flex;align-items:center;gap:5px;background:#fffbea;border:1px solid #ffc107;border-radius:8px;padding:4px 8px;font-size:12px;color:#856404;max-width:140px;cursor:pointer;transition:background .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.notes-bubble:hover{background:#fff3cd;}
-.notes-bubble .nb-dot{width:6px;height:6px;border-radius:50%;background:#ffc107;flex-shrink:0;}
-.notes-add{color:#ced4da;font-size:18px;cursor:pointer;padding:2px 6px;border-radius:4px;transition:color .15s,background .15s;display:inline-block;}
-.notes-add:hover{color:#1a3a5c;background:#e8eef8;}
- 
-/* ── Notes modal ── */
-.notes-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:1000;align-items:center;justify-content:center;}
-.notes-modal-overlay.open{display:flex;}
-.notes-modal{background:#fff;border-radius:16px;width:480px;max-width:95vw;box-shadow:0 12px 48px rgba(0,0,0,.2);display:flex;flex-direction:column;max-height:80vh;overflow:hidden;}
-.nm-header{padding:16px 20px 12px;border-bottom:1px solid #eee;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;background:linear-gradient(135deg,#040d1a,#0d2045);}
-.nm-title{font-size:15px;font-weight:700;color:#fff;line-height:1.4;letter-spacing:0.5px;}
-.nm-sub{font-size:12px;color:rgba(180,200,230,0.8);margin-top:2px;}
-.nm-close{background:none;border:none;font-size:22px;color:rgba(255,255,255,0.5);cursor:pointer;line-height:1;padding:0;flex-shrink:0;transition:color .15s;}
-.nm-close:hover{color:#fff;}
-.nm-action-row{padding:10px 20px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;gap:8px;background:#f8f9fa;}
-.nm-action-cb{width:15px;height:15px;cursor:pointer;accent-color:#1a3a5c;}
-.nm-action-label{font-size:13px;color:#495057;cursor:pointer;font-weight:500;}
-.nm-action-label.done{color:#166534;font-weight:700;}
-.nm-body{flex:1;overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:10px;}
-.nm-empty{text-align:center;padding:32px;color:#adb5bd;font-size:13px;}
-.nm-msg{display:flex;flex-direction:column;gap:2px;}
-.nm-msg.guest .nm-bubble{background:#e8f4fd;border:1px solid #b3d9f7;border-radius:0 10px 10px 10px;align-self:flex-start;max-width:90%;}
-.nm-msg.staff .nm-bubble{background:#f0f6ff;border:1px solid #b3ccf7;border-radius:10px 0 10px 10px;align-self:flex-end;max-width:90%;}
-.nm-bubble{padding:8px 12px;font-size:13px;color:#2a3a4a;line-height:1.5;word-break:break-word;}
-.nm-meta{font-size:11px;color:#adb5bd;padding:0 4px;}
-.nm-msg.staff .nm-meta{text-align:right;}
-.nm-footer{padding:12px 16px;border-top:1px solid #eee;display:flex;gap:8px;align-items:flex-end;}
-.nm-input{flex:1;border:1px solid #dde3ea;border-radius:10px;padding:8px 12px;font-size:13px;font-family:inherit;resize:none;outline:none;line-height:1.5;min-height:38px;max-height:120px;overflow-y:auto;transition:border-color .15s;}
-.nm-input:focus{border-color:#1a3a5c;box-shadow:0 0 0 3px rgba(26,58,92,0.1);}
-.nm-send{background:#1a3a5c;color:#fff;border:none;border-radius:10px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background .15s;flex-shrink:0;letter-spacing:0.5px;}
-.nm-send:hover{background:#0f2440;}
-.nm-send:disabled{background:#ced4da;cursor:not-allowed;}
- 
-.col-dragging{opacity:0.4!important;background:#dde3ea!important;}
-.col-drag-over{border-left:2px solid #1a3a5c!important;}
-thead th{cursor:grab;}
-.col-resizer{position:absolute;right:0;top:0;bottom:0;width:5px;cursor:default;z-index:1;background:transparent;}
-.col-resizer:hover,.col-resizer.active{background:transparent;}
-#thead-row th:first-child .col-resizer,
-#thead-row th:last-child .col-resizer{cursor:col-resize;}
-#thead-row th:first-child .col-resizer:hover,
-#thead-row th:last-child .col-resizer:hover,
-#thead-row th:first-child .col-resizer.active,
-#thead-row th:last-child .col-resizer.active{background:rgba(26,58,92,0.25);}
-.notes-cell{min-width:140px;max-width:200px;}
-.notes-input{width:100%;border:1px solid transparent;background:transparent;font-size:13px;font-family:inherit;padding:3px 5px;border-radius:4px;resize:none;outline:none;overflow:hidden;line-height:1.4;transition:all .15s;}
-.notes-input:focus{border-color:#ffc107;background:#fffbea;}
-.notes-input.dirty{border-color:#ffc107;background:#fffbea;}
-th.notes-hdr.hdr-dirty{background:#fff3cd !important;color:#856404;}
- 
-/* ── Status ── */
-.s-sel{border:none;background:transparent;font-size:13px;font-weight:700;cursor:pointer;padding:2px 4px;border-radius:4px;font-family:inherit;letter-spacing:0.3px;}
-.s-sel.yes{color:#166534;}
-.s-sel.pending{color:#c97a00;}
-.s-sel:focus{outline:1px solid #1a3a5c;}
-.badge-sent{color:#166534;font-size:12px;font-weight:700;}
-.badge-fail{color:#dc3545;font-size:12px;font-weight:700;}
-.badge-none{color:#adb5bd;font-size:12px;}
-</style>
-</head>
-<body>
- 
-<div class="top-bar">
-  <!-- SVG Mountains -->
-  <div class="top-bar-mountains">
-    <svg viewBox="0 0 600 90" preserveAspectRatio="xMaxYMax meet" xmlns="http://www.w3.org/2000/svg">
-      <!-- Sky glow -->
-      <defs>
-        <radialGradient id="glow1" cx="75%" cy="30%" r="40%">
-          <stop offset="0%" stop-color="rgba(95,168,255,0.18)"/>
-          <stop offset="100%" stop-color="rgba(95,168,255,0)"/>
-        </radialGradient>
-        <radialGradient id="glow2" cx="90%" cy="20%" r="25%">
-          <stop offset="0%" stop-color="rgba(180,220,255,0.12)"/>
-          <stop offset="100%" stop-color="rgba(180,220,255,0)"/>
-        </radialGradient>
-      </defs>
-      <rect width="600" height="90" fill="url(#glow1)"/>
-      <rect width="600" height="90" fill="url(#glow2)"/>
-      <!-- Far mountains -->
-      <polygon points="200,90 280,42 320,58 370,28 420,50 480,18 540,38 600,20 600,90" fill="rgba(15,35,70,0.7)"/>
-      <!-- Mid mountains -->
-      <polygon points="240,90 300,52 340,64 390,38 450,55 510,30 570,48 600,35 600,90" fill="rgba(10,25,55,0.8)"/>
-      <!-- Near mountains -->
-      <polygon points="280,90 350,58 400,72 460,44 520,62 580,42 600,50 600,90" fill="rgba(7,18,40,0.9)"/>
-      <!-- Horizon glow line -->
-      <line x1="350" y1="20" x2="600" y2="20" stroke="rgba(95,168,255,0.15)" stroke-width="1"/>
-      <!-- Star dots -->
-      <circle cx="420" cy="12" r="1" fill="rgba(255,255,255,0.8)"/>
-      <circle cx="460" cy="8"  r="0.8" fill="rgba(255,255,255,0.6)"/>
-      <circle cx="500" cy="15" r="1" fill="rgba(255,255,255,0.7)"/>
-      <circle cx="540" cy="6"  r="0.8" fill="rgba(255,255,255,0.5)"/>
-      <circle cx="570" cy="14" r="1.2" fill="rgba(255,255,255,0.9)"/>
-      <circle cx="590" cy="9"  r="0.8" fill="rgba(255,255,255,0.6)"/>
-      <!-- Location pin glow -->
-      <circle cx="480" cy="19" r="4" fill="rgba(95,168,255,0.25)"/>
-      <circle cx="480" cy="19" r="2" fill="rgba(150,210,255,0.7)"/>
-    </svg>
-  </div>
-  <!-- White arch -->
-  <div class="top-bar-arch">
-    <svg viewBox="0 0 1440 32" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M0,32 Q720,0 1440,32 L1440,32 L0,32 Z" fill="#f0f4f8"/>
-    </svg>
-  </div>
-  <img src="https://nationalparkexpress.com/wp-content/uploads/2026/03/image002.png" alt="NPE">
-  <div class="top-bar-text">
-    <h1>Tickets Reminder Log</h1>
-    <div class="top-bar-sub">Stay on top of every ticket. Never miss a guest.</div>
-  </div>
-  <button class="logout-btn" onclick="location.href='/auth/logout'">Logout</button>
-</div>
- 
-<div class="toolbar" style="justify-content:space-between;">
-  <div style="display:flex;align-items:center;gap:8px;">
-    <button class="btn-today" onclick="goToday()">Today</button>
-    <button class="btn-tmr"   onclick="goTomorrow()">Tomorrow</button>
-    <button class="btn-nav"   onclick="changeDate(-1)">&#8249;</button>
-    <div class="date-wrap" id="date-wrap">
-      <input type="date" id="date-input" onchange="loadData()">
+.btn-danger-action:hover { background: #821f1f; }
+
+.result-msg { font-size: 12px; margin-top: 8px; }
+.result-ok   { color: #BA7517; }
+.result-fail { color: #A32D2D; }
+
+.section-title { font-size: 16px; font-weight: 600; margin-bottom: 14px; color: #BA7517; }
+{% endblock %}
+
+{% block content %}
+<div class="section-title">🟠 Tickets Reminder — Utilities</div>
+
+<!-- Export Records -->
+<div class="util-card">
+  <h3>⬇ Export Records to Excel</h3>
+  <p>Export tour confirmation records for a specific date or date range to Excel.</p>
+  <div class="form-row">
+    <div class="form-group">
+      <label>From Date</label>
+      <input type="date" id="export-from">
     </div>
-    <button class="btn-nav" onclick="changeDate(1)">&#8250;</button>
-  </div>
-  <div style="position:relative;">
-    <button id="broadcastBtn" onclick="toggleBroadcastMenu()" style="height:32px;padding:0 16px;background:linear-gradient(135deg,#f7cf6d,#f4b23c);color:#2c1b00;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(244,178,60,0.3);display:flex;align-items:center;gap:6px;">&#128227; Broadcast</button>
-    <div id="broadcastMenu" style="display:none;position:absolute;top:38px;right:0;background:#111a2b;border:1px solid rgba(255,255,255,0.12);border-radius:10px;box-shadow:0 16px 40px rgba(0,0,0,0.6);z-index:200;min-width:190px;overflow:hidden;">
-      <div style="padding:8px 12px;font-size:11px;color:rgba(255,255,255,0.4);font-weight:600;border-bottom:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.04);letter-spacing:0.05em;">SEND TO</div>
-      <div onclick="openBroadcast('all')"     style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;color:#d9e8ff;" onmouseover="this.style.background='rgba(95,168,255,0.1)'" onmouseout="this.style.background=''">All guests <span id="bc-cnt-all"     style="font-size:11px;color:rgba(255,255,255,0.35);"></span></div>
-      <div onclick="openBroadcast('pending')" style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;color:#d9e8ff;" onmouseover="this.style.background='rgba(95,168,255,0.1)'" onmouseout="this.style.background=''">Pending    <span id="bc-cnt-pending" style="font-size:11px;color:rgba(255,255,255,0.35);"></span></div>
-      <div onclick="openBroadcast('yes')"     style="padding:10px 14px;cursor:pointer;font-size:13px;display:flex;justify-content:space-between;color:#d9e8ff;" onmouseover="this.style.background='rgba(95,168,255,0.1)'" onmouseout="this.style.background=''">Yes        <span id="bc-cnt-yes"     style="font-size:11px;color:rgba(255,255,255,0.35);"></span></div>
+    <div class="form-group">
+      <label>To Date</label>
+      <input type="date" id="export-to">
     </div>
-  </div>
-</div>
- 
-<div class="pills-bar">
-  <span class="pill active" data-tour="all" onclick="filterTour(this,'all')">All <span class="cnt" id="p-all">0/0</span></span>
-  <span class="pill" data-tour="upper_antelope_tsosie"          onclick="filterTour(this,'upper_antelope_tsosie')">U-TC <span class="cnt" id="p-utc">0/0</span></span>
-  <span class="pill" data-tour="upper_antelope_brenda"          onclick="filterTour(this,'upper_antelope_brenda')">U-BR <span class="cnt" id="p-ubr">0/0</span></span>
-  <span class="pill" data-tour="upper_antelope_aact"            onclick="filterTour(this,'upper_antelope_aact')">U-AA <span class="cnt" id="p-uaa">0/0</span></span>
-  <span class="pill" data-tour="upper_antelope_hogan_transport" onclick="filterTour(this,'upper_antelope_hogan_transport')">U-HT <span class="cnt" id="p-uht">0/0</span></span>
-  <span class="pill" data-tour="upper_antelope_hogan_hiking"    onclick="filterTour(this,'upper_antelope_hogan_hiking')">U-HH <span class="cnt" id="p-uhh">0/0</span></span>
-  <span class="pill" data-tour="lower_antelope_kens"            onclick="filterTour(this,'lower_antelope_kens')">L-KT <span class="cnt" id="p-lkt">0/0</span></span>
-  <span class="pill" data-tour="lower_antelope_dixie"           onclick="filterTour(this,'lower_antelope_dixie')">L-DX <span class="cnt" id="p-ldx">0/0</span></span>
-  <span class="pill" data-tour="canyon_x"                       onclick="filterTour(this,'canyon_x')">X-TT <span class="cnt" id="p-xtt">0/0</span></span>
-  <span class="pill" data-tour="rattlesnake_aact"               onclick="filterTour(this,'rattlesnake_aact')">R-AA <span class="cnt" id="p-raa">0/0</span></span>
-</div>
- 
-<div class="stats-bar">
-  <div class="stat s-total"><div class="num" id="s-total">0</div><div class="lbl">Total</div></div>
-  <div class="stat s-yes">  <div class="num" id="s-yes">0</div>  <div class="lbl">YES</div></div>
-  <div class="stat s-resc"> <div class="num" id="s-resc">0</div> <div class="lbl">Reschedule</div></div>
-  <div class="stat s-pend"> <div class="num" id="s-pend">0</div> <div class="lbl">Pending</div></div>
-</div>
- 
-<div class="records-bar" style="justify-content:flex-start;gap:8px;align-items:center;padding:8px 20px 12px;">
-  <input type="text" id="search-input" placeholder="🔍  Search order #, name, phone…"
-    oninput="renderTable()"
-    style="padding:0 12px;height:32px;border:1px solid rgba(255,255,255,0.12);border-radius:8px;font-size:12px;width:240px;outline:none;box-sizing:border-box;background:rgba(255,255,255,0.06);color:#fff;font-family:inherit;">
-  <button class="btn-export" onclick="exportXLSX()" style="height:32px;padding:0 14px;">&#128196; Export Excel</button>
-  <button class="btn-refresh" onclick="loadData()" style="height:32px;padding:0 14px;">&#x21bb; Refresh</button>
-  <span id="rec-label" style="white-space:nowrap;font-size:12px;color:rgba(255,255,255,0.35);margin-left:4px;">0 records</span>
-</div>
- 
-<div style="padding:0 20px 6px;">
-  <div style="background:#dce8f5;border:0.5px solid #b3d9f7;border-radius:8px 8px 0 0;padding:8px 14px;display:flex;align-items:center;gap:8px;">
-    <span style="font-size:13px;font-weight:600;color:#1a3a5c;">Tickets Reminder Log</span>
-    <span id="tkt-notes-banner" style="display:none;align-items:center;gap:5px;background:#fff8e1;border:1px solid #f0c040;border-radius:5px;padding:2px 8px;font-size:11px;color:#856404;margin-left:4px;">💬 <span id="tkt-notes-banner-text"></span><button onclick="dismissTktBanner()" style="background:none;border:none;cursor:pointer;color:#856404;font-size:13px;line-height:1;padding:0 0 0 4px;">&times;</button></span>
-    <span style="margin-left:auto;font-size:11px;color:#b3d9f7;white-space:nowrap;">&#6c757d; Drag to reorder &nbsp;·&nbsp; &#6c757d; Drag to resize</span>
+    <div class="form-group">
+      <label>Tour Type</label>
+      <select id="export-type">
+        <option value="">All Types</option>
+        <option value="upper_antelope">AC-U</option>
+        <option value="lower_antelope">AC-L</option>
+        <option value="antelop_X">AC-X</option>
+        <option value="grand_canyon_south">South</option>
+        <option value="grand_canyon_west">West</option>
+        <option value="bryce_zion">BZ</option>
+        <option value="valley_of_fire_full">VOF-F</option>
+        <option value="valley_of_fire_half">VOF-H</option>
+        <option value="hoover_dam">HD</option>
+      </select>
+    </div>
+    <button class="btn-action" onclick="exportRecords()">Export</button>
   </div>
 </div>
-<div class="table-wrap" style="padding-top:0;"><table>
-    <thead><tr id="thead-row">
-      <th style="width:120px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Tour<div class="col-resizer"></div></th>
-      <th style="width:90px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Service Date<div class="col-resizer"></div></th>
-      <th style="width:90px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>CHD#<div class="col-resizer"></div></th>
-      <th style="width:45px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Pax<div class="col-resizer"></div></th>
-      <th style="width:95px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Check-in Time<div class="col-resizer"></div></th>
-      <th style="width:80px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Tour Time<div class="col-resizer"></div></th>
-      <th style="width:130px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Guest Name<div class="col-resizer"></div></th>
-      <th style="width:110px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Phone<div class="col-resizer"></div></th>
-      <th style="width:100px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Confirmation#<div class="col-resizer"></div></th>
-      <th style="width:80px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>&#9679; Email<div class="col-resizer"></div></th>
-      <th style="width:80px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>&#9632; SMS<div class="col-resizer"></div></th>
-      <th class="notes-hdr" id="notes-hdr" style="width:200px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Notes <span id="notes-hdr-bubble" style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#fff;border:1.5px solid #ced4da;color:#aaa;vertical-align:middle;margin-left:4px;">0</span><div class="col-resizer"></div></th>
-      <th style="width:80px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Status<div class="col-resizer"></div></th>
-      <th style="width:90px"><span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span>Submit Time<div class="col-resizer"></div></th>
-    </tr></thead>
-    <tbody id="tbody">
-      <tr><td colspan="15" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>
-    </tbody>
-  </table>
-</div>
- 
-<!-- Notes / Chat dialog -->
-<div id="notesOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:12px;width:520px;max-width:95vw;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
-    <div style="background:#2F7851;padding:14px 18px;display:flex;align-items:center;gap:10px;">
-      <div style="flex:1;">
-        <div style="color:#fff;font-weight:600;font-size:14px;" id="notesTitle">Notes</div>
-        <div style="color:#D5F0D8;font-size:12px;" id="notesSubtitle"></div>
-      </div>
-      <button onclick="closeNotes()" style="background:none;border:none;color:#D5F0D8;font-size:20px;cursor:pointer;">&times;</button>
+
+<!-- Resend single -->
+<div class="util-card">
+  <h3>📨 Resend to Single Guest</h3>
+  <p>Look up a booking by order number and resend the confirmation email and/or SMS.</p>
+  <div class="form-row">
+    <div class="form-group">
+      <label>Order Number</label>
+      <input type="text" id="resend-order" placeholder="e.g. CHD12345" style="padding:7px 10px;border:0.5px solid rgba(0,0,0,0.2);border-radius:7px;font-size:13px;width:160px;">
     </div>
-    <div style="padding:8px 14px;border-bottom:1px solid #eee;background:#f8f9fa;display:flex;align-items:center;gap:8px;">
-      <input type="checkbox" id="nmActionCb" onchange="toggleAction()" style="width:14px;height:14px;accent-color:#2F7851;cursor:pointer;">
-      <label for="nmActionCb" id="nmActionLabel" style="font-size:12px;color:#555;cursor:pointer;">Take Action</label>
-    </div>
-    <div id="notesMessages" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:200px;max-height:360px;background:#f8f9fa;">
-      <div style="text-align:center;color:#aaa;font-size:13px;padding:20px 0;" id="notesEmpty">No messages yet.</div>
-    </div>
-    <div style="padding:12px 14px;border-top:1px solid #eee;background:#fff;">
-      <textarea id="noteInput" rows="3" placeholder="Write a note or reply to guest..." style="width:100%;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;font-size:13px;resize:none;box-sizing:border-box;outline:none;font-family:inherit;"></textarea>
-      <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
-          <input type="checkbox" id="sendSmsCheck" checked>
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f97316;margin-right:2px;"></span> SMS to guest
-        </label>
-        <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;">
-          <input type="checkbox" id="sendEmailCheck">
-          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#3b82f6;margin-right:2px;"></span> Email to guest
-        </label>
-        <div style="margin-left:auto;display:flex;gap:8px;">
-          <button onclick="submitNote('staff_note')" title="Save as internal note — not visible to guest" style="padding:6px 14px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;font-size:12px;cursor:pointer;">&#9733; Save note</button>
-          <button onclick="submitNote('sms_out')" title="Send to guest via selected channels" style="padding:6px 14px;background:#2F7851;color:#fff;border:none;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;">Send &#8594;</button>
-        </div>
-      </div>
-    </div>
+    <button class="btn-action" onclick="lookupOrder()">Look Up</button>
   </div>
+  <div id="resend-result" style="margin-top:12px;"></div>
 </div>
- 
+
+<!-- Delete records -->
+<div class="util-card">
+  <h3>🗑 Delete Records by Date</h3>
+  <p>Select a date to permanently delete all send records for that date. This cannot be undone.</p>
+  <button class="btn-action" onclick="loadDates()">Show Available Dates</button>
+  <div id="dates-list" style="margin-top:12px;"></div>
+  <div id="delete-result" class="result-msg"></div>
+</div>
+
+<!-- Stats -->
+<div class="util-card">
+  <h3>📊 Quick Stats</h3>
+  <p>Total records in the tour confirmation database.</p>
+  <button class="btn-action" onclick="loadStats()">Load Stats</button>
+  <div id="stats-result" style="margin-top:12px;font-size:13px;color:#555;"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
 <script>
-var LABELS = {
-  upper_antelope_tsosie:          'Upper Antelope – Tsosie',
-  upper_antelope_brenda:          'Upper Antelope – Brenda',
-  upper_antelope_aact:            'Upper Antelope – AACT',
-  upper_antelope_hogan_transport: 'Upper Antelope – Hogan',
-  upper_antelope_hogan_hiking:    'Upper Antelope – Hogan Hike',
-  lower_antelope_kens:            "Lower Antelope – Ken's",
-  lower_antelope_dixie:           "Lower Antelope – Dixie's",
-  canyon_x:                       'Antelope Canyon X',
-  rattlesnake_aact:               'Rattlesnake Canyon',
-};
-var PILLS = {
-  upper_antelope_tsosie:'p-utc', upper_antelope_brenda:'p-ubr',
-  upper_antelope_aact:'p-uaa', upper_antelope_hogan_transport:'p-uht',
-  upper_antelope_hogan_hiking:'p-uhh', lower_antelope_kens:'p-lkt',
-  lower_antelope_dixie:'p-ldx', canyon_x:'p-xtt', rattlesnake_aact:'p-raa',
-};
- 
-var allRows = [], activeTour = 'all';
- 
-function toYMD(d){ return d.toLocaleDateString('en-CA'); }
-function getDate(){ return document.getElementById('date-input').value; }
- 
-function goToday(){
-  var la = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
-  document.getElementById('date-input').value = toYMD(la);
-  loadData();
+function exportRecords() {
+  const from = document.getElementById('export-from').value;
+  const to   = document.getElementById('export-to').value;
+  const type = document.getElementById('export-type').value;
+  if (!from) { alert('Please select a from date.'); return; }
+  const toDate = to || from;
+  location.href = `/api/notifications/tickets-reminder/export?from=${from}&to=${toDate}&type=${type}`;
 }
-function goTomorrow(){
-  var la = new Date(new Date().toLocaleString('en-US',{timeZone:'America/Los_Angeles'}));
-  la.setDate(la.getDate()+1);
-  document.getElementById('date-input').value = toYMD(la);
-  loadData();
+
+async function lookupOrder() {
+  const order = document.getElementById('resend-order').value.trim();
+  if (!order) { alert('Please enter an order number.'); return; }
+  const res  = await fetch(`/api/notifications/tickets-reminder/lookup?order=${order}`);
+  const data = await res.json();
+  const el   = document.getElementById('resend-result');
+  if (!data.booking) { el.innerHTML = '<span style="color:#A32D2D;font-size:12px;">Order not found.</span>'; return; }
+  const b = data.booking;
+  el.innerHTML = `
+    <div style="background:#f9f9f7;border-radius:8px;padding:12px;font-size:12px;">
+      <strong>${b.first_name} ${b.last_name}</strong> — ${b.order_number}<br>
+      ${b.customer_email} | ${b.phone}<br>
+      Tour: ${b.tour_type} on ${b.tour_date}<br>
+      Email: ${b.email_status} | SMS: ${b.sms_status}
+      <div style="margin-top:10px;display:flex;gap:8px;">
+        <button class="btn-action" style="font-size:12px;padding:5px 14px;" onclick="resend(${b.id},'email')">📧 Resend Email</button>
+        <button class="btn-action" style="font-size:12px;padding:5px 14px;" onclick="resend(${b.id},'sms')">📱 Resend SMS</button>
+        <button class="btn-action" style="font-size:12px;padding:5px 14px;" onclick="resend(${b.id},'both')">Both</button>
+      </div>
+      <div id="resend-action-result" style="margin-top:6px;font-size:12px;"></div>
+    </div>`;
 }
-function changeDate(n){
-  var inp = document.getElementById('date-input');
-  var dt  = inp.value ? new Date(inp.value+'T12:00:00') : new Date();
-  dt.setDate(dt.getDate()+n);
-  inp.value = toYMD(dt);
-  loadData();
-}
- 
-// Click anywhere in date-wrap → showPicker
-document.getElementById('date-wrap').addEventListener('click', function(){
-  try{ document.getElementById('date-input').showPicker(); }catch(e){}
-});
- 
-function loadData(){
-  var date = getDate(); if(!date) return;
-  document.getElementById('tbody').innerHTML =
-    '<tr><td colspan="15" style="text-align:center;padding:24px;color:#aaa;">Loading...</td></tr>';
-  fetch('/api/notifications/tickets-reminder/tracking?date='+date, {credentials:'include'})
-    .then(function(r){
-      if(r.redirected || r.status===401){ window.location.href='/auth/login'; return Promise.reject('session'); }
-      return r.json();
-    })
-    .then(function(data){ allRows = data.rows || []; updatePills(); renderTable(); })
-    .catch(function(){
-      document.getElementById('tbody').innerHTML =
-        '<tr><td colspan="15" style="text-align:center;padding:24px;color:#dc3545;">Failed to load. Please refresh.</td></tr>';
-    });
-}
- 
-function updatePills(){
-  var tot={}, yes={};
-  for(var k in PILLS){ tot[k]=0; yes[k]=0; }
-  var gT=0, gY=0;
-  allRows.forEach(function(r){
-    gT++;
-    if(r.confirmation_status==='yes') gY++;
-    if(tot[r.tour_type]!==undefined){
-      tot[r.tour_type]++;
-      if(r.confirmation_status==='yes') yes[r.tour_type]++;
-    }
+
+async function resend(id, channel) {
+  const res  = await fetch(`/api/notifications/tickets-reminder/resend`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({booking_id: id, channel}),
   });
-  document.getElementById('p-all').textContent = gY+'/'+gT;
-  for(var k in PILLS) document.getElementById(PILLS[k]).textContent = yes[k]+'/'+tot[k];
+  const data = await res.json();
+  const el   = document.getElementById('resend-action-result');
+  el.innerHTML = `<span class="${data.success ? 'result-ok' : 'result-fail'}">${data.message || (data.success ? 'Sent!' : 'Failed.')}</span>`;
 }
- 
-function filterTour(el, tour){
-  document.querySelectorAll('.pill').forEach(function(p){ p.classList.remove('active'); });
-  el.classList.add('active');
-  activeTour = tour;
-  renderTable();
-}
- 
-function renderTable(){
-  var rows = activeTour==='all' ? allRows : allRows.filter(function(r){ return r.tour_type===activeTour; });
-  var searchEl = document.getElementById('search-input');
-  if(searchEl && searchEl.value.trim()){
-    var q = searchEl.value.trim().toLowerCase();
-    rows = rows.filter(function(r){
-      return (r.order_number||'').toLowerCase().includes(q)
-          || (r.guest_name||'').toLowerCase().includes(q)
-          || (r.phone||'').toLowerCase().includes(q);
-    });
-  }
-  var tot=rows.length, yes=0, resc=0, pend=0;
-  rows.forEach(function(r){
-    if(r.confirmation_status==='yes') yes++;
-    else if(r.confirmation_status==='reschedule_req') resc++;
-    else pend++;
-  });
-  document.getElementById('s-total').textContent = tot;
-  document.getElementById('s-yes').textContent   = yes;
-  document.getElementById('s-resc').textContent  = resc;
-  document.getElementById('s-pend').textContent  = pend;
-  document.getElementById('rec-label').textContent = tot+' record'+(tot===1?'':'s');
- 
-  // Update Notes header bubble
-  // Bubble: red = has notes + no action_taken; green = has notes + actioned; white = no notes
-  var hasNotes    = rows.filter(function(r){ return (r.notes_count||0) > 0 || r.guest_notes; });
-  var unhandled   = hasNotes.filter(function(r){ return !r.action_taken_by; }).length;
-  var handled     = hasNotes.length - unhandled;
-  var bubble = document.getElementById('notes-hdr-bubble');
-  if(hasNotes.length === 0){
-    bubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#fff;border:1.5px solid #ced4da;color:#aaa;vertical-align:middle;margin-left:4px;';
-    bubble.textContent = '0';
-  } else if(unhandled > 0){
-    bubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#dc3545;border:1.5px solid #dc3545;color:#fff;vertical-align:middle;margin-left:4px;';
-    bubble.textContent = unhandled;
-  } else {
-    bubble.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;border-radius:9px;font-size:10px;font-weight:700;padding:0 5px;background:#28a745;border:1.5px solid #28a745;color:#fff;vertical-align:middle;margin-left:4px;';
-    bubble.textContent = handled;
-  }
- 
-  if(!rows.length){
-    document.getElementById('tbody').innerHTML =
-      '<tr><td colspan="15" style="text-align:center;padding:24px;color:#aaa;">No records for this date.</td></tr>';
+
+async function loadDates() {
+  const el = document.getElementById('dates-list');
+  el.innerHTML = '<span style="font-size:12px;color:#888;">Loading…</span>';
+  const res  = await fetch('/api/notifications/tickets-reminder/dates-with-records');
+  const data = await res.json();
+  if (!data.length) {
+    el.innerHTML = '<span style="font-size:12px;color:#888;">No records found.</span>';
     return;
   }
- 
-  var html = '';
-  rows.forEach(function(r){
-    var lbl  = LABELS[r.tour_type] || r.tour_type;
-    var _smsLabel = {
-      'delivered':   '<span class="badge-sent">&#10003; Delivered</span>',
-      'sent':        '<span class="badge-sent">&#10003; Sent</span>',
-      'queued':      '<span class="badge-sent">&#10003; Sent</span>',
-      'failed':      '<span class="badge-fail">&#10007; Failed</span>',
-      'undelivered': '<span class="badge-fail">&#10007; Undelivered</span>',
-    };
-    var _emailLabel = {
-      'delivered':   '<span class="badge-sent">&#10003; Delivered</span>',
-      'sent':        '<span class="badge-sent">&#10003; Sent</span>',
-      'failed':      '<span class="badge-fail">&#10007; Failed</span>',
-    };
-    var emB = _emailLabel[r.email_status] || '<span class="badge-none">—</span>';
-    var smB = _smsLabel[r.sms_status]    || '<span class="badge-none">—</span>';
-    var subT = r.submitted_at
-      ? new Date(r.submitted_at).toLocaleString('en-US',{timeZone:'America/Los_Angeles',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'})
-      : '—';
-    var conf = r.confirmation_status || 'pending';
- 
-    // Notes cell — preview shows latest note; all rows clickable
-    var nCount   = r.notes_count || 0;
-    var hasAny   = nCount > 0 || !!r.guest_notes;
-    var actioned = !!r.action_taken_by;
-    var previewBody = r.latest_note_body || r.guest_notes || '';
-    var notesCell;
-    if(hasAny){
-      var actionPart = actioned
-        ? '<div style="font-size:11px;color:#28a745;font-weight:600;margin-top:4px;">&#10003; '+e(r.action_taken_by)+'<span style="font-weight:400;color:#aaa;margin-left:4px;">(click to undo)</span></div>'
-        : '<div style="margin-top:4px;"><button onclick="event.stopPropagation();takeAction('+r.id+',event)" style="background:none;border:none;cursor:pointer;font-size:11px;padding:0;color:#856404;">&#9888;&#65039; Take action</button></div>';
-      notesCell = '<td class="js-open-notes" data-bid="'+r.id+'" style="padding:0;cursor:pointer;">'
-        +'<div style="background:#fffbea;height:100%;padding:6px 8px;border-left:3px solid #ffc107;">'
-        +'<div style="font-size:12px;color:#555;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;">'+e(previewBody)+'</div>'
-        +actionPart
-        +'</div></td>';
-    } else {
-      notesCell = '<td class="js-open-notes" data-bid="'+r.id+'" style="cursor:pointer;text-align:center;">'
-        +'<span style="display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:6px;border:1px solid #9ED3A9;color:#2F7851;font-size:11px;">&#128172; Chat</span>'
-        +'</td>';
-    }
-    html += '<tr data-id="'+r.id+'" data-chd="'+e(r.order_number)+'" data-date="'+e(r.tour_date)+'">'
-      +'<td style="white-space:nowrap">'+e(lbl)+'</td>'
-      +'<td>'+e(r.tour_date)+'</td>'
-      +'<td style="font-weight:600">'+e(r.order_number)+'</td>'
-      +'<td style="text-align:center">'+e(r.quantities)+'</td>'
-      +'<td>'+e(r.checkin_time)+'</td>'
-      +'<td>'+e(r.tour_time)+'</td>'
-      +'<td>'+e(r.guest_name)+'</td>'
-      +'<td style="font-size:11px">'+e(r.phone||'—')+'</td>'
-      +'<td>'+e(r.confirmation_no||'—')+'</td>'
-      +'<td>'+emB+'</td>'
-      +'<td>'+smB+'</td>'
-      +notesCell
-      +'<td><select class="s-sel '+conf+'" onchange="saveStatus(this)" data-orig="'+conf+'" data-chd="'+e(r.order_number)+'" data-date="'+e(r.tour_date)+'">'
-        +'<option value="yes"'+(conf==='yes'?' selected':'')+'>&#10003; YES</option>'
-        +'<option value="pending"'+(conf==='pending'?' selected':'')+'>&#8987; Pending</option>'
-        +'</select></td>'
-      +'<td style="white-space:nowrap;font-size:11px">'+subT+(r.resubmitted?'<span style="color:#dc3545;font-weight:700"> &#9733;</span>':'')+'</td>'
-      +'</tr>';
+  el.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:13px;margin-top:8px;">
+      <thead>
+        <tr style="background:#f9f9f7;border-bottom:1px solid #e5e7eb;">
+          <td style="padding:8px 12px;font-size:11px;font-weight:600;color:#999;">Date</td>
+          <td style="padding:8px 12px;font-size:11px;font-weight:600;color:#999;">Records</td>
+          <td style="padding:8px 12px;"></td>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.map(d => `
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:8px 12px;font-weight:600;">${d.date}</td>
+            <td style="padding:8px 12px;color:#666;">${d.count} record(s)</td>
+            <td style="padding:8px 12px;">
+              <button class="btn-danger-action" style="font-size:12px;padding:5px 14px;"
+                onclick="deleteRecords('${d.date}')">Delete</button>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+}
+
+async function deleteRecords(date) {
+  if (!confirm(`Delete ALL tickets reminder records for ${date}? This cannot be undone.`)) return;
+  const res  = await fetch('/api/notifications/tickets-reminder/delete-by-date', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({tour_date: date}),
   });
-  document.getElementById('tbody').innerHTML = html;
-  autoResize();
-  setTimeout(function(){ initColDragTkt(); applyColOrderTkt(); }, 0);
- 
+  const data = await res.json();
+  const el   = document.getElementById('delete-result');
+  el.innerHTML = `<span class="${data.success ? 'result-ok' : 'result-fail'}">${data.message || 'Done.'}</span>`;
+  if (data.success) loadDates();
 }
- 
-function e(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
- 
-// ── Notes: yellow on edit, header yellow if any unsaved ──
-function autoResize(){ /* no-op: notes now use modal */ }
- 
-function saveStatus(el){
-  var row = el.closest('tr');
-  var val = el.value;
-  el.className = 's-sel '+val;
-  fetch('/api/tickets-reminder/update-status',{
-    method:'POST', credentials:'include',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({chd_number:el.dataset.chd, service_date:el.dataset.date, confirmation:val})
-  }).then(function(r){
-    if(r.ok) el.setAttribute('data-orig', val);
-    else{ el.value=el.getAttribute('data-orig'); el.className='s-sel '+el.value; }
-  });
+
+async function loadStats() {
+  const res  = await fetch('/api/notifications/tickets-reminder/stats');
+  const data = await res.json();
+  document.getElementById('stats-result').innerHTML = `
+    Total records: <strong>${data.total}</strong> &nbsp;|&nbsp;
+    This month: <strong>${data.this_month}</strong> &nbsp;|&nbsp;
+    Today: <strong>${data.today}</strong>`;
 }
- 
-function exportXLSX(){
-  var date = getDate();
-  var url = '/api/notifications/tickets-reminder/export?date='+date;
-  var a = document.createElement('a');
-  a.href = url;
-  a.download = 'tickets-'+date+'.xlsx';
-  a.click();
-}
- 
-goToday();
-setInterval(loadData, 60000);
- 
-/* ── Notes / Chat ── */
-var _notesBookingId = null, _notesPollTimer = null, _notesGuestNotes = '';
- 
-async function openNotes(bookingId, orderNum, name, guestNotes){
-  _notesBookingId  = bookingId;
-  _notesGuestNotes = guestNotes || '';
-  document.getElementById('notesTitle').textContent    = 'Order ' + orderNum;
-  document.getElementById('notesSubtitle').textContent = name;
-  document.getElementById('noteInput').value           = '';
-  document.getElementById('notesOverlay').style.display = 'flex';
-  var row = allRows.find(function(r){ return r.id === bookingId; });
-  var actioned = row && row.action_taken_by;
-  document.getElementById('nmActionCb').checked = !!actioned;
-  document.getElementById('nmActionLabel').textContent  = actioned ? '✓ Actioned' : 'Take Action';
-  document.getElementById('nmActionLabel').style.color  = actioned ? '#28a745' : '#555';
-  document.getElementById('nmActionLabel').style.fontWeight = actioned ? '600' : 'normal';
-  await _fetchNotes();
-  _notesPollTimer = setInterval(_fetchNotes, 20000);
-}
- 
-function closeNotes(){
-  document.getElementById('notesOverlay').style.display = 'none';
-  _notesBookingId = null; _notesGuestNotes = '';
-  if(_notesPollTimer){ clearInterval(_notesPollTimer); _notesPollTimer = null; }
-}
- 
-document.addEventListener('keydown', function(ev){ if(ev.key==='Escape') closeNotes(); });
- 
-async function _fetchNotes(){
-  if(!_notesBookingId) return;
-  try{
-    var res  = await fetch('/booking-notes/'+_notesBookingId+'?source=tickets', {credentials:'include'});
-    var data = await res.json();
-    _renderNotes(data.notes || []);
-  }catch(e){}
-}
- 
-function _renderNotes(notes){
-  var container = document.getElementById('notesMessages');
-  var sm = {
-    staff_note:  {bg:'#fffbea', border:'#f0d080', label:'★ Note',       color:'#856404', right:true},
-    sms_out:     {bg:'#d4edda', border:'#b7ddc4', label:'SMS sent',      color:'#155724', right:true, dot:'#f97316'},
-    email_out:   {bg:'#d1ecf1', border:'#a8d8e1', label:'Email sent',    color:'#0c5460', right:true, dot:'#3b82f6'},
-    sms_in:      {bg:'#fff7ed', border:'#fcd9b0', label:'Guest via SMS',   color:'#9a3412', right:false, dot:'#f97316'},
-    email_in:    {bg:'#eff6ff', border:'#bfdbfe', label:'Guest via Email', color:'#1e40af', right:false, dot:'#3b82f6'},
-    guest_reply: {bg:'#e8f4fd', border:'#b3d9f7', label:'Guest',           color:'#1a3a5c', right:false},
-  };
-  var msgs = [];
-  if(_notesGuestNotes){
-    msgs.push({direction:'guest_reply', body:_notesGuestNotes, author_username:'Guest (form)', created_at:'via confirmation form'});
-  }
-  msgs = msgs.concat(notes || []);
-  if(!msgs.length){
-    container.innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;padding:20px 0;">No messages yet.</div>';
-    return;
-  }
-  container.innerHTML = msgs.map(function(n){
-    var s = sm[n.direction] || {bg:'#f0f0f0', border:'#ddd', label:n.direction, color:'#333', right:false};
-    var dotHtml = s.dot ? '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:'+s.dot+';margin-right:3px;vertical-align:middle;"></span>' : '';
-    var radius = s.right ? '10px 0 10px 10px' : '0 10px 10px 10px';
-    return '<div style="display:flex;flex-direction:column;gap:2px;align-self:'+(s.right?'flex-end':'flex-start')+';max-width:88%;">'
-      +'<div style="background:'+s.bg+';border:0.5px solid '+s.border+';border-radius:'+radius+';padding:9px 12px;font-size:13px;color:#333;line-height:1.5;white-space:pre-wrap;word-break:break-word;">'+esc(n.body)+'</div>'
-      +'<div style="font-size:11px;color:#aaa;padding:0 4px;'+(s.right?'text-align:right;':'')+'">'+dotHtml
-      +'<span style="font-weight:600;color:'+s.color+';">'+s.label+'</span>'
-      +(n.author_username ? ' · '+esc(n.author_username) : '')
-      +(n.created_at ? ' · '+esc(n.created_at) : '')
-      +'</div></div>';
-  }).join('');
-  container.scrollTop = container.scrollHeight;
-}
- 
-async function submitNote(dir){
-  var body = document.getElementById('noteInput').value.trim();
-  if(!body || !_notesBookingId) return;
-  var smsChk   = document.getElementById('sendSmsCheck');
-  var emailChk = document.getElementById('sendEmailCheck');
-  var sendSms   = smsChk   ? smsChk.checked   : false;
-  var sendEmail = emailChk ? emailChk.checked  : false;
-  try{
-    await fetch('/booking-notes/'+_notesBookingId+'?source=tickets', {
-      method:'POST', credentials:'include',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({body:body, direction:dir,
-        send_sms:sendSms, send_email:sendEmail})
-    });
-    document.getElementById('noteInput').value = '';
-    await _fetchNotes();
-    // loadData() removed — prevents table refresh from wiping take-action state
-  }catch(e){ alert('Failed to save note.'); }
-}
- 
-async function toggleAction(){
-  if(!_notesBookingId) return;
-  var cb = document.getElementById('nmActionCb');
-  var label = document.getElementById('nmActionLabel');
-  try{
-    var res = await fetch('/api/bookings/'+_notesBookingId+'/take-action?source=tickets', {
-      method:'PUT', credentials:'include', headers:{'Content-Type':'application/json'}
-    });
-    if(res.ok){
-      var data = await res.json();
-      var actioned = !!data.action_taken_by;
-      cb.checked = actioned;
-      label.textContent = actioned ? '✓ Actioned' : 'Take Action';
-      label.style.color = actioned ? '#28a745' : '#555';
-      label.style.fontWeight = actioned ? '600' : 'normal';
-      var row = allRows.find(function(r){ return r.id === _notesBookingId; });
-      if(row) row.action_taken_by = data.action_taken_by || '';
-      renderTable();
-    }
-  }catch(err){ cb.checked = !cb.checked; }
-}
- 
-async function takeAction(bookingId, evt){
-  evt && evt.stopPropagation();
-  try{
-    var res = await fetch('/api/bookings/'+bookingId+'/take-action?source=tickets', {
-      method:'PUT', credentials:'include', headers:{'Content-Type':'application/json'}
-    });
-    if(res.ok){
-      var data = await res.json();
-      var row = allRows.find(function(r){ return r.id === bookingId; });
-      if(row) row.action_taken_by = data.action_taken_by || '';
-      renderTable();
-    }
-  }catch(e){ alert('Failed.'); }
-}
- 
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
- 
-/* ── Column resize ── */
- 
-/* ── Column drag reorder ── */
-const COL_ORDER_KEY_TKT = 'npe_tickets_col_order';
- 
-function saveColOrderTkt(){
-  var keys = Array.from(document.querySelectorAll('#thead-row th')).map(function(th){return th.dataset.colIdx;});
-  localStorage.setItem(COL_ORDER_KEY_TKT, JSON.stringify(keys));
-}
- 
-function applyColOrderTkt(){
-  try{
-    var saved = JSON.parse(localStorage.getItem(COL_ORDER_KEY_TKT));
-    if(!saved||!Array.isArray(saved)) return;
-    var tr = document.getElementById('thead-row');
-    var ths = Array.from(tr.querySelectorAll('th'));
-    if(saved.length !== ths.length) return;
-    saved.forEach(function(idx){
-      var th = ths.find(function(t){return t.dataset.colIdx===idx;});
-      if(th) tr.appendChild(th);
-    });
-    document.querySelectorAll('#tbody tr').forEach(function(row){
-      var cells = Array.from(row.querySelectorAll('td'));
-      if(cells.length !== saved.length) return;
-      saved.forEach(function(idx){
-        var cell = cells[parseInt(idx)];
-        if(cell) row.appendChild(cell);
-      });
-    });
-  }catch(e){}
-}
- 
-function initColDragTkt(){
-  var tr = document.getElementById('thead-row');
-  var ths = Array.from(tr.querySelectorAll('th'));
-  ths.forEach(function(th, i){ if(!th.dataset.colIdx) th.dataset.colIdx = String(i); });
-  var dragSrc = null;
-  ths.forEach(function(th){
-    th.draggable = true;
-    th.addEventListener('dragstart', function(e){
-      dragSrc = th; th.classList.add('col-dragging');
-      e.dataTransfer.effectAllowed='move';
-    });
-    th.addEventListener('dragend', function(){
-      th.classList.remove('col-dragging');
-      tr.querySelectorAll('th').forEach(function(t){t.classList.remove('col-drag-over');});
-    });
-    th.addEventListener('dragover', function(e){
-      e.preventDefault();
-      if(th!==dragSrc) th.classList.add('col-drag-over');
-    });
-    th.addEventListener('dragleave', function(){th.classList.remove('col-drag-over');});
-    th.addEventListener('drop', function(e){
-      e.preventDefault(); th.classList.remove('col-drag-over');
-      if(!dragSrc||dragSrc===th) return;
-      var allThs = Array.from(tr.querySelectorAll('th'));
-      var fromI = allThs.indexOf(dragSrc);
-      var toI   = allThs.indexOf(th);
-      if(fromI<toI) tr.insertBefore(dragSrc, th.nextSibling);
-      else tr.insertBefore(dragSrc, th);
-      document.querySelectorAll('#tbody tr').forEach(function(row){
-        var cells = Array.from(row.querySelectorAll('td'));
-        if(cells.length < allThs.length) return;
-        var cell = cells[fromI];
-        if(fromI<toI) row.insertBefore(cell, cells[toI].nextSibling);
-        else row.insertBefore(cell, cells[toI]);
-      });
-      saveColOrderTkt();
-    });
-  });
-}
-function initResizableCols() {
-  const ths = document.querySelectorAll('#thead-row th');
-  ths.forEach(th => {
-    const resizer = th.querySelector('.col-resizer');
-    if (!resizer) return;
-    let startX, startW;
-    resizer.addEventListener('mousedown', e => {
-      startX = e.clientX;
-      startW = th.offsetWidth;
-      resizer.classList.add('active');
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-      const onMove = e => {
-        const newW = Math.max(40, startW + (e.clientX - startX));
-        th.style.width = newW + 'px';
-      };
-      const onUp = () => {
-        resizer.classList.remove('active');
-        document.body.style.cursor = '';
-        document.body.style.userSelect = '';
-        document.removeEventListener('mousemove', onMove);
-        document.removeEventListener('mouseup', onUp);
-      };
-      document.addEventListener('mousemove', onMove);
-      document.addEventListener('mouseup', onUp);
-      e.preventDefault();
-    });
-  });
-}
-// Notes cell click — single event delegation on tbody
-document.getElementById('tbody').addEventListener('click', function(ev){
-  var td = ev.target.closest('.js-open-notes');
-  if(!td) return;
-  var bid = parseInt(td.dataset.bid);
-  var row = allRows.find(function(r){ return r.id === bid; });
-  if(row) openNotes(bid, row.order_number, row.guest_name||'', row.guest_notes||'');
-});
- 
-initResizableCols();
-initColDragTkt();
-applyColOrderTkt();
- 
-/* ── Tickets notes banner (60s poll) ── */
-var _tktBannerDismissed = false;
-var _tktPrevNotesMap = {};
-function dismissTktBanner(){
-  document.getElementById('tkt-notes-banner').style.display = 'none';
-  _tktBannerDismissed = true;
-}
-function checkTktNotesBanner(){
-  if(_tktBannerDismissed) return;
-  var changed = [];
-  allRows.forEach(function(r){
-    var prev = _tktPrevNotesMap[r.id] || 0;
-    var curr = (r.notes_count || 0);
-    if(curr > prev){
-      changed.push('<strong>' + esc(r.order_number) + '</strong>');
-    }
-    _tktPrevNotesMap[r.id] = curr;
-  });
-  if(!changed.length) return;
-  document.getElementById('tkt-notes-banner-text').innerHTML = changed.slice(0,3).join(' &nbsp;·&nbsp; ') + (changed.length > 3 ? ' +' + (changed.length-3) + ' more' : '');
-  document.getElementById('tkt-notes-banner').style.display = 'inline-flex';
-}
-var _tktPollTimer = setInterval(function(){
-  var date = getDate(); if(!date) return;
-  fetch('/api/notifications/tickets-reminder/tracking?date='+date, {credentials:'include'})
-    .then(function(r){
-      if(r.redirected || r.status===401){ clearInterval(_tktPollTimer); window.location.href='/auth/login'; return Promise.reject('session'); }
-      return r.json();
-    })
-    .then(function(data){
-      _tktBannerDismissed = false;
-      var newRows = data.rows || [];
-      allRows = newRows;
-      checkTktNotesBanner();
-    }).catch(function(){});
-}, 60000);
 </script>
-</body>
-</html>
+{% endblock %}
