@@ -1627,22 +1627,14 @@ function closeNotes(){
 async function takeActionFromNotes(){
   if (!_notesBookingId) return;
   const btn = document.getElementById('takeActionBtn');
+  const isActioned = btn && btn.classList.contains('actioned');
   try {
-    const res = await fetch(`/api/bookings/${_notesBookingId}/take-action`, {
-      method: 'PUT', headers: {'Content-Type':'application/json'}
-    });
-    if (res.ok) {
-      const data = await res.json();
-      const actioned = !!data.action_taken_by;
-      // Update button
-      if (btn) {
-        if (actioned) {
-          btn.textContent = '✓ Actioned by ' + data.action_taken_by;
-          btn.classList.add('actioned');
-          btn.style.background = '#2F7851';
-          btn.style.color = '#fff';
-          btn.style.borderColor = '#2F7851';
-        } else {
+    if (isActioned) {
+      const res = await fetch(`/api/bookings/${_notesBookingId}/take-action`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'}
+      });
+      if (res.ok) {
+        if (btn) {
           btn.textContent = '✓ Mark as actioned';
           btn.classList.remove('actioned');
           btn.style.background = '#f8f9fa';
@@ -1650,12 +1642,22 @@ async function takeActionFromNotes(){
           btn.style.borderColor = '#9ED3A9';
         }
       }
-      // Sync allRows so table row re-renders correctly
-      const row = allRows.find(r => r.id === _notesBookingId);
-      if (row) row.action_taken_by = data.action_taken_by || null;
-      applyFilter();
     } else {
-      alert('Failed to mark action. Please try again.');
+      const res = await fetch(`/api/bookings/${_notesBookingId}/take-action`, {
+        method: 'PUT', headers: {'Content-Type':'application/json'}
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (btn) {
+          btn.textContent = '✓ Actioned by ' + (data.action_taken_by || '');
+          btn.classList.add('actioned');
+          btn.style.background = '#2F7851';
+          btn.style.color = '#fff';
+          btn.style.borderColor = '#2F7851';
+        }
+      } else {
+        alert('Failed to mark action. Please try again.');
+      }
     }
   } catch(e) {
     alert('Network error. Please try again.');
@@ -1666,34 +1668,9 @@ async function _fetchNotes(){
   try {
     var res  = await fetch("/booking-notes/by-order/" + encodeURIComponent(_notesOrderNumber));
     var data = await res.json();
+    // Use guest_note from backend (bookings.notes) as the authoritative guest content
     if (data.guest_note) _notesGuestNotes = data.guest_note;
     _renderNotes(data.notes);
-    // Sync takeActionBtn with latest action_taken_by from backend
-    var btn = document.getElementById('takeActionBtn');
-    if (btn) {
-      var actioned = data.action_taken_by;
-      if (actioned) {
-        btn.textContent = '✓ Actioned by ' + actioned;
-        btn.classList.add('actioned');
-        btn.style.background = '#2F7851';
-        btn.style.color = '#fff';
-        btn.style.borderColor = '#2F7851';
-      } else {
-        btn.textContent = '✓ Mark as actioned';
-        btn.classList.remove('actioned');
-        btn.style.background = '#f8f9fa';
-        btn.style.color = '#2F7851';
-        btn.style.borderColor = '#9ED3A9';
-      }
-    }
-    // Sync allRows so table row reflects latest state
-    if (_notesBookingId) {
-      var row = allRows.find(r => r.id === _notesBookingId);
-      if (row) {
-        row.action_taken_by = data.action_taken_by || null;
-        applyFilter();
-      }
-    }
   } catch(e){}
 }
 function _renderNotes(notes){
