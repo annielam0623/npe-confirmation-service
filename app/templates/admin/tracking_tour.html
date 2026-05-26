@@ -423,7 +423,7 @@
 
   <div class="topbar">
     <div class="topbar-left">
-      <a href="/admin/manifests" class="back-btn">← Back</a>
+      <a href="/admin/dashboard" class="back-btn">← Back</a>
       <span class="topbar-title">Tour Confirmation Tracking</span>
     </div>
     <div style="display:flex;gap:8px;">
@@ -490,7 +490,7 @@
         <span style="margin-left:auto;font-size:11px;color:#9ED3A9;white-space:nowrap;">&#8646; Drag to reorder &nbsp;·&nbsp; &#8596; Drag to resize</span>
       </div>
       <div>
-<div style="overflow-x:auto;"><table class="track-tbl">
+<div style="overflow-x:auto;overflow-y:visible;max-height:calc(100vh - 64px - 180px);position:relative;"><table class="track-tbl">
           <thead>
             <tr id="thead-row">
               <td style="width:100px">Order #<span style="color:#bbb;font-size:10px;margin-right:4px;letter-spacing:1px;user-select:none;">⠿</span><div class="col-resizer"></div></td>
@@ -1623,6 +1623,45 @@ function closeNotes(){
   document.getElementById("notesOverlay").style.display = "none";
   _notesBookingId = null;
   if (_notesPollTimer){ clearInterval(_notesPollTimer); _notesPollTimer = null; }
+}
+async function takeActionFromNotes(){
+  if (!_notesBookingId) return;
+  const btn = document.getElementById('takeActionBtn');
+  const isActioned = btn && btn.classList.contains('actioned');
+  try {
+    if (isActioned) {
+      const res = await fetch(`/api/bookings/${_notesBookingId}/take-action`, {
+        method: 'DELETE', headers: {'Content-Type':'application/json'}
+      });
+      if (res.ok) {
+        if (btn) {
+          btn.textContent = '✓ Mark as actioned';
+          btn.classList.remove('actioned');
+          btn.style.background = '#f8f9fa';
+          btn.style.color = '#2F7851';
+          btn.style.borderColor = '#9ED3A9';
+        }
+      }
+    } else {
+      const res = await fetch(`/api/bookings/${_notesBookingId}/take-action`, {
+        method: 'POST', headers: {'Content-Type':'application/json'}
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (btn) {
+          btn.textContent = '✓ Actioned by ' + (data.action_taken_by || '');
+          btn.classList.add('actioned');
+          btn.style.background = '#2F7851';
+          btn.style.color = '#fff';
+          btn.style.borderColor = '#2F7851';
+        }
+      } else {
+        alert('Failed to mark action. Please try again.');
+      }
+    }
+  } catch(e) {
+    alert('Network error. Please try again.');
+  }
 }
 async function _fetchNotes(){
   if (!_notesOrderNumber) return;
