@@ -185,11 +185,12 @@ async def get_notes_by_order(
     user=Depends(require_staff),
 ):
     booking_res = await db.execute(
-        text("SELECT id, notes FROM bookings WHERE order_number = :on ORDER BY id DESC LIMIT 1"),
+        text("SELECT id, notes, action_taken_by FROM bookings WHERE order_number = :on ORDER BY id DESC LIMIT 1"),
         {"on": order_number}
     )
     booking_row = booking_res.mappings().first()
     guest_note = (booking_row["notes"] or "") if booking_row else ""
+    action_taken_by = (booking_row["action_taken_by"] or "") if booking_row else ""
 
     notes_res = await db.execute(
         text("""
@@ -219,7 +220,7 @@ async def get_notes_by_order(
         for r in notes_rows
     ]
 
-    return {"notes": notes, "guest_note": guest_note}
+    return {"notes": notes, "guest_note": guest_note, "action_taken_by": action_taken_by}
 
 
 @router.post("/by-order/{order_number}")
