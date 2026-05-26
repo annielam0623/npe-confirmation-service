@@ -1631,7 +1631,7 @@ async function takeActionFromNotes(){
   try {
     if (isActioned) {
       const res = await fetch(`/api/bookings/${_notesBookingId}/take-action`, {
-        method: 'DELETE', headers: {'Content-Type':'application/json'}
+        method: 'PUT', headers: {'Content-Type':'application/json'}
       });
       if (res.ok) {
         if (btn) {
@@ -1644,7 +1644,7 @@ async function takeActionFromNotes(){
       }
     } else {
       const res = await fetch(`/api/bookings/${_notesBookingId}/take-action`, {
-        method: 'POST', headers: {'Content-Type':'application/json'}
+        method: 'PUT', headers: {'Content-Type':'application/json'}
       });
       if (res.ok) {
         const data = await res.json();
