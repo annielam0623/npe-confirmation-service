@@ -299,48 +299,65 @@ async def add_note(
     db: AsyncSession = Depends(get_db),
     user=Depends(require_staff),
 ):
-    # Fetch booking for SMS/email
-    result = await db.execute(select(Booking).where(Booking.id == booking_id))
-    booking = result.scalar_one_or_none()
-    if not booking:
-        raise HTTPException(status_code=404, detail="Booking not found")
+    phone = None
+    customer_email = None
+    first_name = "Guest"
+    order_number = str(booking_id)
 
-    sms_status = None
+    if source == "tickets":
+        # tickets_reminders 表拿联系方式
+        tr_res = await db.execute(
+            text("SELECT phone, customer_name, order_number FROM tickets_reminders WHERE id = :id"),
+            {"id": booking_id}
+        )
+        tr = tr_res.mappings().first()
+        if not tr:
+            raise HTTPException(status_code=404, detail="Ticket not found")
+        phone         = tr["phone"]
+        order_number  = tr["order_number"] or str(booking_id)
+        first_name    = (tr["customer_name"] or "Guest").split()[0]
+    else:
+        result = await db.execute(select(Booking).where(Booking.id == booking_id))
+        booking = result.scalar_one_or_none()
+        if not booking:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        phone          = booking.phone
+        customer_email = booking.customer_email
+        first_name     = booking.first_name or "Guest"
+        order_number   = booking.order_number
+
+    sms_status   = None
     email_status = None
 
-    # Send SMS if requested
-    if payload.send_sms and booking.phone:
+    if payload.send_sms and phone:
         try:
-            await send_sms_async(booking.phone, payload.body)
+            await send_sms_async(phone, payload.body)
             sms_status = "sent"
         except Exception:
             sms_status = "failed"
 
-    # Send Email if requested
-    if payload.send_email and booking.customer_email:
+    if payload.send_email and customer_email:
         try:
-            subject = f"Update on your National Park Express tour — Order {booking.order_number}"
+            subject = f"Update on your National Park Express tour — Order {order_number}"
             html = f"""
-            <p>Hi {booking.first_name},</p>
+            <p>Hi {first_name},</p>
             <p>{payload.body}</p>
             <p>If you have any questions, please contact us at 702-948-4190.</p>
             <p>National Park Express</p>
             """
-            await send_email(booking.customer_email, subject, html)
+            await send_email(customer_email, subject, html)
             email_status = "sent"
         except Exception:
             email_status = "failed"
 
-    # Determine direction
     direction = payload.direction
     if payload.send_sms and payload.send_email:
-        direction = "sms_out"   # primary direction; email_out logged separately below
+        direction = "sms_out"
     elif payload.send_sms:
         direction = "sms_out"
     elif payload.send_email:
         direction = "email_out"
 
-    # Write note
     note = BookingNote(
         booking_id=booking_id,
         author_username=user.username,
@@ -352,7 +369,6 @@ async def add_note(
     )
     db.add(note)
 
-    # Update handler (only for tour/morning, not tickets)
     if source != "tickets":
         await db.execute(
             update(Booking)
@@ -363,7 +379,6 @@ async def add_note(
             )
         )
 
-    # ── Clear action_taken_by for inbound guest messages ─────────────────
     inbound_directions = {"sms_in", "email_in", "guest_reply"}
     if direction in inbound_directions:
         if source == "tickets":
@@ -383,7 +398,6 @@ async def add_note(
     await db.refresh(note)
 
     return {"note": _serialize_note(note)}
-
 
 # ── GET broadcast counts (for dropdown display) ───────────────────────────────
 
