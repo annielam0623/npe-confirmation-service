@@ -285,7 +285,7 @@ async function loadLog(page){
     page:currentPage, page_size:PAGE_SIZE,
   });
   try{
-    const res=await fetch(`/api/notifications/send-log?${qs}`);
+    const res=await fetch(`/api/send-log?${qs}`);
     const data=await res.json();
     renderRows(data.records||[]);
     renderStats(data.stats||{});
@@ -385,7 +385,7 @@ function exportLog(){
     ...(module&&{module}),
     ...(type&&{channel:type}),
   });
-  location.href=`/api/notifications/send-log/export?${qs}`;
+  location.href=`/api/send-log/export?${qs}`;
 }
 
 function smsStatusClass(s){
