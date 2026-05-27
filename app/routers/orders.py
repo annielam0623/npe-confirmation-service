@@ -66,11 +66,17 @@ async def orders_api(
         params["q"] = f"%{q}%"
 
     if date_from:
-        filters.append("b.tour_date >= :date_from")
-        params["date_from"] = date_from
+        try:
+            params["date_from"] = date_type.fromisoformat(date_from)
+            filters.append("b.tour_date >= :date_from")
+        except ValueError:
+            pass
     if date_to:
-        filters.append("b.tour_date <= :date_to")
-        params["date_to"] = date_to
+        try:
+            params["date_to"] = date_type.fromisoformat(date_to)
+            filters.append("b.tour_date <= :date_to")
+        except ValueError:
+            pass
 
     where = " AND ".join(filters)
     offset = (page - 1) * page_size
