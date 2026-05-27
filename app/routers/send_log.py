@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from datetime import date
 from typing import Optional
@@ -27,7 +27,7 @@ async def send_log_api(
     module: Optional[str] = Query(None),
     type_filter: Optional[str] = Query(None, alias="type"),
     current_user=Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     filters = []
     params = {}
@@ -80,7 +80,8 @@ async def send_log_api(
         ORDER BY sent_at DESC
     """)
 
-    rows = db.execute(query, params).mappings().all()
+   result = await db.execute(query, params)
+   rows = result.mappings().all()
 
     # Stats
     total = len(rows)
