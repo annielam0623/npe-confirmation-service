@@ -39,13 +39,20 @@ async def orders_api(
     q:         Optional[str] = Query(None),
     date_from: Optional[str] = Query(None),
     date_to:   Optional[str] = Query(None),
+    status:    Optional[str] = Query("confirmed"),   # confirmed | processing | all
     page:      int           = Query(1, ge=1),
     page_size: int           = Query(50, ge=1, le=200),
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    filters = ["1=1","b.source = 'rezdy'"]
+    filters = ["1=1", "b.source = 'rezdy'"]
     params: dict = {}
+
+    # Status filter
+    if status == "confirmed":
+        filters.append("UPPER(COALESCE(b.status,'')) = 'CONFIRMED'")
+    elif status == "processing":
+        filters.append("UPPER(COALESCE(b.status,'')) IN ('PROCESSING','ON_HOLD','PENDING','PENDING_SUPPLIER','PENDING_CUSTOMER')")
 
     if q:
         filters.append("""(
@@ -57,6 +64,13 @@ async def orders_api(
             b.product_name ILIKE :q
         )""")
         params["q"] = f"%{q}%"
+
+    if date_from:
+        filters.append("b.tour_date >= :date_from")
+        params["date_from"] = date_from
+    if date_to:
+        filters.append("b.tour_date <= :date_to")
+        params["date_to"] = date_to
 
     where = " AND ".join(filters)
     offset = (page - 1) * page_size
@@ -83,6 +97,7 @@ async def orders_api(
                 b.quantities,
                 b.agent_name,
                 b.source,
+                b.status,
                 b.created_at,
                 b.updated_at
             FROM bookings b
@@ -125,6 +140,7 @@ async def orders_api(
             "quantities":      r["quantities"] or "—",
             "agent_name":      r["agent_name"] or "—",
             "source":          r["source"] or "—",
+            "status":          r["status"] or "—",
             "created_at":      fmt_dt(r["created_at"]),
             "updated_at":      fmt_dt(r["updated_at"]),
         })
