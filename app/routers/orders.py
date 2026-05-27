@@ -1,3 +1,4 @@
+
 """
 app/routers/orders.py
 Orders — live feed from bookings table (Rezdy + Excel)
@@ -7,21 +8,21 @@ GET  /api/operations/orders    — JSON data
 from datetime import datetime, date as date_type, timedelta
 from typing import Optional
 from zoneinfo import ZoneInfo
-
+ 
 from fastapi import APIRouter, Depends, Query, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
-
+ 
 from app.database import get_db
 from app.auth import get_current_user
-
+ 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
 LA = ZoneInfo("America/Los_Angeles")
-
-
+ 
+ 
 @router.get("/admin/operations/orders", response_class=HTMLResponse)
 async def orders_page(
     request: Request,
@@ -32,8 +33,8 @@ async def orders_page(
         "current_user": current_user,
         "active_page":  "orders",
     })
-
-
+ 
+ 
 @router.get("/api/operations/orders")
 async def orders_api(
     q:         Optional[str] = Query(None),
@@ -46,7 +47,7 @@ async def orders_api(
 ):
     filters = ["1=1","b.source = 'rezdy'"]
     params: dict = {}
-
+ 
     if q:
         filters.append("""(
             b.order_number ILIKE :q OR
@@ -57,15 +58,15 @@ async def orders_api(
             b.product_name ILIKE :q
         )""")
         params["q"] = f"%{q}%"
-
+ 
     where = " AND ".join(filters)
     offset = (page - 1) * page_size
-
+ 
     count_res = await db.execute(
         text(f"SELECT COUNT(*) FROM bookings b WHERE {where}"), params
     )
     total = count_res.scalar()
-
+ 
     rows_res = await db.execute(
         text(f"""
             SELECT
@@ -84,7 +85,13 @@ async def orders_api(
                 b.agent_name,
                 b.source,
                 b.created_at,
-                b.updated_at
+                b.updated_at,
+                CASE
+                    WHEN b.first_name IS NULL OR LOWER(b.first_name) = 'unknown'
+                      OR b.last_name  IS NULL OR LOWER(b.last_name)  = 'unknown'
+                    THEN 'Pending'
+                    ELSE INITCAP(LOWER(b.status::text))
+                END as display_status
             FROM bookings b
             WHERE {where}
             ORDER BY GREATEST(b.created_at, COALESCE(b.updated_at, b.created_at)) DESC
@@ -93,21 +100,21 @@ async def orders_api(
         {**params, "limit": page_size, "offset": offset}
     )
     rows = rows_res.mappings().all()
-
+ 
     def fmt_dt(dt):
         if not dt:
             return "—"
         if hasattr(dt, 'astimezone'):
             dt = dt.astimezone(LA)
         return dt.strftime("%-m/%-d/%Y %-I:%M %p")
-
+ 
     def fmt_date(d):
         if not d:
             return "—"
         if isinstance(d, str):
             return d
         return d.strftime("%m/%d/%Y")
-
+ 
     records = []
     for r in rows:
         name = " ".join(filter(None, [r["first_name"], r["last_name"]])) or "—"
@@ -125,13 +132,15 @@ async def orders_api(
             "quantities":      r["quantities"] or "—",
             "agent_name":      r["agent_name"] or "—",
             "source":          r["source"] or "—",
+            "display_status":  r["display_status"] or "—",
             "created_at":      fmt_dt(r["created_at"]),
             "updated_at":      fmt_dt(r["updated_at"]),
         })
-
+ 
     return JSONResponse({
         "total":   total,
         "page":    page,
         "pages":   (total + page_size - 1) // page_size,
         "records": records,
     })
+ 
