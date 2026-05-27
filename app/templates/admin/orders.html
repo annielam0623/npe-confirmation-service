@@ -23,11 +23,6 @@ table.ord-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:900px
 .ord-pagination button{height:28px;padding:0 10px;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;font-size:12px;background:#fff;cursor:pointer;}
 .ord-pagination button:disabled{opacity:0.4;cursor:default;}
 .ord-pagination span{font-size:12px;color:#888;}
-.ord-pills{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;}
-.ord-pill{height:28px;padding:0 12px;border:0.5px solid rgba(0,0,0,0.15);border-radius:14px;font-size:12px;font-weight:500;background:#fff;color:#666;cursor:pointer;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:all .15s;}
-.ord-pill:hover{border-color:rgba(0,0,0,0.3);color:#333;}
-.ord-pill.active{background:#1a1a1a;color:#fff;border-color:#1a1a1a;}
-.ord-pill .pill-count{font-size:11px;opacity:0.7;}
 .sp-confirmed{background:#EAF3DE;color:#3B6D11;}
 .sp-processing{background:#FFF8E6;color:#B45309;}
 .sp-onhold{background:#FAEEDA;color:#BA7517;}
@@ -56,12 +51,6 @@ table.ord-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:900px
 {% endblock %}
 
 {% block content %}
-<div class="ord-pills">
-  <button class="ord-pill" data-status="all" onclick="selectPill(this)">All <span class="pill-count" id="pill-count-all"></span></button>
-  <button class="ord-pill active" data-status="confirmed" onclick="selectPill(this)">Confirmed <span class="pill-count" id="pill-count-confirmed"></span></button>
-  <button class="ord-pill" data-status="processing" onclick="selectPill(this)">Processing <span class="pill-count" id="pill-count-processing"></span></button>
-</div>
-
 <div class="ord-controls">
   <input type="text" id="q" placeholder="Search order#, name, email, phone, product..." oninput="debounceLoad()">
 
@@ -118,7 +107,6 @@ table.ord-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:900px
 <script>
 let currentPage = 1, totalPages = 1, debounceTimer = null, allRecords = [];
 let drRange = 'month', drFrom = '', drTo = '';
-let currentStatus = 'confirmed';
 
 function laToday(){ return new Date().toLocaleDateString('en-CA',{timeZone:'America/Los_Angeles'}); }
 function laWeekStart(){
@@ -180,14 +168,6 @@ document.addEventListener('click',e=>{
   }
 });
 
-function selectPill(el){
-  document.querySelectorAll('.ord-pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  currentStatus = el.dataset.status;
-  currentPage = 1;
-  loadOrders();
-}
-
 function debounceLoad(){ clearTimeout(debounceTimer); debounceTimer=setTimeout(()=>{currentPage=1;loadOrders();},400); }
 function clearFilters(){
   document.getElementById('q').value='';
@@ -221,29 +201,10 @@ function statusTagHtml(s){
   return `<span class="sp ${cls}">${label}</span>`;
 }
 
-async function loadPillCounts(){
-  // Fetch counts for all / confirmed / processing separately
-  const {from,to}=getDateRange();
-  const base=new URLSearchParams({page:1,page_size:1});
-  if(from) base.set('date_from',from);
-  if(to)   base.set('date_to',to);
-  const q=document.getElementById('q').value.trim();
-  if(q) base.set('q',q);
-
-  const [rAll,rConf,rProc] = await Promise.all([
-    fetch(`/api/operations/orders?${base}&status=all`).then(r=>r.json()),
-    fetch(`/api/operations/orders?${base}&status=confirmed`).then(r=>r.json()),
-    fetch(`/api/operations/orders?${base}&status=processing`).then(r=>r.json()),
-  ]);
-  document.getElementById('pill-count-all').textContent       = rAll.total  ? `(${rAll.total.toLocaleString()})`  : '';
-  document.getElementById('pill-count-confirmed').textContent = rConf.total ? `(${rConf.total.toLocaleString()})` : '';
-  document.getElementById('pill-count-processing').textContent= rProc.total ? `(${rProc.total.toLocaleString()})` : '';
-}
-
 async function loadOrders(){
   const q=document.getElementById('q').value.trim();
   const {from,to}=getDateRange();
-  const params=new URLSearchParams({page:currentPage,page_size:50,status:currentStatus});
+  const params=new URLSearchParams({page:currentPage,page_size:50});
   if(q)    params.set('q',q);
   if(from) params.set('date_from',from);
   if(to)   params.set('date_to',to);
@@ -259,7 +220,6 @@ async function loadOrders(){
   if(!allRecords.length){
     document.getElementById('ord-tbody').innerHTML='<tr><td colspan="12" class="ord-loading">No orders found</td></tr>';
     document.getElementById('ord-pagination').style.display='none';
-    loadPillCounts();
     return;
   }
   document.getElementById('ord-tbody').innerHTML=allRecords.map(r=>`
@@ -283,8 +243,6 @@ async function loadOrders(){
   document.getElementById('page-info').textContent=`Page ${currentPage} of ${totalPages}`;
   document.getElementById('btn-prev').disabled=currentPage<=1;
   document.getElementById('btn-next').disabled=currentPage>=totalPages;
-
-  loadPillCounts();
 }
 
 function exportExcel(){

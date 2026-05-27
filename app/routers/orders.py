@@ -39,7 +39,6 @@ async def orders_api(
     q:         Optional[str] = Query(None),
     date_from: Optional[str] = Query(None),
     date_to:   Optional[str] = Query(None),
-    status:    Optional[str] = Query("confirmed"),   # confirmed | processing | all
     page:      int           = Query(1, ge=1),
     page_size: int           = Query(50, ge=1, le=200),
     current_user=Depends(get_current_user),
@@ -47,12 +46,6 @@ async def orders_api(
 ):
     filters = ["1=1", "b.source = 'rezdy'"]
     params: dict = {}
-
-    # Status filter — cast enum to text first to avoid invalid enum value error
-    if status == "confirmed":
-        filters.append("UPPER(b.status::text) = 'CONFIRMED'")
-    elif status == "processing":
-        filters.append("UPPER(b.status::text) IN ('PROCESSING','ON_HOLD','PENDING','PENDING_SUPPLIER','PENDING_CUSTOMER')")
 
     if q:
         filters.append("""(
