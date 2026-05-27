@@ -307,7 +307,7 @@ async def add_note(
     if source == "tickets":
         # tickets_reminders 表拿联系方式
         tr_res = await db.execute(
-            text("SELECT phone, first_name, last_name, order_number FROM tickets_reminders WHERE id = :id"),
+            text("SELECT phone, first_name, last_name, chd_number FROM tickets_reminders WHERE id = :id"),
             {"id": booking_id}
         )
         tr = tr_res.mappings().first()
