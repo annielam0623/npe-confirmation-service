@@ -80,8 +80,8 @@ async def send_log_api(
         ORDER BY sent_at DESC
     """)
 
-   result = await db.execute(query, params)
-   rows = result.mappings().all()
+    result = await db.execute(query, params)
+    rows = result.mappings().all()
 
     # Stats
     total = len(rows)
