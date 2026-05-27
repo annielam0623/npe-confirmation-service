@@ -314,7 +314,7 @@ async def add_note(
         if not tr:
             raise HTTPException(status_code=404, detail="Ticket not found")
         phone         = tr["phone"]
-        order_number  = tr["order_number"] or str(booking_id)
+        order_number  = tr["chd_number"] or str(booking_id)
         first_name    = (tr["first_name"] or tr["last_name"] or "Guest").split()[0]
     else:
         result = await db.execute(select(Booking).where(Booking.id == booking_id))
