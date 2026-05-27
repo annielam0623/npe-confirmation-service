@@ -307,7 +307,7 @@ async def add_note(
     if source == "tickets":
         # tickets_reminders 表拿联系方式
         tr_res = await db.execute(
-            text("SELECT phone, customer_name, order_number FROM tickets_reminders WHERE id = :id"),
+            text("SELECT phone, first_name, last_name, order_number FROM tickets_reminders WHERE id = :id"),
             {"id": booking_id}
         )
         tr = tr_res.mappings().first()
@@ -315,7 +315,7 @@ async def add_note(
             raise HTTPException(status_code=404, detail="Ticket not found")
         phone         = tr["phone"]
         order_number  = tr["order_number"] or str(booking_id)
-        first_name    = (tr["customer_name"] or "Guest").split()[0]
+        first_name    = (tr["first_name"] or tr["last_name"] or "Guest").split()[0]
     else:
         result = await db.execute(select(Booking).where(Booking.id == booking_id))
         booking = result.scalar_one_or_none()
