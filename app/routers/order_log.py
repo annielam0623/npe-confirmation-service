@@ -85,7 +85,7 @@ async def order_log_api(
             parsed_date = date_type.fromisoformat(date)
             al_filters.append("DATE(al.created_at AT TIME ZONE 'America/Los_Angeles') = :tour_date")
             params["tour_date"] = parsed_date
-         except ValueError:
+        except ValueError:
             pass
 
     if event_type:
