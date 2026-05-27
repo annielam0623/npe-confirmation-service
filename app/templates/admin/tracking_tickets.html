@@ -635,6 +635,7 @@ function _renderNotes(notes){
 async function submitNote(dir){
   var body = document.getElementById('noteInput').value.trim();
   if(!body || !_notesBookingId) return;
+  var isStaffNote = (dir === 'staff_note');   
   var smsChk   = document.getElementById('sendSmsCheck');
   var emailChk = document.getElementById('sendEmailCheck');
   var sendSms   = isStaffNote ? false : (smsChk   ? smsChk.checked   : false);
