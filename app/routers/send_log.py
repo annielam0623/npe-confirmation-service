@@ -34,7 +34,7 @@ async def send_log_api(
 
     if date_filter:
         filters.append("DATE(sent_at AT TIME ZONE 'America/Los_Angeles') = :date_filter")
-        params["date_filter"] = date_filter
+        params["date_filter"] = date.fromisoformat(date_filter)
     else:
         filters.append("DATE(sent_at AT TIME ZONE 'America/Los_Angeles') = CURRENT_DATE AT TIME ZONE 'America/Los_Angeles'")
 
