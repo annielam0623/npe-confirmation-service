@@ -44,7 +44,7 @@ async def orders_api(
     current_user=Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    filters = ["1=1", "b.source = 'rezdy'"]
+    filters = ["1=1","b.source = 'rezdy'"]
     params: dict = {}
 
     if q:
@@ -57,19 +57,6 @@ async def orders_api(
             b.product_name ILIKE :q
         )""")
         params["q"] = f"%{q}%"
-
-    if date_from:
-        try:
-            params["date_from"] = date_type.fromisoformat(date_from)
-            filters.append("b.tour_date >= :date_from")
-        except ValueError:
-            pass
-    if date_to:
-        try:
-            params["date_to"] = date_type.fromisoformat(date_to)
-            filters.append("b.tour_date <= :date_to")
-        except ValueError:
-            pass
 
     where = " AND ".join(filters)
     offset = (page - 1) * page_size
@@ -96,7 +83,6 @@ async def orders_api(
                 b.quantities,
                 b.agent_name,
                 b.source,
-                b.status,
                 b.created_at,
                 b.updated_at
             FROM bookings b
@@ -139,7 +125,6 @@ async def orders_api(
             "quantities":      r["quantities"] or "—",
             "agent_name":      r["agent_name"] or "—",
             "source":          r["source"] or "—",
-            "status":          r["status"] or "—",
             "created_at":      fmt_dt(r["created_at"]),
             "updated_at":      fmt_dt(r["updated_at"]),
         })

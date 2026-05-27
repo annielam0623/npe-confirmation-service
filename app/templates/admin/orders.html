@@ -23,11 +23,7 @@ table.ord-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:900px
 .ord-pagination button{height:28px;padding:0 10px;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;font-size:12px;background:#fff;cursor:pointer;}
 .ord-pagination button:disabled{opacity:0.4;cursor:default;}
 .ord-pagination span{font-size:12px;color:#888;}
-.sp-confirmed{background:#EAF3DE;color:#3B6D11;}
-.sp-processing{background:#FFF8E6;color:#B45309;}
-.sp-onhold{background:#FAEEDA;color:#BA7517;}
-.sp-cancelled{background:#FCEBEB;color:#A32D2D;}
-.sp-pending{background:#F0EEFA;color:#534AB7;}
+.ord-loading{padding:24px;text-align:center;color:#ccc;font-size:13px;}
 /* ── Date range picker ── */
 .dr-wrap{position:relative;display:inline-block;}
 .dr-trigger{height:32px;padding:0 12px;border:0.5px solid rgba(0,0,0,0.18);border-radius:7px;font-size:13px;background:#fff;color:#1a1a1a;cursor:pointer;display:flex;align-items:center;gap:6px;white-space:nowrap;user-select:none;}
@@ -88,11 +84,11 @@ table.ord-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:900px
         <tr>
           <td>Order #</td><td>Guest</td><td>Product</td><td>Type</td>
           <td>Tour Date</td><td>Pickup</td><td>Pax</td><td>Agent</td>
-          <td>Status</td><td>Source</td><td>Created</td><td>Updated</td>
+          <td>Source</td><td>Created</td><td>Updated</td>
         </tr>
       </thead>
       <tbody id="ord-tbody">
-        <tr><td colspan="12" class="ord-loading">Loading...</td></tr>
+        <tr><td colspan="11" class="ord-loading">Loading...</td></tr>
       </tbody>
     </table>
   </div>
@@ -149,7 +145,6 @@ function selectRange(range,el){
     document.getElementById('dr-label').textContent=rangeLabelText();
     document.getElementById('dr-dropdown').classList.add('hidden');
     document.getElementById('dr-trigger').classList.remove('active');
-    currentPage=1; loadOrders();
   }
 }
 function applyCustom(){
@@ -159,8 +154,7 @@ function applyCustom(){
   document.getElementById('dr-label').textContent=rangeLabelText();
   document.getElementById('dr-dropdown').classList.add('hidden');
   document.getElementById('dr-trigger').classList.remove('active');
-  currentPage=1; loadOrders();
-}
+  }
 document.addEventListener('click',e=>{
   if(!document.getElementById('dr-wrap').contains(e.target)){
     document.getElementById('dr-dropdown').classList.add('hidden');
@@ -189,17 +183,6 @@ function sourceTagHtml(s){
   const cls=s==='rezdy'?'sp-rezdy':s==='excel'?'sp-excel':'';
   return `<span class="sp ${cls}">${s}</span>`;
 }
-function statusTagHtml(s){
-  if(!s||s==='—') return '<span style="color:#ccc;">—</span>';
-  const upper=(s||'').toUpperCase();
-  let cls='', label=s;
-  if(upper==='CONFIRMED')                          { cls='sp-confirmed'; label='Confirmed'; }
-  else if(upper==='PROCESSING')                    { cls='sp-processing'; label='Processing'; }
-  else if(upper==='ON_HOLD'||upper==='ON HOLD')    { cls='sp-onhold';    label='On Hold'; }
-  else if(upper==='CANCELLED'||upper==='CANCELED') { cls='sp-cancelled'; label='Cancelled'; }
-  else if(upper.includes('PENDING'))               { cls='sp-pending';   label='Pending'; }
-  return `<span class="sp ${cls}">${label}</span>`;
-}
 
 async function loadOrders(){
   const q=document.getElementById('q').value.trim();
@@ -209,7 +192,7 @@ async function loadOrders(){
   if(from) params.set('date_from',from);
   if(to)   params.set('date_to',to);
 
-  document.getElementById('ord-tbody').innerHTML='<tr><td colspan="12" class="ord-loading">Loading...</td></tr>';
+  document.getElementById('ord-tbody').innerHTML='<tr><td colspan="11" class="ord-loading">Loading...</td></tr>';
   const res=await fetch(`/api/operations/orders?${params}`);
   const data=await res.json();
 
@@ -218,7 +201,7 @@ async function loadOrders(){
   document.getElementById('ord-count').textContent=`${data.total.toLocaleString()} orders`;
 
   if(!allRecords.length){
-    document.getElementById('ord-tbody').innerHTML='<tr><td colspan="12" class="ord-loading">No orders found</td></tr>';
+    document.getElementById('ord-tbody').innerHTML='<tr><td colspan="11" class="ord-loading">No orders found</td></tr>';
     document.getElementById('ord-pagination').style.display='none';
     return;
   }
@@ -232,7 +215,6 @@ async function loadOrders(){
       <td style="font-size:11px;color:#666;">${r.pickup_time!=='—'?r.pickup_time:''}${r.pickup_location!=='—'?'<br>'+r.pickup_location:''}</td>
       <td>${r.quantities}</td>
       <td style="font-size:11px;">${r.agent_name}</td>
-      <td>${statusTagHtml(r.status)}</td>
       <td>${sourceTagHtml(r.source)}</td>
       <td style="white-space:nowrap;font-size:11px;">${r.created_at}</td>
       <td style="white-space:nowrap;font-size:11px;">${r.updated_at}</td>
@@ -248,12 +230,12 @@ async function loadOrders(){
 function exportExcel(){
   if(!allRecords.length){alert('No data to export.');return;}
   const headers=['Order #','Guest','Phone/Email','Product','Type','Tour Date',
-                 'Pickup Time','Pickup Location','Pax','Agent','Status','Source','Created','Updated'];
+                 'Pickup Time','Pickup Location','Pax','Agent','Source','Created','Updated'];
   const rows=allRecords.map(r=>[
     r.order_number,r.name,r.phone!=='—'?r.phone:r.email,
     r.product_name,r.product_type,r.tour_date,
     r.pickup_time,r.pickup_location,r.quantities,
-    r.agent_name,r.status,r.source,r.created_at,r.updated_at
+    r.agent_name,r.source,r.created_at,r.updated_at
   ]);
   const ws=XLSX.utils.aoa_to_sheet([headers,...rows]);
   const wb=XLSX.utils.book_new();
