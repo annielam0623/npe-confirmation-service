@@ -637,8 +637,8 @@ async function submitNote(dir){
   if(!body || !_notesBookingId) return;
   var smsChk   = document.getElementById('sendSmsCheck');
   var emailChk = document.getElementById('sendEmailCheck');
-  var sendSms   = smsChk   ? smsChk.checked   : false;
-  var sendEmail = emailChk ? emailChk.checked  : false;
+  var sendSms   = isStaffNote ? false : (smsChk   ? smsChk.checked   : false);
+  var sendEmail = isStaffNote ? false : (emailChk ? emailChk.checked  : false);
   try{
     await fetch('/booking-notes/'+_notesBookingId+'?source=tickets', {
       method:'POST', credentials:'include',
