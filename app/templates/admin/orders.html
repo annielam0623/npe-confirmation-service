@@ -84,7 +84,7 @@ table.ord-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:900px
         <tr>
           <td>Order #</td><td>Guest</td><td>Product</td><td>Type</td>
           <td>Tour Date</td><td>Pickup</td><td>Pax</td><td>Agent</td>
-          <td>Status</td><td>Source</td><td>Created</td><td>Updated</td>
+          <td>Source</td><td>Created</td><td>Updated</td>
         </tr>
       </thead>
       <tbody id="ord-tbody">
@@ -183,13 +183,6 @@ function sourceTagHtml(s){
   const cls=s==='rezdy'?'sp-rezdy':s==='excel'?'sp-excel':'';
   return `<span class="sp ${cls}">${s}</span>`;
 }
-function statusTagHtml(s){
-  if(!s||s==='—') return '<span style="color:#ccc;">—</span>';
-  if(s==='Confirmed') return '<span class="sp" style="background:#EAF3DE;color:#3B6D11;">Confirmed</span>';
-  if(s==='Cancelled') return '<span class="sp" style="background:#FCEBEB;color:#A32D2D;">Cancelled</span>';
-  if(s==='Pending')   return '<span class="sp" style="background:#FFF8E6;color:#B45309;">Pending</span>';
-  return `<span class="sp">${s}</span>`;
-}
 
 async function loadOrders(){
   const q=document.getElementById('q').value.trim();
@@ -199,7 +192,7 @@ async function loadOrders(){
   if(from) params.set('date_from',from);
   if(to)   params.set('date_to',to);
 
-  document.getElementById('ord-tbody').innerHTML='<tr><td colspan="12" class="ord-loading">Loading...</td></tr>';
+  document.getElementById('ord-tbody').innerHTML='<tr><td colspan="11" class="ord-loading">Loading...</td></tr>';
   const res=await fetch(`/api/operations/orders?${params}`);
   const data=await res.json();
 
@@ -208,7 +201,7 @@ async function loadOrders(){
   document.getElementById('ord-count').textContent=`${data.total.toLocaleString()} orders`;
 
   if(!allRecords.length){
-    document.getElementById('ord-tbody').innerHTML='<tr><td colspan="12" class="ord-loading">No orders found</td></tr>';
+    document.getElementById('ord-tbody').innerHTML='<tr><td colspan="11" class="ord-loading">No orders found</td></tr>';
     document.getElementById('ord-pagination').style.display='none';
     return;
   }
@@ -222,7 +215,6 @@ async function loadOrders(){
       <td style="font-size:11px;color:#666;">${r.pickup_time!=='—'?r.pickup_time:''}${r.pickup_location!=='—'?'<br>'+r.pickup_location:''}</td>
       <td>${r.quantities}</td>
       <td style="font-size:11px;">${r.agent_name}</td>
-      <td>${statusTagHtml(r.display_status)}</td>
       <td>${sourceTagHtml(r.source)}</td>
       <td style="white-space:nowrap;font-size:11px;">${r.created_at}</td>
       <td style="white-space:nowrap;font-size:11px;">${r.updated_at}</td>
