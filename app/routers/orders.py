@@ -48,11 +48,11 @@ async def orders_api(
     filters = ["1=1", "b.source = 'rezdy'"]
     params: dict = {}
 
-    # Status filter
+    # Status filter — cast enum to text first to avoid invalid enum value error
     if status == "confirmed":
-        filters.append("UPPER(COALESCE(b.status,'')) = 'CONFIRMED'")
+        filters.append("UPPER(b.status::text) = 'CONFIRMED'")
     elif status == "processing":
-        filters.append("UPPER(COALESCE(b.status,'')) IN ('PROCESSING','ON_HOLD','PENDING','PENDING_SUPPLIER','PENDING_CUSTOMER')")
+        filters.append("UPPER(b.status::text) IN ('PROCESSING','ON_HOLD','PENDING','PENDING_SUPPLIER','PENDING_CUSTOMER')")
 
     if q:
         filters.append("""(
