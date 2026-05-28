@@ -149,11 +149,153 @@ table.preview-tbl {
     </button>
     <span id="upload-err" style="font-size:12px;color:#A32D2D;margin-left:12px;"></span>
   </div>
+  
+  <!-- ── Last Minute Order ─────────────────────────── -->
+  <div class="send-card" style="margin-top:8px;">
+    <h2>⚡ Last Minute Order</h2>
+    <p style="font-size:12px;color:#888;margin-top:-8px;margin-bottom:14px;">
+      For orders placed within the cancellation window — skip reconfirmation, send directly to lunch selection &amp; pickup details.
+    </p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tour Type</label>
+        <select id="lm-tour-type">
+          <option value="">— Select tour type —</option>
+          <option value="upper_antelope">Upper Antelope Canyon Bus Tour</option>
+          <option value="lower_antelope">Lower Antelope Canyon Bus Tour</option>
+          <option value="antelop_X">Antelope Canyon X Bus Tour</option>
+          <option value="grand_canyon_south">Grand Canyon South Rim Bus Tour</option>
+          <option value="grand_canyon_west">Grand Canyon West Rim Bus Tour</option>
+          <option value="bryce_zion">Bryce Canyon &amp; Zion Bus Tour</option>
+          <option value="valley_of_fire_full">Valley of Fire — Full Day</option>
+          <option value="valley_of_fire_half">Valley of Fire — Half Day</option>
+          <option value="hoover_dam">Hoover Dam Tour</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tour Date</label>
+        <input type="date" id="lm-tour-date" onclick="try{this.showPicker()}catch(e){}">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Excel Manifest (.xlsx)</label>
+        <input type="file" id="lm-excel-file" accept=".xlsx">
+      </div>
+    </div>
+    <p style="font-size:11px;color:#aaa;margin-bottom:14px;">
+      Required columns: Order Number, First Name, Last Name, Email, Customer Phone, Pick-up Time, Pick-up Location
+    </p>
+    <button class="btn-send" style="background:#7C4A00;" onmouseenter="this.style.background='#5c3700'" onmouseleave="this.style.background='#7C4A00'" onclick="lmUploadPreview()">
+      ⚡ Upload &amp; Preview
+    </button>
+    <span id="lm-upload-err" style="font-size:12px;color:#A32D2D;margin-left:12px;"></span>
+  </div>
+
+  <!-- Last Minute Preview -->
+  <div id="lm-step-preview" class="hidden">
+   <div id="lm-preview-warning" style="display:none;background:#fff8e1;border:1px solid #f0d080;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:#7C4A00;line-height:1.8;"></div>
+    <div class="preview-card">
+      <div class="preview-header" style="background:#FFF3E0;">
+        <span style="color:#7C4A00;">⚡ Last Minute Preview — <span id="lm-preview-count">0</span> bookings</span>
+        <span class="preview-meta" id="lm-preview-meta"></span>
+      </div>
+      <div class="tbl-wrap">
+        <table class="preview-tbl">
+          <thead>
+            <tr>
+              <td>Order #</td>
+              <td>Name</td>
+              <td>Email</td>
+              <td>Phone</td>
+              <td>Qty</td>
+              <td>Pickup Time</td>
+              <td>Pickup Location</td>
+              <td>Note</td>
+              <td>
+                <div class="select-all-wrap">
+                  <input type="checkbox" id="lm-select-all-dups" onchange="lmToggleAllDups(this.checked)">
+                  <label for="lm-select-all-dups" style="cursor:pointer;">Send anyway (all)</label>
+                </div>
+              </td>
+            </tr>
+          </thead>
+          <tbody id="lm-preview-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;">
+      <div>
+        <div id="lm-preview-meta-bar" style="font-size:12px;color:#888;margin-bottom:8px;"></div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+          <label class="stype-btn active" id="lm-lbl-combined" onclick="lmSetSendType('combined')">
+            <input type="radio" name="lm_send_type" value="combined" checked style="display:none;">
+            <span class="stype-icon">✉️📱</span> Both (SMS + Email)
+          </label>
+          <label class="stype-btn stype-sms" id="lm-lbl-sms" onclick="lmSetSendType('sms')">
+            <input type="radio" name="lm_send_type" value="sms" style="display:none;">
+            <span class="stype-icon">📱</span> SMS Only
+          </label>
+          <label class="stype-btn stype-email" id="lm-lbl-email" onclick="lmSetSendType('email')">
+            <input type="radio" name="lm_send_type" value="email" style="display:none;">
+            <span class="stype-icon">📧</span> Email Only
+          </label>
+        </div>
+        <button class="btn-send" id="lm-btn-confirm-send" style="background:#7C4A00;" onmouseenter="this.style.background='#5c3700'" onmouseleave="this.style.background='#7C4A00'" data-base="Send Last Minute" onclick="lmConfirmSend()">
+          ⚡ Send Last Minute (SMS + Email)
+        </button>
+        <span id="lm-send-err" style="font-size:12px;color:#A32D2D;margin-left:12px;"></span>
+      </div>
+      <button class="btn" style="align-self:flex-end;margin-bottom:0;" onclick="lmReset()">✕ Cancel</button>
+    </div>
+  </div>
+
+  <!-- Last Minute Result -->
+  <div id="lm-step-result" class="hidden">
+    <div class="result-card">
+      <p style="font-size:13px;font-weight:600;color:#7C4A00;margin-bottom:12px;">⚡ Last Minute Send Complete</p>
+      <div class="result-summary">
+        <div class="result-stat ok">
+          <div class="num" id="lm-res-sent">0</div>
+          <div class="lbl">Sent</div>
+        </div>
+        <div class="result-stat fail">
+          <div class="num" id="lm-res-failed">0</div>
+          <div class="lbl">Failed</div>
+        </div>
+        <div class="result-stat skip">
+          <div class="num" id="lm-res-skipped">0</div>
+          <div class="lbl">Skipped</div>
+        </div>
+        <div class="result-stat">
+          <div class="num" id="lm-res-total">0</div>
+          <div class="lbl">Total</div>
+        </div>
+      </div>
+      <div class="tbl-wrap">
+        <table class="preview-tbl">
+          <thead>
+            <tr>
+              <td>Order #</td><td>Name</td>
+              <td>Email Status</td><td>SMS Status</td>
+            </tr>
+          </thead>
+          <tbody id="lm-result-tbody"></tbody>
+        </table>
+      </div>
+      <button class="btn" style="margin-top:16px;" onclick="lmReset()">↩ Send Another</button>
+    </div>
+    <button class="btn" style="margin-top:16px;" onclick="lmReset()">↩ Send Another</button>
+    </div>
+    <div id="lm-skip-report" style="display:none;background:#fff8e1;border:1px solid #f0d080;border-radius:10px;padding:12px 16px;margin-top:12px;font-size:12px;color:#7C4A00;line-height:1.8;"></div>
+  </div>
+  </div>
 </div>
 
 <!-- Preview -->
 <div id="step-preview" class="hidden">
-  <div class="preview-card">
+  <div id="step-preview"-warning" style="display:none;background:#fff8e1;border:1px solid #f0d080;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:#7C4A00;line-height:1.8;"></div>
+   <div class="preview-card">
     <div class="preview-header">
       <span>✅ Preview — <span id="preview-count">0</span> bookings</span>
       <span class="preview-meta" id="preview-meta"></span>
@@ -245,6 +387,9 @@ table.preview-tbl {
     </div>
     <button class="btn" style="margin-top:16px;" onclick="resetForm()">↩ Send Another</button>
   </div>
+  <div id="skip-report" style="display:none;background:#fff8e1;border:1px solid #f0d080;border-radius:10px;padding:12px 16px;margin-top:12px;font-size:12px;color:#7C4A00;line-height:1.8;"></div>
+</div>
+  </div>
 </div>
 {% endblock %}
 
@@ -312,6 +457,23 @@ function showPreview(data) {
   const selectAllWrap = document.getElementById('select-all-dups').closest('.select-all-wrap');
   selectAllWrap.style.display = dups > 0 ? 'flex' : 'none';
   document.getElementById('select-all-dups').checked = false;
+
+  // check for missing email/phone and show warning
+const missingEmail = rows.filter(r => !r.email);
+const missingPhone = rows.filter(r => !r.phone);
+const warningEl = document.getElementById('preview-warning');
+if (missingEmail.length > 0 || missingPhone.length > 0) {
+  let msg = '⚠️ Some bookings have missing information:<br>';
+  if (missingEmail.length > 0)
+    msg += `&nbsp;&nbsp;• <strong>No email</strong> (email will be skipped): ${missingEmail.map(r => r.order_number).join(', ')}<br>`;
+  if (missingPhone.length > 0)
+    msg += `&nbsp;&nbsp;• <strong>No phone</strong> (SMS will be skipped): ${missingPhone.map(r => r.order_number).join(', ')}`;
+  warningEl.innerHTML = msg;
+  warningEl.style.display = 'block';
+} else {
+  warningEl.innerHTML = '';
+  warningEl.style.display = 'none';
+}
 
   const tbody = document.getElementById('preview-tbody');
   tbody.innerHTML = rows.map(r => `
@@ -396,6 +558,24 @@ function showResults(data) {
       </td>
     </tr>`).join('');
 
+    // 生成 skip 报告
+
+  const skippedEmail = results.filter(r => r.email_status === 'skipped - no email');
+  const skippedSms   = results.filter(r => r.sms_status   === 'skipped - no phone');
+  const reportEl = document.getElementById('skip-report');
+if (skippedEmail.length > 0 || skippedSms.length > 0) {
+  let report = '<strong>⚠️ Send Report - Skipped Items:</strong><br>';
+  if (skippedEmail.length > 0)
+    report += `&nbsp;&nbsp;• Email skipped (no email address): ${skippedEmail.map(r => r.order).join(', ')}<br>`;
+  if (skippedSms.length > 0)
+    report += `&nbsp;&nbsp;• SMS skipped (no phone number): ${skippedSms.map(r => r.order).join(', ')}`;
+  reportEl.innerHTML = report;
+  reportEl.style.display = 'block';
+} else {
+  reportEl.innerHTML = '';
+  reportEl.style.display = 'none';
+}
+
   document.getElementById('step-preview').classList.add('hidden');
   document.getElementById('step-result').classList.remove('hidden');
 }
@@ -410,6 +590,199 @@ function resetForm() {
   if (btn) { btn.disabled = false; btn.innerHTML = '✉️ Send to All (SMS + Email)'; }
   document.querySelector('input[name="send_type"][value="combined"]').checked = true;
   setSendType('combined');
+}
+
+// ── Last Minute Order ─────────────────────────────────────
+let lmParsedRows = [];
+let lmCurrentTourType = '';
+let lmCurrentTourDate = '';
+
+function lmSetSendType(val) {
+  document.querySelector(`input[name="lm_send_type"][value="${val}"]`).checked = true;
+  ['combined','sms','email'].forEach(v => {
+    document.getElementById('lm-lbl-' + v).classList.toggle('active', v === val);
+  });
+  const labels = { combined: 'SMS + Email', sms: 'SMS Only', email: 'Email Only' };
+  const icons  = { combined: '⚡', sms: '📱', email: '📧' };
+  const btn = document.getElementById('lm-btn-confirm-send');
+  if (btn) btn.innerHTML = icons[val] + ' Send Last Minute (' + labels[val] + ')';
+}
+
+function lmToggleAllDups(checked) {
+  document.querySelectorAll('.lm-ignore-dup').forEach(cb => cb.checked = checked);
+}
+
+async function lmUploadPreview() {
+  const file     = document.getElementById('lm-excel-file').files[0];
+  const tourType = document.getElementById('lm-tour-type').value;
+  const tourDate = document.getElementById('lm-tour-date').value;
+  const errEl    = document.getElementById('lm-upload-err');
+  errEl.textContent = '';
+
+  if (!file)     { errEl.textContent = 'Please select an Excel file.'; return; }
+  if (!tourType) { errEl.textContent = 'Please select a tour type.'; return; }
+  if (!tourDate) { errEl.textContent = 'Please select a tour date.'; return; }
+
+  const fd = new FormData();
+  fd.append('file', file);
+  fd.append('tour_type', tourType);
+  fd.append('tour_date', tourDate);
+
+  try {
+    const res  = await fetch('/api/notifications/tour-confirmation/preview', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.detail || 'Upload failed.'; return; }
+    lmParsedRows      = data.rows;
+    lmCurrentTourType = tourType;
+    lmCurrentTourDate = tourDate;
+    lmShowPreview(data);
+  } catch(e) {
+    errEl.textContent = 'Network error. Please try again.';
+  }
+}
+
+function lmShowPreview(data) {
+  const rows = data.rows;
+  const dups = rows.filter(r => r.duplicate).length;
+  document.getElementById('lm-preview-count').textContent = rows.length;
+  const metaText = dups > 0 ? `⚠️ ${dups} duplicate(s) will be skipped` : '✅ No duplicates found';
+  document.getElementById('lm-preview-meta').textContent     = metaText;
+  document.getElementById('lm-preview-meta-bar').textContent = metaText;
+  document.getElementById('lm-preview-meta-bar').style.color = dups > 0 ? '#BA7517' : '#3B6D11';
+
+  const selectAllWrap = document.getElementById('lm-select-all-dups').closest('.select-all-wrap');
+  selectAllWrap.style.display = dups > 0 ? 'flex' : 'none';
+  document.getElementById('lm-select-all-dups').checked = false;
+
+  // 检查缺失项，显示警告
+const missingEmail = rows.filter(r => !r.email);
+const missingPhone = rows.filter(r => !r.phone);
+const warningEl = document.getElementById('lm-preview-warning');
+if (missingEmail.length > 0 || missingPhone.length > 0) {
+  let msg = '⚠️ Some bookings have missing information:<br>';
+  if (missingEmail.length > 0)
+    msg += `&nbsp;&nbsp;• <strong>No email</strong> (email will be skipped): ${missingEmail.map(r => r.order_number).join(', ')}<br>`;
+  if (missingPhone.length > 0)
+    msg += `&nbsp;&nbsp;• <strong>No phone</strong> (SMS will be skipped): ${missingPhone.map(r => r.order_number).join(', ')}`;
+  warningEl.innerHTML = msg;
+  warningEl.style.display = 'block';
+} else {
+  warningEl.innerHTML = '';
+  warningEl.style.display = 'none';
+}
+
+  document.getElementById('lm-preview-tbody').innerHTML = rows.map(r => `
+    <tr class="${r.duplicate ? 'dup-row' : ''}">
+      <td>${r.order_number}</td>
+      <td>${r.name}</td>
+      <td style="font-size:11px;">${r.email || '<span style="color:#ccc">—</span>'}</td>
+      <td style="font-size:11px;">${r.phone || '<span style="color:#ccc">—</span>'}</td>
+      <td>${r.quantities}</td>
+      <td>${r.pickup_time}</td>
+      <td>${r.pickup_location}</td>
+      <td>${r.duplicate ? '<span class="dup-badge">Duplicate</span>' : ''}</td>
+      <td>${r.duplicate ? `<label style="font-size:11px;color:#BA7517;cursor:pointer;display:flex;align-items:center;gap:4px;"><input type="checkbox" data-order="${r.order_number}" class="lm-ignore-dup"> Send anyway</label>` : ''}</td>
+    </tr>`).join('');
+
+  document.getElementById('lm-step-preview').classList.remove('hidden');
+}
+
+async function lmConfirmSend() {
+  const btn      = document.getElementById('lm-btn-confirm-send');
+  const errEl    = document.getElementById('lm-send-err');
+  const sendType = document.querySelector('input[name="lm_send_type"]:checked').value;
+  errEl.textContent = '';
+  btn.disabled  = true;
+  btn.innerHTML = '<span class="spinner"></span> Sending…';
+
+  const ignoredDups = new Set(
+    [...document.querySelectorAll('.lm-ignore-dup:checked')].map(el => el.dataset.order)
+  );
+
+  const guests = (lmParsedRows || [])
+    .filter(r => !r.duplicate || ignoredDups.has(r.order_number))
+    .map(r => ({
+      order_number:    r.order_number,
+      first_name:      r.first_name || (r.name || '').split(' ')[0] || '',
+      last_name:       r.last_name  || (r.name || '').split(' ').slice(1).join(' ') || '',
+      customer_email:  r.email || '',
+      phone:           r.phone || '',
+      quantities:      r.quantities || 1,
+      pickup_time:     r.pickup_time || '',
+      pickup_location: r.pickup_location || '',
+      mtlv_eligible:   (r.mtlv_promo || '').trim().toUpperCase() === 'ELIGIBLE',
+    }));
+
+  try {
+    const res  = await fetch('/send/last-minute-confirmation-bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tour_type: lmCurrentTourType, tour_date: lmCurrentTourDate, send_type: sendType, guests })
+    });
+    const data = await res.json();
+    if (!res.ok) { errEl.textContent = data.detail || 'Send failed.'; btn.disabled = false; btn.innerHTML = '⚡ Send Last Minute'; return; }
+    lmShowResults(data);
+  } catch(e) {
+    errEl.textContent = 'Network error.';
+    btn.disabled  = false;
+    btn.innerHTML = '⚡ Send Last Minute';
+  }
+}
+
+function lmShowResults(data) {
+  const results = data.results;
+  const sent    = results.filter(r => (r.email_status||'').startsWith('sent')).length;
+  const failed  = results.filter(r => (r.email_status||'').startsWith('failed')).length;
+  const skipped = results.filter(r => r.status === 'skipped').length;
+
+  document.getElementById('lm-res-sent').textContent    = sent;
+  document.getElementById('lm-res-failed').textContent  = failed;
+  document.getElementById('lm-res-skipped').textContent = skipped;
+  document.getElementById('lm-res-total').textContent   = data.total;
+
+// 生成 skip 报告
+  const skippedEmail = results.filter(r => r.email_status === 'skipped - no email');
+  const skippedSms   = results.filter(r => r.sms_status   === 'skipped - no phone');
+  const reportEl = document.getElementById('lm-skip-report');
+  if (skippedEmail.length > 0 || skippedSms.length > 0) {
+    let report = '<strong>⚠️ Send Report — Skipped Items:</strong><br>';
+    if (skippedEmail.length > 0)
+      report += `&nbsp;&nbsp;• Email skipped (no email address): ${skippedEmail.map(r => r.order).join(', ')}<br>`;
+    if (skippedSms.length > 0)
+      report += `&nbsp;&nbsp;• SMS skipped (no phone number): ${skippedSms.map(r => r.order).join(', ')}`;
+    reportEl.innerHTML = report;
+    reportEl.style.display = 'block';
+  } else {
+    reportEl.innerHTML = '';
+    reportEl.style.display = 'none';
+  }
+
+  document.getElementById('lm-result-tbody').innerHTML = results.map(r => `
+    <tr>
+      <td>${r.order}</td>
+      <td>${r.name || ''}</td>
+      <td class="${r.email_status?.startsWith('sent') ? 'status-ok' : r.email_status?.startsWith('failed') ? 'status-fail' : 'status-skip'}">
+        ${r.email_status || '—'}
+      </td>
+      <td class="${r.sms_status?.startsWith('sent') ? 'status-ok' : r.sms_status?.startsWith('failed') ? 'status-fail' : ''}">
+        ${r.sms_status || '—'}
+      </td>
+    </tr>`).join('');
+
+  document.getElementById('lm-step-preview').classList.add('hidden');
+  document.getElementById('lm-step-result').classList.remove('hidden');
+}
+
+function lmReset() {
+  document.getElementById('lm-step-preview').classList.add('hidden');
+  document.getElementById('lm-step-result').classList.add('hidden');
+  document.getElementById('lm-excel-file').value = '';
+  document.getElementById('lm-upload-err').textContent = '';
+  const btn = document.getElementById('lm-btn-confirm-send');
+  if (btn) { btn.disabled = false; btn.innerHTML = '⚡ Send Last Minute (SMS + Email)'; }
+  document.querySelector('input[name="lm_send_type"][value="combined"]').checked = true;
+  lmSetSendType('combined');
+  lmParsedRows = [];
 }
 </script>
 {% endblock %}

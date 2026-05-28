@@ -335,3 +335,192 @@ def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
 </td></tr></table>
 </body>
 </html>"""
+
+# ── Last Minute Email ─────────────────────────────────────────────────────────
+def build_last_minute_email(row: dict, tour_type: str, tour_date: str, form_url: str,
+                            pickup_instruction: str = "", pickup_photo_url: str = "",
+                            pickup_photo_label: str = "") -> str:
+    cfg   = TOUR_TYPES.get(tour_type, {})
+    label = cfg.get("label", tour_type)
+    first = row.get("first_name", "")
+    qty   = int(row.get("quantities") or 1)
+    onum  = row.get("order_number", "")
+    ptime = row.get("pickup_time", "")
+    ploc  = row.get("pickup_location", "")
+
+    try:
+        date_fmt = datetime.strptime(tour_date, "%Y-%m-%d").strftime("%B %-d, %Y")
+    except ValueError:
+        date_fmt = tour_date
+
+    hero_url = TOUR_IMAGES.get(tour_type, TOUR_IMAGES["grand_canyon_south"])
+
+    if pickup_photo_url:
+        pickup_cell = (
+            f'<a href="{pickup_photo_url}" style="color:#2563eb;font-weight:600;">'
+            f'{ploc} Pickup location - click here for detail</a>'
+        )
+    else:
+        pickup_cell = pickup_instruction or f"<strong>{ploc}</strong>"
+
+    fee_html = ""
+    if cfg.get("has_park_fee"):
+        fee_html = """
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#f5faff;border:1px solid #bfdbfe;border-radius:12px;margin-bottom:24px;">
+          <tr>
+            <td style="padding:14px 18px;border-bottom:1px solid #dbeafe;">
+              <table width="100%" cellpadding="0" cellspacing="0"><tr>
+                <td style="width:42px;vertical-align:top;">
+                  <div style="width:36px;height:36px;border-radius:9px;background:#eef6ff;text-align:center;line-height:36px;font-size:18px;">&#128100;</div>
+                </td>
+                <td style="vertical-align:top;padding-left:12px;">
+                  <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:600;color:#0b1f3a;margin-bottom:3px;">Non-U.S. Residents fee (ages 16+):</div>
+                  <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:300;color:#333;line-height:1.6;">$100/person or $250 America the Beautiful Annual Pass (up to 4 people).</div>
+                </td>
+              </tr></table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:14px 18px;">
+              <table width="100%" cellpadding="0" cellspacing="0"><tr>
+                <td style="width:42px;vertical-align:top;">
+                  <div style="width:36px;height:36px;border-radius:9px;background:#eef6ff;text-align:center;line-height:36px;font-size:18px;">&#129538;</div>
+                </td>
+                <td style="vertical-align:top;padding-left:12px;">
+                  <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:600;color:#0b1f3a;margin-bottom:3px;">Legal U.S. residents:</div>
+                  <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:300;color:#333;line-height:1.6;">Present valid government-issued ID to waive the $100 fee.</div>
+                </td>
+              </tr></table>
+            </td>
+          </tr>
+        </table>"""
+
+    lunch_html = ""
+    if cfg.get("has_lunch"):
+        lunch_html = """
+        <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbf0;border:1px solid #f0d080;border-radius:10px;margin-bottom:24px;">
+          <tr><td style="padding:14px 18px;">
+            <table width="100%" cellpadding="0" cellspacing="0"><tr>
+              <td style="width:42px;vertical-align:top;">
+                <div style="width:36px;height:36px;border-radius:9px;background:#eef6ff;text-align:center;line-height:36px;font-size:18px;">&#127374;</div>
+              </td>
+              <td style="vertical-align:top;padding-left:12px;">
+                <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:300;color:#24364f;line-height:1.6;margin-bottom:4px;">
+                  Please click the button below to select your <strong style="font-weight:600;">lunch option</strong> and confirm your pickup details.
+                </div>
+                <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:12px;font-weight:300;color:#f97316;line-height:1.6;">
+                  This does not apply to Hoover Dam tours, tours without meals, or voucher bookings.
+                </div>
+              </td>
+            </tr></table>
+          </td></tr>
+        </table>"""
+
+    has_lunch = cfg.get("has_lunch", False)
+    btn_text  = "&#127374; SELECT MY LUNCH OPTION" if has_lunch else "&#10003; I'VE READ THIS MESSAGE"
+
+    return f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@300;400;600&display=swap');
+  </style>
+</head>
+<body style="margin:0;padding:0;background:#f4f8fc;font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f8fc;padding:30px 0;">
+<tr><td align="center">
+<table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:12px;overflow:hidden;">
+
+  <tr><td style="padding:0;margin:0;height:200px;position:relative;overflow:hidden;">
+    <div style="position:relative;height:200px;overflow:hidden;">
+      <img src="{hero_url}" alt="{label}" width="600" style="width:100%;height:200px;object-fit:cover;display:block;" />
+      <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(6,26,51,0.45),rgba(6,26,51,0.82));display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;">
+        <img src="{LOGO_URL}" alt="NPE Logo" width="72" style="width:72px;height:72px;object-fit:contain;border-radius:50%;margin-bottom:10px;" />
+        <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:20px;font-weight:600;color:#ffffff;letter-spacing:0.3px;">National Park <span style="color:#f97316;">Express</span></div>
+        <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:10px;font-weight:300;color:#dbeafe;margin-top:5px;letter-spacing:1.5px;">YOUR JOURNEY. OUR PASSION.</div>
+      </div>
+    </div>
+  </td></tr>
+
+  <tr><td style="padding:32px 40px;background:#ffffff;">
+
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:15px;font-weight:300;color:#1a1a1a;margin:0 0 8px;letter-spacing:-0.1px;">Hi <strong style="font-weight:600;">{first}</strong>,</p>
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:300;color:#24364f;line-height:1.7;margin:0 0 28px;letter-spacing:-0.1px;">
+      Your <strong style="font-weight:600;">{label}</strong> is scheduled for <strong style="color:#2563eb;font-weight:600;">{date_fmt}</strong>. Please review your tour details below and confirm your pickup information.
+    </p>
+
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5ecf5;border-radius:12px;overflow:hidden;margin-bottom:24px;">
+      <tr>
+        <td style="width:42px;padding:14px 0 14px 16px;vertical-align:middle;border-bottom:1px solid #e5ecf5;">
+          <div style="width:36px;height:36px;border-radius:9px;background:#eef6ff;text-align:center;line-height:36px;font-size:16px;">&#128196;</div>
+        </td>
+        <td style="padding:14px 16px;font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;border-bottom:1px solid #e5ecf5;">
+          <div style="font-size:10px;font-weight:600;color:#5b6b80;text-transform:uppercase;letter-spacing:0.7px;">Order #</div>
+          <div style="font-size:14px;font-weight:600;color:#0b1f3a;margin-top:2px;">{onum}</div>
+        </td>
+      </tr>
+      <tr>
+        <td style="width:42px;padding:14px 0 14px 16px;vertical-align:middle;border-bottom:1px solid #e5ecf5;">
+          <div style="width:36px;height:36px;border-radius:9px;background:#eef6ff;text-align:center;line-height:36px;font-size:16px;">&#128101;</div>
+        </td>
+        <td style="padding:14px 16px;font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;border-bottom:1px solid #e5ecf5;">
+          <div style="font-size:10px;font-weight:600;color:#5b6b80;text-transform:uppercase;letter-spacing:0.7px;">Party Size</div>
+          <div style="font-size:14px;font-weight:600;color:#0b1f3a;margin-top:2px;">{qty} Guest(s)</div>
+        </td>
+      </tr>
+      <tr>
+        <td style="width:42px;padding:14px 0 14px 16px;vertical-align:middle;border-bottom:1px solid #e5ecf5;">
+          <div style="width:36px;height:36px;border-radius:9px;background:#eef6ff;text-align:center;line-height:36px;font-size:16px;">&#128197;</div>
+        </td>
+        <td style="padding:14px 16px;font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;border-bottom:1px solid #e5ecf5;">
+          <div style="font-size:10px;font-weight:600;color:#5b6b80;text-transform:uppercase;letter-spacing:0.7px;">Tour Date</div>
+          <div style="font-size:14px;font-weight:600;color:#2563eb;margin-top:2px;">{date_fmt}</div>
+        </td>
+      </tr>
+      <tr>
+        <td style="width:42px;padding:14px 0 14px 16px;vertical-align:middle;border-bottom:1px solid #e5ecf5;">
+          <div style="width:36px;height:36px;border-radius:9px;background:#eef6ff;text-align:center;line-height:36px;font-size:16px;">&#128336;</div>
+        </td>
+        <td style="padding:14px 16px;font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;border-bottom:1px solid #e5ecf5;">
+          <div style="font-size:10px;font-weight:600;color:#5b6b80;text-transform:uppercase;letter-spacing:0.7px;">Pickup Time</div>
+          <div style="font-size:14px;font-weight:600;color:#0b1f3a;margin-top:2px;">{ptime}</div>
+        </td>
+      </tr>
+      <tr>
+        <td style="width:42px;padding:14px 0 14px 16px;vertical-align:middle;">
+          <div style="width:36px;height:36px;border-radius:9px;background:#eef6ff;text-align:center;line-height:36px;font-size:16px;">&#128205;</div>
+        </td>
+        <td style="padding:14px 16px;font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;">
+          <div style="font-size:10px;font-weight:600;color:#5b6b80;text-transform:uppercase;letter-spacing:0.7px;">Pickup Location</div>
+          <div style="font-size:14px;font-weight:300;color:#0b1f3a;margin-top:2px;">{pickup_cell}</div>
+        </td>
+      </tr>
+    </table>
+
+    {fee_html}
+    {lunch_html}
+
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td align="center" style="padding:4px 0 8px;">
+        <a href="{form_url}" style="display:inline-block;background:#1a3a5c;color:#ffffff;text-decoration:none;padding:16px 48px;border-radius:10px;font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:15px;font-weight:600;letter-spacing:0.5px;">{btn_text}</a>
+      </td></tr>
+      <tr><td align="center">
+        <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:11px;font-weight:300;color:#aaa;margin:6px 0 0;">Link expires at 6:00 PM PST the day before your tour</p>
+      </td></tr>
+    </table>
+
+  </td></tr>
+
+  <tr><td style="background:#061a33;padding:20px 36px;text-align:center;">
+    <img src="{LOGO_URL}" alt="NPE Logo" width="60" style="width:60px;height:60px;object-fit:contain;border-radius:50%;margin-bottom:12px;" />
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:300;color:#dbeafe;margin:0 0 4px;">Questions? We're here to help!</p>
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:300;color:#dbeafe;margin:0 0 4px;">+1 (702) 948-4190 | <a href="mailto:reservations@nationalparkexpress.com" style="color:#93c5fd;">reservations@nationalparkexpress.com</a></p>
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:12px;font-weight:300;color:#93c5fd;margin:0;"><a href="https://www.nationalparkexpress.com" style="color:#93c5fd;">nationalparkexpress.com</a></p>
+  </td></tr>
+
+</table>
+</td></tr></table>
+</body>
+</html>"""
