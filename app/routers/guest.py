@@ -134,7 +134,8 @@ def _thanks(booking) -> HTMLResponse:
 
 
 def _render(booking, tour_config: dict, error_msg: str = "",
-            pickup_instruction: str = "", pickup_photo_url: str = "", pickup_photo_label: str = "") -> HTMLResponse:
+            pickup_instruction: str = "", pickup_photo_url: str = "", pickup_photo_label: str = "",
+            is_last_minute: bool = False) -> HTMLResponse:
     tour_date  = booking.tour_date
     date_fmt   = tour_date.strftime("%A, %B %-d, %Y") if tour_date else "—"
     qty        = int(booking.quantities or 1)
@@ -250,7 +251,7 @@ def _render(booking, tour_config: dict, error_msg: str = "",
             </div>"""
             for k, icon, name, val in items
         )
-        lunch_show = "" if booking.confirmation == "yes" else "display:none"
+        lunch_show = "" if (booking.confirmation == "yes" or is_last_minute) else "display:none"
         lunch_html = f"""<div class="gf-section" id="lunch-section" style="{lunch_show}">
           <h2>🥪 Lunch Selection</h2>
           <p class="gf-hint">Select for all <strong>{qty}</strong> guest(s). Total must equal your party size.</p>
@@ -385,6 +386,7 @@ function adjMtlv(d){{var el=document.getElementById('c-mtlv');if(!el)return;var 
       <form method="post">
         <input type="hidden" name="npe_submit" value="1">
 
+        {'<!--last-minute: modify hidden-->' if is_last_minute else f'''
         <div class="gf-section">
           <div style="background:#e8f4fd;border-left:4px solid #1a3a5c;border-radius:6px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#1a3a5c;">
             <p style="margin:0 0 8px;"><strong>Confirm Your Tour</strong><br>Click <strong>YES</strong> to confirm, then select lunch and click <strong>Submit Confirmation</strong>.</p>
@@ -395,7 +397,7 @@ function adjMtlv(d){{var el=document.getElementById('c-mtlv');if(!el)return;var 
             {yes_btn}
             <label class="gf-yn no" style="{modify_style_attr}">
               <input type="radio" name="confirmation" value="modify_req"
-                {'checked' if is_modify_req else ''}
+                {"checked" if is_modify_req else ""}
                 {modify_dis_attr} onchange="onModify(this)">
               <span class="gf-yn-icon">✏️</span>
               <span class="gf-yn-label">Modify<br><small>{modify_sub}</small></span>
@@ -411,7 +413,7 @@ function adjMtlv(d){{var el=document.getElementById('c-mtlv');if(!el)return;var 
               </div>
             </div>
           </div>
-        </div>
+        </div>'''}
 
         {lunch_html}
 
@@ -599,8 +601,10 @@ async def guest_confirm_page(token: str, db: AsyncSession = Depends(get_db)):
 
     tour_config = TOUR_TYPES.get(booking.tour_type or "", list(TOUR_TYPES.values())[0])
     pu_inst, pu_photo, pu_label = await _fetch_pickup_info(booking.pickup_location, db)
+    is_last_minute = (booking.module == "last_minute")
     return _render(booking, tour_config,
-                   pickup_instruction=pu_inst, pickup_photo_url=pu_photo, pickup_photo_label=pu_label)
+                   pickup_instruction=pu_inst, pickup_photo_url=pu_photo, pickup_photo_label=pu_label,
+                   is_last_minute=is_last_minute)
 
 
 @router.post("/confirm/{token}", response_class=HTMLResponse)
@@ -660,7 +664,10 @@ async def guest_confirm_submit(
     # Validation
     error_msg = ""
     ts = datetime.now(LA).strftime("%Y-%m-%d %H:%M")
-    if not confirmation:
+    is_last_minute = (booking.module == "last_minute")
+    if is_last_minute:
+        confirmation = "yes"
+    elif not confirmation:
         error_msg = "Please select YES or Modify."
     elif confirmation not in ("yes", "modify_req"):
         error_msg = "Please select YES or Modify."
