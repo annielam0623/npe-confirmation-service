@@ -146,7 +146,7 @@ def _render(booking, tour_config: dict, error_msg: str = "",
     # v4.17.14: YES locked only when already YES; modify_req state can still click YES to cancel
     yes_locked    = booking.confirmation == "yes"
     is_modify_req = booking.confirmation == "modify_req"
-    # Modify locked from midnight (00:00 AM LA) of the day before tour date
+    # Modify locked from 11:59 PM LA time, two days before tour date
     modify_locked = False
     if booking.tour_date:
         from datetime import timedelta
@@ -154,14 +154,14 @@ def _render(booking, tour_config: dict, error_msg: str = "",
             booking.tour_date.year,
             booking.tour_date.month,
             booking.tour_date.day,
-            0, 0, 0,
+            23, 59, 0,
             tzinfo=LA
-        ) - timedelta(days=1)  # 00:00 AM LA time on the day before tour
+        ) - timedelta(days=2)  # 11:59 PM LA time, two days before tour
         if datetime.now(LA) >= deadline:
             modify_locked = True
-    # v4.17.14: Count modify submissions for 3-attempt limit
+    # v4.17.14: Count modify submissions for 2-attempt limit
     modify_count    = (booking.notes_history or "").count("] Modify requested")
-    modify_maxed    = modify_count >= 3
+    modify_maxed    = modify_count >= 2
     modify_disabled = modify_locked or modify_maxed
 
     # Pickup box
@@ -224,9 +224,9 @@ def _render(booking, tour_config: dict, error_msg: str = "",
         modify_sub = "Max requests reached"
     else:
         from datetime import timedelta
-        _deadline_day = booking.tour_date - timedelta(days=1) if booking.tour_date else None
-        _deadline_str = _deadline_day.strftime("%b %-d") if _deadline_day else "day before tour"
-        modify_sub = f"Available until {_deadline_str} midnight"
+        _deadline_day = booking.tour_date - timedelta(days=2) if booking.tour_date else None
+        _deadline_str = _deadline_day.strftime("%b %-d") if _deadline_day else "2 days before tour"
+        modify_sub = f"Available until {_deadline_str}, 11:59 PM"
 
     # Lunch section
     lunch_html = ""
@@ -629,7 +629,7 @@ async def guest_confirm_submit(
     qty         = int(booking.quantities or 1)
     has_lunch   = tour_config.get("has_lunch", False)
 
-    # Modify locked from midnight (00:00 AM LA) of the day before tour date
+    # Modify locked from midnight (23:59 PM LA) of 2 day before tour date
     _mod_locked = False
     if booking.tour_date:
         from datetime import timedelta as _td
@@ -637,9 +637,9 @@ async def guest_confirm_submit(
             booking.tour_date.year,
             booking.tour_date.month,
             booking.tour_date.day,
-            0, 0, 0,
+            23, 59, 0,
             tzinfo=LA
-        ) - _td(days=1)
+        ) - _td(days=2)
         if datetime.now(LA) >= _deadline:
             _mod_locked = True
     _modify_count = (booking.notes_history or "").count("] Modify requested")
@@ -665,11 +665,11 @@ async def guest_confirm_submit(
     elif confirmation not in ("yes", "modify_req"):
         error_msg = "Please select YES or Modify."
     elif confirmation == "yes" and is_yes_confirmed and _mod_locked:
-        error_msg = "Lunch selection is locked. Changes are no longer accepted after midnight the day before your tour."
+        error_msg = "Lunch selection is locked. Changes are no longer accepted after 11:59 PM, two days before your tour."
     elif confirmation == "modify_req" and _mod_locked:
-        error_msg = "The Modify option is no longer available. Date change requests must be submitted before midnight the day before your tour."
-    elif confirmation == "modify_req" and _modify_count >= 3:
-        error_msg = "You have reached the maximum number of date change requests (3). Please contact us at reservations@nationalparkexpress.com or call 702-948-4190."
+        error_msg = "This request is only valid up to 24 hours before your tour."
+    elif confirmation == "modify_req" and _modify_count >= 2:
+        error_msg = "You have reached the maximum number of date change requests (2). Please contact us at reservations@nationalparkexpress.com or call 702-948-4190."
     elif confirmation == "modify_req" and not reschedule_date:
         error_msg = "Please select a new tour date for your Modify request."
     # Lunch total validation handled client-side with warning modal; no server-side block
