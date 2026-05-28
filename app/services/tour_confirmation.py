@@ -204,7 +204,9 @@ def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
         </table>"""
 
     # Lunch note (shown for all tours, explains applicability)
-    lunch_html = """
+    lunch_html = ""
+    if cfg.get("has_lunch"):
+        lunch_html = """
         <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbf0;border:1px solid #f0d080;border-radius:10px;margin-bottom:24px;">
           <tr><td style="padding:14px 18px;">
             <table width="100%" cellpadding="0" cellspacing="0"><tr>
@@ -254,7 +256,7 @@ def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
 
     <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:15px;font-weight:300;color:#1a1a1a;margin:0 0 8px;letter-spacing:-0.1px;">Hi <strong style="font-weight:600;">{first}</strong>,</p>
     <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:300;color:#24364f;line-height:1.7;margin:0 0 28px;letter-spacing:-0.1px;">
-      Your tour is scheduled for <strong style="color:#2563eb;font-weight:600;">{date_fmt}</strong>. Please review your tour details below and <strong style="font-weight:600;">reconfirm your spot</strong>.
+      Your <strong style="font-weight:600;">{label}</strong> is scheduled for <strong style="color:#2563eb;font-weight:600;">{date_fmt}</strong>. Please review your tour details below and <strong style="font-weight:600;">reconfirm your spot</strong>.
     </p>
 
     <!-- Details card -->
@@ -323,6 +325,7 @@ def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
 
   <!-- Footer -->
   <tr><td style="background:#061a33;padding:20px 36px;text-align:center;">
+    <img src="{LOGO_URL}" alt="NPE Logo" width="60" style="width:60px;height:60px;object-fit:contain;border-radius:50%;margin-bottom:12px;" />
     <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:300;color:#dbeafe;margin:0 0 4px;">Questions? We're here to help!</p>
     <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:300;color:#dbeafe;margin:0 0 4px;">+1 (702) 948-4190 | <a href="mailto:reservations@nationalparkexpress.com" style="color:#93c5fd;">reservations@nationalparkexpress.com</a></p>
     <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:12px;font-weight:300;color:#93c5fd;margin:0;"><a href="https://www.nationalparkexpress.com" style="color:#93c5fd;">nationalparkexpress.com</a></p>

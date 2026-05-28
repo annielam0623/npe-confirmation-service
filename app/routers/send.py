@@ -227,7 +227,8 @@ async def send_tour_confirmation(
                                     pickup_instruction=pickup_instruction,
                                     pickup_photo_url=pickup_photo_url,
                                     pickup_photo_label=f"{ploc} Pickup location - click here for detail")
-        subject = f"Tour Confirmation & Lunch Selection – {_fmt_date(tour_date)}"
+        has_lunch = tc.TOUR_TYPES[tour_type].get("has_lunch", False)
+        subject = f"Tour Confirmation & Lunch Selection – {_fmt_date(tour_date)}" if has_lunch else f"Tour Confirmation – {_fmt_date(tour_date)}"
 
         email_message_id = ""
         try:
