@@ -932,6 +932,10 @@
       <div class="num" id="s-pend">0</div>
       <div class="lbl">Pending</div>
     </div>
+    <div class="stat s-cancel">
+      <div class="num" id="s-cancel">0</div>
+      <div class="lbl">Cancelled</div>
+    </div>
   </div>
 
   <div class="records-bar" style="justify-content:flex-start;gap:8px;align-items:center;padding:8px 20px 12px;">
@@ -1178,15 +1182,17 @@
             || (r.phone || '').toLowerCase().includes(q);
         });
       }
-      var tot = rows.length, yes = 0, resc = 0, pend = 0;
+      var tot = rows.length, yes = 0, resc = 0, pend = 0, cancel = 0;
       rows.forEach(function (r) {
         if (r.confirmation_status === 'yes') yes++;
         else if (r.confirmation_status === 'reschedule_req') resc++;
+        else if (r.confirmation_status === 'cancel') cancel++;
         else pend++;
       });
       document.getElementById('s-total').textContent = tot;
       document.getElementById('s-yes').textContent = yes;
       document.getElementById('s-resc').textContent = resc;
+      document.getElementById('s-cancel').textContent = cancel;
       document.getElementById('s-pend').textContent = pend;
       document.getElementById('rec-label').textContent = tot + ' record' + (tot === 1 ? '' : 's');
 
