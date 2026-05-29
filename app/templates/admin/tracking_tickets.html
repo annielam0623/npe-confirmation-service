@@ -871,11 +871,6 @@
       </div>
       <button class="btn-nav" onclick="changeDate(1)">&#8250;</button>
     </div>
-    <div style="position:relative;">
-      <button onclick="openBroadcast()"
-        style="margin-left:auto;display:flex;align-items:center;gap:5px;padding:5px 14px;border-radius:7px;border:none;font-size:12px;background:linear-gradient(135deg,#ffce21,#ee8e00);color:#1a1a1a;cursor:pointer;font-weight:700;">&#128227;
-        Broadcast</button>
-    </div>
   </div>
 
   <div class="pills-bar">
@@ -932,6 +927,9 @@
     <button class="btn-refresh" onclick="loadData()" style="height:32px;padding:0 14px;">&#x21bb; Refresh</button>
     <span id="rec-label" style="white-space:nowrap;font-size:12px;color:rgba(255,255,255,0.35);margin-left:4px;">0
       records</span>
+    <button onclick="openBroadcast()"
+      style="margin-left:auto;height:32px;padding:0 16px;display:flex;align-items:center;gap:5px;border-radius:7px;border:none;font-size:12px;background:linear-gradient(135deg,#ffce21,#ee8e00);color:#1a1a1a;cursor:pointer;font-weight:700;">&#128227;
+      Broadcast</button>
   </div>
 
   <div style="padding:0 20px 6px;">
@@ -1074,7 +1072,7 @@
                 style="accent-color:#f4b23c;">
               <div>
                 <div style="color:#d9e8ff;font-size:13px;font-weight:500;">Pending</div>
-                <div style="color:rgba(255,255,255,0.4);font-size:11px;">Not yet sent</div>
+                <div style="color:rgba(255,255,255,0.4);font-size:11px;">No reply yet</div>
               </div>
               <span style="margin-left:auto;color:rgba(255,255,255,0.4);font-size:12px;" id="bcast-count-pending">—</span>
             </label>
@@ -1084,8 +1082,8 @@
               <input type="radio" name="bcastGroup" value="sent" onchange="onGroupChange()"
                 style="accent-color:#f4b23c;">
               <div>
-                <div style="color:#d9e8ff;font-size:13px;font-weight:500;">Sent</div>
-                <div style="color:rgba(255,255,255,0.4);font-size:11px;">Already sent</div>
+                <div style="color:#d9e8ff;font-size:13px;font-weight:500;">Confirmed</div>
+                <div style="color:rgba(255,255,255,0.4);font-size:11px;">Guest replied yes</div>
               </div>
               <span style="margin-left:auto;color:rgba(255,255,255,0.4);font-size:12px;" id="bcast-count-sent">—</span>
             </label>
@@ -1123,7 +1121,7 @@
 
         <!-- Recipient preview -->
         <div
-          style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px 12px;max-height:150px;overflow-y:auto;">
+          style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:10px 12px;max-height:220px;overflow-y:auto;">
           <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:5px;" id="bcastRecipientCount">0 recipients</div>
           <div id="bcastRecipientList" style="display:flex;flex-direction:column;gap:3px;"></div>
         </div>
@@ -1278,25 +1276,25 @@
         let pool = selectedTours.length ? allRows.filter(r => selectedTours.includes(r.tour_type)) : [];
 
         const allCount     = pool.length;
-        const pendingCount = pool.filter(r => (r.ticket_status || r.status || '').toLowerCase() === 'pending' || !(r.ticket_status || r.status)).length;
-        const sentCount    = pool.filter(r => ['sent','yes'].includes((r.ticket_status || r.status || '').toLowerCase())).length;
+        const pendingCount = pool.filter(r => !r.confirmation || r.confirmation === 'pending').length;
+        const sentCount    = pool.filter(r => r.confirmation === 'yes').length;
 
         document.getElementById('bcast-count-all').textContent     = allCount     + ' guests';
         document.getElementById('bcast-count-pending').textContent = pendingCount + ' guests';
         document.getElementById('bcast-count-sent').textContent    = sentCount    + ' guests';
 
         let recipients = pool;
-        if (group === 'pending') recipients = pool.filter(r => (r.ticket_status || r.status || '').toLowerCase() === 'pending' || !(r.ticket_status || r.status));
-        if (group === 'sent')    recipients = pool.filter(r => ['sent','yes'].includes((r.ticket_status || r.status || '').toLowerCase()));
+        if (group === 'pending') recipients = pool.filter(r => !r.confirmation || r.confirmation === 'pending');
+        if (group === 'sent')    recipients = pool.filter(r => r.confirmation === 'yes');
 
         document.getElementById('bcastRecipientCount').textContent = recipients.length + ' recipient(s)';
-        document.getElementById('bcastRecipientList').innerHTML = recipients.slice(0, 30).map((r, i) =>
+        document.getElementById('bcastRecipientList').innerHTML = recipients.slice(0, 50).map((r, i) =>
           `<div style="display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 6px;background:rgba(255,255,255,0.06);border-radius:4px;border:1px solid rgba(255,255,255,0.1);">
             <input type="checkbox" class="rec-check" data-idx="${i}" checked style="accent-color:#f4b23c;">
-            <span style="flex:1;color:#d9e8ff;font-weight:500;">${escHtml(r.guest_first_name || r.first_name || r.guest_name || '—')}</span>
-            <span style="color:rgba(255,255,255,0.4);font-size:11px;">${escHtml(r.guest_phone || r.phone || r.guest_email || r.email || '—')}</span>
+            <span style="flex:1;color:#d9e8ff;font-weight:500;">${esc(r.name || r.guest_name || '—')}</span>
+            <span style="color:rgba(255,255,255,0.4);font-size:11px;">${esc(r.phone || r.guest_phone || r.email || '—')}</span>
           </div>`
-        ).join('') + (recipients.length > 30 ? `<div style="font-size:11px;color:rgba(255,255,255,0.4);padding:4px 6px;">... and ${recipients.length - 30} more</div>` : '');
+        ).join('') + (recipients.length > 50 ? `<div style="font-size:11px;color:rgba(255,255,255,0.4);padding:4px 6px;">... and ${recipients.length - 50} more</div>` : '');
       }
 
       async function sendBroadcast() {
@@ -1309,8 +1307,8 @@
         const group = document.querySelector('input[name="bcastGroup"]:checked')?.value || 'all';
         let pool = allRows.filter(r => selectedTours.includes(r.tour_type));
         let recipients = pool;
-        if (group === 'pending') recipients = pool.filter(r => (r.ticket_status || r.status || '').toLowerCase() === 'pending' || !(r.ticket_status || r.status));
-        if (group === 'sent')    recipients = pool.filter(r => ['sent','yes'].includes((r.ticket_status || r.status || '').toLowerCase()));
+        if (group === 'pending') recipients = pool.filter(r => !r.confirmation || r.confirmation === 'pending');
+        if (group === 'sent')    recipients = pool.filter(r => r.confirmation === 'yes');
 
         const checkedIdxs = [...document.querySelectorAll('.rec-check:checked')].map(c => parseInt(c.dataset.idx));
         const finalRecipients = checkedIdxs.map(i => recipients[i]).filter(Boolean);
@@ -1331,11 +1329,11 @@
               template_name: document.getElementById('broadcastTemplate').value || null,
               message_body: body,
               recipients: finalRecipients.map(r => ({
-                order_number: r.order_number,
-                customer_name: r.guest_first_name || r.first_name || r.guest_name || '',
-                first_name: r.guest_first_name || r.first_name || (r.guest_name || '').split(' ')[0],
-                phone: r.guest_phone || r.phone,
-                email: r.guest_email || r.email,
+                order_number: r.chd_number || r.order_number,
+                customer_name: r.name || '',
+                first_name: (r.name || '').split(' ')[0],
+                phone: r.phone || r.guest_phone,
+                email: r.email || r.guest_email,
               })),
               send_sms:   _bcastChannel === 'both' || _bcastChannel === 'sms',
               send_email: _bcastChannel === 'both' || _bcastChannel === 'email',
