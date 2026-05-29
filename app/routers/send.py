@@ -359,15 +359,20 @@ async def send_tour_confirmation_bulk(
                                         pickup_instruction=pickup_instruction,
                                         pickup_photo_url=pickup_photo_url,
                                         pickup_photo_label=f"{ploc} Pickup location - click here for detail")
-            subject = f"Tour Confirmation & Lunch Selection – {_fmt_date(tour_date)}"
-            try:
+        has_lunch = tc.TOUR_TYPES[tour_type].get("has_lunch", False)
+        subject = (
+            f"Tour Confirmation & Lunch Selection – {_fmt_date(tour_date)}"
+            if has_lunch else
+            f"Tour Confirmation – {_fmt_date(tour_date)}"
+        )
+        try:
                 email_res        = await send_email(email, f"{first} {last}", subject, email_html)
                 email_message_id = email_res.get("message_id", "") if isinstance(email_res, dict) else ""
                 email_status     = "sent"
-            except Exception as e:
+        except Exception as e:
                 email_status = f"failed: {e}"
                 logger.error(f"[tour_confirmation] Email failed — {email} error={e}")
-            await _update_email_status(db, booking_id, email_status)
+        await _update_email_status(db, booking_id, email_status)
 
         sms_status = ""
         sms_sid    = ""
@@ -497,9 +502,9 @@ async def send_last_minute_confirmation_bulk(
             )
             has_lunch = tc.TOUR_TYPES[tour_type].get("has_lunch", False)
             subject = (
-                f"Last Minute — Lunch Selection & Tour Details – {_fmt_date(tour_date)}"
+                f"Pick up — Lunch Selection & Tour Details – {_fmt_date(tour_date)}"
                 if has_lunch else
-                f"Last Minute — Tour Details – {_fmt_date(tour_date)}"
+                f"Pick up — Tour Details – {_fmt_date(tour_date)}"
             )
             try:
                 email_res        = await send_email(email, f"{first} {last}", subject, email_html)

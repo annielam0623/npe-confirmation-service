@@ -168,6 +168,11 @@ def _render(booking, tour_config: dict, error_msg: str = "",
     # Pickup box
     ploc = booking.pickup_location or ""
     pickup_html = ""
+    pickup_html = ""
+    pickup_html += (
+        f'<div class="gf-row"><span>📱</span>'
+        f'<span>You will receive a morning reminder SMS with a check-in link and real-time vehicle tracking on the day of your tour.</span></div>'
+    )
     if ploc:
         instruction_display = pickup_instruction if pickup_instruction else f"Please arrive at <strong>{ploc}</strong>"
         pickup_html += f'<div class="gf-row"><span>📍</span><span>{instruction_display}</span></div>'
