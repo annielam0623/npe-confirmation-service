@@ -780,6 +780,11 @@
       color: #c97a00;
     }
 
+    .s-sel.cancel {
+      color: #dc3545;
+    }
+
+
     .s-sel:focus {
       outline: 1px solid #1a3a5c;
     }
@@ -1277,6 +1282,7 @@
           + '<td><select class="s-sel ' + conf + '" onchange="saveStatus(this)" data-orig="' + conf + '" data-chd="' + e(r.order_number) + '" data-date="' + e(r.tour_date) + '">'
           + '<option value="yes"' + (conf === 'yes' ? ' selected' : '') + '>&#10003; YES</option>'
           + '<option value="pending"' + (conf === 'pending' ? ' selected' : '') + '>&#8987; Pending</option>'
+          + '<option value="cancel"' + (conf === 'cancel' ? ' selected' : '') + '>&#10005; Cancel</option>'
           + '</select></td>'
           + '<td style="white-space:nowrap;font-size:11px">' + subT + (r.resubmitted ? '<span style="color:#dc3545;font-weight:700"> &#9733;</span>' : '') + '</td>'
           + '</tr>';
