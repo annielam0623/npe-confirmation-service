@@ -447,8 +447,17 @@ def build_last_minute_email(row: dict, tour_type: str, tour_date: str, form_url:
   <tr><td style="padding:32px 40px;background:#ffffff;">
 
     <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:15px;font-weight:300;color:#1a1a1a;margin:0 0 8px;letter-spacing:-0.1px;">Hi <strong style="font-weight:600;">{first}</strong>,</p>
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:300;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
+      Greetings from National Park Express!
+    </p>
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:300;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
+      As your local tour operator for the <strong style="font-weight:600;">{label}</strong>, we're excited to welcome you on <strong style="color:#2563eb;font-weight:600;">{date_fmt}</strong>.
+    </p>
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:300;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
+      {'Please review your tour details below and select your <strong style="font-weight:600;">lunch option</strong> using the button below to help ensure a smooth and hassle-free departure.' if has_lunch else 'Please review your tour details below and confirm your pickup information to help ensure a smooth and hassle-free departure.'}
+    </p>
     <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:300;color:#24364f;line-height:1.7;margin:0 0 28px;letter-spacing:-0.1px;">
-      Your <strong style="font-weight:600;">{label}</strong> is scheduled for <strong style="color:#2563eb;font-weight:600;">{date_fmt}</strong>. Please review your tour details below and confirm your pickup information.
+      We look forward to seeing you soon.
     </p>
 
     <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5ecf5;border-radius:12px;overflow:hidden;margin-bottom:24px;">

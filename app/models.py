@@ -205,6 +205,7 @@ class Booking(Base):
     agent_name = Column(String(200), nullable=True)
 
     # Guest Confirmation
+    is_last_minute   = Column(Boolean, default=False)
     confirmation     = Column(String(20), default="pending")
     reschedule_notes = Column(Text, nullable=True)
     submitted_at     = Column(DateTime, nullable=True)

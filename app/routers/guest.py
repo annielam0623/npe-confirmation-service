@@ -601,7 +601,7 @@ async def guest_confirm_page(token: str, db: AsyncSession = Depends(get_db)):
 
     tour_config = TOUR_TYPES.get(booking.tour_type or "", list(TOUR_TYPES.values())[0])
     pu_inst, pu_photo, pu_label = await _fetch_pickup_info(booking.pickup_location, db)
-    is_last_minute = False
+    is_last_minute = bool(booking.is_last_minute)
     return _render(booking, tour_config,
                    pickup_instruction=pu_inst, pickup_photo_url=pu_photo, pickup_photo_label=pu_label,
                    is_last_minute=is_last_minute)
@@ -664,7 +664,7 @@ async def guest_confirm_submit(
     # Validation
     error_msg = ""
     ts = datetime.now(LA).strftime("%Y-%m-%d %H:%M")
-    is_last_minute = False
+    is_last_minute = bool(booking.is_last_minute)
     if is_last_minute:
         confirmation = "yes"
     elif not confirmation:

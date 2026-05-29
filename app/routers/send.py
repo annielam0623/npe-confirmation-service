@@ -460,6 +460,10 @@ async def send_last_minute_confirmation_bulk(
         }
         booking_id = await _upsert_booking(db, booking_data)
 
+        await db.execute(text(
+            "UPDATE bookings SET is_last_minute = TRUE WHERE id = :id"
+        ), {"id": booking_id})
+
         token = tc.make_token(booking_id, email, tour_date)
         await db.execute(text(
             "UPDATE bookings SET confirm_token = :token WHERE id = :id"
