@@ -106,7 +106,7 @@ def confirm_url(token: str, src: str = "email") -> str:
 
 # ── Tour images ──────────────────────────────────────────────────────────────
 TOUR_IMAGES: dict[str, str] = {
-    "upper_antelope":       "https://nationalparkexpress.com/wp-content/uploads/2026/05/upper-Antelope-scaled.png",
+    "upper_antelope":       "https://nationalparkexpress.com/wp-content/uploads/2023/09/leon-liu-_0aOFIW34rw-unsplash-scaled.jpg",
     "lower_antelope":       "https://nationalparkexpress.com/wp-content/uploads/2023/09/leon-liu-_0aOFIW34rw-unsplash-scaled.jpg",
     "antelop_X":            "https://nationalparkexpress.com/wp-content/uploads/2023/09/leon-liu-_0aOFIW34rw-unsplash-scaled.jpg",
     "grand_canyon_south":   "https://nationalparkexpress.com/wp-content/uploads/2024/04/National-Park-Express-Which-Section-of-the-Grand-Canyon-img1.jpg",
