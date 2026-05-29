@@ -668,7 +668,7 @@ async def guest_confirm_submit(
     if is_last_minute:
         confirmation = "yes"
     elif not confirmation:
-        error_msg = "Please select YES or Modify."
+        error_msg = "Please select YES oSr Modify."
     elif confirmation not in ("yes", "modify_req"):
         error_msg = "Please select YES or Modify."
     elif confirmation == "yes" and is_yes_confirmed and _mod_locked:
