@@ -353,7 +353,7 @@ def build_last_minute_email(row: dict, tour_type: str, tour_date: str, form_url:
                             pickup_photo_label: str = "") -> str:
     cfg   = TOUR_TYPES.get(tour_type, {})
     label = cfg.get("label", tour_type)
-     has_lunch = cfg.get("has_lunch", False)
+    has_lunch = cfg.get("has_lunch", False)
     first = row.get("first_name", "")
     qty   = int(row.get("quantities") or 1)
     onum  = row.get("order_number", "")

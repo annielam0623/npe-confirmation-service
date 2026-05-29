@@ -342,10 +342,10 @@ function onModify(el){{if(hasLunch){{var ls=document.getElementById('lunch-secti
 function openDateModal(){{document.getElementById('date-modal').style.display='flex';}}
 function closeDateModal(){{document.getElementById('date-modal').style.display='none';var inp=document.getElementById('reschedule-date-input');if(!inp.value){{document.querySelectorAll('input[name="confirmation"]').forEach(function(r){{r.checked=false;}});document.getElementById('reschedule-section').style.display='none';if(hasLunch){{var ls=document.getElementById('lunch-section');if(ls)ls.style.display='none';}}}}}}
 function confirmDate(){{var p=document.getElementById('modal-date-picker');if(!p.value){{alert('Please select a date.');return;}}document.getElementById('reschedule-date-input').value=p.value;document.getElementById('reschedule-display').textContent=p.value;document.getElementById('reschedule-selected').style.display='block';document.getElementById('reschedule-prompt').style.display='none';document.getElementById('date-modal').style.display='none';}}
-var isYesConfirmed={'true' if yes_locked else 'false'},_lunchConfirmed=false;
+var isYesConfirmed={'true' if yes_locked else 'false'},_lunchConfirmed=false,isLastMinute={'true' if is_last_minute else 'false'};
 document.querySelector('form').addEventListener('submit',function(e){{
   var c=document.querySelector('input[name="confirmation"]:checked');
-  if(!c&&!isYesConfirmed){{e.preventDefault();alert('Please select YES or Modify.');return;}}
+  if(!isLastMinute&&!c&&!isYesConfirmed){{e.preventDefault();alert('Please select YES or Modify.');return;}}
   if(c&&c.value==='modify_req'){{var d=document.getElementById('reschedule-date-input').value;if(!d){{e.preventDefault();openDateModal();return;}}}}
   var isYes=(isYesConfirmed||(c&&c.value==='yes'));
   if(isYes&&hasLunch&&!_lunchConfirmed){{
