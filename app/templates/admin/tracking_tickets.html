@@ -1601,7 +1601,7 @@
         var prev = _tktPrevNotesMap[r.id] || 0;
         var curr = (r.notes_count || 0);
         if (curr > prev) {
-          changed.push('<strong>' + esc(r.order_number) + '</strong>');
+          changed.push('<strong style="cursor:pointer;text-decoration:underline;" onclick="openNotes(' + r.id + ',\'' + esc(r.order_number) + '\',\'' + esc(r.guest_name) + '\',\'\')">' + esc(r.order_number) + '</strong>');
         }
         _tktPrevNotesMap[r.id] = curr;
       });
