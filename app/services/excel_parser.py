@@ -114,13 +114,39 @@ def _parse_shared_strings(zf: ZipFile) -> list[str]:
     return shared
 
 
+def _should_parse_date(header: str) -> bool:
+    header = (header or "").lower()
+    skip_keywords = [
+        "confirmation", "conf", "voucher", "phone", "mobile",
+        "order", "booking", "pax", "qty", "quantity",
+        "ticket", "id", "ref",
+    ]
+    return not any(k in header for k in skip_keywords)
+
+
 def _parse_sheet(zf: ZipFile, shared: list[str]) -> list[dict[int, str]]:
     xml_bytes = zf.read("xl/worksheets/sheet1.xml")
     root = ET.fromstring(xml_bytes)
     ns = {"x": "http://schemas.openxmlformats.org/spreadsheetml/2006/main"}
 
+    rows_el = root.findall(".//x:row", ns)
+
+    # 第一步：从 header row 建 col_index → header_name 映射
+    col_headers: dict[int, str] = {}
+    if rows_el:
+        for cell in rows_el[0].findall("x:c", ns):
+            ref = cell.get("r", "")
+            col_letter = "".join(ch for ch in ref if ch.isalpha())
+            ci = _col_letter_to_index(col_letter)
+            cell_type = cell.get("t", "")
+            v_el = cell.find("x:v", ns)
+            val = (v_el.text or "") if v_el is not None else ""
+            if cell_type == "s":
+                val = shared[int(val)] if val and int(val) < len(shared) else ""
+            col_headers[ci] = val
+
     raw: list[dict[int, str]] = []
-    for row_el in root.findall(".//x:row", ns):
+    for row_el in rows_el:
         rd: dict[int, str] = {}
         for cell in row_el.findall("x:c", ns):
             ref = cell.get("r", "")
@@ -131,13 +157,12 @@ def _parse_sheet(zf: ZipFile, shared: list[str]) -> list[dict[int, str]]:
             val = (v_el.text or "") if v_el is not None else ""
 
             if cell_type == "s":
-                # Shared string — look up in shared strings table
                 val = shared[int(val)] if val and int(val) < len(shared) else ""
             elif cell_type in ("", "n"):
-                # Numeric value (or formula with cached numeric result)
-                # Could be date serial (>=1) or time fraction (0<x<1)
-                val = _excel_time_to_str(val)
-            # cell_type == "str" means inline string from formula result — keep val as-is
+                header_name = col_headers.get(ci, "")
+                if _should_parse_date(header_name):
+                    val = _excel_time_to_str(val)
+                # 否则保留原始数字字符串
 
             rd[ci] = val
         if rd:
