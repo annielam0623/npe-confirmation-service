@@ -256,17 +256,17 @@ def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
   <!-- Body -->
   <tr><td style="padding:32px 40px;background:#ffffff;">
 
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:15px;font-weight:300;color:#1a1a1a;margin:0 0 8px;letter-spacing:-0.1px;">Hi <strong style="font-weight:600;">{first}</strong>,</p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:300;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:15px;font-weight:400;color:#1a1a1a;margin:0 0 8px;letter-spacing:-0.1px;">Hi <strong style="font-weight:600;">{first}</strong>,</p>
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
       Greetings from National Park Express!
     </p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:300;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
       As your local tour operator for the <strong style="font-weight:600;">{label}</strong>, we're excited to welcome you on <strong style="color:#2563eb;font-weight:600;">{date_fmt}</strong>.
     </p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:300;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
       Please review your tour details below and reconfirm your spot.{'  Please also select your <strong style="font-weight:600;">lunch option</strong> using the button below.' if has_lunch else ''}
     </p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:300;color:#24364f;line-height:1.7;margin:0 0 28px;letter-spacing:-0.1px;">
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 28px;letter-spacing:-0.1px;">
       We look forward to seeing you soon.
     </p>
 
@@ -417,10 +417,10 @@ def build_last_minute_email(row: dict, tour_type: str, tour_date: str, form_url:
                 <div style="width:36px;height:36px;border-radius:9px;background:#eef6ff;text-align:center;line-height:36px;font-size:18px;">&#127374;</div>
               </td>
               <td style="vertical-align:top;padding-left:12px;">
-                <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:300;color:#24364f;line-height:1.6;margin-bottom:4px;">
+                <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:400;color:#24364f;line-height:1.6;margin-bottom:4px;">
                   Please click the button below to select your <strong style="font-weight:600;">lunch option</strong> and confirm your pickup details.
                 </div>
-                <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:12px;font-weight:300;color:#f97316;line-height:1.6;">
+                <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:12px;font-weight:400;color:#f97316;line-height:1.6;">
                   This does not apply to Hoover Dam tours, tours without meals, or voucher bookings.
                 </div>
               </td>
@@ -458,17 +458,17 @@ def build_last_minute_email(row: dict, tour_type: str, tour_date: str, form_url:
 
   <tr><td style="padding:32px 40px;background:#ffffff;">
 
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:15px;font-weight:300;color:#1a1a1a;margin:0 0 8px;letter-spacing:-0.1px;">Hi <strong style="font-weight:600;">{first}</strong>,</p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:300;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:15px;font-weight:400;color:#1a1a1a;margin:0 0 8px;letter-spacing:-0.1px;">Hi <strong style="font-weight:600;">{first}</strong>,</p>
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
       Greetings from National Park Express!
     </p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:300;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
       As your local tour operator for the <strong style="font-weight:600;">{label}</strong>, we're excited to welcome you on <strong style="color:#2563eb;font-weight:600;">{date_fmt}</strong>.
     </p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:300;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
       {'Please review your tour details below and select your <strong style="font-weight:600;">lunch option</strong> using the button below to help ensure a smooth and hassle-free departure.' if has_lunch else 'Please review your tour details below and confirm your pickup information to help ensure a smooth and hassle-free departure.'}
     </p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:300;color:#24364f;line-height:1.7;margin:0 0 28px;letter-spacing:-0.1px;">
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 28px;letter-spacing:-0.1px;">
       We look forward to seeing you soon.
     </p>
 
