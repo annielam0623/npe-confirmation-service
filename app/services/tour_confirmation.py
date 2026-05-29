@@ -106,7 +106,7 @@ def confirm_url(token: str, src: str = "email") -> str:
 
 # ── Tour images ──────────────────────────────────────────────────────────────
 TOUR_IMAGES: dict[str, str] = {
-    "upper_antelope":       "https://nationalparkexpress.com/wp-content/uploads/2023/09/leon-liu-_0aOFIW34rw-unsplash-scaled.jpg",
+    "upper_antelope":       "https://nationalparkexpress.com/wp-content/uploads/2026/05/upper-Antelope-scaled.png",
     "lower_antelope":       "https://nationalparkexpress.com/wp-content/uploads/2023/09/leon-liu-_0aOFIW34rw-unsplash-scaled.jpg",
     "antelop_X":            "https://nationalparkexpress.com/wp-content/uploads/2023/09/leon-liu-_0aOFIW34rw-unsplash-scaled.jpg",
     "grand_canyon_south":   "https://nationalparkexpress.com/wp-content/uploads/2024/04/National-Park-Express-Which-Section-of-the-Grand-Canyon-img1.jpg",
@@ -248,7 +248,7 @@ def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
       <div style="position:absolute;inset:0;background:linear-gradient(to bottom,rgba(6,26,51,0.45),rgba(6,26,51,0.82));display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:20px;">
         <img src="{LOGO_URL}" alt="NPE Logo" width="72" style="width:72px;height:72px;object-fit:contain;border-radius:50%;margin-bottom:10px;" />
         <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:20px;font-weight:600;color:#ffffff;letter-spacing:0.3px;">National Park <span style="color:#f97316;">Express</span></div>
-        <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:10px;font-weight:300;color:#dbeafe;margin-top:5px;letter-spacing:1.5px;">YOUR JOURNEY. OUR PASSION.</div>
+        <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:10px;font-weight:300;color:#ffffff;margin-top:5px;letter-spacing:1.5px;">YOUR JOURNEY. OUR PASSION.</div>
       </div>
     </div>
   </td></tr>
