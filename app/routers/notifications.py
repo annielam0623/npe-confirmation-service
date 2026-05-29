@@ -132,7 +132,6 @@ async def preview_tour_confirmation(
             SELECT id FROM bookings
             WHERE order_number = :order_number
               AND tour_date    = :tour_date
-              AND module       = 'tour_confirmation'
             LIMIT 1
         """), {"order_number": row["order_number"], "tour_date": _to_date(tour_date)})
         row["duplicate"] = result.fetchone() is not None
