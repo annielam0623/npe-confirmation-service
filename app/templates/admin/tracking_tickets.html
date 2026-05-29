@@ -1623,6 +1623,129 @@
           checkTktNotesBanner();
         }).catch(function () { });
     }, 60000);
+
+  // ── Broadcast dropdown ──────────────────────────────────────────────────────
+  function toggleBroadcastMenu() {
+    var menu = document.getElementById('broadcastMenu');
+    if (!menu) return;
+    var isOpen = menu.style.display !== 'none';
+    if (isOpen) {
+      menu.style.display = 'none';
+      return;
+    }
+    // Update counts before opening
+    var counts = { all: 0, pending: 0, yes: 0 };
+    (allRows || []).forEach(function(r) {
+      counts.all++;
+      var st = (r.ticket_status || r.status || '').toLowerCase();
+      if (st === 'pending' || st === '') counts.pending++;
+      else if (st === 'sent' || st === 'yes') counts.yes++;
+    });
+    var cntAll     = document.getElementById('bc-cnt-all');
+    var cntPending = document.getElementById('bc-cnt-pending');
+    var cntYes     = document.getElementById('bc-cnt-yes');
+    if (cntAll)     cntAll.textContent     = counts.all     + ' guests';
+    if (cntPending) cntPending.textContent = counts.pending + ' guests';
+    if (cntYes)     cntYes.textContent     = counts.yes     + ' guests';
+    menu.style.display = 'block';
+    // Close when clicking outside
+    setTimeout(function() {
+      document.addEventListener('click', function _close(e) {
+        var btn = document.getElementById('broadcastBtn');
+        if (!menu.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+          menu.style.display = 'none';
+          document.removeEventListener('click', _close);
+        }
+      });
+    }, 0);
+  }
+
+  function openBroadcast(filter) {
+    document.getElementById('broadcastMenu').style.display = 'none';
+    // Filter rows
+    var rows = (allRows || []).filter(function(r) {
+      if (filter === 'all') return true;
+      var st = (r.ticket_status || r.status || '').toLowerCase();
+      if (filter === 'pending') return st === 'pending' || st === '';
+      if (filter === 'yes')     return st === 'sent' || st === 'yes';
+      return true;
+    });
+    if (!rows.length) {
+      alert('No guests match this filter.');
+      return;
+    }
+    // Build recipient list HTML
+    var listHtml = rows.map(function(r) {
+      var name  = (r.guest_first_name || r.first_name || '') + ' ' + (r.guest_last_name || r.last_name || '');
+      var phone = r.guest_phone || r.phone || '—';
+      return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.06);font-size:13px;">'
+        + '<span style="color:#d9e8ff;">' + name.trim() + '</span>'
+        + '<span style="color:rgba(255,255,255,0.45);">' + phone + '</span>'
+        + '</div>';
+    }).join('');
+
+    // Create/reset modal
+    var existing = document.getElementById('broadcastModal');
+    if (existing) existing.remove();
+
+    var modal = document.createElement('div');
+    modal.id = 'broadcastModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9000;display:flex;align-items:center;justify-content:center;';
+    modal.innerHTML = [
+      '<div style="background:#111a2b;border:1px solid rgba(255,255,255,0.15);border-radius:14px;width:520px;max-width:94vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;">',
+        '<div style="padding:16px 20px;background:linear-gradient(135deg,#f7cf6d,#f4b23c);display:flex;justify-content:space-between;align-items:center;">',
+          '<span style="font-weight:700;color:#2c1b00;font-size:15px;">📢 Broadcast — ' + rows.length + ' guest' + (rows.length > 1 ? 's' : '') + '</span>',
+          '<button onclick="document.getElementById(\'broadcastModal\').remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:#2c1b00;line-height:1;">×</button>',
+        '</div>',
+        '<div style="padding:16px 20px;flex:1;overflow-y:auto;">',
+          '<div style="margin-bottom:14px;">',
+            '<label style="font-size:12px;color:rgba(255,255,255,0.5);display:block;margin-bottom:6px;">MESSAGE</label>',
+            '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;" id="bc-templates">',
+              '<button onclick="setBcTemplate(this,\'Your tour has been cancelled. Please contact us at 702-948-4190.\')" class="bc-tpl">🚫 Cancellation</button>',
+              '<button onclick="setBcTemplate(this,\'Your pickup time has been updated. Please contact us at 702-948-4190 for details.\')" class="bc-tpl">⏰ Time Change</button>',
+              '<button onclick="setBcTemplate(this,\'Due to weather conditions, your tour may experience delays. We will keep you updated.\')" class="bc-tpl">🌧 Weather Delay</button>',
+            '</div>',
+            '<textarea id="bc-message" rows="4" style="width:100%;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:8px;color:#fff;padding:10px;font-size:13px;resize:vertical;" placeholder="Type your message or select a template above..."></textarea>',
+          '</div>',
+          '<div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px;">RECIPIENTS (' + rows.length + ')</div>',
+          '<div style="max-height:180px;overflow-y:auto;background:rgba(255,255,255,0.04);border-radius:8px;padding:0 12px;">' + listHtml + '</div>',
+        '</div>',
+        '<div style="padding:14px 20px;border-top:1px solid rgba(255,255,255,0.1);display:flex;justify-content:flex-end;gap:10px;">',
+          '<button onclick="document.getElementById(\'broadcastModal\').remove()" style="padding:9px 18px;background:rgba(255,255,255,0.08);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;">Cancel</button>',
+          '<button onclick="sendBroadcast(' + JSON.stringify(rows.map(function(r){ return { name:(r.guest_first_name||r.first_name||'')+ ' '+(r.guest_last_name||r.last_name||''), phone:r.guest_phone||r.phone||'', email:r.guest_email||r.email||'' }; })) + ')" style="padding:9px 20px;background:linear-gradient(135deg,#f7cf6d,#f4b23c);color:#2c1b00;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;">Send SMS →</button>',
+        '</div>',
+      '</div>',
+      '<style>.bc-tpl{padding:5px 10px;background:rgba(255,255,255,0.08);color:#d9e8ff;border:1px solid rgba(255,255,255,0.15);border-radius:6px;cursor:pointer;font-size:12px;}.bc-tpl.active{background:rgba(247,207,109,0.2);border-color:#f7cf6d;color:#f7cf6d;}</style>'
+    ].join('');
+    document.body.appendChild(modal);
+  }
+
+  function setBcTemplate(btn, text) {
+    document.querySelectorAll('.bc-tpl').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('bc-message').value = text;
+  }
+
+  function sendBroadcast(recipients) {
+    var msg = (document.getElementById('bc-message').value || '').trim();
+    if (!msg) { alert('Please enter a message.'); return; }
+    if (!confirm('Send SMS to ' + recipients.length + ' guest(s)?\n\n' + msg)) return;
+    var date = getDate ? getDate() : document.getElementById('date-input').value;
+    fetch('/api/broadcast/send', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ module: 'tickets', date: date, message: msg, recipients: recipients })
+    }).then(function(r){ return r.json(); })
+      .then(function(data) {
+        document.getElementById('broadcastModal').remove();
+        alert('✅ Sent to ' + (data.sent_count || recipients.length) + ' guest(s).');
+      }).catch(function(e) {
+        alert('❌ Send failed. Please try again.');
+        console.error(e);
+      });
+  }
+  // ────────────────────────────────────────────────────────────────────────────
   </script>
 </body>
 
