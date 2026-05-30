@@ -775,9 +775,9 @@ async def delete_by_date(
         raise HTTPException(400, "Missing module or tour_date")
 
     await db.execute(text("""
-        DELETE FROM bookings
-        WHERE module = :module AND tour_date = :tour_date AND source = 'manual'
-    """), {"module": module, "tour_date": _to_date(tour_date)})
+    DELETE FROM send_log
+    WHERE module = :module AND tour_date = :tour_date
+"""), {"module": module, "tour_date": _to_date(tour_date)})
 
     await db.execute(text("""
         DELETE FROM tickets_reminders
