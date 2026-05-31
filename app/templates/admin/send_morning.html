@@ -84,13 +84,20 @@ padding: 8px 16px; background: #f5f9ff;
 border-bottom: 0.5px solid rgba(0,0,0,0.06);
 font-size: 12px; color: #555;
 }
-.sel-bar-count { font-weight: 600; color: #185FA5; }
-.sel-bar-btn {
-font-size: 11px; padding: 3px 10px; border-radius: 5px;
-border: 0.5px solid rgba(0,0,0,0.15); background: #fff;
-cursor: pointer; color: #555;
+.sel-bar-count { font-weight: 600; color: #185FA5;
 }
-.sel-bar-btn:hover { background: #f0f0f0; }
+.sel-bar-btn {
+font-size: 13px; padding: 7px 16px; border-radius: 7px;
+border: 0.5px solid #185FA5; background: #185FA5;
+cursor: pointer; color: #fff; font-weight: 600;
+}
+.sel-bar-btn:hover { background: #124d8a;
+}
+.sel-bar-btn-deselect {
+background: #BA7517; border-color: #BA7517; color: #fff;
+}
+.sel-bar-btn-deselect:hover { background: #8f5a10;
+}
 
 /* Result stats */
 .result-card {
@@ -190,7 +197,7 @@ background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
         <span style="font-size:12px;color:#888;">Selected: <span id="sel-count"
             style="font-weight:600;color:#185FA5;">0</span></span>
         <button class="sel-bar-btn" onclick="selectAll(true)">Select all</button>
-        <button class="sel-bar-btn" onclick="selectAll(false)">Deselect all</button>
+        <button class="sel-bar-btn sel-bar-btn-deselect" onclick="selectAll(false)">Deselect all</button>
       </div>
     </div>
     <div id="preview-groups"></div>
