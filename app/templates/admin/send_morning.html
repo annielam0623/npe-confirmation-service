@@ -4,72 +4,73 @@
 
 {% block extra_styles %}
 .send-card {
-  background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
-  border-radius: 12px; padding: 24px; max-width: 680px; margin-bottom: 20px;
+background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+border-radius: 12px; padding: 24px; max-width: 680px; margin-bottom: 20px;
 }
 .send-card h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; color: #1a1a1a; }
 .form-row { display: flex; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
 .form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 180px; }
 .form-group label { font-size: 12px; color: #888; font-weight: 500; }
 .form-group input[type="file"] {
-  padding: 7px 10px; border: 0.5px solid rgba(0,0,0,0.2);
-  border-radius: 7px; font-size: 13px; background: #fff; font-family: inherit;
+padding: 7px 10px; border: 0.5px solid rgba(0,0,0,0.2);
+border-radius: 7px; font-size: 13px; background: #fff; font-family: inherit;
 }
 .form-group input:focus { outline: none; border-color: #185FA5; }
 
 .btn-send {
-  background: #185FA5; color: #fff; border: none;
-  padding: 9px 24px; border-radius: 7px; font-size: 13px;
-  font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+background: #185FA5; color: #fff; border: none;
+padding: 9px 24px; border-radius: 7px; font-size: 13px;
+font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
 }
 .btn-send:hover { background: #124d8a; }
 .btn-send:disabled { background: #aaa; cursor: not-allowed; }
 
 /* Preview */
 .preview-card {
-  background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
-  border-radius: 12px; overflow: hidden; margin-bottom: 20px; width: 100%;
+background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+border-radius: 12px; overflow: hidden; margin-bottom: 20px; width: 100%;
 }
 .preview-header {
-  padding: 12px 16px; background: #E6F1FB;
-  border-bottom: 0.5px solid rgba(0,0,0,0.08);
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+padding: 12px 16px; background: #E6F1FB;
+border-bottom: 0.5px solid rgba(0,0,0,0.08);
+display: flex; align-items: center; justify-content: space-between; gap: 12px;
 }
 .preview-header span { font-size: 13px; font-weight: 600; color: #185FA5; }
 
 /* Location group header */
 .loc-group-header {
-  padding: 8px 12px; background: #f0f6fd;
-  border-bottom: 0.5px solid rgba(0,0,0,0.06);
-  display: flex; align-items: center; gap: 10px;
+padding: 8px 12px; background: #f0f6fd;
+border-bottom: 0.5px solid rgba(0,0,0,0.06);
+display: flex; align-items: center; gap: 10px;
 }
 .loc-group-title {
-  font-size: 12px; font-weight: 600; color: #185FA5; flex: 1;
+font-size: 12px; font-weight: 600; color: #185FA5; flex: 1;
 }
 /* Location toggle button */
 .loc-toggle-btn {
-  font-size: 11px; padding: 3px 10px; border-radius: 5px; border: 0.5px solid #185FA5;
-  color: #185FA5; background: #fff; cursor: pointer; white-space: nowrap;
-  transition: background 0.12s, color 0.12s;
+font-size: 11px; padding: 3px 10px; border-radius: 5px; border: 0.5px solid #185FA5;
+color: #185FA5; background: #fff; cursor: pointer; white-space: nowrap;
+transition: background 0.12s, color 0.12s;
 }
 .loc-toggle-btn:hover { background: #E6F1FB; }
 .loc-toggle-btn.all-unchecked { border-color: #aaa; color: #aaa; background: #fff; }
 
 .tbl-wrap { overflow-x: auto; width: 100%; }
 table.preview-tbl {
-  width: auto; min-width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap;
+width: auto; min-width: 100%; border-collapse: collapse; font-size: 12px; white-space: nowrap;
 }
 .preview-tbl thead td {
-  padding: 8px 10px; font-size: 11px; font-weight: 600;
-  color: #999; background: #f9f9f7;
-  border-bottom: 0.5px solid rgba(0,0,0,0.08);
+padding: 8px 10px; font-size: 11px; font-weight: 600;
+color: #999; background: #f9f9f7;
+border-bottom: 0.5px solid rgba(0,0,0,0.08);
 }
 .preview-tbl thead td.col-cb { width: 36px; text-align: center; }
 .preview-tbl tbody tr { border-bottom: 0.5px solid rgba(0,0,0,0.06); transition: background 0.1s; }
 .preview-tbl tbody tr:last-child { border-bottom: none; }
 .preview-tbl tbody tr.row-unchecked { background: #fafafa; opacity: 0.55; }
 .preview-tbl tbody tr.dup-row { background: #ddeeff; }
-.dup-badge { font-size: 10px; color: #185FA5; background: #cce4ff; border-radius: 4px; padding: 1px 6px; font-weight: 600; }
+.dup-badge { font-size: 10px; color: #185FA5; background: #cce4ff; border-radius: 4px; padding: 1px 6px; font-weight:
+600; }
 .preview-tbl tbody td { padding: 8px 10px; color: #444; }
 .preview-tbl tbody td.col-cb { text-align: center; }
 
@@ -78,54 +79,54 @@ table.preview-tbl {
 
 /* Selection bar */
 .sel-bar {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 16px; background: #f5f9ff;
-  border-bottom: 0.5px solid rgba(0,0,0,0.06);
-  font-size: 12px; color: #555;
+display: flex; align-items: center; gap: 10px;
+padding: 8px 16px; background: #f5f9ff;
+border-bottom: 0.5px solid rgba(0,0,0,0.06);
+font-size: 12px; color: #555;
 }
 .sel-bar-count { font-weight: 600; color: #185FA5; }
 .sel-bar-btn {
-  font-size: 11px; padding: 3px 10px; border-radius: 5px;
-  border: 0.5px solid rgba(0,0,0,0.15); background: #fff;
-  cursor: pointer; color: #555;
+font-size: 11px; padding: 3px 10px; border-radius: 5px;
+border: 0.5px solid rgba(0,0,0,0.15); background: #fff;
+cursor: pointer; color: #555;
 }
 .sel-bar-btn:hover { background: #f0f0f0; }
 
 /* Result stats */
 .result-card {
-  background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
-  border-radius: 12px; padding: 20px; width: 100%; margin-bottom: 20px;
+background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
+border-radius: 12px; padding: 20px; width: 100%; margin-bottom: 20px;
 }
 .result-summary { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
 .result-stat { background: #f5f5f3; border-radius: 8px; padding: 10px 18px; text-align: center; }
 .result-stat .num { font-size: 22px; font-weight: 700; }
 .result-stat .lbl { font-size: 11px; color: #888; margin-top: 2px; }
-.result-stat.ok   .num { color: #185FA5; }
+.result-stat.ok .num { color: #185FA5; }
 .result-stat.skip .num { color: #BA7517; }
 .result-stat.fail .num { color: #A32D2D; }
 
-.status-ok   { color: #185FA5; font-weight: 500; }
+.status-ok { color: #185FA5; font-weight: 500; }
 .status-fail { color: #A32D2D; }
 .status-skip { color: #BA7517; }
 
 .spinner {
-  display: inline-block; width: 14px; height: 14px;
-  border: 2px solid rgba(255,255,255,0.4);
-  border-top-color: #fff; border-radius: 50%;
-  animation: spin 0.7s linear infinite;
+display: inline-block; width: 14px; height: 14px;
+border: 2px solid rgba(255,255,255,0.4);
+border-top-color: #fff; border-radius: 50%;
+animation: spin 0.7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 .hidden { display: none !important; }
 
 .stype-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 16px; border-radius: 7px; font-size: 13px;
-  cursor: pointer; border: 1.5px solid rgba(0,0,0,0.15);
-  background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
+display: inline-flex; align-items: center; gap: 6px;
+padding: 7px 16px; border-radius: 7px; font-size: 13px;
+cursor: pointer; border: 1.5px solid rgba(0,0,0,0.15);
+background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
 }
 .stype-btn:hover { opacity: 0.85; }
-.stype-btn.active            { border-color: #6B4FBB; background: #F0ECFF; color: #6B4FBB; font-weight: 600; }
-.stype-btn.stype-sms.active  { border-color: #185FA5; background: #E6F1FB; color: #185FA5; font-weight: 600; }
+.stype-btn.active { border-color: #6B4FBB; background: #F0ECFF; color: #6B4FBB; font-weight: 600; }
+.stype-btn.stype-sms.active { border-color: #185FA5; background: #E6F1FB; color: #185FA5; font-weight: 600; }
 .stype-btn.stype-email.active{ border-color: #BA7517; background: #FAEEDA; color: #BA7517; font-weight: 600; }
 .stype-icon { font-size: 14px; }
 {% endblock %}
@@ -149,14 +150,45 @@ table.preview-tbl {
     <span id="upload-err" style="font-size:12px;color:#A32D2D;margin-left:12px;"></span>
   </div>
 </div>
-
+<div
+  style="background:#e8f3fc;border:1px solid #b5d4f4;border-radius:10px;padding:16px 20px;max-width:680px;margin-bottom:32px;font-size:12px;color:#0c3a6b;line-height:1.9;">
+  <div style="font-weight:600;margin-bottom:8px;color:#185FA5;">📖 How to use — Morning Pickup Reminder</div>
+  <ol style="margin:0;padding-left:18px;">
+    <li>Export the manifest from <strong>Rezdy</strong> for today's tours and save as <strong>.xlsx</strong>.</li>
+    <li>
+      <strong>Do not remove or rename any header row.</strong> The following columns must be present and spelled
+      exactly:
+      <div
+        style="margin-top:6px;margin-bottom:4px;background:#fff;border:1px solid #b5d4f4;border-radius:6px;padding:8px 12px;font-family:monospace;font-size:11px;color:#185FA5;letter-spacing:0.2px;">
+        Order Number &nbsp;·&nbsp; First Name &nbsp;·&nbsp; Last Name &nbsp;·&nbsp; Customer Phone &nbsp;·&nbsp; Pick-up
+        Time &nbsp;·&nbsp; Driver &nbsp;·&nbsp; Vehicle#
+      </div>
+      Missing or renamed columns will cause the upload to fail.
+    </li>
+    <li>Click <strong>Upload &amp; Preview</strong> — guests are grouped by <strong>pickup location</strong> for easy
+      review.</li>
+    <li>Use the <strong>location toggle</strong> buttons to select or deselect an entire pickup group at once.</li>
+    <li>Use the <strong>Select all / Deselect all</strong> buttons to manage all rows, or check individual rows to
+      include or exclude specific guests.</li>
+    <li>Guests highlighted in <span
+        style="background:#cce4ff;color:#185FA5;padding:1px 6px;border-radius:4px;font-size:11px;font-weight:600;">blue</span>
+      are duplicates — already sent today. They are unchecked by default but can be re-selected if needed.</li>
+    <li>Default send mode is <strong>SMS Only</strong>. Switch to SMS + Email or Email Only if needed.</li>
+    <li>Click <strong>Send to Selected</strong> to send reminders only to checked guests.</li>
+  </ol>
+  <div style="margin-top:10px;padding-top:10px;border-top:1px solid #b5d4f4;color:#185FA5;font-weight:600;">
+    ⚠️ Never delete or overwrite the header row in the Excel file — this will break the upload and no reminders will be
+    sent.
+  </div>
+</div>
 <!-- Preview grouped by location -->
 <div id="step-preview" class="hidden">
   <div class="preview-card">
     <div class="preview-header">
       <span>🚌 Preview — <span id="preview-count">0</span> bookings</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:12px;color:#888;">Selected: <span id="sel-count" style="font-weight:600;color:#185FA5;">0</span></span>
+        <span style="font-size:12px;color:#888;">Selected: <span id="sel-count"
+            style="font-weight:600;color:#185FA5;">0</span></span>
         <button class="sel-bar-btn" onclick="selectAll(true)">Select all</button>
         <button class="sel-bar-btn" onclick="selectAll(false)">Deselect all</button>
       </div>
@@ -195,24 +227,32 @@ table.preview-tbl {
     <h2 style="font-size:15px;font-weight:600;margin-bottom:16px;">📬 Send Results</h2>
     <div class="result-summary">
       <div class="result-stat ok">
-        <div class="num" id="res-sent">0</div><div class="lbl">Sent</div>
+        <div class="num" id="res-sent">0</div>
+        <div class="lbl">Sent</div>
       </div>
       <div class="result-stat skip">
-        <div class="num" id="res-skipped">0</div><div class="lbl">Skipped</div>
+        <div class="num" id="res-skipped">0</div>
+        <div class="lbl">Skipped</div>
       </div>
       <div class="result-stat fail">
-        <div class="num" id="res-failed">0</div><div class="lbl">Failed</div>
+        <div class="num" id="res-failed">0</div>
+        <div class="lbl">Failed</div>
       </div>
       <div class="result-stat">
-        <div class="num" id="res-total">0</div><div class="lbl">Total</div>
+        <div class="num" id="res-total">0</div>
+        <div class="lbl">Total</div>
       </div>
     </div>
     <div class="tbl-wrap">
       <table class="preview-tbl">
         <thead>
           <tr>
-            <td>Order #</td><td>Name</td><td>Phone</td>
-            <td>Pickup Time</td><td>SMS Status</td><td>Email Status</td>
+            <td>Order #</td>
+            <td>Name</td>
+            <td>Phone</td>
+            <td>Pickup Time</td>
+            <td>SMS Status</td>
+            <td>Email Status</td>
           </tr>
         </thead>
         <tbody id="result-tbody"></tbody>
@@ -225,76 +265,76 @@ table.preview-tbl {
 
 {% block scripts %}
 <script>
-/* ── state ── */
-let currentFile = null;
-let allRows = [];        // full parsed row list from preview
-let checkedOrders = new Set();   // order_number strings currently checked
+  /* ── state ── */
+  let currentFile = null;
+  let allRows = [];        // full parsed row list from preview
+  let checkedOrders = new Set();   // order_number strings currently checked
 
-/* ── send type ── */
-function setSendType(val) {
-  document.querySelector(`input[name="send_type"][value="${val}"]`).checked = true;
-  ['combined','sms','email'].forEach(v => {
-    document.getElementById('lbl-' + v).classList.toggle('active', v === val);
-  });
-  const labels = { combined: 'SMS + Email', sms: 'SMS Only', email: 'Email Only' };
-  const icons  = { combined: '✉️', sms: '📱', email: '📧' };
-  const btn = document.getElementById('btn-confirm-send');
-  const selN = checkedOrders.size;
-  if (btn) btn.innerHTML = `${icons[val]} Send to Selected (${labels[val]}) — ${selN} order${selN !== 1 ? 's' : ''}`;
-}
-
-function refreshSendBtn() {
-  const val = document.querySelector('input[name="send_type"]:checked')?.value || 'sms';
-  setSendType(val);
-}
-
-/* ── upload ── */
-async function uploadPreview() {
-  const file = document.getElementById('excel-file').files[0];
-  const errEl = document.getElementById('upload-err');
-  errEl.textContent = '';
-  if (!file) { errEl.textContent = 'Please select an Excel file.'; return; }
-  currentFile = file;
-
-  const fd = new FormData();
-  fd.append('file', file);
-  try {
-    const res = await fetch('/api/notifications/morning-pickup/preview', { method: 'POST', body: fd });
-    const text = await res.text();
-    let data;
-    try { data = JSON.parse(text); } catch(_) { data = null; }
-    if (!res.ok) { errEl.textContent = data?.detail || `Server error ${res.status}`; return; }
-    if (!data) { errEl.textContent = 'Unexpected empty response.'; return; }
-    showPreview(data);
-  } catch(e) {
-    errEl.textContent = 'Network error: ' + e.message;
+  /* ── send type ── */
+  function setSendType(val) {
+    document.querySelector(`input[name="send_type"][value="${val}"]`).checked = true;
+    ['combined', 'sms', 'email'].forEach(v => {
+      document.getElementById('lbl-' + v).classList.toggle('active', v === val);
+    });
+    const labels = { combined: 'SMS + Email', sms: 'SMS Only', email: 'Email Only' };
+    const icons = { combined: '✉️', sms: '📱', email: '📧' };
+    const btn = document.getElementById('btn-confirm-send');
+    const selN = checkedOrders.size;
+    if (btn) btn.innerHTML = `${icons[val]} Send to Selected (${labels[val]}) — ${selN} order${selN !== 1 ? 's' : ''}`;
   }
-}
 
-/* ── preview render ── */
-function showPreview(data) {
-  allRows = data.rows;
-  checkedOrders = new Set(allRows.filter(r => !r.duplicate).map(r => r.order_number));
+  function refreshSendBtn() {
+    const val = document.querySelector('input[name="send_type"]:checked')?.value || 'sms';
+    setSendType(val);
+  }
 
-  document.getElementById('preview-count').textContent = allRows.length;
+  /* ── upload ── */
+  async function uploadPreview() {
+    const file = document.getElementById('excel-file').files[0];
+    const errEl = document.getElementById('upload-err');
+    errEl.textContent = '';
+    if (!file) { errEl.textContent = 'Please select an Excel file.'; return; }
+    currentFile = file;
 
-  // Group by pickup_location
-  const groups = {};
-  allRows.forEach(r => {
-    const loc = r.pickup_location || 'Unknown';
-    if (!groups[loc]) groups[loc] = [];
-    groups[loc].push(r);
-  });
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const res = await fetch('/api/notifications/morning-pickup/preview', { method: 'POST', body: fd });
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch (_) { data = null; }
+      if (!res.ok) { errEl.textContent = data?.detail || `Server error ${res.status}`; return; }
+      if (!data) { errEl.textContent = 'Unexpected empty response.'; return; }
+      showPreview(data);
+    } catch (e) {
+      errEl.textContent = 'Network error: ' + e.message;
+    }
+  }
 
-  // Store location → order numbers map separately (avoids Jinja2 brace conflict in onclick)
-  window._locOrders = {};
+  /* ── preview render ── */
+  function showPreview(data) {
+    allRows = data.rows;
+    checkedOrders = new Set(allRows.filter(r => !r.duplicate).map(r => r.order_number));
 
-  const container = document.getElementById('preview-groups');
-  container.innerHTML = Object.entries(groups).map(([loc, grpRows]) => {
-    const locId = 'loc-' + loc.replace(/\W+/g, '_');
-    window._locOrders[locId] = grpRows.map(r => r.order_number);
+    document.getElementById('preview-count').textContent = allRows.length;
 
-    const rowsHtml = grpRows.map(r => `
+    // Group by pickup_location
+    const groups = {};
+    allRows.forEach(r => {
+      const loc = r.pickup_location || 'Unknown';
+      if (!groups[loc]) groups[loc] = [];
+      groups[loc].push(r);
+    });
+
+    // Store location → order numbers map separately (avoids Jinja2 brace conflict in onclick)
+    window._locOrders = {};
+
+    const container = document.getElementById('preview-groups');
+    container.innerHTML = Object.entries(groups).map(([loc, grpRows]) => {
+      const locId = 'loc-' + loc.replace(/\W+/g, '_');
+      window._locOrders[locId] = grpRows.map(r => r.order_number);
+
+      const rowsHtml = grpRows.map(r => `
       <tr id="row-${r.order_number}" class="${r.duplicate ? 'dup-row' : ''}">
         <td class="col-cb">
           <input type="checkbox" class="row-cb" data-order="${r.order_number}" data-loc="${locId}"
@@ -308,7 +348,7 @@ function showPreview(data) {
         <td>${r.vehicle_no || '—'}</td>
       </tr>`).join('');
 
-    return `
+      return `
       <div class="loc-group-header" id="${locId}-header">
         <span class="loc-group-title">📍 ${loc} — <span id="${locId}-cnt">${grpRows.length}</span> booking(s)</span>
         <button class="loc-toggle-btn" id="${locId}-btn" onclick="toggleLocation('${locId}')">
@@ -325,185 +365,185 @@ function showPreview(data) {
           <tbody id="${locId}-tbody">${rowsHtml}</tbody>
         </table>
       </div>`;
-  }).join('');
+    }).join('');
 
-  // Mark duplicate rows as dimmed
-  allRows.filter(r => r.duplicate).forEach(r => {
-    document.getElementById('row-' + r.order_number)?.classList.add('row-unchecked');
-  });
-  updateSelCount();
-  document.getElementById('step-form').classList.add('hidden');
-  document.getElementById('step-preview').classList.remove('hidden');
-  refreshSendBtn();
-}
-
-/* ── checkbox handlers ── */
-function onRowCheck(cb) {
-  const order = cb.dataset.order;
-  const locId = cb.dataset.loc;
-  if (cb.checked) {
-    checkedOrders.add(order);
-    document.getElementById('row-' + order)?.classList.remove('row-unchecked');
-  } else {
-    checkedOrders.delete(order);
-    document.getElementById('row-' + order)?.classList.add('row-unchecked');
-  }
-  updateLocBtn(locId);
-  updateSelCount();
-  refreshSendBtn();
-}
-
-function toggleLocation(locId) {
-  const orderNums = window._locOrders[locId] || [];
-  // Check if any in this group are currently checked
-  const anyChecked = orderNums.some(o => checkedOrders.has(o));
-  const newState = !anyChecked;  // if any checked → uncheck all; if none checked → check all
-
-  orderNums.forEach(o => {
-    const cb = document.querySelector(`.row-cb[data-order="${o}"]`);
-    if (cb) { cb.checked = newState; }
-    if (newState) {
-      checkedOrders.add(o);
-      document.getElementById('row-' + o)?.classList.remove('row-unchecked');
-    } else {
-      checkedOrders.delete(o);
-      document.getElementById('row-' + o)?.classList.add('row-unchecked');
-    }
-  });
-  updateLocBtn(locId);
-  updateSelCount();
-  refreshSendBtn();
-}
-
-function updateLocBtn(locId) {
-  const cbs = document.querySelectorAll(`.row-cb[data-loc="${locId}"]`);
-  const btn = document.getElementById(locId + '-btn');
-  if (!btn) return;
-  const total = cbs.length;
-  const checked = [...cbs].filter(c => c.checked).length;
-  if (checked === 0) {
-    btn.textContent = 'Select all';
-    btn.classList.add('all-unchecked');
-  } else if (checked === total) {
-    btn.textContent = 'Deselect all';
-    btn.classList.remove('all-unchecked');
-  } else {
-    btn.textContent = `${checked}/${total} selected`;
-    btn.classList.remove('all-unchecked');
-  }
-  // Update the count badge
-  const cntEl = document.getElementById(locId + '-cnt');
-  if (cntEl) cntEl.textContent = checked + (checked !== total ? `/${total}` : '');
-}
-
-function updateSelCount() {
-  document.getElementById('sel-count').textContent = checkedOrders.size;
-}
-
-function selectAll(state) {
-  allRows.forEach(r => {
-    const cb = document.querySelector(`.row-cb[data-order="${r.order_number}"]`);
-    if (cb) cb.checked = state;
-    if (state) {
-      checkedOrders.add(r.order_number);
-      document.getElementById('row-' + r.order_number)?.classList.remove('row-unchecked');
-    } else {
-      checkedOrders.delete(r.order_number);
+    // Mark duplicate rows as dimmed
+    allRows.filter(r => r.duplicate).forEach(r => {
       document.getElementById('row-' + r.order_number)?.classList.add('row-unchecked');
-    }
-  });
-  // Update all location buttons
-  const allLocIds = new Set([...document.querySelectorAll('.row-cb')].map(c => c.dataset.loc));
-  allLocIds.forEach(updateLocBtn);
-  updateSelCount();
-  refreshSendBtn();
-}
-
-/* ── send ── */
-async function confirmSend() {
-  const btn = document.getElementById('btn-confirm-send');
-  const errEl = document.getElementById('send-err');
-  const sendType = document.querySelector('input[name="send_type"]:checked').value;
-  errEl.textContent = '';
-
-  if (checkedOrders.size === 0) {
-    errEl.textContent = 'No orders selected. Please select at least one.';
-    return;
-  }
-
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Sending…';
-
-  const fd = new FormData();
-  fd.append('file', currentFile);
-  fd.append('send_type', sendType);
-  // Pass selected order numbers as JSON string
-  fd.append('selected_orders', JSON.stringify([...checkedOrders]));
-
-  try {
-    const res = await fetch('/send/morning-pickup', { method: 'POST', body: fd });
-    const text = await res.text();
-    let data;
-    try { data = JSON.parse(text); } catch(_) { data = null; }
-    if (!res.ok) {
-      const msg = data?.detail || `Server error ${res.status}${text ? ': ' + text.slice(0,120) : ''}`;
-      errEl.textContent = msg;
-      btn.disabled = false;
-      refreshSendBtn();
-      return;
-    }
-    if (!data) { errEl.textContent = 'Unexpected empty response from server.'; btn.disabled = false; refreshSendBtn(); return; }
-    showResults(data);
-  } catch(e) {
-    errEl.textContent = 'Network error: ' + e.message;
-    btn.disabled = false;
+    });
+    updateSelCount();
+    document.getElementById('step-form').classList.add('hidden');
+    document.getElementById('step-preview').classList.remove('hidden');
     refreshSendBtn();
   }
-}
 
-/* ── results ── */
-function showResults(data) {
-  const results = data.results;
-  const sent    = results.filter(r => (r.sms_status||r.email_status||'').includes('sent')).length;
-  const failed  = results.filter(r => (r.sms_status||r.email_status||'').includes('failed')).length;
-  const skipped = results.filter(r => r.skipped).length;
+  /* ── checkbox handlers ── */
+  function onRowCheck(cb) {
+    const order = cb.dataset.order;
+    const locId = cb.dataset.loc;
+    if (cb.checked) {
+      checkedOrders.add(order);
+      document.getElementById('row-' + order)?.classList.remove('row-unchecked');
+    } else {
+      checkedOrders.delete(order);
+      document.getElementById('row-' + order)?.classList.add('row-unchecked');
+    }
+    updateLocBtn(locId);
+    updateSelCount();
+    refreshSendBtn();
+  }
 
-  document.getElementById('res-sent').textContent    = sent;
-  document.getElementById('res-failed').textContent  = failed;
-  document.getElementById('res-skipped').textContent = skipped;
-  document.getElementById('res-total').textContent   = data.total;
+  function toggleLocation(locId) {
+    const orderNums = window._locOrders[locId] || [];
+    // Check if any in this group are currently checked
+    const anyChecked = orderNums.some(o => checkedOrders.has(o));
+    const newState = !anyChecked;  // if any checked → uncheck all; if none checked → check all
 
-  document.getElementById('result-tbody').innerHTML = results.map(r => {
-    const smsClass   = r.skipped ? 'status-skip' : (r.sms_status||'').includes('sent') ? 'status-ok' : r.sms_status ? 'status-fail' : '';
-    const emailClass = r.skipped ? 'status-skip' : (r.email_status||'').includes('sent') ? 'status-ok' : r.email_status ? 'status-fail' : '';
-    return `<tr>
+    orderNums.forEach(o => {
+      const cb = document.querySelector(`.row-cb[data-order="${o}"]`);
+      if (cb) { cb.checked = newState; }
+      if (newState) {
+        checkedOrders.add(o);
+        document.getElementById('row-' + o)?.classList.remove('row-unchecked');
+      } else {
+        checkedOrders.delete(o);
+        document.getElementById('row-' + o)?.classList.add('row-unchecked');
+      }
+    });
+    updateLocBtn(locId);
+    updateSelCount();
+    refreshSendBtn();
+  }
+
+  function updateLocBtn(locId) {
+    const cbs = document.querySelectorAll(`.row-cb[data-loc="${locId}"]`);
+    const btn = document.getElementById(locId + '-btn');
+    if (!btn) return;
+    const total = cbs.length;
+    const checked = [...cbs].filter(c => c.checked).length;
+    if (checked === 0) {
+      btn.textContent = 'Select all';
+      btn.classList.add('all-unchecked');
+    } else if (checked === total) {
+      btn.textContent = 'Deselect all';
+      btn.classList.remove('all-unchecked');
+    } else {
+      btn.textContent = `${checked}/${total} selected`;
+      btn.classList.remove('all-unchecked');
+    }
+    // Update the count badge
+    const cntEl = document.getElementById(locId + '-cnt');
+    if (cntEl) cntEl.textContent = checked + (checked !== total ? `/${total}` : '');
+  }
+
+  function updateSelCount() {
+    document.getElementById('sel-count').textContent = checkedOrders.size;
+  }
+
+  function selectAll(state) {
+    allRows.forEach(r => {
+      const cb = document.querySelector(`.row-cb[data-order="${r.order_number}"]`);
+      if (cb) cb.checked = state;
+      if (state) {
+        checkedOrders.add(r.order_number);
+        document.getElementById('row-' + r.order_number)?.classList.remove('row-unchecked');
+      } else {
+        checkedOrders.delete(r.order_number);
+        document.getElementById('row-' + r.order_number)?.classList.add('row-unchecked');
+      }
+    });
+    // Update all location buttons
+    const allLocIds = new Set([...document.querySelectorAll('.row-cb')].map(c => c.dataset.loc));
+    allLocIds.forEach(updateLocBtn);
+    updateSelCount();
+    refreshSendBtn();
+  }
+
+  /* ── send ── */
+  async function confirmSend() {
+    const btn = document.getElementById('btn-confirm-send');
+    const errEl = document.getElementById('send-err');
+    const sendType = document.querySelector('input[name="send_type"]:checked').value;
+    errEl.textContent = '';
+
+    if (checkedOrders.size === 0) {
+      errEl.textContent = 'No orders selected. Please select at least one.';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Sending…';
+
+    const fd = new FormData();
+    fd.append('file', currentFile);
+    fd.append('send_type', sendType);
+    // Pass selected order numbers as JSON string
+    fd.append('selected_orders', JSON.stringify([...checkedOrders]));
+
+    try {
+      const res = await fetch('/send/morning-pickup', { method: 'POST', body: fd });
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch (_) { data = null; }
+      if (!res.ok) {
+        const msg = data?.detail || `Server error ${res.status}${text ? ': ' + text.slice(0, 120) : ''}`;
+        errEl.textContent = msg;
+        btn.disabled = false;
+        refreshSendBtn();
+        return;
+      }
+      if (!data) { errEl.textContent = 'Unexpected empty response from server.'; btn.disabled = false; refreshSendBtn(); return; }
+      showResults(data);
+    } catch (e) {
+      errEl.textContent = 'Network error: ' + e.message;
+      btn.disabled = false;
+      refreshSendBtn();
+    }
+  }
+
+  /* ── results ── */
+  function showResults(data) {
+    const results = data.results;
+    const sent = results.filter(r => (r.sms_status || r.email_status || '').includes('sent')).length;
+    const failed = results.filter(r => (r.sms_status || r.email_status || '').includes('failed')).length;
+    const skipped = results.filter(r => r.skipped).length;
+
+    document.getElementById('res-sent').textContent = sent;
+    document.getElementById('res-failed').textContent = failed;
+    document.getElementById('res-skipped').textContent = skipped;
+    document.getElementById('res-total').textContent = data.total;
+
+    document.getElementById('result-tbody').innerHTML = results.map(r => {
+      const smsClass = r.skipped ? 'status-skip' : (r.sms_status || '').includes('sent') ? 'status-ok' : r.sms_status ? 'status-fail' : '';
+      const emailClass = r.skipped ? 'status-skip' : (r.email_status || '').includes('sent') ? 'status-ok' : r.email_status ? 'status-fail' : '';
+      return `<tr>
       <td>${r.order}</td>
-      <td>${r.name||''}</td>
-      <td style="font-size:11px;">${r.phone||''}</td>
-      <td>${r.pickup_time||''}</td>
+      <td>${r.name || ''}</td>
+      <td style="font-size:11px;">${r.phone || ''}</td>
+      <td>${r.pickup_time || ''}</td>
       <td class="${smsClass}">${r.skipped ? 'skipped' : (r.sms_status || '—')}</td>
       <td class="${emailClass}">${r.skipped ? 'skipped' : (r.email_status || '—')}</td>
     </tr>`;
-  }).join('');
+    }).join('');
 
-  document.getElementById('step-preview').classList.add('hidden');
-  document.getElementById('step-result').classList.remove('hidden');
-}
+    document.getElementById('step-preview').classList.add('hidden');
+    document.getElementById('step-result').classList.remove('hidden');
+  }
 
-/* ── reset ── */
-function resetForm() {
-  document.getElementById('step-form').classList.remove('hidden');
-  document.getElementById('step-preview').classList.add('hidden');
-  document.getElementById('step-result').classList.add('hidden');
-  document.getElementById('excel-file').value = '';
-  document.getElementById('upload-err').textContent = '';
-  document.getElementById('send-err').textContent = '';
-  const btn = document.getElementById('btn-confirm-send');
-  if (btn) { btn.disabled = false; }
-  currentFile = null;
-  allRows = [];
-  checkedOrders = new Set();
-  setSendType('sms');
-}
+  /* ── reset ── */
+  function resetForm() {
+    document.getElementById('step-form').classList.remove('hidden');
+    document.getElementById('step-preview').classList.add('hidden');
+    document.getElementById('step-result').classList.add('hidden');
+    document.getElementById('excel-file').value = '';
+    document.getElementById('upload-err').textContent = '';
+    document.getElementById('send-err').textContent = '';
+    const btn = document.getElementById('btn-confirm-send');
+    if (btn) { btn.disabled = false; }
+    currentFile = null;
+    allRows = [];
+    checkedOrders = new Set();
+    setSendType('sms');
+  }
 </script>
 {% endblock %}

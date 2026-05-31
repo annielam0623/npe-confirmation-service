@@ -178,7 +178,7 @@ def _render(booking, tour_config: dict, error_msg: str = "",
     if booking.pickup_time:
         pickup_html += (
             f'<div class="gf-row"><span>⏰</span><span>'
-            f'Please arrive at <strong>{ploc}</strong> by '
+            f'Please arrive at <strong>{pickup_photo_label.replace(" Pickup Photos", "")}</strong> by '
             f'<strong>{booking.pickup_time}</strong> for check-in.</span></div>'
     )
         pickup_html += (
