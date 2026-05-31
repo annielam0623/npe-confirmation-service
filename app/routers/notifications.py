@@ -128,7 +128,7 @@ async def preview_tour_confirmation(
 
     # Check duplicates against bookings table
     for row in rows:
-       result = await db.execute(text("""
+        result = await db.execute(text("""
             SELECT sent_by, sent_at AT TIME ZONE 'America/Los_Angeles'
             FROM send_log
             WHERE order_number = :order_number
