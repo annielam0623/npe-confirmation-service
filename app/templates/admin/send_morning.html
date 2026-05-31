@@ -142,7 +142,7 @@ background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
       </div>
     </div>
     <p style="font-size:11px;color:#aaa;margin-bottom:14px;">
-      Required columns: Order Number, First Name, Last Name, Customer Phone, Pick-up Time, Driver, Vehicle#
+      Required columns: Order Number, Name, Phone, Pax, Pickup Time, Pickup Location, Agent, Driver, Bus#
     </p>
     <button class="btn-send" onclick="uploadPreview()">
       📂 Upload &amp; Preview
@@ -159,9 +159,9 @@ background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
       <strong>Do not remove or rename any header row.</strong> The following columns must be present and spelled
       exactly:
       <div
-        style="margin-top:6px;margin-bottom:4px;background:#fff;border:1px solid #b5d4f4;border-radius:6px;padding:8px 12px;font-family:monospace;font-size:11px;color:#185FA5;letter-spacing:0.2px;">
-        Order Number &nbsp;·&nbsp; First Name &nbsp;·&nbsp; Last Name &nbsp;·&nbsp; Customer Phone &nbsp;·&nbsp; Pick-up
-        Time &nbsp;·&nbsp; Driver &nbsp;·&nbsp; Vehicle#
+        style="margin-top:6px;margin-bottom:4px;background:#fff;border:1px solid #b5d4f4;border-radius:6px;padding:8px 12px;font-family:monospace;font-size:11px;color:#185FA5;letter-spacing:0.2px;white-space:nowrap;overflow-x:auto;">
+        Order Number &nbsp;·&nbsp; Name &nbsp;·&nbsp; Phone &nbsp;·&nbsp; Pax &nbsp;·&nbsp; Bus# &nbsp;·&nbsp; Driver
+        &nbsp;·&nbsp; Pickup Time &nbsp;·&nbsp; Pickup Location &nbsp;·&nbsp; Agent
       </div>
       Missing or renamed columns will cause the upload to fail.
     </li>
