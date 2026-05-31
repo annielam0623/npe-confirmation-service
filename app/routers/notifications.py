@@ -128,13 +128,23 @@ async def preview_tour_confirmation(
 
     # Check duplicates against bookings table
     for row in rows:
-        result = await db.execute(text("""
-            SELECT id FROM bookings
+       result = await db.execute(text("""
+            SELECT sent_by, sent_at AT TIME ZONE 'America/Los_Angeles'
+            FROM send_log
             WHERE order_number = :order_number
               AND tour_date    = :tour_date
+              AND module       = 'tour_confirmation'
             LIMIT 1
         """), {"order_number": row["order_number"], "tour_date": _to_date(tour_date)})
-        row["duplicate"] = result.fetchone() is not None
+        sent_row = result.fetchone()
+        if sent_row:
+            sent_by = sent_row[0] or "staff"
+            sent_at = sent_row[1].strftime("%-m/%-d %-I:%M %p") if sent_row[1] else ""
+            row["duplicate"] = True
+            row["sent_label"] = f"Sent by {sent_by} on {sent_at}"
+        else:
+            row["duplicate"] = False
+            row["sent_label"] = ""
         row["name"] = f"{row['first_name']} {row['last_name']}".strip()
 
     total    = len(rows)
@@ -194,14 +204,23 @@ async def preview_tickets_reminder(
 
     for row in rows:
         result = await db.execute(text("""
-            SELECT id FROM bookings
+            SELECT sent_by, sent_at AT TIME ZONE 'America/Los_Angeles'
+            FROM send_log
             WHERE order_number = :order_number
               AND tour_date    = :tour_date
               AND module       = 'tickets_reminder'
             LIMIT 1
         """), {"order_number": row["order_number"], "tour_date": _to_date(service_date)})
-        row["duplicate"] = result.fetchone() is not None
-        row["name"] = f"{row['first_name']} {row['last_name']}".strip()
+        sent_row = result.fetchone()
+        if sent_row:
+            sent_by = sent_row[0] or "staff"
+            sent_at = sent_row[1].strftime("%-m/%-d %-I:%M %p") if sent_row[1] else ""
+            row["duplicate"] = True
+            row["sent_label"] = f"Sent by {sent_by} on {sent_at}"
+        else:
+            row["duplicate"] = False
+            row["sent_label"] = ""
+            row["name"] = f"{row['first_name']} {row['last_name']}".strip()
 
     dup_cnt = sum(1 for r in rows if r["duplicate"])
     return {"total": len(rows), "duplicates": dup_cnt, "rows": rows}
