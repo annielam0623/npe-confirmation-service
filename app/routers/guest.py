@@ -171,17 +171,20 @@ def _render(booking, tour_config: dict, error_msg: str = "",
     pickup_html = ""
     pickup_html += (
         f'<div class="gf-row"><span>📱</span>'
-        f'<span>You will receive a morning reminder SMS with a check-in link and real-time vehicle tracking on the day of your tour.</span></div>'
+        f'<span>You will receive a morning reminder SMS with check-in link and real-time vehicle tracking on the day of your tour.</span></div>'
     )
     if ploc:
         instruction_display = pickup_instruction if pickup_instruction else f"Please arrive at <strong>{ploc}</strong>"
-        pickup_html += f'<div class="gf-row"><span>📍</span><span>{instruction_display}</span></div>'
     if booking.pickup_time:
         pickup_html += (
-            f'<div class="gf-row"><span>⏰</span><span>Arrive by '
-            f'<strong>{booking.pickup_time}</strong> for check-in. '
-            f'Departs promptly — vehicle cannot wait for late arrivals.</span></div>'
-        )
+            f'<div class="gf-row"><span>⏰</span><span>'
+            f'Please arrive at <strong>{ploc}</strong> by '
+            f'<strong>{booking.pickup_time}</strong> for check-in.</span></div>'
+    )
+        pickup_html += (
+            f'<div style="font-size:11px;color:#c0392b;margin-left:28px;margin-bottom:12px;">'
+            f'* Departs promptly — vehicle cannot wait for late arrivals.</div>'
+    )
     if pickup_photo_url:
         pickup_html += (
             f'<div class="gf-row"><span>🗺️</span>'
