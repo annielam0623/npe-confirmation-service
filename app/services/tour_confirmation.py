@@ -264,10 +264,10 @@ def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
       As your local tour operator for the <strong style="font-weight:600;">{label}</strong>, we're excited to welcome you on <strong style="color:#2563eb;font-weight:600;">{date_fmt}</strong>.
     </p>
     <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
-      Please review your tour details below and reconfirm your spot.{'  Please also select your <strong style="font-weight:600;">lunch option</strong> using the button below.' if has_lunch else ''}
+      Please review your tour details below and reconfirm your participation so we can ensure everything is ready for your visit.{'  Please also select your <strong style="font-weight:600;">lunch option</strong> using the button below.' if has_lunch else ''}
     </p>
     <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 28px;letter-spacing:-0.1px;">
-      We look forward to seeing you soon.
+      Thank you for choosing National Park Express. We are honored to be part of your adventure and are committed to making your experience smooth, enjoyable and filled with lasting memories.
     </p>
 
     <!-- Details card -->
