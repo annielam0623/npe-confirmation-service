@@ -156,7 +156,8 @@ background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
       <li>Download the manifest from <strong>Rezdy</strong> for the tour date.</li>
       <li>Select the matching <strong>Tour Type</strong> and <strong>Tour Date</strong> above.</li>
       <li>Upload the <strong>.xlsx</strong> file — the filename should match the tour and date (e.g.
-        <code>bryce-zion-bus-2026-06-01.xlsx</code>).</li>
+        <code>bryce-zion-bus-2026-06-01.xlsx</code>).
+      </li>
       <li>Click <strong>Upload &amp; Preview</strong> to review the guest list before sending.</li>
       <li>Any orders already sent will be flagged as <span
           style="background:#FAEEDA;color:#BA7517;padding:1px 6px;border-radius:4px;font-size:11px;">Duplicate</span> —
@@ -212,20 +213,20 @@ background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
     ⚡ Upload &amp; Preview
   </button>
   <span id="lm-upload-err" style="font-size:12px;color:#A32D2D;margin-left:12px;"></span>
-  <div
-    style="background:#fdf6ee;border:1px solid #e8d5b0;border-radius:10px;padding:16px 20px;max-width:680px;margin-bottom:32px;font-size:12px;color:#5a4020;line-height:1.9;">
-    <div style="font-weight:600;margin-bottom:8px;color:#7C4A00;">📖 How to use — Last Minute Order</div>
-    <ol style="margin:0;padding-left:18px;">
-      <li>Use this section <strong>only for orders placed within the cancellation window</strong> (typically same-day or
-        next-day bookings).</li>
-      <li>These guests skip the reconfirmation step and go directly to lunch selection &amp; pickup details.</li>
-      <li>Select the <strong>Tour Type</strong> and <strong>Tour Date</strong>, then upload the manifest.</li>
-      <li>Review the preview and confirm send.</li>
-    </ol>
-    <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e8d5b0;color:#888;">
-      ⚠️ Do not use this for regular bookings — guests will not receive the standard confirmation &amp; reconfirmation
-      flow.
-    </div>
+</div>
+<div
+  style="background:#fdf6ee;border:1px solid #e8d5b0;border-radius:10px;padding:16px 20px;max-width:680px;margin-bottom:32px;font-size:12px;color:#5a4020;line-height:1.9;">
+  <div style="font-weight:600;margin-bottom:8px;color:#7C4A00;">📖 How to use — Last Minute Order</div>
+  <ol style="margin:0;padding-left:18px;">
+    <li>Use this section <strong>only for orders placed within the cancellation window</strong> (typically same-day or
+      next-day bookings).</li>
+    <li>These guests skip the reconfirmation step and go directly to lunch selection &amp; pickup details.</li>
+    <li>Select the <strong>Tour Type</strong> and <strong>Tour Date</strong>, then upload the manifest.</li>
+    <li>Review the preview and confirm send.</li>
+  </ol>
+  <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e8d5b0;color:#888;">
+    ⚠️ Do not use this for regular bookings — guests will not receive the standard confirmation &amp; reconfirmation
+    flow.
   </div>
 </div>
 
@@ -439,8 +440,6 @@ background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
   <div id="skip-report"
     style="display:none;background:#fff8e1;border:1px solid #f0d080;border-radius:10px;padding:12px 16px;margin-top:12px;font-size:12px;color:#7C4A00;line-height:1.8;">
   </div>
-</div>
-</div>
 </div>
 {% endblock %}
 
