@@ -140,3 +140,82 @@ async def send_log_api(
         },
         "records": records
     })
+
+@router.get("/api/send-log/export")
+async def send_log_export(
+    date_filter: Optional[str] = Query(None, alias="date"),
+    module: Optional[str] = Query(None),
+    current_user=Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    import csv
+    import io
+    from fastapi.responses import StreamingResponse
+
+    filters = []
+    params = {}
+
+    if date_filter:
+        filters.append("DATE(sent_at AT TIME ZONE 'America/Los_Angeles') = :date_filter")
+        params["date_filter"] = date.fromisoformat(date_filter)
+    else:
+        filters.append("DATE(sent_at AT TIME ZONE 'America/Los_Angeles') = CURRENT_DATE AT TIME ZONE 'America/Los_Angeles'")
+
+    if module and module != "all":
+        filters.append("module = :module")
+        params["module"] = module
+
+    where_clause = "WHERE " + " AND ".join(filters) if filters else ""
+
+    query = text(f"""
+        SELECT
+            sent_at AT TIME ZONE 'America/Los_Angeles' AS sent_at,
+            module,
+            order_number,
+            first_name,
+            last_name,
+            email,
+            phone,
+            tour_date,
+            tour_type,
+            email_status,
+            sms_status,
+            error_msg,
+            sent_by
+        FROM send_log
+        {where_clause}
+        ORDER BY sent_at DESC
+    """)
+
+    result = await db.execute(query, params)
+    rows = result.mappings().all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Sent At", "Module", "Order#", "First Name", "Last Name",
+                     "Email", "Phone", "Tour Date", "Tour Type",
+                     "Email Status", "SMS Status", "Error", "Sent By"])
+    for r in rows:
+        writer.writerow([
+            r["sent_at"].strftime("%-m/%-d/%Y %-I:%M %p") if r["sent_at"] else "",
+            r["module"] or "",
+            r["order_number"] or "",
+            r["first_name"] or "",
+            r["last_name"] or "",
+            r["email"] or "",
+            r["phone"] or "",
+            str(r["tour_date"]) if r["tour_date"] else "",
+            r["tour_type"] or "",
+            r["email_status"] or "",
+            r["sms_status"] or "",
+            r["error_msg"] or "",
+            r["sent_by"] or "",
+        ])
+
+    output.seek(0)
+    filename = f"send_log_{date_filter or 'today'}.csv"
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
