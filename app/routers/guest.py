@@ -269,9 +269,10 @@ def _render(booking, tour_config: dict, error_msg: str = "",
         </div>"""
 
     reminders_html = "".join(f"<li>{r}</li>" for r in (tour_config.get("extra_reminders") or []))
-    reminders_html += """<li>Dress appropriately for the weather and stay hydrated.</li>
-    <li>Vehicles are air-conditioned; in extreme heat, cooling may take a moment.</li>
-    <li>You may bring small items like personal fans or ice packs.</li>"""
+    reminders_html += """<li>Please dress appropriately for the weather and stay hydrated throughout your tour.</li>
+    <li>All vehicles are air-conditioned. During periods of extreme heat, it may take a few minutes for the vehicle to cool down after boarding.You are welcome to bring small personal comfort items, such as handheld fans, cooling towels, or ice packs.</li>
+    <li>To help ensure a pleasant experience for everyone on board, we kindly ask guests to refrain from wearing strong fragrances, including perfumes, colognes, and heavily scented products.</li>
+    <li>If you have any special needs or concerns, please contact us prior to your tour so we can better assist you.</li>"""
 
     # MTLV — Madame Tussauds ticket selection (only when mtlv_eligible)
     mtlv_html = ""
@@ -297,12 +298,18 @@ def _render(booking, tour_config: dict, error_msg: str = "",
             mtlv_html = f"""<div class="gf-section">
           <div class="gf-mtlv-box">
             <div class="gf-mtlv-title">🏛️ Madame Tussauds Las Vegas Ticket</div>
-            <div class="gf-mtlv-hint">Your package includes the option to add Madame Tussauds tickets. Please select the number of tickets for your party (0–{qty}). Enter 0 if you do not need any tickets.</div>
+            <div class="gf-mtlv-hint">As a special bonus for this trip, you are eligible to receive complimentary Madame Tussauds Las Vegas tickets. Please select the number of tickets you would like to receive for your party (0–{qty}). No action is required for this section if you do not wish to receive the tickets.</div>
             <div class="gf-mtlv-counter">
               <button type="button" onclick="adjMtlv(-1)">−</button>
               <input type="number" name="mtlv_qty" id="c-mtlv" value="{current_mtlv}" min="0" max="{qty}" readonly>
               <button type="button" onclick="adjMtlv(1)">+</button>
               <span style="font-size:13px;color:#7e57c2;margin-left:6px;">/ {qty} guests</span>
+            </div>
+            <div class="gf-mtlv-hint">
+            <ul style="margin:0;padding-left:18px;">
+                <li>If you plan to visit Madame Tussauds Las Vegas, please check the attraction's operating hours, available dates, and any admission requirements before your visit: https://www.madametussauds.com/las-vegas.</li>
+                <li style="margin-top:4px;">Please note that attraction operating hours, closures, capacity restrictions, and admission policies are determined solely by Madame Tussauds Las Vegas and may change without notice. National Park Express is not responsible for attraction availability, operating schedules, or admission decisions made by the attraction.</li>
+            </ul>            
             </div>
           </div>
         </div>"""
@@ -387,6 +394,12 @@ function adjMtlv(d){{var el=document.getElementById('c-mtlv');if(!el)return;var 
         <div class="gf-box-title">🚌 Your Pickup Information</div>
         {pickup_html}
       </div>
+      <div class="gf-section">
+          <div style="background:#f0f6ff;border:1px solid #b3d1f7;border-radius:8px;padding:16px 18px;margin-bottom:16px;font-size:14px;color:#333;line-height:1.7;">
+            <p style="margin:0 0 8px;">To ensure a smooth pick-up process, check-in and Bus Track information will be sent to your mobile phone prior to departure.</p>
+            <p style="margin:0 0 8px;">Please confirm that the following phone number is correct: <strong>{booking.phone or 'Not on file'}</strong></p>
+            <p style="margin:0;">If this number is incorrect, kindly provide the correct number in the Notes section below.</p>
+      </div>
 
       {fee_html}
       {banners}
@@ -432,12 +445,6 @@ function adjMtlv(d){{var el=document.getElementById('c-mtlv');if(!el)return;var 
           <ul>{reminders_html}</ul>
         </div>
 
-        <div class="gf-section">
-          <div style="background:#f0f6ff;border:1px solid #b3d1f7;border-radius:8px;padding:16px 18px;margin-bottom:16px;font-size:14px;color:#333;line-height:1.7;">
-            <p style="margin:0 0 8px;">To ensure a smooth pick-up process, check-in and Bus Track information will be sent to your mobile phone prior to departure.</p>
-            <p style="margin:0 0 8px;">Please confirm that the following phone number is correct: <strong>{booking.phone or 'Not on file'}</strong></p>
-            <p style="margin:0;">If this number is incorrect, kindly provide the correct number in the Notes section below.</p>
-          </div>
           {notes_display_html}
           <h2>📝 Notes <span class="gf-opt">(optional)</span></h2>
           <textarea name="notes" rows="3" placeholder="Special requests, dietary notes...">{booking.notes or ''}</textarea>
