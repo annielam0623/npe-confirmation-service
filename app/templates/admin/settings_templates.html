@@ -1,0 +1,449 @@
+{% extends "base.html" %}
+{% block title %}Template Copy — NPE Operations{% endblock %}
+
+{% block extra_styles %}
+.tc-wrap { max-width: 900px; }
+.tc-tabs { display: flex; gap: 0; border-bottom: 1px solid rgba(0,0,0,0.1); margin-bottom: 24px; }
+.tc-tab { padding: 9px 22px; font-size: 13px; font-weight: 500; color: #888; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; border-top: none; border-left: none; border-right: none; }
+.tc-tab:hover { color: #1a1a1a; }
+.tc-tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; }
+.tc-panel { display: none; }
+.tc-panel.active { display: block; }
+
+/* Tour type selector */
+.tour-selector { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+.tour-pill { padding: 5px 13px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid rgba(0,0,0,0.15); background: #fff; color: #555; transition: all 0.12s; }
+.tour-pill:hover { border-color: #1a1a1a; color: #1a1a1a; }
+.tour-pill.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+
+/* Field cards */
+.field-group { margin-bottom: 28px; }
+.field-group-title { font-size: 11px; font-weight: 700; color: #9B8F88; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 12px; }
+
+.field-card { background: #fff; border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+.field-card.global-card { border-color: #dc2626; border-width: 1.5px; }
+
+.field-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 12px 16px 10px; gap: 12px; }
+.field-label-text { font-size: 12px; font-weight: 600; color: #1a1a1a; line-height: 1.4; }
+.field-scope { font-size: 11px; color: #888; margin-top: 2px; }
+
+.global-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; border-radius: 4px; padding: 2px 7px; white-space: nowrap; flex-shrink: 0; }
+.global-warning { font-size: 11px; color: #dc2626; background: #fef2f2; border-top: 1px solid #fecaca; padding: 6px 16px; }
+
+.field-body { padding: 0 16px 14px; }
+.field-textarea { width: 100%; border: 1px solid #e5e7eb; border-radius: 7px; padding: 9px 11px; font-size: 13px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.6; color: #1a1a1a; resize: vertical; min-height: 72px; box-sizing: border-box; background: #fafafa; transition: border-color 0.12s, background 0.12s; }
+.field-textarea:focus { outline: none; border-color: #1a1a1a; background: #fff; }
+.field-textarea.global-card-ta { border-color: #fca5a5; background: #fff8f8; }
+.field-textarea.global-card-ta:focus { border-color: #dc2626; background: #fff; }
+
+.field-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; }
+.var-hint { font-size: 11px; color: #9B8F88; }
+.var-hint code { background: #f1f0eb; border-radius: 3px; padding: 1px 5px; font-size: 10px; color: #555; }
+.save-btn { font-size: 12px; font-weight: 500; padding: 5px 16px; border-radius: 6px; border: 1px solid #1a1a1a; background: #fff; color: #1a1a1a; cursor: pointer; transition: all 0.12s; }
+.save-btn:hover { background: #1a1a1a; color: #fff; }
+.save-btn.saving { opacity: 0.5; cursor: not-allowed; }
+.save-btn.saved { border-color: #3B6D11; color: #3B6D11; background: #EAF3DE; }
+.save-btn.err { border-color: #dc2626; color: #dc2626; background: #fef2f2; }
+{% endblock %}
+
+{% block page_title %}Template Copy{% endblock %}
+
+{% block content %}
+<div class="tc-wrap">
+  <div style="margin-bottom:20px;">
+    <div style="font-size:13px;color:#888;line-height:1.6;">
+      Edit the text content used in guest emails, SMS messages, and the guest confirmation page.
+      <br>Only text can be changed — formatting, colours, and layout are fixed.
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tc-tabs">
+    <button class="tc-tab active" onclick="switchTab('guest')">Guest Page</button>
+    <button class="tc-tab" onclick="switchTab('email')">Email</button>
+    <button class="tc-tab" onclick="switchTab('sms')">SMS</button>
+  </div>
+
+  <!-- Loading state -->
+  <div id="tc-loading" style="color:#888;font-size:13px;padding:20px 0;">Loading templates…</div>
+
+  <!-- ── GUEST PAGE TAB ─────────────────────────────────────────────────── -->
+  <div id="panel-guest" class="tc-panel">
+
+    <!-- Global section -->
+    <div class="field-group" id="guest-global-group"></div>
+
+    <hr style="border:none;border-top:1px solid rgba(0,0,0,0.08);margin:24px 0;">
+
+    <!-- Per-product section -->
+    <div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:12px;">Per Product</div>
+    <div class="tour-selector" id="guest-tour-pills"></div>
+    <div id="guest-product-group" class="field-group"></div>
+  </div>
+
+  <!-- ── EMAIL TAB ──────────────────────────────────────────────────────── -->
+  <div id="panel-email" class="tc-panel">
+
+    <!-- Module selector -->
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <button class="tour-pill active" onclick="switchEmailModule('tc', this)">Tour Confirmation</button>
+      <button class="tour-pill" onclick="switchEmailModule('tix', this)">Tickets Reminder</button>
+      <button class="tour-pill" onclick="switchEmailModule('mp', this)">Morning Pickup</button>
+    </div>
+
+    <!-- Global email fields (module-specific) -->
+    <div class="field-group" id="email-global-group"></div>
+
+    <!-- Per-product (tc / tix only) -->
+    <div id="email-product-wrap">
+      <hr style="border:none;border-top:1px solid rgba(0,0,0,0.08);margin:24px 0;">
+      <div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:12px;">Per Product</div>
+      <div class="tour-selector" id="email-tour-pills"></div>
+      <div id="email-product-group" class="field-group"></div>
+    </div>
+  </div>
+
+  <!-- ── SMS TAB ────────────────────────────────────────────────────────── -->
+  <div id="panel-sms" class="tc-panel">
+
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <button class="tour-pill active" onclick="switchSmsModule('tc', this)">Tour Confirmation</button>
+      <button class="tour-pill" onclick="switchSmsModule('tix', this)">Tickets Reminder</button>
+      <button class="tour-pill" onclick="switchSmsModule('mp', this)">Morning Pickup</button>
+    </div>
+
+    <div class="field-group" id="sms-global-group"></div>
+
+    <div id="sms-product-wrap" style="display:none;">
+      <hr style="border:none;border-top:1px solid rgba(0,0,0,0.08);margin:24px 0;">
+      <div style="font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:12px;">Per Product</div>
+      <div class="tour-selector" id="sms-tour-pills"></div>
+      <div id="sms-product-group" class="field-group"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ── State ─────────────────────────────────────────────────────────────────────
+let ALL_SETTINGS = {};   // key → {value, label}
+let currentTab      = 'guest';
+let currentEmailMod = 'tc';
+let currentSmsMod   = 'tc';
+let currentGuestTour   = null;
+let currentEmailTour   = null;
+let currentSmsTour     = null;
+
+// ── Tour type definitions ─────────────────────────────────────────────────────
+const TC_TOURS = [
+  {key:'upper_antelope',       label:'Upper Antelope'},
+  {key:'lower_antelope',       label:'Lower Antelope'},
+  {key:'antelop_X',            label:'Antelope X'},
+  {key:'grand_canyon_south',   label:'GC South Rim'},
+  {key:'grand_canyon_west',    label:'GC West Rim'},
+  {key:'bryce_zion',           label:'Bryce & Zion'},
+  {key:'valley_of_fire_full',  label:'Valley of Fire (Full)'},
+  {key:'valley_of_fire_half',  label:'Valley of Fire (Half)'},
+  {key:'hoover_dam',           label:'Hoover Dam'},
+];
+const TIX_TOURS = [
+  {key:'upper_antelope_tsosie',        label:'U-Antelope (Tsosie)'},
+  {key:'upper_antelope_brenda',        label:'U-Antelope (Brenda)'},
+  {key:'upper_antelope_brenda_no_fee', label:'U-Antelope (Brenda, no fee)'},
+  {key:'upper_antelope_aact',          label:'U-Antelope (AACT)'},
+  {key:'upper_antelope_hogan_transport',label:'U-Antelope (Hogan Transport)'},
+  {key:'upper_antelope_hogan_hiking',  label:'U-Antelope (Hogan Hiking)'},
+  {key:'lower_antelope_kens',          label:'L-Antelope (Ken\'s)'},
+  {key:'lower_antelope_dixie',         label:'L-Antelope (Dixie\'s)'},
+  {key:'canyon_x',                     label:'Canyon X'},
+];
+
+// ── Field definitions ─────────────────────────────────────────────────────────
+const GUEST_GLOBAL_FIELDS = [
+  {key:'tmpl__global__guest_sms_notice',        label:'Morning SMS notice (📱 row)', hint:''},
+  {key:'tmpl__global__guest_depart_warning',    label:'Departure warning (red text below pickup time)', hint:''},
+  {key:'tmpl__global__guest_phone_confirm',     label:'Phone confirmation box (blue box)', hint:'Use {phone} for the guest\'s phone number', vars:['{phone}']},
+  {key:'tmpl__global__guest_confirm_instructions', label:'Confirm / Modify instructions box', hint:'Format: Title|Body — one section per line', rows:6},
+  {key:'tmpl__global__guest_thanks_text',       label:'Thank you page body text', hint:''},
+  {key:'tmpl__global__guest_expired_text',      label:'Expired link page text', hint:''},
+];
+const GUEST_TC_PRODUCT_FIELDS = (tourKey) => [
+  {key:`tmpl__tc__${tourKey}__reminders`,       label:'Important Reminders (one bullet per line)', hint:'', rows:6},
+  {key:`tmpl__tc__${tourKey}__extra_reminders`, label:'Tour-specific extra reminders (one per line)', hint:''},
+  ...(tourKey==='grand_canyon_south'||tourKey==='bryce_zion' ? [
+    {key:`tmpl__tc__${tourKey}__park_fee_nonresident`, label:'Park fee — non-US residents', hint:''},
+    {key:`tmpl__tc__${tourKey}__park_fee_resident`,    label:'Park fee — US residents', hint:''},
+  ] : []),
+];
+const GUEST_TIX_PRODUCT_FIELDS = (tourKey) => [
+  {key:`tmpl__tix__${tourKey}__extra_notes`, label:'Notes / important info (one item per line)', hint:'', rows:8},
+];
+
+const EMAIL_GLOBAL_FIELDS = {
+  tc: [
+    {key:'tmpl__global__tc_email_greeting',     label:'Opening greeting', hint:''},
+    {key:'tmpl__global__tc_email_intro',         label:'Intro line', hint:'', vars:['{label}','{date}']},
+    {key:'tmpl__global__tc_email_review',        label:'Review / reconfirm line', hint:''},
+    {key:'tmpl__global__tc_email_closing',       label:'Closing paragraph', hint:'', rows:4},
+    {key:'tmpl__global__tc_email_link_expiry',   label:'Link expiry notice (below CTA button)', hint:''},
+    {key:'tmpl__global__tc_email_footer_contact',label:'Footer contact block', hint:'', rows:3},
+  ],
+  tix: [
+    {key:'tmpl__global__tix_email_intro',        label:'Intro paragraph', hint:''},
+    {key:'tmpl__global__tix_email_warning',      label:'Warning box (one item per line)', hint:'', rows:3},
+    {key:'tmpl__global__tix_email_cta_desc',     label:'Paragraph above CTA button', hint:'', rows:3},
+    {key:'tmpl__global__tix_email_link_expiry',  label:'Link expiry notice (below CTA button)', hint:''},
+    {key:'tmpl__global__tix_email_footer',       label:'Footer text', hint:''},
+  ],
+  mp: [
+    {key:'tmpl__global__mp_email_body',          label:'Body paragraphs', hint:'', vars:['{pickup_time}'], rows:3},
+    {key:'tmpl__global__mp_email_cta',           label:'CTA button text', hint:''},
+    {key:'tmpl__global__mp_email_footer',        label:'Footer text', hint:''},
+  ],
+};
+const EMAIL_PRODUCT_FIELDS = {
+  tc:  (t) => [
+    {key:`tmpl__tc__${t}__park_fee_nonresident`, label:'Park fee — non-US residents', hint:''},
+    {key:`tmpl__tc__${t}__park_fee_resident`,    label:'Park fee — US residents', hint:''},
+  ],
+  tix: (t) => [
+    {key:`tmpl__tix__${t}__extra_notes`, label:'Notes / important info (one item per line)', hint:'', rows:6},
+  ],
+};
+
+const SMS_GLOBAL_FIELDS = {
+  tc: [
+    {key:'tmpl__global__tc_sms_with_lunch', label:'SMS body — tours WITH lunch', hint:'', vars:['{name}','{label}','{date}','{url}'], rows:4},
+    {key:'tmpl__global__tc_sms_no_lunch',   label:'SMS body — tours WITHOUT lunch', hint:'', vars:['{name}','{label}','{date}','{url}'], rows:4},
+  ],
+  tix: [],  // Tickets SMS is per-product (embedded in extra_notes flow, no separate global SMS)
+  mp: [
+    {key:'tmpl__global__mp_sms_body', label:'SMS body', hint:'', vars:['{name}','{pickup_time}','{url}','{phone}'], rows:6},
+  ],
+};
+
+// ── Load all settings ─────────────────────────────────────────────────────────
+async function loadSettings() {
+  const resp = await fetch('/api/template-settings');
+  const rows = await resp.json();
+  rows.forEach(r => { ALL_SETTINGS[r.key] = {value: r.value, label: r.label}; });
+  document.getElementById('tc-loading').style.display = 'none';
+  renderGuestTab();
+}
+
+// ── Render helpers ────────────────────────────────────────────────────────────
+function fieldCard(fieldDef, isGlobal=false) {
+  const setting = ALL_SETTINGS[fieldDef.key] || {};
+  const value   = setting.value !== undefined ? setting.value : '';
+  const rows    = fieldDef.rows || 3;
+  const vars    = fieldDef.vars || [];
+
+  const varHint = vars.length
+    ? `<span class="var-hint">Variables: ${vars.map(v=>`<code>${v}</code>`).join(' ')}</span>`
+    : (fieldDef.hint ? `<span class="var-hint">${fieldDef.hint}</span>` : '<span></span>');
+
+  const globalBadge = isGlobal
+    ? `<span class="global-badge">⚠ Global — affects all tours</span>` : '';
+  const globalWarning = isGlobal
+    ? `<div class="global-warning">⚠ This text appears everywhere. Edit carefully.</div>` : '';
+
+  const taClass = isGlobal ? 'field-textarea global-card-ta' : 'field-textarea';
+  const cardClass = isGlobal ? 'field-card global-card' : 'field-card';
+
+  return `
+    <div class="${cardClass}" id="card-${fieldDef.key.replace(/[^a-z0-9]/gi,'_')}">
+      <div class="field-header">
+        <div>
+          <div class="field-label-text">${fieldDef.label}</div>
+          <div class="field-scope">${fieldDef.key}</div>
+        </div>
+        ${globalBadge}
+      </div>
+      ${isGlobal ? globalWarning : ''}
+      <div class="field-body">
+        <textarea class="${taClass}" rows="${rows}"
+          data-key="${fieldDef.key}"
+          onchange="markDirty(this)">${escHtml(value)}</textarea>
+        <div class="field-footer">
+          ${varHint}
+          <button class="save-btn" onclick="saveField('${fieldDef.key}', this)">Save</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function pillsHtml(tours, currentKey, onclickFn, prefix) {
+  return tours.map(t =>
+    `<button class="tour-pill${t.key===currentKey?' active':''}" onclick="${onclickFn}('${t.key}',this,'${prefix}')">${t.label}</button>`
+  ).join('');
+}
+
+// ── GUEST TAB ─────────────────────────────────────────────────────────────────
+function renderGuestTab() {
+  // Global fields
+  const gGlobal = document.getElementById('guest-global-group');
+  gGlobal.innerHTML = '<div class="field-group-title">Global — all tours</div>' +
+    GUEST_GLOBAL_FIELDS.map(f => fieldCard(f, true)).join('');
+
+  // Tour pills — TC tours first
+  if (!currentGuestTour) currentGuestTour = TC_TOURS[0].key;
+  const pills = document.getElementById('guest-tour-pills');
+  pills.innerHTML =
+    '<span style="font-size:11px;color:#888;align-self:center;margin-right:4px;">Tour Confirmation:</span>' +
+    pillsHtml(TC_TOURS, currentGuestTour, 'selectGuestTour', 'tc') +
+    '<span style="font-size:11px;color:#888;align-self:center;margin:0 4px 0 12px;">Tickets:</span>' +
+    pillsHtml(TIX_TOURS, currentGuestTour, 'selectGuestTour', 'tix');
+
+  renderGuestProduct();
+}
+
+function selectGuestTour(key, el, prefix) {
+  currentGuestTour = key;
+  document.querySelectorAll('#guest-tour-pills .tour-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderGuestProduct(prefix);
+}
+
+function renderGuestProduct(prefix) {
+  const isTix = TIX_TOURS.some(t => t.key === currentGuestTour);
+  const fields = isTix
+    ? GUEST_TIX_PRODUCT_FIELDS(currentGuestTour)
+    : GUEST_TC_PRODUCT_FIELDS(currentGuestTour);
+  const label = isTix ? 'Tickets Reminder' : 'Tour Confirmation';
+  document.getElementById('guest-product-group').innerHTML =
+    `<div class="field-group-title">${label} — editable blocks</div>` +
+    fields.map(f => fieldCard(f, false)).join('');
+}
+
+// ── EMAIL TAB ─────────────────────────────────────────────────────────────────
+function renderEmailTab() {
+  renderEmailModule(currentEmailMod);
+}
+
+function switchEmailModule(mod, el) {
+  currentEmailMod = mod;
+  document.querySelectorAll('#panel-email .tour-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  renderEmailModule(mod);
+}
+
+function renderEmailModule(mod) {
+  const globalFields = EMAIL_GLOBAL_FIELDS[mod] || [];
+  const gEl = document.getElementById('email-global-group');
+  gEl.innerHTML = '<div class="field-group-title">Global — all products</div>' +
+    globalFields.map(f => fieldCard(f, true)).join('');
+
+  const productWrap = document.getElementById('email-product-wrap');
+  if (mod === 'mp') { productWrap.style.display = 'none'; return; }
+  productWrap.style.display = '';
+
+  const tours = mod === 'tc' ? TC_TOURS : TIX_TOURS;
+  if (!currentEmailTour || !tours.find(t=>t.key===currentEmailTour)) currentEmailTour = tours[0].key;
+  const pills = document.getElementById('email-tour-pills');
+  pills.innerHTML = pillsHtml(tours, currentEmailTour, 'selectEmailTour', mod);
+  renderEmailProduct(mod, currentEmailTour);
+}
+
+function selectEmailTour(key, el, mod) {
+  currentEmailTour = key;
+  document.querySelectorAll('#email-tour-pills .tour-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  renderEmailProduct(mod, key);
+}
+
+function renderEmailProduct(mod, tourKey) {
+  const fn = EMAIL_PRODUCT_FIELDS[mod];
+  const fields = fn ? fn(tourKey) : [];
+  // Filter out keys with no value in settings (e.g. park_fee only for some tours)
+  const filtered = fields.filter(f => ALL_SETTINGS[f.key] !== undefined || f.key.includes('park_fee'));
+  document.getElementById('email-product-group').innerHTML =
+    `<div class="field-group-title">Per product — editable blocks</div>` +
+    (filtered.length ? filtered.map(f => fieldCard(f, false)).join('') : '<div style="color:#888;font-size:13px;padding:12px 0;">No per-product fields for this tour.</div>');
+}
+
+// ── SMS TAB ───────────────────────────────────────────────────────────────────
+function renderSmsTab() {
+  renderSmsModule(currentSmsMod);
+}
+
+function switchSmsModule(mod, el) {
+  currentSmsMod = mod;
+  document.querySelectorAll('#panel-sms > div:first-child .tour-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  renderSmsModule(mod);
+}
+
+function renderSmsModule(mod) {
+  const globalFields = SMS_GLOBAL_FIELDS[mod] || [];
+  const gEl = document.getElementById('sms-global-group');
+  gEl.innerHTML = (globalFields.length
+    ? '<div class="field-group-title">SMS template</div>' + globalFields.map(f => fieldCard(f, true)).join('')
+    : '<div style="color:#888;font-size:13px;padding:12px 0;">Tickets Reminder SMS text is managed per-product in the Tickets Reminder section of the Guest Page tab.</div>');
+
+  document.getElementById('sms-product-wrap').style.display = 'none';
+}
+
+// ── Tab switching ─────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tc-tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase().includes(tab)));
+  document.querySelectorAll('.tc-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  if (tab === 'guest')  renderGuestTab();
+  if (tab === 'email')  renderEmailTab();
+  if (tab === 'sms')    renderSmsTab();
+}
+
+// ── Save ──────────────────────────────────────────────────────────────────────
+function markDirty(ta) {
+  // future: per-field dirty tracking
+}
+
+async function saveField(key, btn) {
+  const ta = document.querySelector(`textarea[data-key="${key}"]`);
+  if (!ta) return;
+  const value = ta.value;
+
+  btn.textContent = 'Saving…';
+  btn.classList.add('saving');
+
+  try {
+    const resp = await fetch('/api/template-settings/save', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({key, value}),
+    });
+    if (!resp.ok) throw new Error('Failed');
+    // Update local cache
+    if (!ALL_SETTINGS[key]) ALL_SETTINGS[key] = {};
+    ALL_SETTINGS[key].value = value;
+
+    btn.textContent = 'Saved ✓';
+    btn.classList.remove('saving');
+    btn.classList.add('saved');
+    setTimeout(() => {
+      btn.textContent = 'Save';
+      btn.classList.remove('saved');
+    }, 2000);
+  } catch(e) {
+    btn.textContent = 'Error';
+    btn.classList.remove('saving');
+    btn.classList.add('err');
+    setTimeout(() => {
+      btn.textContent = 'Save';
+      btn.classList.remove('err');
+    }, 2500);
+  }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+loadSettings().then(() => {
+  document.getElementById('panel-guest').classList.add('active');
+});
+</script>
+{% endblock %}

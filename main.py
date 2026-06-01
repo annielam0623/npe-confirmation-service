@@ -31,6 +31,7 @@ from app.routers import sales_report
 from app.routers import ops_summary
 from app.routers import promotion_stats
 from app.routers import send_log
+from app.routers import template_settings
 
 logger = logging.getLogger(__name__)
 LA_TZ = pytz.timezone("America/Los_Angeles")
@@ -121,6 +122,8 @@ app.include_router(sales_report.router)
 app.include_router(ops_summary.router)
 app.include_router(promotion_stats.router)
 app.include_router(send_log.router)
+app.include_router(template_settings.router)
+
 
 @app.get("/")
 def home():
