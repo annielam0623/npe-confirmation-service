@@ -286,6 +286,8 @@ background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
 </div>
 
 <!-- ── Last Minute Order ─────────────────────────── -->
+
+<div id="lm-step-form">
 <div class="send-card" style="margin-top:8px;">
   <h2>⚡ Last Minute Order</h2>
   <p style="font-size:12px;color:#888;margin-top:-8px;margin-bottom:14px;">
@@ -351,7 +353,7 @@ background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
     </ul>
   </div>
 </div>
-
+</div>
 <!-- Last Minute Preview -->
 <div id="lm-step-preview" class="hidden">
   <div class="preview-card">
@@ -729,6 +731,7 @@ background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
       lmCurrentTourType = tourType;
       lmCurrentTourDate = tourDate;
       lmShowPreview(data);
+      document.getElementById('lm-step-form').classList.add('hidden');
     } catch (e) {
       errEl.textContent = 'Network error. Please try again.';
     }
@@ -869,6 +872,7 @@ background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
   function lmReset() {
     document.getElementById('lm-step-preview').classList.add('hidden');
     document.getElementById('lm-step-result').classList.add('hidden');
+    document.getElementById('lm-step-form').classList.remove('hidden');
     document.getElementById('lm-excel-file').value = '';
     document.getElementById('lm-upload-err').textContent = '';
     const btn = document.getElementById('lm-btn-confirm-send');
