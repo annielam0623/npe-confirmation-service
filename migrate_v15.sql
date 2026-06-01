@@ -260,3 +260,9 @@ INSERT INTO settings (key, value, label) VALUES
  '[Tickets Guest Page] Notes — Canyon X (one item per line)')
 
 ON CONFLICT (key) DO NOTHING;
+
+-- Fix: convert literal \n to real newlines in all template values
+UPDATE settings
+SET value = replace(value, '\n', chr(10))
+WHERE key LIKE 'tmpl__%'
+  AND value LIKE '%\n%';
