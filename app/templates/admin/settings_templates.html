@@ -116,8 +116,20 @@
 
     <!-- GUEST TAB -->
     <div id="panel-guest" class="tc-panel">
-      <div class="field-group" id="guest-global-group"></div>
-      <hr style="border:none;border-top:1px solid rgba(0,0,0,0.08);margin:20px 0;">
+      <!-- Collapsible Global -->
+      <div style="margin-bottom:16px;">
+        <div onclick="toggleGlobal()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px 12px;background:#fff5f5;border:1.5px solid #fca5a5;border-radius:8px;">
+          <span style="font-size:12px;font-weight:700;color:#dc2626;">⚠ Global — applies to ALL tours</span>
+          <span id="global-toggle-icon" style="font-size:18px;color:#dc2626;font-weight:700;line-height:1;">+</span>
+        </div>
+        <div id="guest-global-content" style="display:none;">
+          <div style="font-size:11px;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-left:none;border-right:none;padding:7px 12px;margin-bottom:10px;">
+            Changes here apply to ALL tours. If you need a change to appear across all tours, make it here.
+          </div>
+          <div class="field-group" id="guest-global-group"></div>
+        </div>
+      </div>
+      <hr style="border:none;border-top:1px solid rgba(0,0,0,0.08);margin:16px 0;">
       <div style="font-size:12px;font-weight:600;color:#1a1a1a;margin-bottom:10px;">Per Product</div>
       <div class="tour-selector" id="guest-tour-pills"></div>
       <div id="guest-product-group" class="field-group"></div>
@@ -336,16 +348,25 @@ function onFieldFocus(key) { activeFieldKey = key; renderPreview(); }
 function onFieldBlur()     { activeFieldKey = null; renderPreview(); }
 
 // ── GUEST TAB ─────────────────────────────────────────────────────────────────
+function toggleGlobal() {
+  const content = document.getElementById('guest-global-content');
+  const icon    = document.getElementById('global-toggle-icon');
+  const open    = content.style.display === 'none';
+  content.style.display = open ? 'block' : 'none';
+  icon.textContent = open ? '−' : '+';
+}
+
 function renderGuestTab() {
   document.getElementById('guest-global-group').innerHTML =
-    '<div class="field-group-title">Global — all tours</div>' +
     GUEST_GLOBAL_FIELDS.map(f => fieldCard(f, true)).join('');
   if (!currentGuestTour) currentGuestTour = TC_TOURS[0].key;
   const pills = document.getElementById('guest-tour-pills');
   pills.innerHTML =
-    '<div style="width:100%;font-size:11px;font-weight:600;color:#6B5E57;margin-bottom:6px;">Tour Confirmation</div>' +
+    '<div style="width:100%;font-size:13px;font-weight:700;color:#4a7c59;margin-bottom:4px;">Tour Confirmation</div>' +
+    '<div style="width:100%;font-size:11px;color:#6B5E57;margin-bottom:8px;">Select a tour to edit. Changes only apply to the selected tour. To apply a change to all tours, edit the Global section above.</div>' +
     pillsHtml(TC_TOURS, currentGuestTour, 'selectGuestTour', 'tc') +
-    '<div style="width:100%;font-size:11px;font-weight:600;color:#6B5E57;margin:10px 0 6px;">Tickets Reminder</div>' +
+    '<div style="width:100%;font-size:13px;font-weight:700;color:#c17f3a;margin:14px 0 4px;">Tickets Reminder</div>' +
+    '<div style="width:100%;font-size:11px;color:#6B5E57;margin-bottom:8px;">Select a tour to edit. Changes only apply to the selected tour. To apply a change to all tours, edit the Global section above.</div>' +
     pillsHtml(TIX_TOURS, currentGuestTour, 'selectGuestTour', 'tix');
   renderGuestProduct();
 }
