@@ -560,18 +560,20 @@ function renderSmsPreview() {
 }
 
 function renderGuestPreview() {
-  const isTix = TIX_TOURS.some(t=>t.key===currentGuestTour);
+  const isTix  = TIX_TOURS.some(t => t.key === currentGuestTour);
   const tourKey = currentGuestTour || TC_TOURS[0].key;
-  const tourLabel = isTix
-    ? (TIX_TOURS.find(t=>t.key===tourKey)?.label||'Antelope Canyon Tour')
-    : (TC_TOURS.find(t=>t.key===tourKey)?.label||SAMPLE.label);
+  return isTix ? renderTixGuestPreview(tourKey) : renderTcGuestPreview(tourKey);
+}
 
-  const smsNotice = hl(esc(v('tmpl__global__guest_sms_notice')), 'tmpl__global__guest_sms_notice');
-  const departWarn= hl(esc(v('tmpl__global__guest_depart_warning')), 'tmpl__global__guest_depart_warning');
-  const phoneText = hl(nl2br(fill(v('tmpl__global__guest_phone_confirm'))), 'tmpl__global__guest_phone_confirm');
+function renderTcGuestPreview(tourKey) {
+  const tourLabel = TC_TOURS.find(t=>t.key===tourKey)?.label || SAMPLE.label;
 
-  // Confirm instructions: Title|Body per line
-  const instrRaw = v('tmpl__global__guest_confirm_instructions');
+  const smsNotice  = hl(esc(v('tmpl__global__guest_sms_notice')), 'tmpl__global__guest_sms_notice');
+  const departWarn = hl(esc(v('tmpl__global__guest_depart_warning')), 'tmpl__global__guest_depart_warning');
+  const phoneText  = hl(nl2br(fill(v('tmpl__global__guest_phone_confirm'))), 'tmpl__global__guest_phone_confirm');
+  const thanksText = hl(esc(v('tmpl__global__guest_thanks_text')), 'tmpl__global__guest_thanks_text');
+
+  const instrRaw  = v('tmpl__global__guest_confirm_instructions');
   const instrHtml = instrRaw.split('\n').map(line => {
     const [title, ...rest] = line.split('|');
     return rest.length
@@ -580,41 +582,27 @@ function renderGuestPreview() {
   }).join('');
   const instrBlock = hl(instrHtml, 'tmpl__global__guest_confirm_instructions');
 
-  const hasParkFee = !isTix && ['grand_canyon_south','bryce_zion'].includes(tourKey);
+  const hasParkFee = ['grand_canyon_south','bryce_zion'].includes(tourKey);
   let feeHtml = '';
   if (hasParkFee) {
     const nr = hl(esc(v(`tmpl__tc__${tourKey}__park_fee_nonresident`)), `tmpl__tc__${tourKey}__park_fee_nonresident`);
     const re = hl(esc(v(`tmpl__tc__${tourKey}__park_fee_resident`)), `tmpl__tc__${tourKey}__park_fee_resident`);
-    feeHtml = `<div class="gp-fee-box"><div style="font-size:11px;font-weight:700;color:#795548;margin-bottom:6px;">ℹ️ National Park Entry Fee</div>
+    feeHtml = `<div class="gp-fee-box">
+      <div style="font-size:11px;font-weight:700;color:#795548;margin-bottom:6px;">ℹ️ National Park Entry Fee</div>
       <div style="margin-bottom:4px;">👤 ${nr}</div>
-      <div>🪪 ${re}</div></div>`;
-  }
-
-  let remindersHtml = '';
-  if (!isTix) {
-    const remKey = `tmpl__tc__${tourKey}__reminders`;
-    const extraKey = `tmpl__tc__${tourKey}__extra_reminders`;
-    const items = v(remKey).split('\n').filter(Boolean).map(r=>`<li style="margin-bottom:5px;">${hl(esc(r), remKey)}</li>`).join('');
-    const extra = v(extraKey).split('\n').filter(Boolean).map(r=>`<li style="margin-bottom:5px;">${hl(esc(r), extraKey)}</li>`).join('');
-    remindersHtml = `<div class="gp-reminders">
-      <div class="gp-reminders-title">📌 Important Reminders</div>
-      <ul style="margin:0;padding-left:18px;font-size:12px;color:#333;">${items}${extra}</ul>
-    </div>`;
-  } else {
-    const notesKey = `tmpl__tix__${tourKey}__extra_notes`;
-    const items = v(notesKey).split('\n').filter(Boolean).map(r=>`<li style="margin-bottom:5px;">${hl(esc(r), notesKey)}</li>`).join('');
-    remindersHtml = `<div class="gp-reminders">
-      <div class="gp-reminders-title">📋 Important Notes</div>
-      <ul style="margin:0;padding-left:18px;font-size:12px;color:#333;">${items}</ul>
+      <div>🪪 ${re}</div>
     </div>`;
   }
 
-  const thanksText = hl(esc(v('tmpl__global__guest_thanks_text')), 'tmpl__global__guest_thanks_text');
+  const remKey  = `tmpl__tc__${tourKey}__reminders`;
+  const extraKey = `tmpl__tc__${tourKey}__extra_reminders`;
+  const items = v(remKey).split('\n').filter(Boolean).map(r=>`<li style="margin-bottom:5px;">${hl(esc(r), remKey)}</li>`).join('');
+  const extra = v(extraKey).split('\n').filter(Boolean).map(r=>`<li style="margin-bottom:5px;">${hl(esc(r), extraKey)}</li>`).join('');
 
   return `<div class="gp-wrap">
     <div class="gp-header">
       <h2>Tour Confirmation</h2>
-      <p>${tourLabel} · ${SAMPLE.date}</p>
+      <p>${esc(tourLabel)} · ${SAMPLE.date}</p>
     </div>
     <div class="gp-body">
       <div class="gp-pickup-box">
@@ -626,8 +614,44 @@ function renderGuestPreview() {
       <div class="gp-info-box">${phoneText}</div>
       ${feeHtml}
       <div class="gp-instructions">${instrBlock}</div>
-      ${remindersHtml}
+      <div class="gp-reminders">
+        <div class="gp-reminders-title">📌 Important Reminders</div>
+        <ul style="margin:0;padding-left:18px;font-size:12px;color:#333;">${items}${extra}</ul>
+      </div>
       <div class="gp-btn">CONFIRM MY TOUR</div>
+      <div class="gp-thanks-text">${thanksText}</div>
+    </div>
+  </div>`;
+}
+
+function renderTixGuestPreview(tourKey) {
+  const tourLabel  = TIX_TOURS.find(t=>t.key===tourKey)?.label || 'Antelope Canyon Tour';
+  const notesKey   = `tmpl__tix__${tourKey}__extra_notes`;
+  const notesItems = v(notesKey).split('\n').filter(Boolean)
+    .map(r => `<li style="margin-bottom:6px;">${hl(esc(r), notesKey)}</li>`).join('');
+  const thanksText = hl(esc(v('tmpl__global__guest_thanks_text')), 'tmpl__global__guest_thanks_text');
+
+  return `<div class="gp-wrap">
+    <div class="gp-header" style="background:#1a5c4a;">
+      <h2>Tickets Reconfirmation</h2>
+      <p>${esc(tourLabel)} · ${SAMPLE.date}</p>
+    </div>
+    <div class="gp-body">
+      <div class="gp-pickup-box" style="border-color:#b3d9c8;">
+        <div class="gp-pickup-title" style="color:#1a5c4a;">📍 Check-in Details</div>
+        <div class="gp-row"><span>⏰</span><span>Check-in: <strong>9:00 AM</strong></span></div>
+        <div class="gp-row"><span>🎡</span><span>Tour Time: <strong>10:00 AM</strong></span></div>
+        <div class="gp-row"><span>📍</span><span>Antelope Slot Canyon Tours, 148 6th Ave, Page, AZ 86040</span></div>
+      </div>
+      <div style="background:#fff5f5;border:1px solid #f5c6c6;border-radius:7px;padding:10px 13px;margin-bottom:12px;font-size:11px;color:#c0392b;line-height:1.5;">
+        ★ Late check-in is subject to forfeiting your tour entry.<br>
+        ★ All times are based on the Arizona (AZ) time zone.
+      </div>
+      <div class="gp-reminders">
+        <div class="gp-reminders-title">📋 Important Notes</div>
+        <ul style="margin:0;padding-left:18px;font-size:12px;color:#333;">${notesItems}</ul>
+      </div>
+      <div class="gp-btn" style="background:#1a5c4a;">RECONFIRM MY TOUR</div>
       <div class="gp-thanks-text">${thanksText}</div>
     </div>
   </div>`;
