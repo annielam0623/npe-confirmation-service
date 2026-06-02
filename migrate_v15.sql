@@ -266,3 +266,193 @@ UPDATE settings
 SET value = replace(value, '\n', chr(10))
 WHERE key LIKE 'tmpl__%'
   AND value LIKE '%\n%';
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- PER TOUR TYPE — Tickets Reminder (tix)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+INSERT INTO settings (key, value, label) VALUES
+
+('tmpl__tix__upper_antelope_tsosie__extra_notes',
+ '★ No children, toddlers or infants (ages 0–5) are permitted due to safety concerns.\nThe general guidelines for visiting Antelope Canyon:\n1. Bottled water is allowed.\n2. No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3. Phones and standard cameras are allowed.\n4. Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\nPlease note that rules may vary slightly depending on the canyon and tour operator. Final instructions will be provided by the guide on site.',
+ '[Tickets Guest Page] Notes — Upper Antelope (Chief Tsosie) (one item per line)'),
+
+('tmpl__tix__upper_antelope_brenda__extra_notes',
+ 'Car seats are required for children under 4. Visitors must provide their own car seat or booster seat.\nThe general guidelines for visiting Antelope Canyon:\n1. Bottled water is allowed.\n2. No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3. Phones and standard cameras are allowed.\n4. Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\nPlease note that rules may vary slightly depending on the canyon and tour operator. Final instructions will be provided by the guide on site.',
+ '[Tickets Guest Page] Notes — Upper Antelope (Brenda) (one item per line)'),
+
+('tmpl__tix__upper_antelope_brenda_no_fee__extra_notes',
+ 'Car seats are required for children under 4. Visitors must provide their own car seat or booster seat.\nThe general guidelines for visiting Antelope Canyon:\n1. Bottled water is allowed.\n2. No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3. Phones and standard cameras are allowed.\n4. Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\nPlease note that rules may vary slightly depending on the canyon and tour operator. Final instructions will be provided by the guide on site.',
+ '[Tickets Guest Page] Notes — Upper Antelope (Brenda, no fee) (one item per line)'),
+
+('tmpl__tix__upper_antelope_aact__extra_notes',
+ '★ Minimum age 8. Guests must be at least 8 years of age to join the walking tour.\n★ Pregnant guests are not permitted to participate due to safety concerns.\nThe general guidelines for visiting Antelope Canyon:\n1. Bottled water is allowed.\n2. No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3. Phones and standard cameras are allowed.\n4. Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\nPlease note that rules may vary slightly depending on the canyon and tour operator. Final instructions will be provided by the guide on site.',
+ '[Tickets Guest Page] Notes — Upper Antelope (AACT) (one item per line)'),
+
+('tmpl__tix__upper_antelope_hogan_transport__extra_notes',
+ 'Car seats are required for children under 8. Visitors must provide their own car seat.\n★ These entry reservations are non-refundable.\nAntelope Canyon does not allow any bags on the walking tour. Please leave them in your vehicle.\nIf you can''t find the check-in location, call: 928-693-9293',
+ '[Tickets Guest Page] Notes — Upper Antelope (Hogan with Transport) (one item per line)'),
+
+('tmpl__tix__upper_antelope_hogan_hiking__extra_notes',
+ '★ Minimum age 8. Guests must be at least 8 years of age to join the hiking tour.\n★ Pregnant guests are not permitted to participate due to safety concerns.\n★ These entry reservations are non-refundable.\nPrepare for a 2-mile round-trip hike. Bring plenty of water.\nThe general guidelines for visiting Antelope Canyon:\n1. Bottled water is allowed.\n2. No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3. Phones and standard cameras are allowed.\n4. Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\nIf you can''t find the check-in location, call: 928-693-9293',
+ '[Tickets Guest Page] Notes — Upper Antelope (Hogan Hiking) (one item per line)'),
+
+('tmpl__tix__lower_antelope_kens__extra_notes',
+ '★ These entry reservations are non-refundable.\nThe general guidelines for visiting Antelope Canyon:\n1. Bottled water is allowed.\n2. No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3. Phones and standard cameras are allowed.\n4. Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\nPlease note that rules may vary slightly depending on the canyon and tour operator. Final instructions will be provided by the guide on site.',
+ '[Tickets Guest Page] Notes — Lower Antelope (Ken''s Tours) (one item per line)'),
+
+('tmpl__tix__lower_antelope_dixie__extra_notes',
+ 'The general guidelines for visiting Antelope Canyon:\n1. Bottled water is allowed.\n2. No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3. Phones and standard cameras are allowed.\n4. Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\nPlease note that rules may vary slightly depending on the canyon and tour operator. Final instructions will be provided by the guide on site.',
+ '[Tickets Guest Page] Notes — Lower Antelope (Dixie''s Tours) (one item per line)'),
+
+('tmpl__tix__canyon_x__extra_notes',
+ 'The general guidelines for visiting Antelope Canyon:\n1. Bottled water is allowed.\n2. No bags are allowed on the walking tour. Please leave all bags in your vehicle.\n3. Phones and standard cameras are allowed.\n4. Tripods, monopods, large camera equipment, and flash/light equipment are generally NOT permitted.\nPlease note that rules may vary slightly depending on the canyon and tour operator. Final instructions will be provided by the guide on site.',
+ '[Tickets Guest Page] Notes — Canyon X (one item per line)')
+
+ON CONFLICT (key) DO NOTHING;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- PER TOUR TYPE — Tickets Reminder: checkin_location, maps_url, location_photo,
+--                                   prepare_steps (up to 3)
+-- ─────────────────────────────────────────────────────────────────────────────
+
+INSERT INTO settings (key, value, label) VALUES
+
+-- upper_antelope_tsosie
+('tmpl__tix__upper_antelope_tsosie__checkin_location','Antelope Slot Canyon Tours, 148 6th Ave, Page, AZ 86040','[Tickets] Check-in location — Upper Antelope (Tsosie)'),
+('tmpl__tix__upper_antelope_tsosie__maps_url','https://goo.gl/maps/t8e9E9uioEWG9zHn7','[Tickets] Maps URL — Upper Antelope (Tsosie)'),
+('tmpl__tix__upper_antelope_tsosie__location_photo','https://maps.app.goo.gl/DiwJPosKMWNXzrH3A','[Tickets] Location photo URL — Upper Antelope (Tsosie)'),
+('tmpl__tix__upper_antelope_tsosie__prep_1_label','','[Tickets] Prepare step 1 label — Upper Antelope (Tsosie)'),
+('tmpl__tix__upper_antelope_tsosie__prep_1_url','','[Tickets] Prepare step 1 URL — Upper Antelope (Tsosie)'),
+('tmpl__tix__upper_antelope_tsosie__prep_1_note','','[Tickets] Prepare step 1 note — Upper Antelope (Tsosie)'),
+('tmpl__tix__upper_antelope_tsosie__prep_2_label','','[Tickets] Prepare step 2 label — Upper Antelope (Tsosie)'),
+('tmpl__tix__upper_antelope_tsosie__prep_2_url','','[Tickets] Prepare step 2 URL — Upper Antelope (Tsosie)'),
+('tmpl__tix__upper_antelope_tsosie__prep_2_note','','[Tickets] Prepare step 2 note — Upper Antelope (Tsosie)'),
+('tmpl__tix__upper_antelope_tsosie__prep_3_label','','[Tickets] Prepare step 3 label — Upper Antelope (Tsosie)'),
+('tmpl__tix__upper_antelope_tsosie__prep_3_url','','[Tickets] Prepare step 3 URL — Upper Antelope (Tsosie)'),
+('tmpl__tix__upper_antelope_tsosie__prep_3_note','','[Tickets] Prepare step 3 note — Upper Antelope (Tsosie)'),
+
+-- upper_antelope_brenda
+('tmpl__tix__upper_antelope_brenda__checkin_location','Tse Bighanilini Tours, Highway 98, Milepost 299.8, Page, AZ 86040 (Between 299 and 300)','[Tickets] Check-in location — Upper Antelope (Brenda)'),
+('tmpl__tix__upper_antelope_brenda__maps_url','https://maps.app.goo.gl/kcixg7Hee9WMMt3h8','[Tickets] Maps URL — Upper Antelope (Brenda)'),
+('tmpl__tix__upper_antelope_brenda__location_photo','https://maps.app.goo.gl/3meJhQqfCAAt9Ayp7','[Tickets] Location photo URL — Upper Antelope (Brenda)'),
+('tmpl__tix__upper_antelope_brenda__prep_1_label','Sign the required waiver form','[Tickets] Prepare step 1 label — Upper Antelope (Brenda)'),
+('tmpl__tix__upper_antelope_brenda__prep_1_url','https://fareharbor.com/waivers?shortname=tsebighanilini&bookingUuid=4487ab4e-7d05-4cea-860b-b7da6ab47df6&source=copy-link','[Tickets] Prepare step 1 URL — Upper Antelope (Brenda)'),
+('tmpl__tix__upper_antelope_brenda__prep_1_note','','[Tickets] Prepare step 1 note — Upper Antelope (Brenda)'),
+('tmpl__tix__upper_antelope_brenda__prep_2_label','Pay the permit fee using the provided payment link','[Tickets] Prepare step 2 label — Upper Antelope (Brenda)'),
+('tmpl__tix__upper_antelope_brenda__prep_2_url','https://fareharbor.com/embeds/book/navajonationparks/items/691331/calendar/2026/01/','[Tickets] Prepare step 2 URL — Upper Antelope (Brenda)'),
+('tmpl__tix__upper_antelope_brenda__prep_2_note','For all guests, please keep your payment receipt for check-in. Same-day Lower Antelope or Canyon X receipts can waive the Upper Antelope permit fee. If we supplied your tickets, we can provide the receipt — just let us know.','[Tickets] Prepare step 2 note — Upper Antelope (Brenda)'),
+('tmpl__tix__upper_antelope_brenda__prep_3_label','','[Tickets] Prepare step 3 label — Upper Antelope (Brenda)'),
+('tmpl__tix__upper_antelope_brenda__prep_3_url','','[Tickets] Prepare step 3 URL — Upper Antelope (Brenda)'),
+('tmpl__tix__upper_antelope_brenda__prep_3_note','','[Tickets] Prepare step 3 note — Upper Antelope (Brenda)'),
+
+-- upper_antelope_brenda_no_fee
+('tmpl__tix__upper_antelope_brenda_no_fee__checkin_location','Tse Bighanilini Tours, Highway 98, Milepost 299.8, Page, AZ 86040 (Between 299 and 300)','[Tickets] Check-in location — Upper Antelope (Brenda, no fee)'),
+('tmpl__tix__upper_antelope_brenda_no_fee__maps_url','https://maps.app.goo.gl/kcixg7Hee9WMMt3h8','[Tickets] Maps URL — Upper Antelope (Brenda, no fee)'),
+('tmpl__tix__upper_antelope_brenda_no_fee__location_photo','https://maps.app.goo.gl/3meJhQqfCAAt9Ayp7','[Tickets] Location photo URL — Upper Antelope (Brenda, no fee)'),
+('tmpl__tix__upper_antelope_brenda_no_fee__prep_1_label','Sign the required waiver form','[Tickets] Prepare step 1 label — Upper Antelope (Brenda, no fee)'),
+('tmpl__tix__upper_antelope_brenda_no_fee__prep_1_url','https://fareharbor.com/waivers?shortname=tsebighanilini&bookingUuid=4487ab4e-7d05-4cea-860b-b7da6ab47df6&source=copy-link','[Tickets] Prepare step 1 URL — Upper Antelope (Brenda, no fee)'),
+('tmpl__tix__upper_antelope_brenda_no_fee__prep_1_note','','[Tickets] Prepare step 1 note — Upper Antelope (Brenda, no fee)'),
+('tmpl__tix__upper_antelope_brenda_no_fee__prep_2_label','','[Tickets] Prepare step 2 label — Upper Antelope (Brenda, no fee)'),
+('tmpl__tix__upper_antelope_brenda_no_fee__prep_2_url','','[Tickets] Prepare step 2 URL — Upper Antelope (Brenda, no fee)'),
+('tmpl__tix__upper_antelope_brenda_no_fee__prep_2_note','','[Tickets] Prepare step 2 note — Upper Antelope (Brenda, no fee)'),
+('tmpl__tix__upper_antelope_brenda_no_fee__prep_3_label','','[Tickets] Prepare step 3 label — Upper Antelope (Brenda, no fee)'),
+('tmpl__tix__upper_antelope_brenda_no_fee__prep_3_url','','[Tickets] Prepare step 3 URL — Upper Antelope (Brenda, no fee)'),
+('tmpl__tix__upper_antelope_brenda_no_fee__prep_3_note','','[Tickets] Prepare step 3 note — Upper Antelope (Brenda, no fee)'),
+
+-- upper_antelope_aact
+('tmpl__tix__upper_antelope_aact__checkin_location','Adventurous Antelope Canyon, Highway 98 Road & Milepost 302, Page, AZ 86040','[Tickets] Check-in location — Upper Antelope (AACT)'),
+('tmpl__tix__upper_antelope_aact__maps_url','https://maps.app.goo.gl/hWXU2JSLSphMda529','[Tickets] Maps URL — Upper Antelope (AACT)'),
+('tmpl__tix__upper_antelope_aact__location_photo','https://maps.app.goo.gl/tZttDC6G3jctLC8E7','[Tickets] Location photo URL — Upper Antelope (AACT)'),
+('tmpl__tix__upper_antelope_aact__prep_1_label','','[Tickets] Prepare step 1 label — Upper Antelope (AACT)'),
+('tmpl__tix__upper_antelope_aact__prep_1_url','','[Tickets] Prepare step 1 URL — Upper Antelope (AACT)'),
+('tmpl__tix__upper_antelope_aact__prep_1_note','','[Tickets] Prepare step 1 note — Upper Antelope (AACT)'),
+('tmpl__tix__upper_antelope_aact__prep_2_label','','[Tickets] Prepare step 2 label — Upper Antelope (AACT)'),
+('tmpl__tix__upper_antelope_aact__prep_2_url','','[Tickets] Prepare step 2 URL — Upper Antelope (AACT)'),
+('tmpl__tix__upper_antelope_aact__prep_2_note','','[Tickets] Prepare step 2 note — Upper Antelope (AACT)'),
+('tmpl__tix__upper_antelope_aact__prep_3_label','','[Tickets] Prepare step 3 label — Upper Antelope (AACT)'),
+('tmpl__tix__upper_antelope_aact__prep_3_url','','[Tickets] Prepare step 3 URL — Upper Antelope (AACT)'),
+('tmpl__tix__upper_antelope_aact__prep_3_note','','[Tickets] Prepare step 3 note — Upper Antelope (AACT)'),
+
+-- upper_antelope_hogan_transport
+('tmpl__tix__upper_antelope_hogan_transport__checkin_location','Antelope Hogan Canyon Tours, LLC, 302 SR-98 (7 miles east of Page), Page, AZ 86040','[Tickets] Check-in location — Upper Antelope (Hogan Transport)'),
+('tmpl__tix__upper_antelope_hogan_transport__maps_url','https://maps.app.goo.gl/DgmwCEepZbNLRn7A6','[Tickets] Maps URL — Upper Antelope (Hogan Transport)'),
+('tmpl__tix__upper_antelope_hogan_transport__location_photo','https://maps.app.goo.gl/DztGqAk8b9pUp8EV7','[Tickets] Location photo URL — Upper Antelope (Hogan Transport)'),
+('tmpl__tix__upper_antelope_hogan_transport__prep_1_label','','[Tickets] Prepare step 1 label — Upper Antelope (Hogan Transport)'),
+('tmpl__tix__upper_antelope_hogan_transport__prep_1_url','','[Tickets] Prepare step 1 URL — Upper Antelope (Hogan Transport)'),
+('tmpl__tix__upper_antelope_hogan_transport__prep_1_note','','[Tickets] Prepare step 1 note — Upper Antelope (Hogan Transport)'),
+('tmpl__tix__upper_antelope_hogan_transport__prep_2_label','','[Tickets] Prepare step 2 label — Upper Antelope (Hogan Transport)'),
+('tmpl__tix__upper_antelope_hogan_transport__prep_2_url','','[Tickets] Prepare step 2 URL — Upper Antelope (Hogan Transport)'),
+('tmpl__tix__upper_antelope_hogan_transport__prep_2_note','','[Tickets] Prepare step 2 note — Upper Antelope (Hogan Transport)'),
+('tmpl__tix__upper_antelope_hogan_transport__prep_3_label','','[Tickets] Prepare step 3 label — Upper Antelope (Hogan Transport)'),
+('tmpl__tix__upper_antelope_hogan_transport__prep_3_url','','[Tickets] Prepare step 3 URL — Upper Antelope (Hogan Transport)'),
+('tmpl__tix__upper_antelope_hogan_transport__prep_3_note','','[Tickets] Prepare step 3 note — Upper Antelope (Hogan Transport)'),
+
+-- upper_antelope_hogan_hiking
+('tmpl__tix__upper_antelope_hogan_hiking__checkin_location','Antelope Hogan Canyon Tours, LLC, 302 SR-98 (7 miles east of Page), Page, AZ 86040','[Tickets] Check-in location — Upper Antelope (Hogan Hiking)'),
+('tmpl__tix__upper_antelope_hogan_hiking__maps_url','https://maps.app.goo.gl/DgmwCEepZbNLRn7A6','[Tickets] Maps URL — Upper Antelope (Hogan Hiking)'),
+('tmpl__tix__upper_antelope_hogan_hiking__location_photo','https://maps.app.goo.gl/DztGqAk8b9pUp8EV7','[Tickets] Location photo URL — Upper Antelope (Hogan Hiking)'),
+('tmpl__tix__upper_antelope_hogan_hiking__prep_1_label','','[Tickets] Prepare step 1 label — Upper Antelope (Hogan Hiking)'),
+('tmpl__tix__upper_antelope_hogan_hiking__prep_1_url','','[Tickets] Prepare step 1 URL — Upper Antelope (Hogan Hiking)'),
+('tmpl__tix__upper_antelope_hogan_hiking__prep_1_note','','[Tickets] Prepare step 1 note — Upper Antelope (Hogan Hiking)'),
+('tmpl__tix__upper_antelope_hogan_hiking__prep_2_label','','[Tickets] Prepare step 2 label — Upper Antelope (Hogan Hiking)'),
+('tmpl__tix__upper_antelope_hogan_hiking__prep_2_url','','[Tickets] Prepare step 2 URL — Upper Antelope (Hogan Hiking)'),
+('tmpl__tix__upper_antelope_hogan_hiking__prep_2_note','','[Tickets] Prepare step 2 note — Upper Antelope (Hogan Hiking)'),
+('tmpl__tix__upper_antelope_hogan_hiking__prep_3_label','','[Tickets] Prepare step 3 label — Upper Antelope (Hogan Hiking)'),
+('tmpl__tix__upper_antelope_hogan_hiking__prep_3_url','','[Tickets] Prepare step 3 URL — Upper Antelope (Hogan Hiking)'),
+('tmpl__tix__upper_antelope_hogan_hiking__prep_3_note','','[Tickets] Prepare step 3 note — Upper Antelope (Hogan Hiking)'),
+
+-- lower_antelope_kens
+('tmpl__tix__lower_antelope_kens__checkin_location','Ken''s Tours, 22 S Lake Powell Blvd, Page, AZ 86040','[Tickets] Check-in location — Lower Antelope (Ken''s)'),
+('tmpl__tix__lower_antelope_kens__maps_url','','[Tickets] Maps URL — Lower Antelope (Ken''s)'),
+('tmpl__tix__lower_antelope_kens__location_photo','','[Tickets] Location photo URL — Lower Antelope (Ken''s)'),
+('tmpl__tix__lower_antelope_kens__prep_1_label','','[Tickets] Prepare step 1 label — Lower Antelope (Ken''s)'),
+('tmpl__tix__lower_antelope_kens__prep_1_url','','[Tickets] Prepare step 1 URL — Lower Antelope (Ken''s)'),
+('tmpl__tix__lower_antelope_kens__prep_1_note','','[Tickets] Prepare step 1 note — Lower Antelope (Ken''s)'),
+('tmpl__tix__lower_antelope_kens__prep_2_label','','[Tickets] Prepare step 2 label — Lower Antelope (Ken''s)'),
+('tmpl__tix__lower_antelope_kens__prep_2_url','','[Tickets] Prepare step 2 URL — Lower Antelope (Ken''s)'),
+('tmpl__tix__lower_antelope_kens__prep_2_note','','[Tickets] Prepare step 2 note — Lower Antelope (Ken''s)'),
+('tmpl__tix__lower_antelope_kens__prep_3_label','','[Tickets] Prepare step 3 label — Lower Antelope (Ken''s)'),
+('tmpl__tix__lower_antelope_kens__prep_3_url','','[Tickets] Prepare step 3 URL — Lower Antelope (Ken''s)'),
+('tmpl__tix__lower_antelope_kens__prep_3_note','','[Tickets] Prepare step 3 note — Lower Antelope (Ken''s)'),
+
+-- lower_antelope_dixie
+('tmpl__tix__lower_antelope_dixie__checkin_location','Dixie''s Tours, 29 S Lake Powell Blvd, Page, AZ 86040','[Tickets] Check-in location — Lower Antelope (Dixie''s)'),
+('tmpl__tix__lower_antelope_dixie__maps_url','','[Tickets] Maps URL — Lower Antelope (Dixie''s)'),
+('tmpl__tix__lower_antelope_dixie__location_photo','','[Tickets] Location photo URL — Lower Antelope (Dixie''s)'),
+('tmpl__tix__lower_antelope_dixie__prep_1_label','','[Tickets] Prepare step 1 label — Lower Antelope (Dixie''s)'),
+('tmpl__tix__lower_antelope_dixie__prep_1_url','','[Tickets] Prepare step 1 URL — Lower Antelope (Dixie''s)'),
+('tmpl__tix__lower_antelope_dixie__prep_1_note','','[Tickets] Prepare step 1 note — Lower Antelope (Dixie''s)'),
+('tmpl__tix__lower_antelope_dixie__prep_2_label','','[Tickets] Prepare step 2 label — Lower Antelope (Dixie''s)'),
+('tmpl__tix__lower_antelope_dixie__prep_2_url','','[Tickets] Prepare step 2 URL — Lower Antelope (Dixie''s)'),
+('tmpl__tix__lower_antelope_dixie__prep_2_note','','[Tickets] Prepare step 2 note — Lower Antelope (Dixie''s)'),
+('tmpl__tix__lower_antelope_dixie__prep_3_label','','[Tickets] Prepare step 3 label — Lower Antelope (Dixie''s)'),
+('tmpl__tix__lower_antelope_dixie__prep_3_url','','[Tickets] Prepare step 3 URL — Lower Antelope (Dixie''s)'),
+('tmpl__tix__lower_antelope_dixie__prep_3_note','','[Tickets] Prepare step 3 note — Lower Antelope (Dixie''s)'),
+
+-- canyon_x
+('tmpl__tix__canyon_x__checkin_location','Canyon X Tours, Page, AZ 86040','[Tickets] Check-in location — Canyon X'),
+('tmpl__tix__canyon_x__maps_url','','[Tickets] Maps URL — Canyon X'),
+('tmpl__tix__canyon_x__location_photo','','[Tickets] Location photo URL — Canyon X'),
+('tmpl__tix__canyon_x__prep_1_label','','[Tickets] Prepare step 1 label — Canyon X'),
+('tmpl__tix__canyon_x__prep_1_url','','[Tickets] Prepare step 1 URL — Canyon X'),
+('tmpl__tix__canyon_x__prep_1_note','','[Tickets] Prepare step 1 note — Canyon X'),
+('tmpl__tix__canyon_x__prep_2_label','','[Tickets] Prepare step 2 label — Canyon X'),
+('tmpl__tix__canyon_x__prep_2_url','','[Tickets] Prepare step 2 URL — Canyon X'),
+('tmpl__tix__canyon_x__prep_2_note','','[Tickets] Prepare step 2 note — Canyon X'),
+('tmpl__tix__canyon_x__prep_3_label','','[Tickets] Prepare step 3 label — Canyon X'),
+('tmpl__tix__canyon_x__prep_3_url','','[Tickets] Prepare step 3 URL — Canyon X'),
+('tmpl__tix__canyon_x__prep_3_note','','[Tickets] Prepare step 3 note — Canyon X')
+
+ON CONFLICT (key) DO NOTHING;
+
+-- Fix newlines (run again safely)
+UPDATE settings
+SET value = replace(value, '\n', chr(10))
+WHERE key LIKE 'tmpl__%'
+  AND value LIKE '%\n%';
+
+-- Tickets SMS global
+INSERT INTO settings (key, value, label) VALUES
+('tmpl__global__tix_sms_body','Dear {name}, reminder for your {sms_label} on {date}. Check-in: {checkin}, Tour: {tour_time}. Please use the link below to review important information and reconfirm your booking: {url} Questions? Call 702-948-4190.','[Tickets SMS] Full SMS body — variables: {name} {sms_label} {date} {checkin} {tour_time} {url}')
+ON CONFLICT (key) DO NOTHING;

@@ -242,8 +242,36 @@ const GUEST_TC_PRODUCT_FIELDS = t => [
   ] : []),
 ];
 const GUEST_TIX_PRODUCT_FIELDS = t => [
-  {key:`tmpl__tix__${t}__extra_notes`, label:'Notes / important info (one item per line)', rows:7},
+  {key:`tmpl__tix__${t}__checkin_location`, label:'Check-in location', hint:'Full address shown to guests'},
+  {key:`tmpl__tix__${t}__maps_url`,         label:'Google Maps URL', hint:'Link shown as "Google Maps GPS"'},
+  {key:`tmpl__tix__${t}__location_photo`,   label:'Location photo URL', hint:'Link shown as "Location Photo"'},
+  {key:`tmpl__tix__${t}__extra_notes`,      label:'Know Before You Go (one item per line)', rows:7},
+  // prepare steps 1–3
+  {key:`tmpl__tix__${t}__prep_1_label`, label:'Prepare Step 1 — Label', hint:'Leave blank to hide this step'},
+  {key:`tmpl__tix__${t}__prep_1_url`,   label:'Prepare Step 1 — Link URL', hint:''},
+  {key:`tmpl__tix__${t}__prep_1_note`,  label:'Prepare Step 1 — Note (optional)', hint:''},
+  {key:`tmpl__tix__${t}__prep_2_label`, label:'Prepare Step 2 — Label', hint:'Leave blank to hide this step'},
+  {key:`tmpl__tix__${t}__prep_2_url`,   label:'Prepare Step 2 — Link URL', hint:''},
+  {key:`tmpl__tix__${t}__prep_2_note`,  label:'Prepare Step 2 — Note (optional)', hint:''},
+  {key:`tmpl__tix__${t}__prep_3_label`, label:'Prepare Step 3 — Label', hint:'Leave blank to hide this step'},
+  {key:`tmpl__tix__${t}__prep_3_url`,   label:'Prepare Step 3 — Link URL', hint:''},
+  {key:`tmpl__tix__${t}__prep_3_note`,  label:'Prepare Step 3 — Note (optional)', hint:''},
 ];
+// Helper: group tix prepare steps for preview
+function getTixPrepSteps(t) {
+  const steps = [];
+  for (let i = 1; i <= 3; i++) {
+    const label = v(`tmpl__tix__${t}__prep_${i}_label`);
+    if (label.trim()) {
+      steps.push({
+        label,
+        url:  v(`tmpl__tix__${t}__prep_${i}_url`),
+        note: v(`tmpl__tix__${t}__prep_${i}_note`),
+      });
+    }
+  }
+  return steps;
+}
 const EMAIL_GLOBAL_FIELDS = {
   tc: [
     {key:'tmpl__global__tc_email_greeting',     label:'Opening greeting'},
@@ -278,7 +306,9 @@ const SMS_GLOBAL_FIELDS = {
     {key:'tmpl__global__tc_sms_with_lunch',label:'SMS — tours WITH lunch', vars:['{name}','{label}','{date}','{url}'], rows:4},
     {key:'tmpl__global__tc_sms_no_lunch',  label:'SMS — tours WITHOUT lunch', vars:['{name}','{label}','{date}','{url}'], rows:4},
   ],
-  tix: [],
+  tix: [
+    {key:'tmpl__global__tix_sms_body', label:'SMS body', vars:['{name}','{sms_label}','{date}','{checkin}','{tour_time}','{url}'], rows:4},
+  ],
   mp: [{key:'tmpl__global__mp_sms_body',label:'SMS body', vars:['{name}','{pickup_time}','{url}','{phone}'], rows:5}],
 };
 
@@ -362,10 +392,10 @@ function renderGuestTab() {
   if (!currentGuestTour) currentGuestTour = TC_TOURS[0].key;
   const pills = document.getElementById('guest-tour-pills');
   pills.innerHTML =
-    '<div style="width:100%;font-size:13px;font-weight:700;color:#4a7c59;margin-bottom:4px;">Tour Confirmation</div>' +
+    '<div style="width:100%;font-size:13px;font-weight:700;color:#5a8a3c;margin-bottom:4px;">Tour Confirmation</div>' +
     '<div style="width:100%;font-size:11px;color:#6B5E57;margin-bottom:8px;">Select a tour to edit. Changes only apply to the selected tour. To apply a change to all tours, edit the Global section above.</div>' +
     pillsHtml(TC_TOURS, currentGuestTour, 'selectGuestTour', 'tc') +
-    '<div style="width:100%;font-size:13px;font-weight:700;color:#c17f3a;margin:14px 0 4px;">Tickets Reminder</div>' +
+    '<div style="width:100%;font-size:13px;font-weight:700;color:#b87333;margin:14px 0 4px;">Tickets Reminder</div>' +
     '<div style="width:100%;font-size:11px;color:#6B5E57;margin-bottom:8px;">Select a tour to edit. Changes only apply to the selected tour. To apply a change to all tours, edit the Global section above.</div>' +
     pillsHtml(TIX_TOURS, currentGuestTour, 'selectGuestTour', 'tix');
   renderGuestProduct();
@@ -646,33 +676,56 @@ function renderTcGuestPreview(tourKey) {
 }
 
 function renderTixGuestPreview(tourKey) {
-  const tourLabel  = TIX_TOURS.find(t=>t.key===tourKey)?.label || 'Antelope Canyon Tour';
-  const notesKey   = `tmpl__tix__${tourKey}__extra_notes`;
-  const notesItems = v(notesKey).split('\n').filter(Boolean)
-    .map(r => `<li style="margin-bottom:6px;">${hl(esc(r), notesKey)}</li>`).join('');
-  const thanksText = hl(esc(v('tmpl__global__guest_thanks_text')), 'tmpl__global__guest_thanks_text');
+  const tourLabel    = TIX_TOURS.find(t=>t.key===tourKey)?.label || 'Antelope Canyon Tour';
+  const notesKey     = `tmpl__tix__${tourKey}__extra_notes`;
+  const checkinLoc   = hl(esc(v(`tmpl__tix__${tourKey}__checkin_location`)), `tmpl__tix__${tourKey}__checkin_location`);
+  const mapsUrl      = v(`tmpl__tix__${tourKey}__maps_url`);
+  const locPhoto     = v(`tmpl__tix__${tourKey}__location_photo`);
+  const notesItems   = v(notesKey).split('\n').filter(Boolean)
+    .map(r => `<li style="margin-bottom:6px;${r.startsWith('★')?'color:#c0392b;font-weight:600;':''}">${hl(esc(r), notesKey)}</li>`).join('');
+  const thanksText   = hl(esc(v('tmpl__global__guest_thanks_text')), 'tmpl__global__guest_thanks_text');
+
+  // resource links
+  let resLinks = '';
+  if (mapsUrl) resLinks += `<a href="#" style="color:#1a3a5c;font-size:11px;margin-right:10px;">🗺️ Google Maps GPS</a>`;
+  if (locPhoto) resLinks += `<a href="#" style="color:#1a3a5c;font-size:11px;">📸 Location Photo</a>`;
+
+  // prepare steps
+  const prepSteps = getTixPrepSteps(tourKey);
+  let prepHtml = '';
+  if (prepSteps.length) {
+    const items = prepSteps.map(s => {
+      const noteHtml = s.note ? `<br><span style="font-size:11px;color:#555;">${esc(s.note)}</span>` : '';
+      const urlHtml  = s.url  ? `&nbsp;<a href="#" style="color:#1a3a5c;font-size:11px;font-weight:600;">→ Open Link</a>` : '';
+      return `<li style="margin-bottom:6px;">${esc(s.label)}${urlHtml}${noteHtml}</li>`;
+    }).join('');
+    prepHtml = `<div style="background:#eaf4ff;border-bottom:1px solid #b3d9ff;padding:12px 14px;margin-bottom:12px;">
+      <div class="gp-reminders-title" style="color:#1a3a5c;">📋 Prepare for Your Tour</div>
+      <p style="font-size:11px;color:#555;margin:5px 0 8px;line-height:1.5;">Complete these steps before arrival to shorten your check-in time.</p>
+      <ul style="margin:0;padding-left:18px;font-size:12px;">${items}</ul>
+    </div>`;
+  }
 
   return `<div class="gp-wrap">
-    <div class="gp-header" style="background:#1a5c4a;">
+    <div class="gp-header" style="background:#1a3a5c;">
       <h2>Tickets Reconfirmation</h2>
       <p>${esc(tourLabel)} · ${SAMPLE.date}</p>
     </div>
     <div class="gp-body">
-      <div class="gp-pickup-box" style="border-color:#b3d9c8;">
-        <div class="gp-pickup-title" style="color:#1a5c4a;">📍 Check-in Details</div>
-        <div class="gp-row"><span>⏰</span><span>Check-in: <strong>9:00 AM</strong></span></div>
-        <div class="gp-row"><span>🎡</span><span>Tour Time: <strong>10:00 AM</strong></span></div>
-        <div class="gp-row"><span>📍</span><span>Antelope Slot Canyon Tours, 148 6th Ave, Page, AZ 86040</span></div>
+      <div class="gp-pickup-box">
+        <div class="gp-pickup-title">📍 Your Check-in Information</div>
+        <div class="gp-row"><span>📍</span><span><strong>Location:</strong> ${checkinLoc}</span></div>
+        ${mapsUrl ? `<div class="gp-row"><span></span><a href="#" style="color:#1a3a5c;font-size:12px;font-weight:600;">🗺️ Google Maps GPS</a></div>` : ''}
+        <div class="gp-row"><span>⏰</span><span>Check-in: <strong>9:00 AM</strong> &nbsp;|&nbsp; Tour: <strong>10:00 AM</strong><br><span style="font-size:11px;color:#c0392b;">★ Late check-in is subject to forfeiting your tour entry.</span></span></div>
+        <div style="font-size:11px;color:#c0392b;padding:2px 0 4px 28px;">★ All times are based on the Arizona (AZ) time zone.</div>
       </div>
-      <div style="background:#fff5f5;border:1px solid #f5c6c6;border-radius:7px;padding:10px 13px;margin-bottom:12px;font-size:11px;color:#c0392b;line-height:1.5;">
-        ★ Late check-in is subject to forfeiting your tour entry.<br>
-        ★ All times are based on the Arizona (AZ) time zone.
-      </div>
-      <div class="gp-reminders">
-        <div class="gp-reminders-title">📋 Important Notes</div>
+      ${prepHtml}
+      ${notesItems ? `<div class="gp-reminders">
+        <div class="gp-reminders-title">📌 Know Before You Go</div>
         <ul style="margin:0;padding-left:18px;font-size:12px;color:#333;">${notesItems}</ul>
-      </div>
-      <div class="gp-btn" style="background:#1a5c4a;">RECONFIRM MY TOUR</div>
+        ${resLinks ? `<div style="margin-top:8px;">${resLinks}</div>` : ''}
+      </div>` : ''}
+      <div class="gp-btn">RECONFIRM MY TOUR</div>
       <div class="gp-thanks-text">${thanksText}</div>
     </div>
   </div>`;
