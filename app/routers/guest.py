@@ -93,10 +93,20 @@ body{background:#f0f4f8;font-family:"Helvetica Neue",Arial,sans-serif;color:#333
 .gf-mtlv-box{background:#f5f0ff;border:1.5px solid #b39ddb;border-radius:12px;padding:16px 18px;margin-top:4px;}
 .gf-mtlv-title{font-size:14px;font-weight:bold;color:#512da8;margin-bottom:4px;}
 .gf-mtlv-hint{font-size:12px;color:#7e57c2;margin-bottom:12px;}
-.gf-mtlv-counter{display:flex;align-items:center;gap:10px;}
+.gf-mtlv-counter{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
 .gf-mtlv-counter button{width:34px;height:34px;border:1.5px solid #b39ddb;border-radius:8px;background:#ede7f6;font-size:20px;line-height:1;cursor:pointer;color:#512da8;font-weight:bold;}
 .gf-mtlv-counter button:hover{background:#d1c4e9;}
 .gf-mtlv-counter input{width:44px;text-align:center;border:1.5px solid #b39ddb;border-radius:8px;padding:4px;font-size:18px;font-weight:bold;color:#512da8;background:#fff;}
+.gf-mtlv-counter{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.gf-pu-step{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #d0e6ff;}
+.gf-pu-step:last-child{border-bottom:none;padding-bottom:0;}
+.gf-pu-icon{flex-shrink:0;width:30px;height:30px;border-radius:50%;background:#1a3a5c;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.gf-pu-body{flex:1;padding-top:4px;}
+.gf-pu-head{font-weight:600;color:#1a3a5c;font-size:13px;margin-bottom:3px;}
+.gf-pu-text{color:#444;font-size:13px;line-height:1.6;}
+.gf-pu-warn{font-size:11px;color:#c0392b;margin-top:4px;font-weight:500;}
+.gf-pu-phone{background:#fff;border:1px solid #b3d1f7;border-radius:6px;padding:4px 10px;font-size:13px;color:#1a3a5c;font-weight:bold;display:inline-block;margin-top:4px;}
+.gf-pu-sub{font-size:12px;color:#5a7a9a;margin-top:4px;}
 @media(max-width:440px){.gf-lunch-grid{grid-template-columns:1fr 1fr;}.gf-yn-row{flex-direction:column;}}"""
 
 
@@ -168,28 +178,41 @@ def _render(booking, tour_config: dict, error_msg: str = "",
     # Pickup box
     ploc = booking.pickup_location or ""
     pickup_html = ""
-    pickup_html = ""
-    pickup_html += (
-        f'<div class="gf-row"><span>📱</span>'
-        f'<span>You will receive a morning reminder SMS with check-in link and real-time vehicle tracking on the day of your tour.</span></div>'
-    )
-    if ploc:
-        instruction_display = pickup_instruction if pickup_instruction else f"Please arrive at <strong>{ploc}</strong>"
     if booking.pickup_time:
         pickup_html += (
-            f'<div class="gf-row"><span>⏰</span><span>'
-            f'Please arrive at <strong>{pickup_photo_label.replace(" Pickup Photos", "")}</strong> by '
-            f'<strong>{booking.pickup_time}</strong> for check-in.</span></div>'
-    )
-        pickup_html += (
-            f'<div style="font-size:11px;color:#c0392b;margin-left:28px;margin-bottom:12px;">'
-            f'* Departs promptly — vehicle cannot wait for late arrivals.</div>'
-    )
+            f'<div class="gf-pu-step">'
+            f'<div class="gf-pu-icon">⏰</div>'
+            f'<div class="gf-pu-body">'
+            f'<div class="gf-pu-head">Head to your pickup location</div>'
+            f'<div class="gf-pu-text">Please arrive at <strong>{pickup_photo_label.replace(" Pickup Photos", "")}</strong> by <strong>{booking.pickup_time}</strong>.</div>'
+            f'<div class="gf-pu-warn">⚠ We depart promptly — the vehicle cannot wait for late arrivals.</div>'
+            f'</div></div>'
+        )
     if pickup_photo_url:
         pickup_html += (
-            f'<div class="gf-row"><span>🗺️</span>'
-            f'<a href="{pickup_photo_url}" target="_blank" style="color:#1a3a5c;">{pickup_photo_label}</a></div>'
+            f'<div class="gf-pu-step">'
+            f'<div class="gf-pu-icon">🗺️</div>'
+            f'<div class="gf-pu-body">'
+            f'<div class="gf-pu-head">Not sure where to go?</div>'
+            f'<div class="gf-pu-text"><a href="{pickup_photo_url}" target="_blank" style="color:#1a3a5c;font-weight:600;">{pickup_photo_label} →</a></div>'
+            f'</div></div>'
         )
+    phone_html = (
+        f'<div class="gf-pu-step" style="border-bottom:none;padding-bottom:0;">'
+        f'<div class="gf-pu-icon">📱</div>'
+        f'<div class="gf-pu-body">'
+        f'<div class="gf-pu-head">Morning of your tour — SMS reminder</div>'
+        f'<div class="gf-pu-text">We\'ll send you an SMS with your <strong>check-in link</strong> and <strong>live vehicle tracking</strong> before departure.</div>'
+        f'<div class="gf-pu-text" style="margin-top:5px;">Sending to: <span class="gf-pu-phone">{booking.phone or "Not on file"}</span></div>'
+        f'<div class="gf-pu-sub">Wrong number? Let us know in the Notes section below.</div>'
+        f'</div></div>'
+        f'<div class="gf-pu-step">'
+        f'<div class="gf-pu-icon">✅</div>'
+        f'<div class="gf-pu-body">'
+        f'<div class="gf-pu-head">Check in when you arrive</div>'
+        f'<div class="gf-pu-text">Use the link in your SMS to check in on the spot. Your guide will be looking out for you!</div>'
+        f'</div></div>'
+    )
 
     fee_html = ""
     if tour_config.get("has_park_fee"):
@@ -391,18 +414,13 @@ function adjMtlv(d){{var el=document.getElementById('c-mtlv');if(!el)return;var 
       </div>
 
       <div class="gf-pickup-box">
-        <div class="gf-box-title">🚌 Your Pickup Information</div>
-        {pickup_html}
-      </div>
-      <div class="gf-section">
-          <div style="background:#f0f6ff;border:1px solid #b3d1f7;border-radius:8px;padding:16px 18px;margin-bottom:16px;font-size:14px;color:#333;line-height:1.7;">
-            <p style="margin:0 0 8px;">To ensure a smooth pick-up process, check-in and Bus Track information will be sent to your mobile phone prior to departure.</p>
-            <p style="margin:0 0 8px;">Please confirm that the following phone number is correct: <strong>{booking.phone or 'Not on file'}</strong></p>
-            <p style="margin:0;">If this number is incorrect, kindly provide the correct number in the Notes section below.</p>
+        <div class="gf-box-title">🚌 Your Pick-up Process</div>
+          {phone_html}
+          {pickup_html}
       </div>
 
-      {fee_html}
-      {banners}
+        {fee_html}
+        {banners}
 
       <form method="post">
         <input type="hidden" name="npe_submit" value="1">
