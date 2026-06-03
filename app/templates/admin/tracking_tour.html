@@ -2196,10 +2196,7 @@
           guest_reply: { label: 'Guest', color: '#1a3a5c', right: false, dot: null },
         };
         var msgs = [];
-        if (_notesGuestNotes) {
-          msgs.push({ direction: 'guest_reply', body: _notesGuestNotes, author_username: 'Guest (form)', created_at: 'via confirmation form', _sort: 0 });
-        }
-        (notes || []).forEach(function (n) {
+          (notes || []).forEach(function (n) {
           msgs.push(Object.assign({}, n, { _sort: n.created_at ? new Date(n.created_at).getTime() : 1 }));
         });
         msgs.sort(function (a, b) { return (a._sort || 0) - (b._sort || 0); });
