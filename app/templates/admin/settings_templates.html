@@ -178,11 +178,11 @@
     <div class="cs-inner" id="inner-tc">
       <div class="cs-breadcrumb" onclick="goHome()">← Back &nbsp;<strong>Tour Confirmation</strong></div>
       <div class="cs-sub-tabs">
-        <button class="cs-sub-tab active" onclick="switchSub(this,'tc-global-panel')">Global</button>
+        <button class="cs-sub-tab active" onclick="switchSub(this,'tc-global-panel')">Guest Page-Global</button>
         <button class="cs-sub-tab" onclick="switchSub(this,'tc-email-panel')">Email</button>
         <button class="cs-sub-tab" onclick="switchSub(this,'tc-lm-panel')">Last Minute Email</button>
         <button class="cs-sub-tab" onclick="switchSub(this,'tc-sms-panel')">SMS</button>
-        <button class="cs-sub-tab" onclick="switchSub(this,'tc-guest-panel')">Guest Page</button>
+        <button class="cs-sub-tab" onclick="switchSub(this,'tc-guest-panel')">Guest Page-By Tour</button>
       </div>
       <div class="cs-panel active" id="tc-global-panel">
         <div class="global-toggle-bar" onclick="toggleGlobal('tc-global-content','tc-global-icon')">
@@ -213,10 +213,10 @@
     <div class="cs-inner" id="inner-tix">
       <div class="cs-breadcrumb" onclick="goHome()">← Back &nbsp;<strong>Tickets Reminder</strong></div>
       <div class="cs-sub-tabs">
-        <button class="cs-sub-tab active" onclick="switchSub(this,'tix-global-panel')">Global</button>
+        <button class="cs-sub-tab active" onclick="switchSub(this,'tix-global-panel')">Guest Page-Global</button>
         <button class="cs-sub-tab" onclick="switchSub(this,'tix-email-panel')">Email</button>
         <button class="cs-sub-tab" onclick="switchSub(this,'tix-sms-panel')">SMS</button>
-        <button class="cs-sub-tab" onclick="switchSub(this,'tix-guest-panel')">Guest Page</button>
+        <button class="cs-sub-tab" onclick="switchSub(this,'tix-guest-panel')">Guest Page-By Supplier</button>
       </div>
       <div class="cs-panel active" id="tix-global-panel">
         <div class="global-toggle-bar" onclick="toggleGlobal('tix-global-content','tix-global-icon')">
@@ -852,6 +852,52 @@ function renderTcLmEmailPreview() {
         <div class="ep-row"><div class="ep-icon">📍</div><div><div class="ep-row-label">Pickup Location</div><div class="ep-row-val" style="font-weight:400;">${SAMPLE.pickup_loc}</div></div></div>
       </div>
       <div class="ep-cta"><a class="ep-btn" href="#">${btnText}</a></div>
+      <div class="ep-expiry">${expiry}</div>
+    </div>
+    <div class="ep-footer">${footer}</div>
+  </div>`;
+}
+
+function renderTcEmailPreview() {
+  const tourKey=currentTcTour||'grand_canyon_south';
+  const heroImg=TOUR_IMAGES[tourKey]||TOUR_IMAGES['grand_canyon_south'];
+  const tourLabel=TC_TOURS.find(t=>t.key===tourKey)?.label||SAMPLE.label;
+  const hasParkFee=['grand_canyon_south','bryce_zion'].includes(tourKey);
+  const greeting=hlE(esc(v('tmpl__global__tc_email_greeting')),'tmpl__global__tc_email_greeting');
+  const intro=hlE(fill(esc(v('tmpl__global__tc_email_intro')).replace('{label}',tourLabel)),'tmpl__global__tc_email_intro');
+  const review=hlE(esc(v('tmpl__global__tc_email_review')),'tmpl__global__tc_email_review');
+  const closing=hlE(esc(v('tmpl__global__tc_email_closing')),'tmpl__global__tc_email_closing');
+  const expiry=hlE(esc(v('tmpl__global__tc_email_link_expiry')),'tmpl__global__tc_email_link_expiry');
+  const footer=hlE(nl2br(v('tmpl__global__tc_email_footer_contact')),'tmpl__global__tc_email_footer_contact');
+  let feeHtml='';
+  if(hasParkFee){
+    const nr=hlE(esc(v(`tmpl__tc__${tourKey}__park_fee_nonresident`)),`tmpl__tc__${tourKey}__park_fee_nonresident`);
+    const re=hlE(esc(v(`tmpl__tc__${tourKey}__park_fee_resident`)),`tmpl__tc__${tourKey}__park_fee_resident`);
+    feeHtml=`<div class="ep-fee-box">ℹ️ <strong>National Park Entry Fee</strong><br><br>👤 ${nr}<br><br>🪪 ${re}</div>`;
+  }
+  return `<div class="ep-wrap">
+    <div class="ep-hero"><img src="${heroImg}" alt="">
+      <div class="ep-hero-overlay">
+        <img src="${LOGO}" style="width:48px;height:48px;border-radius:50%;object-fit:contain;margin-bottom:8px;">
+        <div style="font-size:15px;font-weight:600;color:#fff;">National Park <span style="color:#f97316;">Express</span></div>
+        <div style="font-size:9px;color:#fff;letter-spacing:1.5px;margin-top:3px;">YOUR JOURNEY. OUR PASSION.</div>
+      </div>
+    </div>
+    <div class="ep-body">
+      <p class="ep-p">Hi <strong>${SAMPLE.name}</strong>,</p>
+      <p class="ep-p">${greeting}</p>
+      <p class="ep-p">${intro}</p>
+      <p class="ep-p">${review}</p>
+      <p class="ep-p" style="margin-bottom:18px;">${closing}</p>
+      <div class="ep-detail-card">
+        <div class="ep-row"><div class="ep-icon">📋</div><div><div class="ep-row-label">Order #</div><div class="ep-row-val">${SAMPLE.order}</div></div></div>
+        <div class="ep-row"><div class="ep-icon">👥</div><div><div class="ep-row-label">Party Size</div><div class="ep-row-val">${SAMPLE.pax} Guest(s)</div></div></div>
+        <div class="ep-row"><div class="ep-icon">📅</div><div><div class="ep-row-label">Tour Date</div><div class="ep-row-val" style="color:#2563eb;">${SAMPLE.date}</div></div></div>
+        <div class="ep-row"><div class="ep-icon">⏰</div><div><div class="ep-row-label">Pickup Time</div><div class="ep-row-val">${SAMPLE.pickup_time}</div></div></div>
+        <div class="ep-row"><div class="ep-icon">📍</div><div><div class="ep-row-label">Pickup Location</div><div class="ep-row-val" style="font-weight:400;">${SAMPLE.pickup_loc}</div></div></div>
+      </div>
+      ${feeHtml}
+      <div class="ep-cta"><a class="ep-btn" href="#">✓ RECONFIRM MY SPOT</a></div>
       <div class="ep-expiry">${expiry}</div>
     </div>
     <div class="ep-footer">${footer}</div>
