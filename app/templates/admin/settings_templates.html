@@ -507,6 +507,16 @@ function setTcGuestMode(mode) {
 }
 
 // ── Field card renderer ───────────────────────────────────────────────────────
+
+function metaLine(key) {
+  const s = ALL_SETTINGS[key];
+  if (!s) return 'Original';
+  if (!s.updated_by) return 'Original';
+  const d = new Date(s.updated_at);
+  const fmt = d.toLocaleString('en-US',{month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+  return `Last edited by <strong>${s.updated_by}</strong> · ${fmt}`;
+}
+
 function fieldCard(f, isGlobal) {
   if (f.type === 'dynamic_lines') return dynLinesCard(f, isGlobal);
   if (f.type === 'dynamic_steps') return dynStepsCard(currentModule==='tc' ? currentTcTour : currentTixTour);
@@ -532,7 +542,8 @@ function fieldCard(f, isGlobal) {
         oninput="onFieldInput('${f.key}',this)"
         onfocus="onFieldFocus('${f.key}')"
         onblur="onFieldBlur()">${esc(val)}</textarea>
-      <div class="field-footer"><span></span>
+      <div class="field-footer">
+        <span style="font-size:10px;color:var(--color-text-tertiary,#aaa);" id="meta-${f.key.replace(/[^a-z0-9]/gi,'_')}">${metaLine(f.key)}</span>
         <button class="save-btn" onclick="saveField('${f.key}',this)">Save</button>
       </div>
     </div>
@@ -566,6 +577,7 @@ function dynLinesCard(f, isGlobal) {
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
         <div id="dynadd-${uid}">${addBtn}</div>
+        <span style="font-size:10px;color:var(--color-text-tertiary,#aaa);" id="meta-${uid}">${metaLine(f.key)}</span>
         <button class="save-btn" onclick="saveDynLines('${f.key}','${uid}',this)">Save</button>
       </div>
     </div>
@@ -761,6 +773,10 @@ async function saveField(key,btn) {
     if(!r.ok) throw new Error();
     if(!ALL_SETTINGS[key]) ALL_SETTINGS[key]={};
     ALL_SETTINGS[key].value=ta.value;
+    ALL_SETTINGS[key].updated_by=window._currentUser||'';
+    ALL_SETTINGS[key].updated_at=new Date().toISOString();
+    const metaEl=document.getElementById('meta-'+key.replace(/[^a-z0-9]/gi,'_'));
+    if(metaEl) metaEl.innerHTML=metaLine(key);
     btn.textContent='Saved ✓'; btn.classList.remove('saving'); btn.classList.add('saved');
     setTimeout(()=>{btn.textContent='Save';btn.classList.remove('saved');},2000);
   } catch(e) {
@@ -777,6 +793,10 @@ async function saveDynLines(key,uid,btn) {
     if(!r.ok) throw new Error();
     if(!ALL_SETTINGS[key]) ALL_SETTINGS[key]={};
     ALL_SETTINGS[key].value=value;
+    ALL_SETTINGS[key].updated_by=window._currentUser||'';
+    ALL_SETTINGS[key].updated_at=new Date().toISOString();
+    const metaEl=document.getElementById('meta-'+uid);
+    if(metaEl) metaEl.innerHTML=metaLine(key);
     btn.textContent='Saved ✓'; btn.classList.remove('saving'); btn.classList.add('saved');
     setTimeout(()=>{btn.textContent='Save';btn.classList.remove('saved');},2000);
   } catch(e) {
@@ -1179,11 +1199,12 @@ function renderTixGuestPreview() {
 async function loadSettings() {
   const resp=await fetch('/api/template-settings');
   const rows=await resp.json();
-  rows.forEach(r=>{ ALL_SETTINGS[r.key]={value:r.value,label:r.label}; });
+  rows.forEach(r=>{ ALL_SETTINGS[r.key]={value:r.value,label:r.label,updated_by:r.updated_by,updated_at:r.updated_at}; });
   document.getElementById('tc-loading').style.display='none';
   document.getElementById('home-view').style.display='';
   renderPreview();
 }
+window._currentUser = "{{ current_user.username }}";
 loadSettings();
 </script>
 {% endblock %} 

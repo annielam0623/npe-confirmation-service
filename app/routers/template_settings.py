@@ -44,10 +44,25 @@ async def list_template_settings(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        text("SELECT key, value, label FROM settings WHERE key LIKE 'tmpl__%' ORDER BY key")
+        text("""
+            SELECT key, value, label, updated_at,
+                   updated_by
+            FROM settings
+            WHERE key LIKE 'tmpl__%'
+            ORDER BY key
+        """)
     )
     rows = result.fetchall()
-    return [{"key": r[0], "value": r[1], "label": r[2]} for r in rows]
+    return [
+        {
+            "key":        r[0],
+            "value":      r[1],
+            "label":      r[2],
+            "updated_at": r[3].isoformat() if r[3] else None,
+            "updated_by": r[4] if r[4] else None,
+        }
+        for r in rows
+    ]
 
 
 # ── API: save one key ─────────────────────────────────────────────────────────
@@ -66,10 +81,10 @@ async def save_template_setting(
 
     await db.execute(
         text("""
-            UPDATE settings SET value = :v, updated_at = NOW()
+            UPDATE settings SET value = :v, updated_at = NOW(), updated_by = :u
             WHERE key = :k
         """),
-        {"v": value, "k": key},
+        {"v": value, "k": key, "u": current_user.username},
     )
     await db.commit()
     invalidate_cache(key)
