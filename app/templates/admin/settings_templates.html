@@ -2,229 +2,281 @@
 {% block title %}Content Studio — NPE Operations{% endblock %}
 
 {% block extra_styles %}
-/* ── Layout ── */
-.studio-layout { display: flex; gap: 0; height: calc(100vh - 48px); overflow: hidden; margin: -20px -24px; }
-.studio-editor { width: 55%; min-width: 400px; overflow-y: auto; padding: 20px 24px; border-right: 1px solid rgba(0,0,0,0.08); }
-.studio-preview { width: 45%; overflow-y: auto; background: #e8e4de; display: flex; flex-direction: column; }
-.preview-header { padding: 12px 16px; background: #e8e4de; border-bottom: 1px solid rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: sticky; top: 0; z-index: 10; }
-.preview-label { font-size: 11px; font-weight: 600; color: #9B8F88; text-transform: uppercase; letter-spacing: 0.07em; }
-.preview-notice { font-size: 10px; color: #b5a9a2; background: rgba(0,0,0,0.05); border-radius: 4px; padding: 2px 8px; }
-.preview-body { flex: 1; padding: 16px; }
+.studio-layout{display:flex;gap:0;height:calc(100vh - 48px);overflow:hidden;margin:-20px -24px;}
+.studio-editor{width:55%;min-width:380px;overflow-y:auto;padding:20px 24px;border-right:1px solid rgba(0,0,0,0.08);}
+.studio-preview{width:45%;overflow-y:auto;background:#e8e4de;display:flex;flex-direction:column;}
+.preview-header{padding:10px 16px;background:#e8e4de;border-bottom:1px solid rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:10;}
+.preview-label{font-size:11px;font-weight:600;color:#9B8F88;text-transform:uppercase;letter-spacing:0.07em;}
+.preview-notice{font-size:10px;color:#b5a9a2;background:rgba(0,0,0,0.05);border-radius:4px;padding:2px 8px;}
+.preview-body{flex:1;padding:16px;}
 
-/* ── Tabs ── */
-.tc-tabs { display: flex; gap: 0; border-bottom: 1px solid rgba(0,0,0,0.1); margin-bottom: 20px; }
-.tc-tab { padding: 8px 20px; font-size: 13px; font-weight: 500; color: #888; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; border-top: none; border-left: none; border-right: none; }
-.tc-tab:hover { color: #1a1a1a; }
-.tc-tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; }
-.tc-panel { display: none; }
-.tc-panel.active { display: block; }
+/* Home screen */
+.cs-home{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
+.cs-big-btn{border:none;border-radius:24px;padding:26px 20px 20px;cursor:pointer;text-align:left;position:relative;overflow:hidden;transition:transform 0.18s cubic-bezier(.34,1.56,.64,1),box-shadow 0.18s;width:100%;}
+.cs-big-btn::before{content:'';position:absolute;top:0;left:0;right:0;height:55%;background:linear-gradient(to bottom,rgba(255,255,255,0.22),rgba(255,255,255,0));border-radius:24px 24px 0 0;pointer-events:none;}
+.cs-big-btn::after{content:'';position:absolute;inset:0;border-radius:24px;border:0.5px solid rgba(255,255,255,0.25);pointer-events:none;}
+.cs-big-btn:hover{transform:translateY(-2px) scale(1.015);}
+.cs-big-btn:active{transform:scale(0.97);}
+.cs-big-btn.tc{background:linear-gradient(145deg,#72c27a 0%,#3a8c45 45%,#1f5c2a 100%);box-shadow:0 8px 28px rgba(40,110,55,0.4),0 2px 8px rgba(0,0,0,0.12);}
+.cs-big-btn.tix{background:linear-gradient(145deg,#e8b060 0%,#c07830 45%,#8a4e10 100%);box-shadow:0 8px 28px rgba(180,110,30,0.4),0 2px 8px rgba(0,0,0,0.12);}
+.cs-btn-emoji{font-size:34px;margin-bottom:14px;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));}
+.cs-btn-title{font-size:15px;font-weight:500;color:#fff;margin-bottom:7px;text-shadow:0 1px 4px rgba(0,0,0,0.2);}
+.cs-btn-desc{font-size:11px;color:rgba(255,255,255,0.75);line-height:1.65;}
+.cs-btn-footer{display:flex;align-items:center;justify-content:space-between;margin-top:16px;}
+.cs-btn-tag{font-size:10px;font-weight:500;padding:3px 10px;border-radius:20px;background:rgba(255,255,255,0.18);border:0.5px solid rgba(255,255,255,0.28);color:rgba(255,255,255,0.92);}
+.cs-btn-arrow{font-size:15px;color:rgba(255,255,255,0.55);}
 
-/* ── Pills ── */
-.tour-selector { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; align-items: flex-start; }
-.tour-pill { padding: 4px 11px; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid rgba(0,0,0,0.15); background: #fff; color: #555; transition: all 0.12s; }
-.tour-pill:hover { border-color: #1a1a1a; color: #1a1a1a; }
-.tour-pill.active { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+/* Inner page */
+.cs-inner{display:none;}
+.cs-inner.active{display:block;}
+.cs-breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:#888;margin-bottom:16px;cursor:pointer;}
+.cs-breadcrumb:hover{color:#1a1a1a;}
+.cs-breadcrumb strong{color:#1a1a1a;}
+.cs-sub-tabs{display:flex;gap:0;border-bottom:1px solid rgba(0,0,0,0.1);margin-bottom:18px;}
+.cs-sub-tab{padding:7px 18px;font-size:13px;font-weight:500;color:#888;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none;}
+.cs-sub-tab:hover{color:#1a1a1a;}
+.cs-sub-tab.active{color:#1a1a1a;border-bottom-color:#1a1a1a;}
+.cs-panel{display:none;}
+.cs-panel.active{display:block;}
 
-/* ── Field cards ── */
-.field-group { margin-bottom: 24px; }
-.field-group-title { font-size: 10px; font-weight: 700; color: #9B8F88; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 10px; }
-.field-card { background: #fff; border: 1px solid rgba(0,0,0,0.1); border-radius: 10px; margin-bottom: 10px; overflow: hidden; }
-.field-card.global-card { border-color: #dc2626; border-width: 1.5px; }
-.field-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 10px 14px 8px; gap: 10px; }
-.field-label-text { font-size: 12px; font-weight: 600; color: #1a1a1a; line-height: 1.4; }
-.field-scope { font-size: 10px; color: #bbb; margin-top: 1px; font-family: monospace; }
-.global-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; border-radius: 4px; padding: 2px 7px; white-space: nowrap; flex-shrink: 0; }
-.global-warning { font-size: 11px; color: #dc2626; background: #fef2f2; border-top: 1px solid #fecaca; padding: 5px 14px; }
-.field-body { padding: 0 14px 12px; }
-.field-textarea { width: 100%; border: 1px solid #e5e7eb; border-radius: 7px; padding: 8px 10px; font-size: 12px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; line-height: 1.6; color: #1a1a1a; resize: vertical; min-height: 64px; box-sizing: border-box; background: #fafafa; transition: border-color 0.12s, background 0.12s; }
-.field-textarea:focus { outline: none; border-color: #1a1a1a; background: #fff; }
-.field-textarea.global-card-ta { border-color: #fca5a5; background: #fff8f8; }
-.field-textarea.global-card-ta:focus { border-color: #dc2626; background: #fff; }
-.field-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 7px; }
-.var-hint { font-size: 10px; color: #9B8F88; }
-.var-hint code { background: #f1f0eb; border-radius: 3px; padding: 1px 5px; font-size: 10px; color: #555; }
-.save-btn { font-size: 11px; font-weight: 500; padding: 4px 14px; border-radius: 6px; border: 1px solid #1a1a1a; background: #fff; color: #1a1a1a; cursor: pointer; transition: all 0.12s; }
-.save-btn:hover { background: #1a1a1a; color: #fff; }
-.save-btn.saving { opacity: 0.5; cursor: not-allowed; }
-.save-btn.saved { border-color: #3B6D11; color: #3B6D11; background: #EAF3DE; }
-.save-btn.err { border-color: #dc2626; color: #dc2626; background: #fef2f2; }
+/* Tour pills */
+.tour-selector{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;align-items:flex-start;}
+.tour-pill{padding:4px 11px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid rgba(0,0,0,0.15);background:#fff;color:#555;transition:all 0.12s;}
+.tour-pill:hover{border-color:#1a1a1a;color:#1a1a1a;}
+.tour-pill.active-tc{background:#3a8c45;color:#fff;border-color:#3a8c45;}
+.tour-pill.active-tix{background:#c07830;color:#fff;border-color:#c07830;}
 
-/* ── Email preview ── */
-.ep-wrap { background: #f4f8fc; border-radius: 10px; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; font-size: 13px; }
-.ep-hero { position: relative; height: 160px; overflow: hidden; }
-.ep-hero img { width: 100%; height: 160px; object-fit: cover; display: block; }
-.ep-hero-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(6,26,51,.45), rgba(6,26,51,.82)); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 16px; }
-.ep-body { background: #fff; padding: 24px; }
-.ep-p { color: #24364f; line-height: 1.7; margin: 0 0 8px; font-size: 13px; }
-.ep-detail-card { border: 1px solid #e5ecf5; border-radius: 10px; overflow: hidden; margin-bottom: 18px; }
-.ep-row { display: flex; align-items: center; border-bottom: 1px solid #e5ecf5; padding: 10px 14px; gap: 10px; }
-.ep-row:last-child { border-bottom: none; }
-.ep-icon { width: 30px; height: 30px; border-radius: 7px; background: #eef6ff; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
-.ep-row-label { font-size: 9px; font-weight: 600; color: #5b6b80; text-transform: uppercase; letter-spacing: 0.7px; }
-.ep-row-val { font-size: 12px; font-weight: 600; color: #0b1f3a; }
-.ep-cta { text-align: center; margin: 18px 0 10px; }
-.ep-btn { display: inline-block; background: #1a3a5c; color: #fff; text-decoration: none; padding: 12px 36px; border-radius: 8px; font-size: 13px; font-weight: 600; }
-.ep-expiry { text-align: center; font-size: 10px; color: #aaa; margin-top: 6px; }
-.ep-fee-box { background: #f5faff; border: 1px solid #bfdbfe; border-radius: 10px; margin-bottom: 18px; padding: 12px 14px; font-size: 12px; color: #333; line-height: 1.6; }
-.ep-footer { background: #061a33; padding: 16px; text-align: center; color: #dbeafe; font-size: 11px; line-height: 1.8; }
-.ep-highlight { background: #fffbcc; transition: background 0.6s; border-radius: 3px; padding: 1px 2px; }
+/* Field cards */
+.field-group{margin-bottom:20px;}
+.field-group-title{font-size:10px;font-weight:700;color:#9B8F88;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;}
+.field-card{background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:10px;margin-bottom:10px;overflow:hidden;}
+.field-card.global-card{border-color:#dc2626;border-width:1.5px;}
+.field-header{display:flex;align-items:flex-start;justify-content:space-between;padding:10px 14px 8px;gap:10px;}
+.field-label-text{font-size:12px;font-weight:600;color:#1a1a1a;line-height:1.4;}
+.field-scope{font-size:10px;color:#bbb;margin-top:1px;font-family:monospace;}
+.global-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:4px;padding:2px 7px;white-space:nowrap;flex-shrink:0;}
+.global-warning{font-size:11px;color:#dc2626;background:#fef2f2;border-top:1px solid #fecaca;padding:5px 14px;}
+.var-warning{font-size:11px;color:#dc2626;background:#fef2f2;border-top:1px solid #fecaca;padding:5px 14px;}
+.field-body{padding:0 14px 12px;}
+.field-textarea{width:100%;border:1px solid #e5e7eb;border-radius:7px;padding:8px 10px;font-size:12px;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.6;color:#1a1a1a;resize:vertical;min-height:60px;box-sizing:border-box;background:#fafafa;transition:border-color 0.12s,background 0.12s;}
+.field-textarea:focus{outline:none;border-color:#1a1a1a;background:#fff;}
+.field-textarea.global-card-ta{border-color:#fca5a5;background:#fff8f8;}
+.field-textarea.global-card-ta:focus{border-color:#dc2626;background:#fff;}
+.field-footer{display:flex;align-items:center;justify-content:space-between;margin-top:7px;}
+.var-hint{font-size:10px;color:#9B8F88;}
+.var-hint code{background:#f1f0eb;border-radius:3px;padding:1px 5px;font-size:10px;color:#555;}
+.save-btn{font-size:11px;font-weight:500;padding:4px 14px;border-radius:6px;border:1px solid #1a1a1a;background:#fff;color:#1a1a1a;cursor:pointer;transition:all 0.12s;}
+.save-btn:hover{background:#1a1a1a;color:#fff;}
+.save-btn.saving{opacity:0.5;cursor:not-allowed;}
+.save-btn.saved{border-color:#3B6D11;color:#3B6D11;background:#EAF3DE;}
+.save-btn.err{border-color:#dc2626;color:#dc2626;background:#fef2f2;}
 
-/* ── Guest page preview ── */
-.gp-wrap { background: #fff; border-radius: 10px; overflow: hidden; font-family: -apple-system, sans-serif; font-size: 13px; }
-.gp-header { background: #1a3a5c; color: #fff; padding: 16px; }
-.gp-header h2 { margin: 0 0 2px; font-size: 15px; }
-.gp-header p { margin: 0; font-size: 11px; opacity: 0.8; }
-.gp-body { padding: 14px; }
-.gp-info-box { background: #f0f6ff; border: 1px solid #b3d1f7; border-radius: 7px; padding: 11px 13px; margin-bottom: 12px; font-size: 12px; color: #333; line-height: 1.6; }
-.gp-pickup-box { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
-.gp-pickup-title { font-size: 11px; font-weight: 700; color: #1a3a5c; margin-bottom: 8px; }
-.gp-row { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; font-size: 12px; color: #333; line-height: 1.5; }
-.gp-warn { font-size: 11px; color: #c0392b; margin-left: 20px; }
-.gp-fee-box { background: #fff8e1; border: 1px solid #ffe082; border-radius: 7px; padding: 11px 13px; margin-bottom: 12px; font-size: 12px; }
-.gp-instructions { background: #e8f4fd; border-left: 3px solid #1a3a5c; border-radius: 5px; padding: 11px 13px; margin-bottom: 12px; font-size: 12px; color: #1a3a5c; line-height: 1.7; }
-.gp-reminders { background: #fafafa; border: 1px solid #eee; border-radius: 7px; padding: 11px 14px; margin-bottom: 12px; }
-.gp-reminders-title { font-size: 11px; font-weight: 700; color: #1a3a5c; margin-bottom: 7px; }
-.gp-btn { background: #e85d04; color: #fff; text-align: center; padding: 12px; border-radius: 7px; font-size: 13px; font-weight: 700; letter-spacing: 0.03em; margin-bottom: 10px; }
-.gp-thanks-text { font-size: 11px; color: #888; text-align: center; }
-.gp-highlight { background: #fffbcc; border-radius: 3px; padding: 1px 2px; }
+/* Global collapsible */
+.global-toggle-bar{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px 12px;background:#fff5f5;border:1.5px solid #fca5a5;border-radius:8px;margin-bottom:0;user-select:none;}
+.global-toggle-bar span:first-child{font-size:12px;font-weight:700;color:#dc2626;}
+.global-toggle-icon{font-size:18px;color:#dc2626;font-weight:700;line-height:1;}
+.global-content{display:none;padding-top:8px;}
+.global-content.open{display:block;}
+.global-content-warn{font-size:11px;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:7px 12px;margin-bottom:10px;}
 
-/* ── SMS preview ── */
-.sms-phone { background: #1a1a2e; border-radius: 14px; padding: 20px 14px; max-width: 280px; margin: 0 auto; }
-.sms-screen { background: #f2f2f7; border-radius: 10px; padding: 14px 10px; min-height: 180px; }
-.sms-bubble { background: #e5e5ea; border-radius: 14px 14px 14px 4px; padding: 10px 13px; font-size: 12px; color: #1a1a1a; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+/* Dynamic rows */
+.dyn-list{margin-bottom:6px;}
+.dyn-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;background:#fafafa;border:1px solid #e5e7eb;border-radius:6px;padding:5px 8px;cursor:default;}
+.dyn-row:hover{border-color:#ccc;}
+.dyn-handle{color:#bbb;font-size:14px;cursor:grab;user-select:none;flex-shrink:0;}
+.dyn-input{flex:1;border:none;background:transparent;font-size:12px;font-family:inherit;color:#1a1a1a;outline:none;padding:2px 0;}
+.dyn-del-btn{background:none;border:none;color:#ccc;font-size:16px;cursor:pointer;padding:0 2px;line-height:1;flex-shrink:0;}
+.dyn-del-btn:hover{color:#dc2626;}
+.dyn-add-btn{font-size:11px;color:#1a1a1a;background:#fff;border:1px dashed #aaa;border-radius:6px;padding:4px 12px;cursor:pointer;}
+.dyn-add-btn:hover{border-color:#1a1a1a;}
+.dyn-step-group{background:#fafafa;border:1px solid #e5e7eb;border-radius:8px;padding:10px 12px;margin-bottom:8px;}
+.dyn-step-group:hover{border-color:#ccc;}
+.dyn-step-hidden{display:none;}
+.dyn-step-group .dyn-input{display:block;width:100%;border:1px solid #e5e7eb;border-radius:5px;padding:5px 8px;margin-bottom:5px;font-size:12px;font-family:inherit;background:#fff;box-sizing:border-box;}
+.dyn-step-group .dyn-input:focus{outline:none;border-color:#1a1a1a;}
 
-/* ── Dynamic line rows ── */
-.dyn-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 5px 8px; cursor: default; }
-.dyn-row:hover { border-color: #ccc; }
-.dyn-row[draggable="true"] { cursor: grab; }
-.dyn-handle { color: #bbb; font-size: 14px; cursor: grab; user-select: none; flex-shrink: 0; }
-.dyn-input { flex: 1; border: none; background: transparent; font-size: 12px; font-family: inherit; color: #1a1a1a; outline: none; padding: 2px 0; }
-.dyn-del-btn { background: none; border: none; color: #ccc; font-size: 16px; cursor: pointer; padding: 0 2px; line-height: 1; flex-shrink: 0; }
-.dyn-del-btn:hover { color: #dc2626; }
-.dyn-add-btn { font-size: 11px; color: #1a1a1a; background: #fff; border: 1px dashed #aaa; border-radius: 6px; padding: 4px 12px; cursor: pointer; }
-.dyn-add-btn:hover { border-color: #1a1a1a; }
-.dyn-step-group { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; cursor: grab; }
-.dyn-step-group:hover { border-color: #ccc; }
-.dyn-step-hidden { display: none; }
-.dyn-step-group .dyn-input { display: block; width: 100%; border: 1px solid #e5e7eb; border-radius: 5px; padding: 5px 8px; margin-bottom: 5px; font-size: 12px; font-family: inherit; background: #fff; box-sizing: border-box; }
-.dyn-step-group .dyn-input:focus { outline: none; border-color: #1a1a1a; }
-.sms-label { font-size: 10px; color: #8e8e93; text-align: center; margin-bottom: 10px; }
+/* Product section label */
+.product-section-label{font-size:13px;font-weight:700;margin-bottom:8px;}
+.product-section-label.tc{color:#3a8c45;}
+.product-section-label.tix{color:#c07830;}
+.product-section-hint{font-size:11px;color:#6B5E57;margin-bottom:12px;line-height:1.5;}
+
+/* Email preview */
+.ep-wrap{background:#f4f8fc;border-radius:10px;overflow:hidden;font-family:'Segoe UI',Arial,sans-serif;font-size:13px;}
+.ep-hero{position:relative;height:150px;overflow:hidden;}
+.ep-hero img{width:100%;height:150px;object-fit:cover;display:block;}
+.ep-hero-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:16px;}
+.ep-body{background:#fff;padding:22px;}
+.ep-p{color:#24364f;line-height:1.7;margin:0 0 8px;font-size:13px;}
+.ep-detail-card{border:1px solid #e5ecf5;border-radius:10px;overflow:hidden;margin-bottom:16px;}
+.ep-row{display:flex;align-items:center;border-bottom:1px solid #e5ecf5;padding:9px 13px;gap:10px;}
+.ep-row:last-child{border-bottom:none;}
+.ep-icon{width:28px;height:28px;border-radius:6px;background:#eef6ff;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.ep-row-label{font-size:9px;font-weight:600;color:#5b6b80;text-transform:uppercase;letter-spacing:0.7px;}
+.ep-row-val{font-size:12px;font-weight:600;color:#0b1f3a;}
+.ep-cta{text-align:center;margin:16px 0 8px;}
+.ep-btn{display:inline-block;background:#1a3a5c;color:#fff;text-decoration:none;padding:11px 32px;border-radius:8px;font-size:13px;font-weight:600;}
+.ep-expiry{text-align:center;font-size:10px;color:#aaa;margin-top:5px;}
+.ep-fee-box{background:#f5faff;border:1px solid #bfdbfe;border-radius:8px;margin-bottom:14px;padding:10px 13px;font-size:12px;color:#333;line-height:1.6;}
+.ep-footer{background:#061a33;padding:14px;text-align:center;color:#dbeafe;font-size:11px;line-height:1.8;}
+.ep-highlight{background:#fffbcc;transition:background 0.6s;border-radius:3px;padding:1px 2px;}
+
+/* Guest preview */
+.gp-wrap{background:#fff;border-radius:10px;overflow:hidden;font-family:-apple-system,sans-serif;font-size:13px;}
+.gp-header{background:#1a3a5c;color:#fff;padding:14px;}
+.gp-header h2{margin:0 0 2px;font-size:14px;}
+.gp-header p{margin:0;font-size:11px;opacity:0.8;}
+.gp-body{padding:12px;}
+.gp-info-box{background:#f0f6ff;border:1px solid #b3d1f7;border-radius:7px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:#333;line-height:1.6;}
+.gp-pickup-box{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:10px 13px;margin-bottom:10px;}
+.gp-pickup-title{font-size:11px;font-weight:700;color:#1a3a5c;margin-bottom:7px;}
+.gp-row{display:flex;align-items:flex-start;gap:7px;margin-bottom:5px;font-size:12px;color:#333;line-height:1.5;}
+.gp-warn{font-size:11px;color:#c0392b;margin-left:20px;}
+.gp-fee-box{background:#fff8e1;border:1px solid #ffe082;border-radius:7px;padding:10px 12px;margin-bottom:10px;font-size:12px;}
+.gp-instructions{background:#e8f4fd;border-left:3px solid #1a3a5c;border-radius:5px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:#1a3a5c;line-height:1.7;}
+.gp-reminders{background:#fafafa;border:1px solid #eee;border-radius:7px;padding:10px 13px;margin-bottom:10px;}
+.gp-reminders-title{font-size:11px;font-weight:700;color:#1a3a5c;margin-bottom:6px;}
+.gp-btn{background:#e85d04;color:#fff;text-align:center;padding:11px;border-radius:7px;font-size:13px;font-weight:700;letter-spacing:0.03em;margin-bottom:8px;}
+.gp-thanks-text{font-size:11px;color:#888;text-align:center;}
+.gp-highlight{background:#fffbcc;border-radius:3px;padding:1px 2px;}
+
+/* SMS preview */
+.sms-phone{background:#1a1a2e;border-radius:14px;padding:18px 12px;max-width:260px;margin:0 auto;}
+.sms-screen{background:#f2f2f7;border-radius:10px;padding:12px 10px;min-height:160px;}
+.sms-bubble{background:#e5e5ea;border-radius:14px 14px 14px 4px;padding:9px 12px;font-size:12px;color:#1a1a1a;line-height:1.6;white-space:pre-wrap;word-break:break-word;}
+.sms-label{font-size:10px;color:#8e8e93;text-align:center;margin-bottom:8px;}
 {% endblock %}
 
 {% block page_title %}Content Studio{% endblock %}
 
 {% block content %}
 <div class="studio-layout">
-
-  <!-- ── LEFT: EDITOR ───────────────────────────────────────────────────── -->
+  <!-- EDITOR -->
   <div class="studio-editor">
-    <div style="margin-bottom:16px;">
-      <div style="font-size:12px;color:#888;line-height:1.6;">Edit text used in emails, SMS, and the guest confirmation page. Only text can be changed — formatting and layout are fixed.</div>
-    </div>
-
-    <div class="tc-tabs">
-      <button class="tc-tab active" onclick="switchTab('guest')">Guest Page</button>
-      <button class="tc-tab" onclick="switchTab('email')">Email</button>
-      <button class="tc-tab" onclick="switchTab('sms')">SMS</button>
-    </div>
-
     <div id="tc-loading" style="color:#888;font-size:13px;padding:20px 0;">Loading…</div>
 
-    <!-- GUEST TAB -->
-    <div id="panel-guest" class="tc-panel">
-      <!-- Collapsible Global -->
-      <div style="margin-bottom:16px;">
-        <div onclick="toggleGlobal()" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px 12px;background:#fff5f5;border:1.5px solid #fca5a5;border-radius:8px;">
-          <span style="font-size:12px;font-weight:700;color:#dc2626;">⚠ Global — applies to ALL tours</span>
-          <span id="global-toggle-icon" style="font-size:18px;color:#dc2626;font-weight:700;line-height:1;">+</span>
-        </div>
-        <div id="guest-global-content" style="display:none;">
-          <div style="font-size:11px;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-left:none;border-right:none;padding:7px 12px;margin-bottom:10px;">
-            Changes here apply to ALL tours. If you need a change to appear across all tours, make it here.
-          </div>
-          <div class="field-group" id="guest-global-group"></div>
-        </div>
-      </div>
-      <hr style="border:none;border-top:1px solid rgba(0,0,0,0.08);margin:16px 0;">
-      <div style="font-size:12px;font-weight:600;color:#1a1a1a;margin-bottom:10px;">Per Product</div>
-      <div class="tour-selector" id="guest-tour-pills"></div>
-      <div id="guest-product-group" class="field-group"></div>
-    </div>
-
-    <!-- EMAIL TAB -->
-    <div id="panel-email" class="tc-panel">
-      <div style="display:flex;gap:6px;margin-bottom:16px;">
-        <button class="tour-pill active" onclick="switchEmailModule('tc',this)">Tour Confirmation</button>
-        <button class="tour-pill" onclick="switchEmailModule('tix',this)">Tickets Reminder</button>
-        <button class="tour-pill" onclick="switchEmailModule('mp',this)">Morning Pickup</button>
-      </div>
-      <div class="field-group" id="email-global-group"></div>
-      <div id="email-product-wrap">
-        <hr style="border:none;border-top:1px solid rgba(0,0,0,0.08);margin:20px 0;">
-        <div style="font-size:12px;font-weight:600;color:#1a1a1a;margin-bottom:10px;">Per Product</div>
-        <div class="tour-selector" id="email-tour-pills"></div>
-        <div id="email-product-group" class="field-group"></div>
+    <!-- HOME -->
+    <div id="home-view" style="display:none;">
+      <div style="font-size:12px;color:#888;line-height:1.6;margin-bottom:20px;">Select a module to edit its text content — emails, SMS messages, and guest-facing pages.</div>
+      <div class="cs-home">
+        <button class="cs-big-btn tc" onclick="goInner('tc')">
+          <span class="cs-btn-emoji">🗓️</span>
+          <div class="cs-btn-title">Tour Confirmation</div>
+          <div class="cs-btn-desc">Manage the confirmation email sent to guests, SMS reminder, and the guest confirmation page. Affects bus tour products only.</div>
+          <div class="cs-btn-footer"><span class="cs-btn-tag">Bus Tours</span><span class="cs-btn-arrow">→</span></div>
+        </button>
+        <button class="cs-big-btn tix" onclick="goInner('tix')">
+          <span class="cs-btn-emoji">🎟️</span>
+          <div class="cs-btn-title">Tickets Reminder</div>
+          <div class="cs-btn-desc">Manage the reminder email, SMS, and self-drive guest reconfirmation page. Affects Antelope Canyon ticket products only.</div>
+          <div class="cs-btn-footer"><span class="cs-btn-tag">Self-Drive</span><span class="cs-btn-arrow">→</span></div>
+        </button>
       </div>
     </div>
 
-    <!-- SMS TAB -->
-    <div id="panel-sms" class="tc-panel">
-      <div style="display:flex;gap:6px;margin-bottom:16px;">
-        <button class="tour-pill active" onclick="switchSmsModule('tc',this)">Tour Confirmation</button>
-        <button class="tour-pill" onclick="switchSmsModule('tix',this)">Tickets Reminder</button>
-        <button class="tour-pill" onclick="switchSmsModule('mp',this)">Morning Pickup</button>
+    <!-- TC INNER -->
+    <div class="cs-inner" id="inner-tc">
+      <div class="cs-breadcrumb" onclick="goHome()">← Back &nbsp;<strong>Tour Confirmation</strong></div>
+      <div class="cs-sub-tabs">
+        <button class="cs-sub-tab active" onclick="switchSub(this,'tc-global-panel')">Global</button>
+        <button class="cs-sub-tab" onclick="switchSub(this,'tc-email-panel')">Email</button>
+        <button class="cs-sub-tab" onclick="switchSub(this,'tc-sms-panel')">SMS</button>
+        <button class="cs-sub-tab" onclick="switchSub(this,'tc-guest-panel')">Guest Page</button>
       </div>
-      <div class="field-group" id="sms-global-group"></div>
+      <div class="cs-panel active" id="tc-global-panel">
+        <div class="global-toggle-bar" onclick="toggleGlobal('tc-global-content','tc-global-icon')">
+          <span>⚠ Global — applies to ALL Tour Confirmation tours</span>
+          <span class="global-toggle-icon" id="tc-global-icon">+</span>
+        </div>
+        <div class="global-content" id="tc-global-content">
+          <div class="global-content-warn">Changes here apply to all tours. Edit carefully.</div>
+          <div id="tc-global-fields"></div>
+        </div>
+      </div>
+      <div class="cs-panel" id="tc-email-panel"><div id="tc-email-fields"></div></div>
+      <div class="cs-panel" id="tc-sms-panel"><div id="tc-sms-fields"></div></div>
+      <div class="cs-panel" id="tc-guest-panel">
+        <div class="product-section-label tc">Tour Confirmation</div>
+        <div class="product-section-hint">Select a tour to edit. Changes only apply to the selected tour. To apply a change to all tours, edit the Global section above.</div>
+        <div class="tour-selector" id="tc-guest-pills"></div>
+        <div id="tc-guest-fields"></div>
+      </div>
+    </div>
+
+    <!-- TIX INNER -->
+    <div class="cs-inner" id="inner-tix">
+      <div class="cs-breadcrumb" onclick="goHome()">← Back &nbsp;<strong>Tickets Reminder</strong></div>
+      <div class="cs-sub-tabs">
+        <button class="cs-sub-tab active" onclick="switchSub(this,'tix-global-panel')">Global</button>
+        <button class="cs-sub-tab" onclick="switchSub(this,'tix-email-panel')">Email</button>
+        <button class="cs-sub-tab" onclick="switchSub(this,'tix-sms-panel')">SMS</button>
+        <button class="cs-sub-tab" onclick="switchSub(this,'tix-guest-panel')">Guest Page</button>
+      </div>
+      <div class="cs-panel active" id="tix-global-panel">
+        <div class="global-toggle-bar" onclick="toggleGlobal('tix-global-content','tix-global-icon')">
+          <span>⚠ Global — applies to ALL Tickets Reminder tours</span>
+          <span class="global-toggle-icon" id="tix-global-icon">+</span>
+        </div>
+        <div class="global-content" id="tix-global-content">
+          <div class="global-content-warn">Changes here apply to all tours. Edit carefully.</div>
+          <div id="tix-global-fields"></div>
+        </div>
+      </div>
+      <div class="cs-panel" id="tix-email-panel"><div id="tix-email-fields"></div></div>
+      <div class="cs-panel" id="tix-sms-panel"><div id="tix-sms-fields"></div></div>
+      <div class="cs-panel" id="tix-guest-panel">
+        <div class="product-section-label tix">Tickets Reminder</div>
+        <div class="product-section-hint">Select a tour to edit. Changes only apply to the selected tour. To apply a change to all tours, edit the Global section above.</div>
+        <div class="tour-selector" id="tix-guest-pills"></div>
+        <div id="tix-guest-fields"></div>
+      </div>
     </div>
   </div>
 
-  <!-- ── RIGHT: PREVIEW ─────────────────────────────────────────────────── -->
+  <!-- PREVIEW -->
   <div class="studio-preview">
     <div class="preview-header">
       <span class="preview-label">Preview</span>
       <span class="preview-notice">Preview only — not actual rendering</span>
     </div>
-    <div class="preview-body" id="preview-body">
-      <!-- rendered by JS -->
-    </div>
+    <div class="preview-body" id="preview-body"></div>
   </div>
-
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-// ── State ────────────────────────────────────────────────────────────────────
+// ── State ─────────────────────────────────────────────────────────────────────
 let ALL_SETTINGS = {};
-let currentTab      = 'guest';
-let currentEmailMod = 'tc';
-let currentSmsMod   = 'tc';
-let currentGuestTour  = null;
-let currentEmailTour  = null;
-let activeFieldKey    = null;  // which field is being edited
+let currentModule  = null;   // 'tc' | 'tix'
+let currentSubTab  = 'global';
+let currentTcTour  = null;
+let currentTixTour = null;
+let activeFieldKey = null;
+let _dragIdx = -1, _dragStepIdx = -1;
 
 // ── Sample data ───────────────────────────────────────────────────────────────
 const SAMPLE = {
-  name: 'Sarah', date: 'January 10, 2026', label: 'Grand Canyon South Rim Bus Tour',
-  order: 'CHDEXAMPLE', pax: '3', pickup_time: '5:00 AM',
-  pickup_loc: 'Park MGM Hotel, Las Vegas', phone: '+1 702 555 0123',
-  url: 'https://confirm.nationalparkexpress.com/c/example',
-};
-
-const TOUR_IMAGES = {
-  upper_antelope:      'https://nationalparkexpress.com/wp-content/uploads/2026/04/Upper_Antelope_BSCT_lg.jpg',
-  lower_antelope:      'https://nationalparkexpress.com/wp-content/uploads/2023/09/leon-liu-_0aOFIW34rw-unsplash-scaled.jpg',
-  antelop_X:           'https://nationalparkexpress.com/wp-content/uploads/2023/09/leon-liu-_0aOFIW34rw-unsplash-scaled.jpg',
-  grand_canyon_south:  'https://nationalparkexpress.com/wp-content/uploads/2024/04/National-Park-Express-Which-Section-of-the-Grand-Canyon-img1.jpg',
-  grand_canyon_west:   'https://nationalparkexpress.com/wp-content/uploads/2023/04/GCW_Banner.jpg',
-  bryce_zion:          'https://nationalparkexpress.com/wp-content/uploads/2023/01/6Bryce.jpg',
-  valley_of_fire_full: 'https://nationalparkexpress.com/wp-content/uploads/2026/01/3ValleyofFire-scaled-1-1.jpg',
-  valley_of_fire_half: 'https://nationalparkexpress.com/wp-content/uploads/2026/01/3ValleyofFire-scaled-1-1.jpg',
-  hoover_dam:          'https://nationalparkexpress.com/wp-content/uploads/2023/06/hoover-dam-img1.jpg',
+  name:'Sarah', date:'January 10, 2026', label:'Grand Canyon South Rim Bus Tour',
+  order:'CHDEXAMPLE', pax:'3', pickup_time:'5:00 AM',
+  pickup_loc:'Park MGM Hotel, Las Vegas', phone:'+1 702 555 0123',
+  url:'https://confirm.nationalparkexpress.com/c/example',
+  sms_label:'Grand Canyon South Rim Tour', checkin:'9:00 AM', tour_time:'10:00 AM',
 };
 const LOGO = 'https://nationalparkexpress.com/wp-content/uploads/2026/03/image002.png';
+const TOUR_IMAGES = {
+  upper_antelope:'https://nationalparkexpress.com/wp-content/uploads/2026/04/Upper_Antelope_BSCT_lg.jpg',
+  lower_antelope:'https://nationalparkexpress.com/wp-content/uploads/2023/09/leon-liu-_0aOFIW34rw-unsplash-scaled.jpg',
+  antelop_X:'https://nationalparkexpress.com/wp-content/uploads/2023/09/leon-liu-_0aOFIW34rw-unsplash-scaled.jpg',
+  grand_canyon_south:'https://nationalparkexpress.com/wp-content/uploads/2024/04/National-Park-Express-Which-Section-of-the-Grand-Canyon-img1.jpg',
+  grand_canyon_west:'https://nationalparkexpress.com/wp-content/uploads/2023/04/GCW_Banner.jpg',
+  bryce_zion:'https://nationalparkexpress.com/wp-content/uploads/2023/01/6Bryce.jpg',
+  valley_of_fire_full:'https://nationalparkexpress.com/wp-content/uploads/2026/01/3ValleyofFire-scaled-1-1.jpg',
+  valley_of_fire_half:'https://nationalparkexpress.com/wp-content/uploads/2026/01/3ValleyofFire-scaled-1-1.jpg',
+  hoover_dam:'https://nationalparkexpress.com/wp-content/uploads/2023/06/hoover-dam-img1.jpg',
+};
 
-// ── Tour type lists ───────────────────────────────────────────────────────────
+// ── Tour lists ────────────────────────────────────────────────────────────────
 const TC_TOURS = [
   {key:'upper_antelope',label:'Upper Antelope'},{key:'lower_antelope',label:'Lower Antelope'},
   {key:'antelop_X',label:'Antelope X'},{key:'grand_canyon_south',label:'GC South Rim'},
@@ -241,196 +293,313 @@ const TIX_TOURS = [
 ];
 
 // ── Field definitions ─────────────────────────────────────────────────────────
-const GUEST_GLOBAL_FIELDS = [
-  {key:'tmpl__global__guest_sms_notice',        label:'Morning SMS notice (📱 row)', hint:''},
-  {key:'tmpl__global__guest_depart_warning',    label:'Departure warning (red text)', hint:''},
-  {key:'tmpl__global__guest_phone_confirm',     label:'Phone confirmation box', hint:'', vars:['{phone}']},
-  {key:'tmpl__global__guest_confirm_instructions',label:'Confirm / Modify instructions box', hint:'Format: Title|Body — one section per line', rows:5},
-  {key:'tmpl__global__guest_thanks_text',       label:'Thank you page body text', hint:''},
-  {key:'tmpl__global__guest_expired_text',      label:'Expired link page text', hint:''},
+const VAR_WARN = '⚠ Do not remove or modify the { } variables — they are replaced with real guest data when sent.';
+
+const TC_GLOBAL_FIELDS = [
+  {key:'tmpl__global__guest_sms_notice',        label:'Morning SMS notice (📱 row on guest page)', rows:2},
+  {key:'tmpl__global__guest_depart_warning',    label:'Departure warning (red text)', rows:2},
+  {key:'tmpl__global__guest_phone_confirm',     label:'Phone confirmation box', rows:3, vars:['{phone}']},
+  {key:'tmpl__global__guest_confirm_instructions', label:'Confirm / Modify instructions box', hint:'Format: Title|Body — one section per line', rows:5},
+  {key:'tmpl__global__guest_thanks_text',       label:'Thank you page body text', rows:2},
+  {key:'tmpl__global__guest_expired_text',      label:'Expired link page text', rows:2},
 ];
-const GUEST_TC_PRODUCT_FIELDS = t => [
+const TC_EMAIL_FIELDS = [
+  {key:'tmpl__global__tc_email_greeting',      label:'Opening greeting', rows:2},
+  {key:'tmpl__global__tc_email_intro',          label:'Intro line', rows:2, vars:['{label}','{date}']},
+  {key:'tmpl__global__tc_email_review',         label:'Review / reconfirm line', rows:2},
+  {key:'tmpl__global__tc_email_closing',        label:'Closing paragraph', rows:4},
+  {key:'tmpl__global__tc_email_link_expiry',    label:'Link expiry notice (below CTA button)', rows:2},
+  {key:'tmpl__global__tc_email_footer_contact', label:'Footer contact block', rows:3},
+];
+const TC_SMS_FIELDS = [
+  {key:'tmpl__global__tc_sms_with_lunch', label:'SMS body — tours WITH lunch', rows:4, vars:['{name}','{label}','{date}','{url}']},
+  {key:'tmpl__global__tc_sms_no_lunch',   label:'SMS body — tours WITHOUT lunch', rows:4, vars:['{name}','{label}','{date}','{url}']},
+];
+const TC_GUEST_PRODUCT_FIELDS = t => [
   {key:`tmpl__tc__${t}__reminders`,       label:'Important Reminders (one bullet per line)', rows:5},
   {key:`tmpl__tc__${t}__extra_reminders`, label:'Tour-specific extra reminders', type:'dynamic_lines', max:3},
   ...(['grand_canyon_south','bryce_zion'].includes(t) ? [
-    {key:`tmpl__tc__${t}__park_fee_nonresident`,label:'Park fee — non-US residents'},
-    {key:`tmpl__tc__${t}__park_fee_resident`,   label:'Park fee — US residents'},
+    {key:`tmpl__tc__${t}__park_fee_nonresident`, label:'Park fee — non-US residents', rows:2},
+    {key:`tmpl__tc__${t}__park_fee_resident`,    label:'Park fee — US residents', rows:2},
   ] : []),
 ];
-const GUEST_TIX_PRODUCT_FIELDS = t => [
-  {key:`tmpl__tix__${t}__checkin_location`, label:'Check-in location', hint:'Full address shown to guests'},
-  {key:`tmpl__tix__${t}__maps_url`,         label:'Google Maps URL', hint:'Link shown as "Google Maps GPS"'},
-  {key:`tmpl__tix__${t}__location_photo`,   label:'Location photo URL', hint:'Link shown as "Location Photo"'},
+
+const TIX_GLOBAL_FIELDS = [
+  {key:'tmpl__global__tix_email_warning',       label:'Warning box — late check-in / timezone (one item per line)', rows:3},
+  {key:'tmpl__global__tix_guest_cfm_note',      label:'Confirmation# note on guest page', rows:2},
+  {key:'tmpl__global__tix_guest_already_info',  label:'"If you have questions" info box (green box)', rows:3},
+  {key:'tmpl__global__tix_guest_checkbox_text', label:'Checkbox / confirmation statement', rows:2},
+  {key:'tmpl__global__tix_guest_submit_btn',    label:'Submit button text', rows:1},
+  {key:'tmpl__global__tix_guest_thanks_small',  label:'Thank you footer text', rows:2},
+];
+const TIX_EMAIL_FIELDS = [
+  {key:'tmpl__global__tix_email_intro',       label:'Intro paragraph', rows:2},
+  {key:'tmpl__global__tix_email_cta_desc',    label:'Paragraph above CTA button', rows:3},
+  {key:'tmpl__global__tix_email_link_expiry', label:'Link expiry notice (below CTA button)', rows:2},
+  {key:'tmpl__global__tix_email_footer',      label:'Footer text', rows:2},
+];
+const TIX_SMS_FIELDS = [
+  {key:'tmpl__global__tix_sms_body', label:'SMS body', rows:4, vars:['{name}','{sms_label}','{date}','{checkin}','{tour_time}','{url}']},
+];
+const TIX_GUEST_PRODUCT_FIELDS = t => [
+  {key:`tmpl__tix__${t}__checkin_location`, label:'Check-in location', rows:2},
+  {key:`tmpl__tix__${t}__maps_url`,         label:'Google Maps URL', rows:1},
+  {key:`tmpl__tix__${t}__location_photo`,   label:'Location photo URL', rows:1},
   {key:`tmpl__tix__${t}__extra_notes`,      label:'Know Before You Go', type:'dynamic_lines', max:3},
   {key:`tmpl__tix__${t}__prepare_steps`,    label:'Prepare for Your Tour', type:'dynamic_steps', max:3},
 ];
-// Helper: group tix prepare steps for preview
-function getTixPrepSteps(t) {
-  const steps = [];
-  for (let i = 1; i <= 3; i++) {
-    const label = v(`tmpl__tix__${t}__prep_${i}_label`);
-    if ((label||'').trim()) {
-      steps.push({
-        label,
-        url:   v(`tmpl__tix__${t}__prep_${i}_url`),
-        note:  v(`tmpl__tix__${t}__prep_${i}_note`),
-        lKey:  `tmpl__tix__${t}__prep_${i}_label`,
-        uKey:  `tmpl__tix__${t}__prep_${i}_url`,
-        nKey:  `tmpl__tix__${t}__prep_${i}_note`,
-      });
-    }
-  }
-  return steps;
-}
-const EMAIL_GLOBAL_FIELDS = {
-  tc: [
-    {key:'tmpl__global__tc_email_greeting',     label:'Opening greeting'},
-    {key:'tmpl__global__tc_email_intro',         label:'Intro line', vars:['{label}','{date}']},
-    {key:'tmpl__global__tc_email_review',        label:'Review / reconfirm line'},
-    {key:'tmpl__global__tc_email_closing',       label:'Closing paragraph', rows:4},
-    {key:'tmpl__global__tc_email_link_expiry',   label:'Link expiry notice'},
-    {key:'tmpl__global__tc_email_footer_contact',label:'Footer contact block', rows:3},
-  ],
-  tix: [
-    {key:'tmpl__global__tix_email_intro',        label:'Intro paragraph'},
-    {key:'tmpl__global__tix_email_warning',      label:'Warning box (one item per line)', rows:3},
-    {key:'tmpl__global__tix_email_cta_desc',     label:'Paragraph above CTA button', rows:3},
-    {key:'tmpl__global__tix_email_link_expiry',  label:'Link expiry notice'},
-    {key:'tmpl__global__tix_email_footer',       label:'Footer text'},
-  ],
-  mp: [
-    {key:'tmpl__global__mp_email_body',  label:'Body paragraphs', vars:['{pickup_time}'], rows:3},
-    {key:'tmpl__global__mp_email_cta',   label:'CTA button text'},
-    {key:'tmpl__global__mp_email_footer',label:'Footer text'},
-  ],
-};
-const EMAIL_PRODUCT_FIELDS = {
-  tc:  t => ['grand_canyon_south','bryce_zion'].includes(t) ? [
-    {key:`tmpl__tc__${t}__park_fee_nonresident`,label:'Park fee — non-US residents'},
-    {key:`tmpl__tc__${t}__park_fee_resident`,   label:'Park fee — US residents'},
-  ] : [],
-  tix: t => [{key:`tmpl__tix__${t}__extra_notes`,label:'Notes / important info (one item per line)', rows:6}],
-};
-const SMS_GLOBAL_FIELDS = {
-  tc: [
-    {key:'tmpl__global__tc_sms_with_lunch',label:'SMS — tours WITH lunch', vars:['{name}','{label}','{date}','{url}'], rows:4},
-    {key:'tmpl__global__tc_sms_no_lunch',  label:'SMS — tours WITHOUT lunch', vars:['{name}','{label}','{date}','{url}'], rows:4},
-  ],
-  tix: [
-    {key:'tmpl__global__tix_sms_body', label:'SMS body', vars:['{name}','{sms_label}','{date}','{checkin}','{tour_time}','{url}'], rows:4},
-  ],
-  mp: [{key:'tmpl__global__mp_sms_body',label:'SMS body', vars:['{name}','{pickup_time}','{url}','{phone}'], rows:5}],
-};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function v(key) { return (ALL_SETTINGS[key]||{}).value || ''; }
+function v(key) { return (ALL_SETTINGS[key]||{}).value||''; }
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function nl2br(s) { return esc(s).replace(/\n/g,'<br>'); }
 function fill(s) {
-  return s.replace(/\{name\}/g, SAMPLE.name)
-          .replace(/\{date\}/g, SAMPLE.date)
-          .replace(/\{label\}/g, SAMPLE.label)
-          .replace(/\{phone\}/g, SAMPLE.phone)
-          .replace(/\{pickup_time\}/g, SAMPLE.pickup_time)
-          .replace(/\{url\}/g, SAMPLE.url);
+  return s.replace(/\{name\}/g,SAMPLE.name).replace(/\{date\}/g,SAMPLE.date)
+    .replace(/\{label\}/g,SAMPLE.label).replace(/\{phone\}/g,SAMPLE.phone)
+    .replace(/\{pickup_time\}/g,SAMPLE.pickup_time).replace(/\{url\}/g,SAMPLE.url)
+    .replace(/\{sms_label\}/g,SAMPLE.sms_label).replace(/\{checkin\}/g,SAMPLE.checkin)
+    .replace(/\{tour_time\}/g,SAMPLE.tour_time);
 }
-function hl(s, key) {
-  const cls = (activeFieldKey === key) ? ' gp-highlight' : '';
-  return cls ? `<span class="${cls.trim()}">${s}</span>` : s;
-}
-function hlE(s, key) {
-  const cls = (activeFieldKey === key) ? ' ep-highlight' : '';
-  return cls ? `<span class="${cls.trim()}">${s}</span>` : s;
-}
+function hl(s,key)  { return activeFieldKey===key ? `<span class="gp-highlight">${s}</span>` : s; }
+function hlE(s,key) { return activeFieldKey===key ? `<span class="ep-highlight">${s}</span>` : s; }
 
-function pillsHtml(tours, currentKey, onclickFn, prefix) {
+function pillsHtml(tours, currentKey, onclickFn, activeClass) {
   return tours.map(t =>
-    `<button class="tour-pill${t.key===currentKey?' active':''}" onclick="${onclickFn}('${t.key}',this,'${prefix}')">${t.label}</button>`
+    `<button class="tour-pill${t.key===currentKey?' '+activeClass:''}" onclick="${onclickFn}('${t.key}',this)">${t.label}</button>`
   ).join('');
 }
 
-// ── Dynamic lines helpers ─────────────────────────────────────────────────────
-function getDynLines(key) {
-  return (v(key)||'').split('\n').filter(Boolean);
+// ── Navigation ────────────────────────────────────────────────────────────────
+function goHome() {
+  currentModule = null;
+  document.getElementById('home-view').style.display = '';
+  document.querySelectorAll('.cs-inner').forEach(el=>el.classList.remove('active'));
+  renderPreview();
 }
-function setDynLines(key, lines) {
-  if (!ALL_SETTINGS[key]) ALL_SETTINGS[key] = {};
-  ALL_SETTINGS[key].value = lines.join('\n');
+function goInner(mod) {
+  currentModule = mod;
+  document.getElementById('home-view').style.display = 'none';
+  document.querySelectorAll('.cs-inner').forEach(el=>el.classList.remove('active'));
+  document.getElementById('inner-'+mod).classList.add('active');
+  // reset to global tab
+  const inner = document.getElementById('inner-'+mod);
+  inner.querySelectorAll('.cs-sub-tab').forEach(t=>t.classList.remove('active'));
+  inner.querySelectorAll('.cs-panel').forEach(p=>p.classList.remove('active'));
+  inner.querySelectorAll('.cs-sub-tab')[0].classList.add('active');
+  inner.querySelectorAll('.cs-panel')[0].classList.add('active');
+  currentSubTab = 'global';
+  renderModuleFields(mod);
+  renderPreview();
 }
-function getDynSteps(tourKey) {
-  const steps = [];
-  for (let i = 1; i <= 3; i++) {
-    steps.push({
-      label: v(`tmpl__tix__${tourKey}__prep_${i}_label`),
-      url:   v(`tmpl__tix__${tourKey}__prep_${i}_url`),
-      note:  v(`tmpl__tix__${tourKey}__prep_${i}_note`),
-    });
-  }
-  return steps;
+function switchSub(btn, panelId) {
+  const inner = btn.closest('.cs-inner');
+  inner.querySelectorAll('.cs-sub-tab').forEach(t=>t.classList.remove('active'));
+  inner.querySelectorAll('.cs-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(panelId).classList.add('active');
+  currentSubTab = panelId.includes('global')?'global':panelId.includes('email')?'email':panelId.includes('sms')?'sms':'guest';
+  renderModuleFields(currentModule);
+  renderPreview();
+}
+function toggleGlobal(contentId, iconId) {
+  const c = document.getElementById(contentId);
+  const i = document.getElementById(iconId);
+  const open = !c.classList.contains('open');
+  c.classList.toggle('open', open);
+  i.textContent = open ? '−' : '+';
 }
 
-function dynLinesCard(f, isGlobal) {
-  const lines = getDynLines(f.key);
-  const max   = f.max || 3;
+// ── Render fields ─────────────────────────────────────────────────────────────
+function renderModuleFields(mod) {
+  if (mod === 'tc') {
+    document.getElementById('tc-global-fields').innerHTML = TC_GLOBAL_FIELDS.map(f=>fieldCard(f,true)).join('');
+    document.getElementById('tc-email-fields').innerHTML =
+      '<div class="field-group-title">Global — all products</div>' + TC_EMAIL_FIELDS.map(f=>fieldCard(f,true)).join('');
+    document.getElementById('tc-sms-fields').innerHTML =
+      '<div class="field-group-title">Global — all products</div>' + TC_SMS_FIELDS.map(f=>fieldCard(f,true)).join('');
+    if (!currentTcTour) currentTcTour = TC_TOURS[0].key;
+    document.getElementById('tc-guest-pills').innerHTML = pillsHtml(TC_TOURS, currentTcTour, 'selectTcTour', 'active-tc');
+    document.getElementById('tc-guest-fields').innerHTML = TC_GUEST_PRODUCT_FIELDS(currentTcTour).map(f=>fieldCard(f,false)).join('');
+  } else {
+    document.getElementById('tix-global-fields').innerHTML = TIX_GLOBAL_FIELDS.map(f=>fieldCard(f,true)).join('');
+    document.getElementById('tix-email-fields').innerHTML =
+      '<div class="field-group-title">Global — all products</div>' + TIX_EMAIL_FIELDS.map(f=>fieldCard(f,true)).join('');
+    document.getElementById('tix-sms-fields').innerHTML =
+      '<div class="field-group-title">Global — all products</div>' + TIX_SMS_FIELDS.map(f=>fieldCard(f,true)).join('');
+    if (!currentTixTour) currentTixTour = TIX_TOURS[0].key;
+    document.getElementById('tix-guest-pills').innerHTML = pillsHtml(TIX_TOURS, currentTixTour, 'selectTixTour', 'active-tix');
+    document.getElementById('tix-guest-fields').innerHTML = TIX_GUEST_PRODUCT_FIELDS(currentTixTour).map(f=>fieldCard(f,false)).join('');
+  }
+}
+function selectTcTour(key, el) {
+  currentTcTour = key;
+  document.querySelectorAll('#tc-guest-pills .tour-pill').forEach(p=>p.classList.remove('active-tc'));
+  el.classList.add('active-tc');
+  document.getElementById('tc-guest-fields').innerHTML = TC_GUEST_PRODUCT_FIELDS(key).map(f=>fieldCard(f,false)).join('');
+  renderPreview();
+}
+function selectTixTour(key, el) {
+  currentTixTour = key;
+  document.querySelectorAll('#tix-guest-pills .tour-pill').forEach(p=>p.classList.remove('active-tix'));
+  el.classList.add('active-tix');
+  document.getElementById('tix-guest-fields').innerHTML = TIX_GUEST_PRODUCT_FIELDS(key).map(f=>fieldCard(f,false)).join('');
+  renderPreview();
+}
+
+// ── Field card renderer ───────────────────────────────────────────────────────
+function fieldCard(f, isGlobal) {
+  if (f.type === 'dynamic_lines') return dynLinesCard(f, isGlobal);
+  if (f.type === 'dynamic_steps') return dynStepsCard(currentModule==='tc' ? currentTcTour : currentTixTour);
+  const val  = v(f.key);
+  const rows = f.rows || 3;
+  const vars = f.vars || [];
+  const varHtml = vars.length
+    ? `<div class="var-warning">${VAR_WARN}</div><div class="field-body" style="padding-top:6px;"><div class="var-hint">Variables: ${vars.map(x=>`<code>${x}</code>`).join(' ')}</div></div>`
+    : '';
   const badge   = isGlobal ? `<span class="global-badge">⚠ Global</span>` : '';
   const warning = isGlobal ? `<div class="global-warning">⚠ This text appears everywhere. Edit carefully.</div>` : '';
+  const taClass = isGlobal ? 'field-textarea global-card-ta' : 'field-textarea';
   const cardCls = isGlobal ? 'field-card global-card' : 'field-card';
-  const uid = f.key.replace(/[^a-z0-9]/gi,'_');
-
-  let rowsHtml = lines.map((line, i) => dynLineRow(uid, i, line, max)).join('');
-  const addBtn = lines.length < max
-    ? `<button class="dyn-add-btn" onclick="dynAddLine('${uid}','${f.key}',${max})">+ Add line</button>`
-    : `<span style="font-size:11px;color:#888;">Max ${max} lines. Contact admin to add more.</span>`;
-
-  return `<div class="${cardCls}" id="dyncard-${uid}">
+  const hintHtml = f.hint && !vars.length ? `<div class="field-body" style="padding-top:0;padding-bottom:4px;"><span class="var-hint">${f.hint}</span></div>` : '';
+  return `<div class="${cardCls}">
     <div class="field-header">
       <div><div class="field-label-text">${f.label}</div><div class="field-scope">${f.key}</div></div>
       ${badge}
     </div>
-    ${warning}
+    ${warning}${varHtml}${hintHtml}
+    <div class="field-body">
+      <textarea class="${taClass}" rows="${rows}" data-key="${f.key}"
+        oninput="onFieldInput('${f.key}',this)"
+        onfocus="onFieldFocus('${f.key}')"
+        onblur="onFieldBlur()">${esc(val)}</textarea>
+      <div class="field-footer"><span></span>
+        <button class="save-btn" onclick="saveField('${f.key}',this)">Save</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ── Dynamic lines ─────────────────────────────────────────────────────────────
+function getDynLines(key) { return (v(key)||'').split('\n').filter(Boolean); }
+function setDynLines(key, lines) { if(!ALL_SETTINGS[key]) ALL_SETTINGS[key]={}; ALL_SETTINGS[key].value=lines.join('\n'); }
+
+function dynLinesCard(f, isGlobal) {
+  const lines = getDynLines(f.key);
+  const max   = f.max||3;
+  const badge   = isGlobal ? `<span class="global-badge">⚠ Global</span>` : '';
+  const warning = isGlobal ? `<div class="global-warning">⚠ This text appears everywhere. Edit carefully.</div>` : '';
+  const cardCls = isGlobal ? 'field-card global-card' : 'field-card';
+  const uid = f.key.replace(/[^a-z0-9]/gi,'_');
+  const rowsHtml = lines.map((line,i)=>dynLineRow(uid,i,line,max)).join('');
+  const addBtn = lines.length < max
+    ? `<button class="dyn-add-btn" onclick="dynAddLine('${uid}','${f.key}',${max})">+ Add line</button>`
+    : `<span style="font-size:11px;color:#888;">Max ${max} lines reached. Contact admin to add more.</span>`;
+  return `<div class="${cardCls}">
+    <div class="field-header">
+      <div><div class="field-label-text">${f.label}</div><div class="field-scope">${f.key}</div></div>
+      ${badge}
+    </div>${warning}
     <div class="field-body">
       <div class="dyn-list" id="dynlist-${uid}" data-key="${f.key}" data-max="${max}"
            ondragover="dynDragOver(event)" ondrop="dynDrop(event,'${f.key}')">
         ${rowsHtml}
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;">
         <div id="dynadd-${uid}">${addBtn}</div>
         <button class="save-btn" onclick="saveDynLines('${f.key}','${uid}',this)">Save</button>
       </div>
     </div>
   </div>`;
 }
-
-function dynLineRow(uid, idx, val, max) {
-  return `<div class="dyn-row" draggable="true"
-    ondragstart="dynDragStart(event,${idx})"
-    data-idx="${idx}">
-    <span class="dyn-handle" title="Drag to reorder">⠿</span>
+function dynLineRow(uid,idx,val,max) {
+  return `<div class="dyn-row" draggable="true" ondragstart="dynDragStart(event,${idx})" data-idx="${idx}">
+    <span class="dyn-handle">⠿</span>
     <input type="text" class="dyn-input" value="${esc(val)}"
       oninput="dynInputChange('${uid}')"
       onfocus="onFieldFocus(document.getElementById('dynlist-${uid}').dataset.key)"
       onblur="onFieldBlur()">
-    <button class="dyn-del-btn" onclick="dynDelLine('${uid}',${idx},${max})" title="Remove">×</button>
+    <button class="dyn-del-btn" onclick="dynDelLine('${uid}',${idx},${max})">×</button>
   </div>`;
 }
-
-function dynStepsCard(tourKey) {
-  const steps = getDynSteps(tourKey);
-  const uid   = `steps_${tourKey}`;
-  const max   = 3;
-
-  let stepsHtml = '';
-  steps.forEach((s, i) => {
-    if (s.label || i === 0) {
-      stepsHtml += dynStepGroup(uid, tourKey, i+1, s);
-    }
+function dynInputChange(uid) {
+  const list=document.getElementById('dynlist-'+uid);
+  const key=list.dataset.key;
+  const lines=[...list.querySelectorAll('.dyn-input')].map(i=>i.value);
+  setDynLines(key,lines.filter(Boolean));
+  renderPreview();
+}
+function dynAddLine(uid,key,max) {
+  const list=document.getElementById('dynlist-'+uid);
+  const rows=list.querySelectorAll('.dyn-row');
+  if(rows.length>=max) return;
+  const idx=rows.length;
+  list.insertAdjacentHTML('beforeend',dynLineRow(uid,idx,'',max));
+  if(rows.length+1>=max) document.getElementById('dynadd-'+uid).innerHTML=`<span style="font-size:11px;color:#888;">Max ${max} lines reached. Contact admin to add more.</span>`;
+}
+function dynDelLine(uid,idx,max) {
+  const list=document.getElementById('dynlist-'+uid);
+  const key=list.dataset.key;
+  [...list.querySelectorAll('.dyn-row')][idx]?.remove();
+  [...list.querySelectorAll('.dyn-row')].forEach((r,i)=>{
+    r.dataset.idx=i;
+    r.setAttribute('ondragstart',`dynDragStart(event,${i})`);
+    r.querySelector('.dyn-del-btn').setAttribute('onclick',`dynDelLine('${uid}',${i},${max})`);
   });
-  const visibleCount = steps.filter(s => s.label).length;
-  const addBtn = visibleCount < max
+  setDynLines(key,[...list.querySelectorAll('.dyn-input')].map(i=>i.value).filter(Boolean));
+  const cur=list.querySelectorAll('.dyn-row').length;
+  if(cur<max) document.getElementById('dynadd-'+uid).innerHTML=`<button class="dyn-add-btn" onclick="dynAddLine('${uid}','${key}',${max})">+ Add line</button>`;
+  renderPreview();
+}
+function dynDragStart(e,idx) { _dragIdx=idx; e.dataTransfer.effectAllowed='move'; }
+function dynDragOver(e) { e.preventDefault(); }
+function dynDrop(e,key) {
+  e.preventDefault();
+  const list=e.currentTarget;
+  const uid=list.id.replace('dynlist-','');
+  const rows=[...list.querySelectorAll('.dyn-row')];
+  const target=e.target.closest('.dyn-row');
+  if(!target||_dragIdx<0) return;
+  const toIdx=parseInt(target.dataset.idx);
+  if(toIdx===_dragIdx) return;
+  const lines=rows.map(r=>r.querySelector('.dyn-input').value);
+  const moved=lines.splice(_dragIdx,1)[0];
+  lines.splice(toIdx,0,moved);
+  setDynLines(key,lines);
+  const mod=currentModule; const tour=mod==='tc'?currentTcTour:currentTixTour;
+  document.getElementById(mod==='tc'?'tc-guest-fields':'tix-guest-fields').innerHTML=
+    (mod==='tc'?TC_GUEST_PRODUCT_FIELDS(tour):TIX_GUEST_PRODUCT_FIELDS(tour)).map(f=>fieldCard(f,false)).join('');
+  renderPreview(); _dragIdx=-1;
+}
+
+// ── Dynamic steps ─────────────────────────────────────────────────────────────
+function getDynSteps(tourKey) {
+  const steps=[];
+  for(let i=1;i<=3;i++) {
+    steps.push({
+      label:v(`tmpl__tix__${tourKey}__prep_${i}_label`),
+      url:v(`tmpl__tix__${tourKey}__prep_${i}_url`),
+      note:v(`tmpl__tix__${tourKey}__prep_${i}_note`),
+      lKey:`tmpl__tix__${tourKey}__prep_${i}_label`,
+      uKey:`tmpl__tix__${tourKey}__prep_${i}_url`,
+      nKey:`tmpl__tix__${tourKey}__prep_${i}_note`,
+    });
+  }
+  return steps;
+}
+function getTixPrepSteps(tourKey) {
+  return getDynSteps(tourKey).filter(s=>(s.label||'').trim());
+}
+function dynStepsCard(tourKey) {
+  const steps=getDynSteps(tourKey);
+  const uid=`steps_${tourKey}`;
+  const max=3;
+  const visCount=steps.filter(s=>s.label).length;
+  let stepsHtml='';
+  steps.forEach((s,i)=>{ if(s.label||i===0) stepsHtml+=dynStepGroup(uid,tourKey,i+1,s); });
+  const addBtn=visCount<max
     ? `<button class="dyn-add-btn" onclick="dynShowStep('${uid}','${tourKey}',${max})">+ Add step</button>`
     : `<span style="font-size:11px;color:#888;">Max ${max} steps. Contact admin to add more.</span>`;
-
-  return `<div class="field-card" id="dyncard-${uid}">
+  return `<div class="field-card">
     <div class="field-header">
       <div><div class="field-label-text">Prepare for Your Tour</div>
       <div class="field-scope">prep steps (label / URL / note)</div></div>
@@ -447,10 +616,9 @@ function dynStepsCard(tourKey) {
     </div>
   </div>`;
 }
-
-function dynStepGroup(uid, tourKey, num, s) {
-  const isHidden = !s.label && num > 1;
-  return `<div class="dyn-step-group${isHidden?' dyn-step-hidden':''}" data-stepnum="${num}" draggable="true"
+function dynStepGroup(uid,tourKey,num,s) {
+  const hidden=!s.label&&num>1;
+  return `<div class="dyn-step-group${hidden?' dyn-step-hidden':''}" data-stepnum="${num}" draggable="true"
     ondragstart="dynStepDragStart(event,${num-1})">
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
       <span class="dyn-handle">⠿</span>
@@ -470,136 +638,69 @@ function dynStepGroup(uid, tourKey, num, s) {
       onfocus="onFieldFocus('tmpl__tix__${tourKey}__prep_${num}_note')" onblur="onFieldBlur()">
   </div>`;
 }
-
-// ── Drag state ────────────────────────────────────────────────────────────────
-let _dragIdx = -1;
-function dynDragStart(e, idx) { _dragIdx = idx; e.dataTransfer.effectAllowed='move'; }
-function dynDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect='move'; }
-function dynDrop(e, key) {
+function dynStepDragStart(e,idx) { _dragStepIdx=idx; e.dataTransfer.effectAllowed='move'; }
+function dynDropStep(e,uid,tourKey) {
   e.preventDefault();
-  const list = e.currentTarget;
-  const uid  = list.id.replace('dynlist-','');
-  const rows = [...list.querySelectorAll('.dyn-row')];
-  const targetRow = e.target.closest('.dyn-row');
-  if (!targetRow || _dragIdx < 0) return;
-  const toIdx = parseInt(targetRow.dataset.idx);
-  if (toIdx === _dragIdx) return;
-  const lines = rows.map(r => r.querySelector('.dyn-input').value);
-  const moved = lines.splice(_dragIdx, 1)[0];
-  lines.splice(toIdx, 0, moved);
-  setDynLines(key, lines);
-  renderGuestProduct();
-  renderPreview();
-  _dragIdx = -1;
-}
-let _dragStepIdx = -1;
-function dynStepDragStart(e, idx) { _dragStepIdx = idx; e.dataTransfer.effectAllowed='move'; }
-function dynDropStep(e, uid, tourKey) {
-  e.preventDefault();
-  const list   = e.currentTarget;
-  const groups = [...list.querySelectorAll('.dyn-step-group')];
-  const target = e.target.closest('.dyn-step-group');
-  if (!target || _dragStepIdx < 0) return;
-  const toIdx  = groups.indexOf(target);
-  if (toIdx === _dragStepIdx) return;
-  const steps  = getDynSteps(tourKey);
-  const moved  = steps.splice(_dragStepIdx, 1)[0];
-  steps.splice(toIdx, 0, moved);
-  // write back
-  for (let i = 0; i < 3; i++) {
-    const s = steps[i] || {label:'',url:'',note:''};
-    ['label','url','note'].forEach(f => {
-      const k = `tmpl__tix__${tourKey}__prep_${i+1}_${f}`;
-      if (!ALL_SETTINGS[k]) ALL_SETTINGS[k]={};
-      ALL_SETTINGS[k].value = s[f]||'';
+  const list=e.currentTarget;
+  const groups=[...list.querySelectorAll('.dyn-step-group')];
+  const target=e.target.closest('.dyn-step-group');
+  if(!target||_dragStepIdx<0) return;
+  const toIdx=groups.indexOf(target);
+  if(toIdx===_dragStepIdx) return;
+  const steps=getDynSteps(tourKey);
+  const moved=steps.splice(_dragStepIdx,1)[0];
+  steps.splice(toIdx,0,moved);
+  for(let i=0;i<3;i++){
+    const s=steps[i]||{label:'',url:'',note:''};
+    ['label','url','note'].forEach(f=>{
+      const k=`tmpl__tix__${tourKey}__prep_${i+1}_${f}`;
+      if(!ALL_SETTINGS[k]) ALL_SETTINGS[k]={};
+      ALL_SETTINGS[k].value=s[f]||'';
     });
   }
-  renderGuestProduct();
-  renderPreview();
-  _dragStepIdx = -1;
+  document.getElementById('tix-guest-fields').innerHTML=TIX_GUEST_PRODUCT_FIELDS(tourKey).map(f=>fieldCard(f,false)).join('');
+  renderPreview(); _dragStepIdx=-1;
 }
-
-// ── Dynamic line actions ──────────────────────────────────────────────────────
-function dynInputChange(uid) {
-  const list = document.getElementById('dynlist-'+uid);
-  const key  = list.dataset.key;
-  const lines = [...list.querySelectorAll('.dyn-input')].map(i=>i.value);
-  setDynLines(key, lines.filter(Boolean));
-  renderPreview();
-}
-function dynAddLine(uid, key, max) {
-  const list  = document.getElementById('dynlist-'+uid);
-  const rows  = list.querySelectorAll('.dyn-row');
-  if (rows.length >= max) return;
-  const idx   = rows.length;
-  list.insertAdjacentHTML('beforeend', dynLineRow(uid, idx, '', max));
-  // update add btn
-  const addDiv = document.getElementById('dynadd-'+uid);
-  if (rows.length + 1 >= max) {
-    addDiv.innerHTML = `<span style="font-size:11px;color:#888;">Max ${max} lines. Contact admin to add more.</span>`;
-  }
-}
-function dynDelLine(uid, idx, max) {
-  const list  = document.getElementById('dynlist-'+uid);
-  const key   = list.dataset.key;
-  const rows  = [...list.querySelectorAll('.dyn-row')];
-  rows[idx]?.remove();
-  // re-index
-  [...list.querySelectorAll('.dyn-row')].forEach((r,i) => {
-    r.dataset.idx = i;
-    r.setAttribute('ondragstart', `dynDragStart(event,${i})`);
-    r.querySelector('.dyn-del-btn').setAttribute('onclick', `dynDelLine('${uid}',${i},${max})`);
+function dynShowStep(uid,tourKey,max) {
+  const list=document.getElementById('dynsteps-'+uid);
+  const groups=list.querySelectorAll('.dyn-step-group');
+  let shown=0;
+  groups.forEach(g=>{if(!g.classList.contains('dyn-step-hidden')) shown++;});
+  groups.forEach(g=>{
+    if(g.classList.contains('dyn-step-hidden')&&shown<max){g.classList.remove('dyn-step-hidden');shown++;}
   });
-  const lines = [...list.querySelectorAll('.dyn-input')].map(i=>i.value);
-  setDynLines(key, lines.filter(Boolean));
-  // restore add btn if below max
-  const addDiv = document.getElementById('dynadd-'+uid);
-  const cur = list.querySelectorAll('.dyn-row').length;
-  if (cur < max) addDiv.innerHTML = `<button class="dyn-add-btn" onclick="dynAddLine('${uid}','${key}',${max})">+ Add line</button>`;
-  renderPreview();
+  if(shown>=max) document.getElementById('dynstepadd-'+uid).innerHTML=`<span style="font-size:11px;color:#888;">Max ${max} steps. Contact admin to add more.</span>`;
 }
-
-function dynShowStep(uid, tourKey, max) {
-  const list   = document.getElementById('dynsteps-'+uid);
-  const groups = list.querySelectorAll('.dyn-step-group');
-  // find first hidden
-  let shown = 0;
-  groups.forEach(g => { if (!g.classList.contains('dyn-step-hidden')) shown++; });
-  if (shown >= max) return;
-  groups.forEach(g => {
-    if (g.classList.contains('dyn-step-hidden') && shown < max) {
-      g.classList.remove('dyn-step-hidden');
-      shown++;
-    }
-  });
-  const addDiv = document.getElementById('dynstepadd-'+uid);
-  if (shown >= max) addDiv.innerHTML = `<span style="font-size:11px;color:#888;">Max ${max} steps. Contact admin to add more.</span>`;
-}
-function dynStepChange(uid, tourKey) {
-  const list = document.getElementById('dynsteps-'+uid);
-  list.querySelectorAll('.dyn-step-group').forEach(g => {
-    const num = parseInt(g.dataset.stepnum);
-    ['label','url','note'].forEach(field => {
-      const inp = g.querySelector(`[data-field="${field}"]`);
-      if (!inp) return;
-      const k = `tmpl__tix__${tourKey}__prep_${num}_${field}`;
-      if (!ALL_SETTINGS[k]) ALL_SETTINGS[k]={};
-      ALL_SETTINGS[k].value = inp.value;
+function dynStepChange(uid,tourKey) {
+  const list=document.getElementById('dynsteps-'+uid);
+  list.querySelectorAll('.dyn-step-group').forEach(g=>{
+    const num=parseInt(g.dataset.stepnum);
+    ['label','url','note'].forEach(field=>{
+      const inp=g.querySelector(`[data-field="${field}"]`);
+      if(!inp) return;
+      const k=`tmpl__tix__${tourKey}__prep_${num}_${field}`;
+      if(!ALL_SETTINGS[k]) ALL_SETTINGS[k]={};
+      ALL_SETTINGS[k].value=inp.value;
     });
   });
   renderPreview();
 }
 
-async function saveDynLines(key, uid, btn) {
-  const list  = document.getElementById('dynlist-'+uid);
-  const lines = [...list.querySelectorAll('.dyn-input')].map(i=>i.value).filter(Boolean);
-  const value = lines.join('\n');
+// ── Live edit ─────────────────────────────────────────────────────────────────
+function onFieldInput(key,ta) { if(!ALL_SETTINGS[key]) ALL_SETTINGS[key]={}; ALL_SETTINGS[key].value=ta.value; renderPreview(); }
+function onFieldFocus(key) { activeFieldKey=key; renderPreview(); }
+function onFieldBlur()     { activeFieldKey=null; renderPreview(); }
+
+// ── Save ──────────────────────────────────────────────────────────────────────
+async function saveField(key,btn) {
+  const ta=document.querySelector(`textarea[data-key="${key}"]`);
+  if(!ta) return;
   btn.textContent='Saving…'; btn.classList.add('saving');
   try {
-    const r = await fetch('/api/template-settings/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,value})});
-    if (!r.ok) throw new Error();
-    if (!ALL_SETTINGS[key]) ALL_SETTINGS[key]={};
-    ALL_SETTINGS[key].value = value;
+    const r=await fetch('/api/template-settings/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,value:ta.value})});
+    if(!r.ok) throw new Error();
+    if(!ALL_SETTINGS[key]) ALL_SETTINGS[key]={};
+    ALL_SETTINGS[key].value=ta.value;
     btn.textContent='Saved ✓'; btn.classList.remove('saving'); btn.classList.add('saved');
     setTimeout(()=>{btn.textContent='Save';btn.classList.remove('saved');},2000);
   } catch(e) {
@@ -607,16 +708,32 @@ async function saveDynLines(key, uid, btn) {
     setTimeout(()=>{btn.textContent='Save';btn.classList.remove('err');},2500);
   }
 }
-async function saveDynSteps(uid, tourKey, btn) {
+async function saveDynLines(key,uid,btn) {
+  const list=document.getElementById('dynlist-'+uid);
+  const value=[...list.querySelectorAll('.dyn-input')].map(i=>i.value).filter(Boolean).join('\n');
   btn.textContent='Saving…'; btn.classList.add('saving');
-  const list   = document.getElementById('dynsteps-'+uid);
-  const groups = [...list.querySelectorAll('.dyn-step-group')];
-  const saves  = [];
-  for (let i = 0; i < 3; i++) {
-    const g = groups[i];
-    for (const field of ['label','url','note']) {
-      const key = `tmpl__tix__${tourKey}__prep_${i+1}_${field}`;
-      const val = g ? (g.querySelector(`[data-field="${field}"]`)?.value || '') : '';
+  try {
+    const r=await fetch('/api/template-settings/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,value})});
+    if(!r.ok) throw new Error();
+    if(!ALL_SETTINGS[key]) ALL_SETTINGS[key]={};
+    ALL_SETTINGS[key].value=value;
+    btn.textContent='Saved ✓'; btn.classList.remove('saving'); btn.classList.add('saved');
+    setTimeout(()=>{btn.textContent='Save';btn.classList.remove('saved');},2000);
+  } catch(e) {
+    btn.textContent='Error'; btn.classList.remove('saving'); btn.classList.add('err');
+    setTimeout(()=>{btn.textContent='Save';btn.classList.remove('err');},2500);
+  }
+}
+async function saveDynSteps(uid,tourKey,btn) {
+  btn.textContent='Saving…'; btn.classList.add('saving');
+  const list=document.getElementById('dynsteps-'+uid);
+  const groups=[...list.querySelectorAll('.dyn-step-group')];
+  const saves=[];
+  for(let i=0;i<3;i++){
+    const g=groups[i];
+    for(const field of ['label','url','note']){
+      const key=`tmpl__tix__${tourKey}__prep_${i+1}_${field}`;
+      const val=g?(g.querySelector(`[data-field="${field}"]`)?.value||''):'';
       saves.push(fetch('/api/template-settings/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,value:val})}));
     }
   }
@@ -630,202 +747,44 @@ async function saveDynSteps(uid, tourKey, btn) {
   }
 }
 
-function fieldCard(f, isGlobal) {
-  // Route to dynamic renderers
-  if (f.type === 'dynamic_lines') return dynLinesCard(f, isGlobal);
-  if (f.type === 'dynamic_steps') return dynStepsCard(currentGuestTour);
-
-  const val  = v(f.key);
-  const rows = f.rows || 3;
-  const vars = f.vars || [];
-  const varHint = vars.length
-    ? `<span class="var-hint">Variables: ${vars.map(x=>`<code>${x}</code>`).join(' ')}</span>`
-    : (f.hint ? `<span class="var-hint">${f.hint}</span>` : '<span></span>');
-  const badge   = isGlobal ? `<span class="global-badge">⚠ Global</span>` : '';
-  const warning = isGlobal ? `<div class="global-warning">⚠ This text appears everywhere. Edit carefully.</div>` : '';
-  const taClass = isGlobal ? 'field-textarea global-card-ta' : 'field-textarea';
-  const cardCls = isGlobal ? 'field-card global-card' : 'field-card';
-  return `<div class="${cardCls}">
-    <div class="field-header">
-      <div><div class="field-label-text">${f.label}</div><div class="field-scope">${f.key}</div></div>
-      ${badge}
-    </div>
-    ${warning}
-    <div class="field-body">
-      <textarea class="${taClass}" rows="${rows}" data-key="${f.key}"
-        oninput="onFieldInput('${f.key}',this)"
-        onfocus="onFieldFocus('${f.key}')"
-        onblur="onFieldBlur()">${esc(val)}</textarea>
-      <div class="field-footer">${varHint}
-        <button class="save-btn" onclick="saveField('${f.key}',this)">Save</button>
-      </div>
-    </div>
-  </div>`;
-}
-
-// ── Live edit callbacks ───────────────────────────────────────────────────────
-function onFieldInput(key, ta) {
-  if (!ALL_SETTINGS[key]) ALL_SETTINGS[key] = {};
-  ALL_SETTINGS[key].value = ta.value;
-  renderPreview();
-}
-function onFieldFocus(key) { activeFieldKey = key; renderPreview(); }
-function onFieldBlur()     { activeFieldKey = null; renderPreview(); }
-
-// ── GUEST TAB ─────────────────────────────────────────────────────────────────
-function toggleGlobal() {
-  const content = document.getElementById('guest-global-content');
-  const icon    = document.getElementById('global-toggle-icon');
-  const open    = content.style.display === 'none';
-  content.style.display = open ? 'block' : 'none';
-  icon.textContent = open ? '−' : '+';
-}
-
-function renderGuestTab() {
-  document.getElementById('guest-global-group').innerHTML =
-    GUEST_GLOBAL_FIELDS.map(f => fieldCard(f, true)).join('');
-  if (!currentGuestTour) currentGuestTour = TC_TOURS[0].key;
-  const pills = document.getElementById('guest-tour-pills');
-  pills.innerHTML =
-    '<div style="width:100%;font-size:13px;font-weight:700;color:#3a7d44;margin-bottom:4px;">Tour Confirmation</div>' +
-    '<div style="width:100%;font-size:11px;color:#6B5E57;margin-bottom:8px;">Select a tour to edit. Changes only apply to the selected tour. To apply a change to all tours, edit the Global section above.</div>' +
-    pillsHtml(TC_TOURS, currentGuestTour, 'selectGuestTour', 'tc') +
-    '<div style="width:100%;font-size:13px;font-weight:700;color:#b87333;margin:14px 0 4px;">Tickets Reminder</div>' +
-    '<div style="width:100%;font-size:11px;color:#6B5E57;margin-bottom:8px;">Select a tour to edit. Changes only apply to the selected tour. To apply a change to all tours, edit the Global section above.</div>' +
-    pillsHtml(TIX_TOURS, currentGuestTour, 'selectGuestTour', 'tix');
-  renderGuestProduct();
-}
-function selectGuestTour(key, el, prefix) {
-  currentGuestTour = key;
-  document.querySelectorAll('#guest-tour-pills .tour-pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  renderGuestProduct(prefix);
-  renderPreview();
-}
-function renderGuestProduct(prefix) {
-  const isTix = TIX_TOURS.some(t=>t.key===currentGuestTour);
-  const fields = isTix ? GUEST_TIX_PRODUCT_FIELDS(currentGuestTour) : GUEST_TC_PRODUCT_FIELDS(currentGuestTour);
-  document.getElementById('guest-product-group').innerHTML =
-    `<div class="field-group-title">${isTix?'Tickets Reminder':'Tour Confirmation'} — editable blocks</div>` +
-    fields.map(f=>fieldCard(f,false)).join('');
-}
-
-// ── EMAIL TAB ─────────────────────────────────────────────────────────────────
-function renderEmailTab() { renderEmailModule(currentEmailMod); }
-function switchEmailModule(mod, el) {
-  currentEmailMod = mod;
-  document.querySelectorAll('#panel-email .tour-pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  renderEmailModule(mod);
-  renderPreview();
-}
-function renderEmailModule(mod) {
-  const globalFields = EMAIL_GLOBAL_FIELDS[mod]||[];
-  document.getElementById('email-global-group').innerHTML =
-    '<div class="field-group-title">Global — all products</div>' +
-    globalFields.map(f=>fieldCard(f,true)).join('');
-  const wrap = document.getElementById('email-product-wrap');
-  if (mod==='mp') { wrap.style.display='none'; return; }
-  wrap.style.display='';
-  const tours = mod==='tc' ? TC_TOURS : TIX_TOURS;
-  if (!currentEmailTour||!tours.find(t=>t.key===currentEmailTour)) currentEmailTour=tours[0].key;
-  document.getElementById('email-tour-pills').innerHTML = pillsHtml(tours,currentEmailTour,'selectEmailTour',mod);
-  renderEmailProduct(mod,currentEmailTour);
-}
-function selectEmailTour(key, el, mod) {
-  currentEmailTour = key;
-  document.querySelectorAll('#email-tour-pills .tour-pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  renderEmailProduct(mod,key);
-  renderPreview();
-}
-function renderEmailProduct(mod, tourKey) {
-  const fn = EMAIL_PRODUCT_FIELDS[mod];
-  const fields = fn ? fn(tourKey) : [];
-  const filtered = fields.filter(f=>ALL_SETTINGS[f.key]!==undefined||f.key.includes('park_fee'));
-  document.getElementById('email-product-group').innerHTML =
-    '<div class="field-group-title">Per product — editable blocks</div>' +
-    (filtered.length ? filtered.map(f=>fieldCard(f,false)).join('') : '<div style="color:#888;font-size:12px;padding:10px 0;">No per-product fields for this tour.</div>');
-}
-
-// ── SMS TAB ───────────────────────────────────────────────────────────────────
-function renderSmsTab() { renderSmsModule(currentSmsMod); }
-function switchSmsModule(mod, el) {
-  currentSmsMod = mod;
-  document.querySelectorAll('#panel-sms > div:first-child .tour-pill').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  renderSmsModule(mod);
-  renderPreview();
-}
-function renderSmsModule(mod) {
-  const globalFields = SMS_GLOBAL_FIELDS[mod]||[];
-  document.getElementById('sms-global-group').innerHTML = globalFields.length
-    ? '<div class="field-group-title">SMS template</div>'+globalFields.map(f=>fieldCard(f,true)).join('')
-    : '<div style="color:#888;font-size:12px;padding:10px 0;">Tickets Reminder SMS is managed per-product in the Guest Page tab.</div>';
-  renderPreview();
-}
-
-// ── Tab switching ─────────────────────────────────────────────────────────────
-function switchTab(tab) {
-  currentTab = tab;
-  document.querySelectorAll('.tc-tab').forEach(t=>t.classList.toggle('active',t.textContent.toLowerCase().includes(tab)));
-  document.querySelectorAll('.tc-panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('panel-'+tab).classList.add('active');
-  if (tab==='guest') renderGuestTab();
-  if (tab==='email') renderEmailTab();
-  if (tab==='sms')   renderSmsTab();
-  renderPreview();
-}
-
-// ── PREVIEW RENDERERS ─────────────────────────────────────────────────────────
+// ── Preview ───────────────────────────────────────────────────────────────────
 function renderPreview() {
-  const el = document.getElementById('preview-body');
-  if (currentTab==='email') el.innerHTML = renderEmailPreview();
-  else if (currentTab==='sms') el.innerHTML = renderSmsPreview();
-  else el.innerHTML = renderGuestPreview();
-}
-
-function renderEmailPreview() {
-  if (currentEmailMod==='mp') return renderMorningEmailPreview();
-  if (currentEmailMod==='tix') return renderTixEmailPreview();
-  return renderTcEmailPreview();
+  const el=document.getElementById('preview-body');
+  if(!currentModule) { el.innerHTML='<div style="color:#aaa;font-size:12px;text-align:center;padding:40px 0;">Select a module to see preview</div>'; return; }
+  if(currentSubTab==='email') el.innerHTML=currentModule==='tc'?renderTcEmailPreview():renderTixEmailPreview();
+  else if(currentSubTab==='sms') el.innerHTML=currentModule==='tc'?renderTcSmsPreview():renderTixSmsPreview();
+  else el.innerHTML=currentModule==='tc'?renderTcGuestPreview():renderTixGuestPreview();
 }
 
 function renderTcEmailPreview() {
-  const tourKey  = currentEmailTour || 'grand_canyon_south';
-  const heroImg  = TOUR_IMAGES[tourKey] || TOUR_IMAGES['grand_canyon_south'];
-  const tourLabel = TC_TOURS.find(t=>t.key===tourKey)?.label || SAMPLE.label;
-  const hasParkFee = ['grand_canyon_south','bryce_zion'].includes(tourKey);
-
-  const greeting = hlE(fill(esc(v('tmpl__global__tc_email_greeting'))), 'tmpl__global__tc_email_greeting');
-  const intro    = hlE(fill(esc(v('tmpl__global__tc_email_intro')).replace('{label}', tourLabel)), 'tmpl__global__tc_email_intro');
-  const review   = hlE(fill(esc(v('tmpl__global__tc_email_review'))), 'tmpl__global__tc_email_review');
-  const closing  = hlE(fill(esc(v('tmpl__global__tc_email_closing'))), 'tmpl__global__tc_email_closing');
-  const expiry   = hlE(esc(v('tmpl__global__tc_email_link_expiry')), 'tmpl__global__tc_email_link_expiry');
-  const footer   = hlE(nl2br(v('tmpl__global__tc_email_footer_contact')), 'tmpl__global__tc_email_footer_contact');
-
-  let feeHtml = '';
-  if (hasParkFee) {
-    const nr = hlE(esc(v(`tmpl__tc__${tourKey}__park_fee_nonresident`)), `tmpl__tc__${tourKey}__park_fee_nonresident`);
-    const re = hlE(esc(v(`tmpl__tc__${tourKey}__park_fee_resident`)), `tmpl__tc__${tourKey}__park_fee_resident`);
-    feeHtml = `<div class="ep-fee-box">ℹ️ <strong>National Park Entry Fee</strong><br><br>👤 ${nr}<br><br>🪪 ${re}</div>`;
+  const tourKey=currentTcTour||'grand_canyon_south';
+  const heroImg=TOUR_IMAGES[tourKey]||TOUR_IMAGES['grand_canyon_south'];
+  const tourLabel=TC_TOURS.find(t=>t.key===tourKey)?.label||SAMPLE.label;
+  const hasParkFee=['grand_canyon_south','bryce_zion'].includes(tourKey);
+  const greeting=hlE(esc(v('tmpl__global__tc_email_greeting')),'tmpl__global__tc_email_greeting');
+  const intro=hlE(fill(esc(v('tmpl__global__tc_email_intro')).replace('{label}',tourLabel)),'tmpl__global__tc_email_intro');
+  const review=hlE(esc(v('tmpl__global__tc_email_review')),'tmpl__global__tc_email_review');
+  const closing=hlE(esc(v('tmpl__global__tc_email_closing')),'tmpl__global__tc_email_closing');
+  const expiry=hlE(esc(v('tmpl__global__tc_email_link_expiry')),'tmpl__global__tc_email_link_expiry');
+  const footer=hlE(nl2br(v('tmpl__global__tc_email_footer_contact')),'tmpl__global__tc_email_footer_contact');
+  let feeHtml='';
+  if(hasParkFee){
+    const nr=hlE(esc(v(`tmpl__tc__${tourKey}__park_fee_nonresident`)),`tmpl__tc__${tourKey}__park_fee_nonresident`);
+    const re=hlE(esc(v(`tmpl__tc__${tourKey}__park_fee_resident`)),`tmpl__tc__${tourKey}__park_fee_resident`);
+    feeHtml=`<div class="ep-fee-box">ℹ️ <strong>National Park Entry Fee</strong><br><br>👤 ${nr}<br><br>🪪 ${re}</div>`;
   }
-
   return `<div class="ep-wrap">
-    <div class="ep-hero">
-      <img src="${heroImg}" alt="">
+    <div class="ep-hero"><img src="${heroImg}" alt="">
       <div class="ep-hero-overlay">
-        <img src="${LOGO}" style="width:52px;height:52px;border-radius:50%;object-fit:contain;margin-bottom:8px;">
-        <div style="font-size:16px;font-weight:600;color:#fff;">National Park <span style="color:#f97316;">Express</span></div>
+        <img src="${LOGO}" style="width:48px;height:48px;border-radius:50%;object-fit:contain;margin-bottom:8px;">
+        <div style="font-size:15px;font-weight:600;color:#fff;">National Park <span style="color:#f97316;">Express</span></div>
         <div style="font-size:9px;color:#fff;letter-spacing:1.5px;margin-top:3px;">YOUR JOURNEY. OUR PASSION.</div>
       </div>
     </div>
     <div class="ep-body">
       <p class="ep-p">Hi <strong>${SAMPLE.name}</strong>,</p>
-      <p class="ep-p">${greeting}</p>
-      <p class="ep-p">${intro}</p>
-      <p class="ep-p">${review}</p>
-      <p class="ep-p" style="margin-bottom:20px;">${closing}</p>
+      <p class="ep-p">${greeting}</p><p class="ep-p">${intro}</p>
+      <p class="ep-p">${review}</p><p class="ep-p" style="margin-bottom:18px;">${closing}</p>
       <div class="ep-detail-card">
         <div class="ep-row"><div class="ep-icon">📋</div><div><div class="ep-row-label">Order #</div><div class="ep-row-val">${SAMPLE.order}</div></div></div>
         <div class="ep-row"><div class="ep-icon">👥</div><div><div class="ep-row-label">Party Size</div><div class="ep-row-val">${SAMPLE.pax} Guest(s)</div></div></div>
@@ -842,119 +801,73 @@ function renderTcEmailPreview() {
 }
 
 function renderTixEmailPreview() {
-  const intro   = hlE(esc(v('tmpl__global__tix_email_intro')), 'tmpl__global__tix_email_intro');
-  const warning = hlE(nl2br(v('tmpl__global__tix_email_warning')), 'tmpl__global__tix_email_warning');
-  const cta     = hlE(esc(v('tmpl__global__tix_email_cta_desc')), 'tmpl__global__tix_email_cta_desc');
-  const expiry  = hlE(esc(v('tmpl__global__tix_email_link_expiry')), 'tmpl__global__tix_email_link_expiry');
-  const footer  = hlE(esc(v('tmpl__global__tix_email_footer')), 'tmpl__global__tix_email_footer');
+  const intro=hlE(esc(v('tmpl__global__tix_email_intro')),'tmpl__global__tix_email_intro');
+  const warning=hlE(nl2br(v('tmpl__global__tix_email_warning')),'tmpl__global__tix_email_warning');
+  const cta=hlE(esc(v('tmpl__global__tix_email_cta_desc')),'tmpl__global__tix_email_cta_desc');
+  const expiry=hlE(esc(v('tmpl__global__tix_email_link_expiry')),'tmpl__global__tix_email_link_expiry');
+  const footer=hlE(esc(v('tmpl__global__tix_email_footer')),'tmpl__global__tix_email_footer');
   return `<div class="ep-wrap">
-    <div style="background:#1a3a5c;padding:24px;text-align:center;">
-      <img src="${LOGO}" style="width:72px;height:auto;margin-bottom:10px;">
-      <div style="color:#fff;font-size:18px;font-weight:600;">Tickets Reminder &amp; Reconfirmation</div>
-      <div style="color:#a8c4e0;font-size:13px;margin-top:4px;">${SAMPLE.label}</div>
+    <div style="background:#1a3a5c;padding:22px;text-align:center;">
+      <img src="${LOGO}" style="width:64px;height:auto;margin-bottom:8px;">
+      <div style="color:#fff;font-size:16px;font-weight:600;">Tickets Reminder &amp; Reconfirmation</div>
     </div>
     <div class="ep-body">
       <p class="ep-p">Hi <strong>${SAMPLE.name}</strong>,</p>
       <p class="ep-p">${intro}</p>
-      <div class="ep-detail-card" style="margin-bottom:16px;">
+      <div class="ep-detail-card" style="margin-bottom:14px;">
         <div class="ep-row"><div class="ep-icon">📋</div><div><div class="ep-row-label">CHD #</div><div class="ep-row-val">${SAMPLE.order}</div></div></div>
         <div class="ep-row"><div class="ep-icon">📅</div><div><div class="ep-row-label">Service Date</div><div class="ep-row-val" style="color:#1a3a5c;">${SAMPLE.date}</div></div></div>
-        <div class="ep-row"><div class="ep-icon">⏰</div><div><div class="ep-row-label">Check-in Time</div><div class="ep-row-val">9:00 AM</div></div></div>
+        <div class="ep-row"><div class="ep-icon">⏰</div><div><div class="ep-row-label">Check-in Time</div><div class="ep-row-val">${SAMPLE.checkin}</div></div></div>
       </div>
-      <div style="background:#fff5f5;border:1px solid #f5c6c6;border-radius:6px;padding:10px 13px;margin-bottom:16px;font-size:11px;color:#c0392b;line-height:1.5;">${warning}</div>
+      <div style="background:#fff5f5;border:1px solid #f5c6c6;border-radius:6px;padding:9px 12px;margin-bottom:14px;font-size:11px;color:#c0392b;line-height:1.5;">${warning}</div>
       <p class="ep-p">${cta}</p>
       <div class="ep-cta"><a class="ep-btn" href="#">Reconfirm My Tour &amp; Continue</a></div>
       <div class="ep-expiry">${expiry}</div>
     </div>
-    <div style="background:#f0f0f0;padding:14px;text-align:center;font-size:11px;color:#aaa;border-radius:0 0 10px 10px;">${footer}</div>
+    <div style="background:#f0f0f0;padding:12px;text-align:center;font-size:11px;color:#aaa;border-radius:0 0 10px 10px;">${footer}</div>
   </div>`;
 }
 
-function renderMorningEmailPreview() {
-  const body   = hlE(nl2br(fill(v('tmpl__global__mp_email_body'))), 'tmpl__global__mp_email_body');
-  const cta    = hlE(esc(v('tmpl__global__mp_email_cta')), 'tmpl__global__mp_email_cta');
-  const footer = hlE(esc(v('tmpl__global__mp_email_footer')), 'tmpl__global__mp_email_footer');
-  return `<div class="ep-wrap">
-    <div style="background:#1a3a5c;border-radius:10px 10px 0 0;padding:24px;text-align:center;">
-      <img src="${LOGO}" style="width:80px;height:auto;margin-bottom:10px;">
-      <div style="color:#fff;font-size:18px;font-weight:600;">Morning Pickup Reminder</div>
-    </div>
-    <div class="ep-body">
-      <p class="ep-p">Hi <strong>${SAMPLE.name}</strong>,</p>
-      <p class="ep-p">${body}</p>
-      <div class="ep-cta"><a class="ep-btn" href="#">${cta}</a></div>
-    </div>
-    <div style="background:#f0f0f0;padding:14px;text-align:center;font-size:11px;color:#aaa;border-radius:0 0 10px 10px;">${footer}</div>
-  </div>`;
+function renderTcSmsPreview() {
+  const smsText=fill(v('tmpl__global__tc_sms_with_lunch')||v('tmpl__global__tc_sms_no_lunch'));
+  return `<div class="sms-phone"><div class="sms-screen"><div class="sms-label">National Park Express</div><div class="sms-bubble">${esc(smsText)}</div></div></div>`;
+}
+function renderTixSmsPreview() {
+  const smsText=fill(v('tmpl__global__tix_sms_body'));
+  return `<div class="sms-phone"><div class="sms-screen"><div class="sms-label">National Park Express</div><div class="sms-bubble">${esc(smsText)}</div></div></div>`;
 }
 
-function renderSmsPreview() {
-  let smsText = '';
-  if (currentSmsMod==='tc') {
-    smsText = fill(v('tmpl__global__tc_sms_with_lunch') || v('tmpl__global__tc_sms_no_lunch'));
-  } else if (currentSmsMod==='mp') {
-    smsText = fill(v('tmpl__global__mp_sms_body'));
-  } else {
-    smsText = 'Tickets Reminder SMS text is managed per-product in the Guest Page tab.';
-  }
-  return `<div class="sms-phone">
-    <div class="sms-screen">
-      <div class="sms-label">National Park Express</div>
-      <div class="sms-bubble">${esc(smsText)}</div>
-    </div>
-  </div>`;
-}
-
-function renderGuestPreview() {
-  const isTix  = TIX_TOURS.some(t => t.key === currentGuestTour);
-  const tourKey = currentGuestTour || TC_TOURS[0].key;
-  return isTix ? renderTixGuestPreview(tourKey) : renderTcGuestPreview(tourKey);
-}
-
-function renderTcGuestPreview(tourKey) {
-  const tourLabel = TC_TOURS.find(t=>t.key===tourKey)?.label || SAMPLE.label;
-
-  const smsNotice  = hl(esc(v('tmpl__global__guest_sms_notice')), 'tmpl__global__guest_sms_notice');
-  const departWarn = hl(esc(v('tmpl__global__guest_depart_warning')), 'tmpl__global__guest_depart_warning');
-  const phoneText  = hl(nl2br(fill(v('tmpl__global__guest_phone_confirm'))), 'tmpl__global__guest_phone_confirm');
-  const thanksText = hl(esc(v('tmpl__global__guest_thanks_text')), 'tmpl__global__guest_thanks_text');
-
-  const instrRaw  = v('tmpl__global__guest_confirm_instructions');
-  const instrHtml = instrRaw.split('\n').map(line => {
-    const [title, ...rest] = line.split('|');
-    return rest.length
-      ? `<div style="margin-bottom:5px;"><strong>${esc(title)}</strong> ${esc(rest.join('|'))}</div>`
-      : `<div style="margin-bottom:5px;">${esc(line)}</div>`;
+function renderTcGuestPreview() {
+  const tourKey=currentTcTour||TC_TOURS[0].key;
+  const tourLabel=TC_TOURS.find(t=>t.key===tourKey)?.label||SAMPLE.label;
+  const smsNotice=hl(esc(v('tmpl__global__guest_sms_notice')),'tmpl__global__guest_sms_notice');
+  const departWarn=hl(esc(v('tmpl__global__guest_depart_warning')),'tmpl__global__guest_depart_warning');
+  const phoneText=hl(nl2br(fill(v('tmpl__global__guest_phone_confirm'))),'tmpl__global__guest_phone_confirm');
+  const thanksText=hl(esc(v('tmpl__global__guest_thanks_text')),'tmpl__global__guest_thanks_text');
+  const instrRaw=v('tmpl__global__guest_confirm_instructions');
+  const instrHtml=instrRaw.split('\n').map(line=>{
+    const [title,...rest]=line.split('|');
+    return rest.length?`<div style="margin-bottom:5px;"><strong>${esc(title)}</strong> ${esc(rest.join('|'))}</div>`:`<div style="margin-bottom:5px;">${esc(line)}</div>`;
   }).join('');
-  const instrBlock = hl(instrHtml, 'tmpl__global__guest_confirm_instructions');
-
-  const hasParkFee = ['grand_canyon_south','bryce_zion'].includes(tourKey);
-  let feeHtml = '';
-  if (hasParkFee) {
-    const nr = hl(esc(v(`tmpl__tc__${tourKey}__park_fee_nonresident`)), `tmpl__tc__${tourKey}__park_fee_nonresident`);
-    const re = hl(esc(v(`tmpl__tc__${tourKey}__park_fee_resident`)), `tmpl__tc__${tourKey}__park_fee_resident`);
-    feeHtml = `<div class="gp-fee-box">
-      <div style="font-size:11px;font-weight:700;color:#795548;margin-bottom:6px;">ℹ️ National Park Entry Fee</div>
-      <div style="margin-bottom:4px;">👤 ${nr}</div>
-      <div>🪪 ${re}</div>
-    </div>`;
+  const instrBlock=hl(instrHtml,'tmpl__global__guest_confirm_instructions');
+  const hasParkFee=['grand_canyon_south','bryce_zion'].includes(tourKey);
+  let feeHtml='';
+  if(hasParkFee){
+    const nr=hl(esc(v(`tmpl__tc__${tourKey}__park_fee_nonresident`)),`tmpl__tc__${tourKey}__park_fee_nonresident`);
+    const re=hl(esc(v(`tmpl__tc__${tourKey}__park_fee_resident`)),`tmpl__tc__${tourKey}__park_fee_resident`);
+    feeHtml=`<div class="gp-fee-box"><div style="font-size:11px;font-weight:700;color:#795548;margin-bottom:5px;">ℹ️ National Park Entry Fee</div><div style="margin-bottom:3px;">👤 ${nr}</div><div>🪪 ${re}</div></div>`;
   }
-
-  const remKey  = `tmpl__tc__${tourKey}__reminders`;
-  const extraKey = `tmpl__tc__${tourKey}__extra_reminders`;
-  const items = v(remKey).split('\n').filter(Boolean).map(r=>`<li style="margin-bottom:5px;">${hl(esc(r), remKey)}</li>`).join('');
-  const extra = v(extraKey).split('\n').filter(Boolean).map(r=>`<li style="margin-bottom:5px;">${hl(esc(r), extraKey)}</li>`).join('');
-
+  const remKey=`tmpl__tc__${tourKey}__reminders`;
+  const extraKey=`tmpl__tc__${tourKey}__extra_reminders`;
+  const items=v(remKey).split('\n').filter(Boolean).map(r=>`<li style="margin-bottom:4px;">${hl(esc(r),remKey)}</li>`).join('');
+  const extra=v(extraKey).split('\n').filter(Boolean).map(r=>`<li style="margin-bottom:4px;">${hl(esc(r),extraKey)}</li>`).join('');
   return `<div class="gp-wrap">
-    <div class="gp-header">
-      <h2>Tour Confirmation</h2>
-      <p>${esc(tourLabel)} · ${SAMPLE.date}</p>
-    </div>
+    <div class="gp-header"><h2>Tour Confirmation</h2><p>${esc(tourLabel)} · ${SAMPLE.date}</p></div>
     <div class="gp-body">
       <div class="gp-pickup-box">
         <div class="gp-pickup-title">🚌 Your Pickup Information</div>
         <div class="gp-row"><span>📱</span><span>${smsNotice}</span></div>
-        <div class="gp-row"><span>⏰</span><span>Please arrive at <strong>${SAMPLE.pickup_loc}</strong> by <strong>${SAMPLE.pickup_time}</strong> for check-in.</span></div>
+        <div class="gp-row"><span>⏰</span><span>Please arrive at <strong>${SAMPLE.pickup_loc}</strong> by <strong>${SAMPLE.pickup_time}</strong></span></div>
         <div class="gp-warn">${departWarn}</div>
       </div>
       <div class="gp-info-box">${phoneText}</div>
@@ -962,7 +875,7 @@ function renderTcGuestPreview(tourKey) {
       <div class="gp-instructions">${instrBlock}</div>
       <div class="gp-reminders">
         <div class="gp-reminders-title">📌 Important Reminders</div>
-        <ul style="margin:0;padding-left:18px;font-size:12px;color:#333;">${items}${extra}</ul>
+        <ul style="margin:0;padding-left:16px;font-size:12px;color:#333;">${items}${extra}</ul>
       </div>
       <div class="gp-btn">CONFIRM MY TOUR</div>
       <div class="gp-thanks-text">${thanksText}</div>
@@ -970,91 +883,60 @@ function renderTcGuestPreview(tourKey) {
   </div>`;
 }
 
-function renderTixGuestPreview(tourKey) {
-  const tourLabel    = TIX_TOURS.find(t=>t.key===tourKey)?.label || 'Antelope Canyon Tour';
-  const notesKey     = `tmpl__tix__${tourKey}__extra_notes`;
-  const checkinLoc   = hl(esc(v(`tmpl__tix__${tourKey}__checkin_location`)), `tmpl__tix__${tourKey}__checkin_location`);
-  const mapsUrl      = v(`tmpl__tix__${tourKey}__maps_url`);
-  const locPhoto     = v(`tmpl__tix__${tourKey}__location_photo`);
-  const notesItems   = v(notesKey).split('\n').filter(Boolean)
-    .map(r => `<li style="margin-bottom:6px;${r.startsWith('★')?'color:#c0392b;font-weight:600;':''}">${hl(esc(r), notesKey)}</li>`).join('');
-  const thanksText   = hl(esc(v('tmpl__global__guest_thanks_text')), 'tmpl__global__guest_thanks_text');
-
-  // resource links
-  let resLinks = '';
-  if (mapsUrl) resLinks += `<a href="#" style="color:#1a3a5c;font-size:11px;margin-right:10px;">🗺️ Google Maps GPS</a>`;
-  if (locPhoto) resLinks += `<a href="#" style="color:#1a3a5c;font-size:11px;">📸 Location Photo</a>`;
-
-  // prepare steps
-  const prepSteps = getTixPrepSteps(tourKey);
-  let prepHtml = '';
-  if (prepSteps.length) {
-    const items = prepSteps.map(s => {
-      const noteHtml = s.note ? `<br><span style="font-size:11px;color:#555;">${hlE(esc(s.note), s.nKey)}</span>` : '';
-      const urlHtml  = s.url  ? `&nbsp;<a href="#" style="color:#1a3a5c;font-size:11px;font-weight:600;">${hlE('→ Open Link', s.uKey)}</a>` : '';
-      return `<li style="margin-bottom:6px;">${hlE(esc(s.label), s.lKey)}${urlHtml}${noteHtml}</li>`;
+function renderTixGuestPreview() {
+  const tourKey=currentTixTour||TIX_TOURS[0].key;
+  const tourLabel=TIX_TOURS.find(t=>t.key===tourKey)?.label||'Antelope Canyon Tour';
+  const notesKey=`tmpl__tix__${tourKey}__extra_notes`;
+  const checkinLoc=hl(esc(v(`tmpl__tix__${tourKey}__checkin_location`)),`tmpl__tix__${tourKey}__checkin_location`);
+  const mapsUrl=v(`tmpl__tix__${tourKey}__maps_url`);
+  const notesItems=v(notesKey).split('\n').filter(Boolean).map(r=>`<li style="margin-bottom:5px;${r.startsWith('★')?'color:#c0392b;font-weight:600;':''}">${hl(esc(r),notesKey)}</li>`).join('');
+  const cfmNote=hl(esc(v('tmpl__global__tix_guest_cfm_note')),'tmpl__global__tix_guest_cfm_note');
+  const thanksSmall=hl(esc(v('tmpl__global__tix_guest_thanks_small')),'tmpl__global__tix_guest_thanks_small');
+  const submitBtn=hl(esc(v('tmpl__global__tix_guest_submit_btn')||'Submit'),'tmpl__global__tix_guest_submit_btn');
+  const checkboxText=hl(esc(v('tmpl__global__tix_guest_checkbox_text')),'tmpl__global__tix_guest_checkbox_text');
+  const prepSteps=getTixPrepSteps(tourKey);
+  let prepHtml='';
+  if(prepSteps.length){
+    const items=prepSteps.map(s=>{
+      const noteHtml=s.note?`<br><span style="font-size:11px;color:#555;">${hlE(esc(s.note),s.nKey)}</span>`:'';
+      const urlHtml=s.url?`&nbsp;<a href="#" style="color:#1a3a5c;font-size:11px;font-weight:600;">${hlE('→ Open Link',s.uKey)}</a>`:'';
+      return `<li style="margin-bottom:6px;">${hlE(esc(s.label),s.lKey)}${urlHtml}${noteHtml}</li>`;
     }).join('');
-    prepHtml = `<div style="background:#eaf4ff;border-bottom:1px solid #b3d9ff;padding:12px 14px;margin-bottom:12px;">
+    prepHtml=`<div style="background:#eaf4ff;border-bottom:1px solid #b3d9ff;padding:11px 13px;margin-bottom:10px;">
       <div class="gp-reminders-title" style="color:#1a3a5c;">📋 Prepare for Your Tour</div>
-      <p style="font-size:11px;color:#555;margin:5px 0 8px;line-height:1.5;">Complete these steps before arrival to shorten your check-in time.</p>
-      <ul style="margin:0;padding-left:18px;font-size:12px;">${items}</ul>
+      <ul style="margin:5px 0 0;padding-left:16px;font-size:12px;">${items}</ul>
     </div>`;
   }
-
   return `<div class="gp-wrap">
     <div class="gp-header" style="background:#1a3a5c;">
-      <h2>Tickets Reconfirmation</h2>
-      <p>${esc(tourLabel)} · ${SAMPLE.date}</p>
+      <h2>Tickets Reconfirmation</h2><p>${esc(tourLabel)} · ${SAMPLE.date}</p>
     </div>
     <div class="gp-body">
       <div class="gp-pickup-box">
         <div class="gp-pickup-title">📍 Your Check-in Information</div>
         <div class="gp-row"><span>📍</span><span><strong>Location:</strong> ${checkinLoc}</span></div>
-        ${mapsUrl ? `<div class="gp-row"><span></span><a href="#" style="color:#1a3a5c;font-size:12px;font-weight:600;">🗺️ Google Maps GPS</a></div>` : ''}
-        <div class="gp-row"><span>⏰</span><span>Check-in: <strong>9:00 AM</strong> &nbsp;|&nbsp; Tour: <strong>10:00 AM</strong><br><span style="font-size:11px;color:#c0392b;">★ Late check-in is subject to forfeiting your tour entry.</span></span></div>
-        <div style="font-size:11px;color:#c0392b;padding:2px 0 4px 28px;">★ All times are based on the Arizona (AZ) time zone.</div>
+        ${mapsUrl?`<div class="gp-row"><span></span><a href="#" style="color:#1a3a5c;font-size:12px;font-weight:600;">🗺️ Google Maps GPS</a></div>`:''}
+        <div class="gp-row"><span>⏰</span><span>Check-in: <strong>${SAMPLE.checkin}</strong> | Tour: <strong>${SAMPLE.tour_time}</strong></span></div>
+        <div style="font-size:11px;color:#c0392b;padding:2px 0 2px 26px;">★ Late check-in is subject to forfeiting your tour entry.</div>
+        <div style="font-size:11px;color:#c0392b;padding:2px 0 4px 26px;">★ All times are based on the Arizona (AZ) time zone.</div>
+        <div class="gp-row"><span>🔖</span><span>Confirmation#: <strong>95151</strong><br><span style="font-size:11px;color:#555;">${cfmNote}</span></span></div>
       </div>
       ${prepHtml}
-      ${notesItems ? `<div class="gp-reminders">
-        <div class="gp-reminders-title">📌 Know Before You Go</div>
-        <ul style="margin:0;padding-left:18px;font-size:12px;color:#333;">${notesItems}</ul>
-        ${resLinks ? `<div style="margin-top:8px;">${resLinks}</div>` : ''}
-      </div>` : ''}
-      <div class="gp-btn">RECONFIRM MY TOUR</div>
-      <div class="gp-thanks-text">${thanksText}</div>
+      ${notesItems?`<div class="gp-reminders"><div class="gp-reminders-title">📌 Know Before You Go</div><ul style="margin:0;padding-left:16px;font-size:12px;color:#333;">${notesItems}</ul></div>`:''}
+      <div style="font-size:12px;color:#555;text-align:center;margin-bottom:10px;">${checkboxText}</div>
+      <div class="gp-btn">${submitBtn}</div>
+      <div class="gp-thanks-text">${thanksSmall}</div>
     </div>
   </div>`;
 }
 
-// ── Save ──────────────────────────────────────────────────────────────────────
-async function saveField(key, btn) {
-  const ta = document.querySelector(`textarea[data-key="${key}"]`);
-  if (!ta) return;
-  btn.textContent = 'Saving…'; btn.classList.add('saving');
-  try {
-    const resp = await fetch('/api/template-settings/save', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({key, value: ta.value}),
-    });
-    if (!resp.ok) throw new Error();
-    if (!ALL_SETTINGS[key]) ALL_SETTINGS[key]={};
-    ALL_SETTINGS[key].value = ta.value;
-    btn.textContent='Saved ✓'; btn.classList.remove('saving'); btn.classList.add('saved');
-    setTimeout(()=>{ btn.textContent='Save'; btn.classList.remove('saved'); }, 2000);
-  } catch(e) {
-    btn.textContent='Error'; btn.classList.remove('saving'); btn.classList.add('err');
-    setTimeout(()=>{ btn.textContent='Save'; btn.classList.remove('err'); }, 2500);
-  }
-}
-
-// ── Load & init ───────────────────────────────────────────────────────────────
+// ── Load ──────────────────────────────────────────────────────────────────────
 async function loadSettings() {
-  const resp = await fetch('/api/template-settings');
-  const rows = await resp.json();
-  rows.forEach(r => { ALL_SETTINGS[r.key] = {value: r.value, label: r.label}; });
-  document.getElementById('tc-loading').style.display = 'none';
-  document.getElementById('panel-guest').classList.add('active');
-  renderGuestTab();
+  const resp=await fetch('/api/template-settings');
+  const rows=await resp.json();
+  rows.forEach(r=>{ ALL_SETTINGS[r.key]={value:r.value,label:r.label}; });
+  document.getElementById('tc-loading').style.display='none';
+  document.getElementById('home-view').style.display='';
   renderPreview();
 }
 loadSettings();
