@@ -200,6 +200,10 @@
       <div class="cs-panel" id="tc-guest-panel">
         <div class="product-section-label tc">Tour Confirmation</div>
         <div class="product-section-hint">Select a tour to edit. Changes only apply to the selected tour. To apply a change to all tours, edit the Global section above.</div>
+        <div style="display:flex;gap:8px;margin-bottom:14px;">
+          <button class="tour-pill active-tc" id="tc-mode-standard" onclick="setTcGuestMode('standard')">Standard</button>
+          <button class="tour-pill" id="tc-mode-lm" onclick="setTcGuestMode('lm')">Last Minute</button>
+        </div>
         <div class="tour-selector" id="tc-guest-pills"></div>
         <div id="tc-guest-fields"></div>
       </div>
@@ -256,6 +260,7 @@ let currentTcTour  = null;
 let currentTixTour = null;
 let activeFieldKey = null;
 let _dragIdx = -1, _dragStepIdx = -1;
+let tcGuestMode = 'standard';  // 'standard' | 'lm'
 
 // ── Sample data ───────────────────────────────────────────────────────────────
 const SAMPLE = {
@@ -443,7 +448,7 @@ function switchSub(btn, panelId) {
   inner.querySelectorAll('.cs-panel').forEach(p=>p.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById(panelId).classList.add('active');
-  currentSubTab = panelId.includes('global')?'global':panelId.includes('email')?'email':panelId.includes('sms')?'sms':'guest';
+  currentSubTab = panelId.includes('global')?'global':panelId.includes('lm')?'lm':panelId.includes('email')?'email':panelId.includes('sms')?'sms':'guest';
   renderModuleFields(currentModule);
   renderPreview();
 }
@@ -491,6 +496,13 @@ function selectTixTour(key, el) {
   document.querySelectorAll('#tix-guest-pills .tour-pill').forEach(p=>p.classList.remove('active-tix'));
   el.classList.add('active-tix');
   document.getElementById('tix-guest-fields').innerHTML = TIX_GUEST_PRODUCT_FIELDS(key).map(f=>fieldCard(f,false)).join('');
+  renderPreview();
+}
+
+function setTcGuestMode(mode) {
+  tcGuestMode = mode;
+  document.getElementById('tc-mode-standard').classList.toggle('active-tc', mode==='standard');
+  document.getElementById('tc-mode-lm').classList.toggle('active-tc', mode==='lm');
   renderPreview();
 }
 
@@ -800,48 +812,46 @@ function renderPreview() {
   const el=document.getElementById('preview-body');
   if(!currentModule) { el.innerHTML='<div style="color:#aaa;font-size:12px;text-align:center;padding:40px 0;">Select a module to see preview</div>'; return; }
   if(currentSubTab==='email') el.innerHTML=currentModule==='tc'?renderTcEmailPreview():renderTixEmailPreview();
+  else if(currentSubTab==='lm') el.innerHTML=renderTcLmEmailPreview();
   else if(currentSubTab==='sms') el.innerHTML=currentModule==='tc'?renderTcSmsPreview():renderTixSmsPreview();
-  else el.innerHTML=currentModule==='tc'?renderTcGuestPreview():renderTixGuestPreview();
+  else el.innerHTML=currentModule==='tc'?renderTcGuestPreview(tcGuestMode):renderTixGuestPreview();
 }
 
-function renderTcEmailPreview() {
-  const tourKey=currentTcTour||'grand_canyon_south';
-  const heroImg=TOUR_IMAGES[tourKey]||TOUR_IMAGES['grand_canyon_south'];
-  const tourLabel=TC_TOURS.find(t=>t.key===tourKey)?.label||SAMPLE.label;
-  const hasParkFee=['grand_canyon_south','bryce_zion'].includes(tourKey);
-  const greeting=hlE(esc(v('tmpl__global__tc_email_greeting')),'tmpl__global__tc_email_greeting');
-  const intro=hlE(fill(esc(v('tmpl__global__tc_email_intro')).replace('{label}',tourLabel)),'tmpl__global__tc_email_intro');
-  const review=hlE(esc(v('tmpl__global__tc_email_review')),'tmpl__global__tc_email_review');
-  const closing=hlE(esc(v('tmpl__global__tc_email_closing')),'tmpl__global__tc_email_closing');
-  const expiry=hlE(esc(v('tmpl__global__tc_email_link_expiry')),'tmpl__global__tc_email_link_expiry');
-  const footer=hlE(nl2br(v('tmpl__global__tc_email_footer_contact')),'tmpl__global__tc_email_footer_contact');
-  let feeHtml='';
-  if(hasParkFee){
-    const nr=hlE(esc(v(`tmpl__tc__${tourKey}__park_fee_nonresident`)),`tmpl__tc__${tourKey}__park_fee_nonresident`);
-    const re=hlE(esc(v(`tmpl__tc__${tourKey}__park_fee_resident`)),`tmpl__tc__${tourKey}__park_fee_resident`);
-    feeHtml=`<div class="ep-fee-box">ℹ️ <strong>National Park Entry Fee</strong><br><br>👤 ${nr}<br><br>🪪 ${re}</div>`;
-  }
+function renderTcLmEmailPreview() {
+  const tourKey  = currentTcTour||'grand_canyon_south';
+  const heroImg  = TOUR_IMAGES[tourKey]||TOUR_IMAGES['grand_canyon_south'];
+  const tourLabel= TC_TOURS.find(t=>t.key===tourKey)?.label||SAMPLE.label;
+  const hasLunch = !['grand_canyon_west','valley_of_fire_half','hoover_dam'].includes(tourKey);
+  const greeting = hlE(esc(v('tmpl__global__tc_email_greeting')),'tmpl__global__tc_email_greeting');
+  const intro    = hasLunch
+    ? hlE(esc(v('tmpl__global__tc_lm_email_intro_with_lunch')),'tmpl__global__tc_lm_email_intro_with_lunch')
+    : hlE(esc(v('tmpl__global__tc_lm_email_intro_no_lunch')),'tmpl__global__tc_lm_email_intro_no_lunch');
+  const closing  = hlE(esc(v('tmpl__global__tc_lm_email_closing')),'tmpl__global__tc_lm_email_closing');
+  const btnText  = hasLunch
+    ? hlE(esc(v('tmpl__global__tc_lm_email_btn_lunch')),'tmpl__global__tc_lm_email_btn_lunch')
+    : hlE(esc(v('tmpl__global__tc_lm_email_btn_no_lunch')),'tmpl__global__tc_lm_email_btn_no_lunch');
+  const expiry   = hlE(esc(v('tmpl__global__tc_email_link_expiry')),'tmpl__global__tc_email_link_expiry');
+  const footer   = hlE(nl2br(v('tmpl__global__tc_email_footer_contact')),'tmpl__global__tc_email_footer_contact');
   return `<div class="ep-wrap">
     <div class="ep-hero"><img src="${heroImg}" alt="">
       <div class="ep-hero-overlay">
         <img src="${LOGO}" style="width:48px;height:48px;border-radius:50%;object-fit:contain;margin-bottom:8px;">
         <div style="font-size:15px;font-weight:600;color:#fff;">National Park <span style="color:#f97316;">Express</span></div>
-        <div style="font-size:9px;color:#fff;letter-spacing:1.5px;margin-top:3px;">YOUR JOURNEY. OUR PASSION.</div>
       </div>
     </div>
     <div class="ep-body">
       <p class="ep-p">Hi <strong>${SAMPLE.name}</strong>,</p>
-      <p class="ep-p">${greeting}</p><p class="ep-p">${intro}</p>
-      <p class="ep-p">${review}</p><p class="ep-p" style="margin-bottom:18px;">${closing}</p>
+      <p class="ep-p">${greeting}</p>
+      <p class="ep-p">As your local tour operator for the <strong>${esc(tourLabel)}</strong>, we're excited to welcome you on <strong style="color:#2563eb;">${SAMPLE.date}</strong>.</p>
+      <p class="ep-p" style="margin-bottom:20px;">${intro}</p>
+      <p class="ep-p" style="margin-bottom:20px;">${closing}</p>
       <div class="ep-detail-card">
         <div class="ep-row"><div class="ep-icon">📋</div><div><div class="ep-row-label">Order #</div><div class="ep-row-val">${SAMPLE.order}</div></div></div>
-        <div class="ep-row"><div class="ep-icon">👥</div><div><div class="ep-row-label">Party Size</div><div class="ep-row-val">${SAMPLE.pax} Guest(s)</div></div></div>
         <div class="ep-row"><div class="ep-icon">📅</div><div><div class="ep-row-label">Tour Date</div><div class="ep-row-val" style="color:#2563eb;">${SAMPLE.date}</div></div></div>
         <div class="ep-row"><div class="ep-icon">⏰</div><div><div class="ep-row-label">Pickup Time</div><div class="ep-row-val">${SAMPLE.pickup_time}</div></div></div>
         <div class="ep-row"><div class="ep-icon">📍</div><div><div class="ep-row-label">Pickup Location</div><div class="ep-row-val" style="font-weight:400;">${SAMPLE.pickup_loc}</div></div></div>
       </div>
-      ${feeHtml}
-      <div class="ep-cta"><a class="ep-btn" href="#">✓ RECONFIRM MY SPOT</a></div>
+      <div class="ep-cta"><a class="ep-btn" href="#">${btnText}</a></div>
       <div class="ep-expiry">${expiry}</div>
     </div>
     <div class="ep-footer">${footer}</div>
@@ -876,6 +886,47 @@ function renderTixEmailPreview() {
   </div>`;
 }
 
+function renderTcLmEmailPreview() {
+  const tourKey  = currentTcTour||'grand_canyon_south';
+  const heroImg  = TOUR_IMAGES[tourKey]||TOUR_IMAGES['grand_canyon_south'];
+  const tourLabel= TC_TOURS.find(t=>t.key===tourKey)?.label||SAMPLE.label;
+  const hasLunch = !['grand_canyon_west','valley_of_fire_half','hoover_dam'].includes(tourKey);
+  const greeting = hlE(esc(v('tmpl__global__tc_email_greeting')),'tmpl__global__tc_email_greeting');
+  const intro    = hasLunch
+    ? hlE(esc(v('tmpl__global__tc_lm_email_intro_with_lunch')),'tmpl__global__tc_lm_email_intro_with_lunch')
+    : hlE(esc(v('tmpl__global__tc_lm_email_intro_no_lunch')),'tmpl__global__tc_lm_email_intro_no_lunch');
+  const closing  = hlE(esc(v('tmpl__global__tc_lm_email_closing')),'tmpl__global__tc_lm_email_closing');
+  const btnText  = hasLunch
+    ? hlE(esc(v('tmpl__global__tc_lm_email_btn_lunch')),'tmpl__global__tc_lm_email_btn_lunch')
+    : hlE(esc(v('tmpl__global__tc_lm_email_btn_no_lunch')),'tmpl__global__tc_lm_email_btn_no_lunch');
+  const expiry   = hlE(esc(v('tmpl__global__tc_email_link_expiry')),'tmpl__global__tc_email_link_expiry');
+  const footer   = hlE(nl2br(v('tmpl__global__tc_email_footer_contact')),'tmpl__global__tc_email_footer_contact');
+  return `<div class="ep-wrap">
+    <div class="ep-hero"><img src="${heroImg}" alt="">
+      <div class="ep-hero-overlay">
+        <img src="${LOGO}" style="width:48px;height:48px;border-radius:50%;object-fit:contain;margin-bottom:8px;">
+        <div style="font-size:15px;font-weight:600;color:#fff;">National Park <span style="color:#f97316;">Express</span></div>
+      </div>
+    </div>
+    <div class="ep-body">
+      <p class="ep-p">Hi <strong>${SAMPLE.name}</strong>,</p>
+      <p class="ep-p">${greeting}</p>
+      <p class="ep-p">As your local tour operator for the <strong>${esc(tourLabel)}</strong>, we're excited to welcome you on <strong style="color:#2563eb;">${SAMPLE.date}</strong>.</p>
+      <p class="ep-p" style="margin-bottom:20px;">${intro}</p>
+      <p class="ep-p" style="margin-bottom:20px;">${closing}</p>
+      <div class="ep-detail-card">
+        <div class="ep-row"><div class="ep-icon">📋</div><div><div class="ep-row-label">Order #</div><div class="ep-row-val">${SAMPLE.order}</div></div></div>
+        <div class="ep-row"><div class="ep-icon">📅</div><div><div class="ep-row-label">Tour Date</div><div class="ep-row-val" style="color:#2563eb;">${SAMPLE.date}</div></div></div>
+        <div class="ep-row"><div class="ep-icon">⏰</div><div><div class="ep-row-label">Pickup Time</div><div class="ep-row-val">${SAMPLE.pickup_time}</div></div></div>
+        <div class="ep-row"><div class="ep-icon">📍</div><div><div class="ep-row-label">Pickup Location</div><div class="ep-row-val" style="font-weight:400;">${SAMPLE.pickup_loc}</div></div></div>
+      </div>
+      <div class="ep-cta"><a class="ep-btn" href="#">${btnText}</a></div>
+      <div class="ep-expiry">${expiry}</div>
+    </div>
+    <div class="ep-footer">${footer}</div>
+  </div>`;
+}
+
 function renderTcSmsPreview() {
   const smsText=fill(v('tmpl__global__tc_sms_with_lunch')||v('tmpl__global__tc_sms_no_lunch'));
   return `<div class="sms-phone"><div class="sms-screen"><div class="sms-label">National Park Express</div><div class="sms-bubble">${esc(smsText)}</div></div></div>`;
@@ -885,7 +936,7 @@ function renderTixSmsPreview() {
   return `<div class="sms-phone"><div class="sms-screen"><div class="sms-label">National Park Express</div><div class="sms-bubble">${esc(smsText)}</div></div></div>`;
 }
 
-function renderTcGuestPreview() {
+function renderTcGuestPreview(mode='standard') {
   const tourKey=currentTcTour||TC_TOURS[0].key;
   const tourLabel=TC_TOURS.find(t=>t.key===tourKey)?.label||SAMPLE.label;
 
@@ -966,6 +1017,21 @@ function renderTcGuestPreview() {
 
       <!-- Confirm/Modify instructions -->
       <div class="gp-instructions">${instrBlock}</div>
+
+      ${mode==='standard' ? `
+      <!-- YES / Modify buttons -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div style="border:1.5px solid #e0e0e0;border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:20px;margin-bottom:4px;">✅</div>
+          <div style="font-weight:600;font-size:13px;">YES</div>
+          <div style="font-size:11px;color:#888;">I'm attending</div>
+        </div>
+        <div style="border:1.5px solid #e0e0e0;border-radius:10px;padding:14px;text-align:center;">
+          <div style="font-size:20px;margin-bottom:4px;">✏️</div>
+          <div style="font-weight:600;font-size:13px;">Modify</div>
+          <div style="font-size:11px;color:#888;">Available until Jun 29, 11:59 PM</div>
+        </div>
+      </div>` : ''}
 
       <!-- Lunch note (email version shown here) -->
       ${hasLunch?`<div style="background:#fffbf0;border:1px solid #f0d080;border-radius:8px;padding:10px 13px;margin-bottom:10px;font-size:12px;">
