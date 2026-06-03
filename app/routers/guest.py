@@ -473,6 +473,8 @@ function adjMtlv(d){{var el=document.getElementById('c-mtlv');if(!el)return;var 
           <ul>{reminders_html}</ul>
         </div>
 
+          
+        <div class="gf-section">
           {notes_display_html}
           <h2>📝 Notes <span class="gf-opt">(optional)</span></h2>
           <textarea name="notes" rows="3" placeholder="Special requests, dietary notes...">{booking.notes or ''}</textarea>

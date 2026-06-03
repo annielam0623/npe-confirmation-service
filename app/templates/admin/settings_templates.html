@@ -92,6 +92,22 @@
 .sms-phone { background: #1a1a2e; border-radius: 14px; padding: 20px 14px; max-width: 280px; margin: 0 auto; }
 .sms-screen { background: #f2f2f7; border-radius: 10px; padding: 14px 10px; min-height: 180px; }
 .sms-bubble { background: #e5e5ea; border-radius: 14px 14px 14px 4px; padding: 10px 13px; font-size: 12px; color: #1a1a1a; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+
+/* ── Dynamic line rows ── */
+.dyn-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 5px 8px; cursor: default; }
+.dyn-row:hover { border-color: #ccc; }
+.dyn-row[draggable="true"] { cursor: grab; }
+.dyn-handle { color: #bbb; font-size: 14px; cursor: grab; user-select: none; flex-shrink: 0; }
+.dyn-input { flex: 1; border: none; background: transparent; font-size: 12px; font-family: inherit; color: #1a1a1a; outline: none; padding: 2px 0; }
+.dyn-del-btn { background: none; border: none; color: #ccc; font-size: 16px; cursor: pointer; padding: 0 2px; line-height: 1; flex-shrink: 0; }
+.dyn-del-btn:hover { color: #dc2626; }
+.dyn-add-btn { font-size: 11px; color: #1a1a1a; background: #fff; border: 1px dashed #aaa; border-radius: 6px; padding: 4px 12px; cursor: pointer; }
+.dyn-add-btn:hover { border-color: #1a1a1a; }
+.dyn-step-group { background: #fafafa; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; cursor: grab; }
+.dyn-step-group:hover { border-color: #ccc; }
+.dyn-step-hidden { display: none; }
+.dyn-step-group .dyn-input { display: block; width: 100%; border: 1px solid #e5e7eb; border-radius: 5px; padding: 5px 8px; margin-bottom: 5px; font-size: 12px; font-family: inherit; background: #fff; box-sizing: border-box; }
+.dyn-step-group .dyn-input:focus { outline: none; border-color: #1a1a1a; }
 .sms-label { font-size: 10px; color: #8e8e93; text-align: center; margin-bottom: 10px; }
 {% endblock %}
 
@@ -235,7 +251,7 @@ const GUEST_GLOBAL_FIELDS = [
 ];
 const GUEST_TC_PRODUCT_FIELDS = t => [
   {key:`tmpl__tc__${t}__reminders`,       label:'Important Reminders (one bullet per line)', rows:5},
-  {key:`tmpl__tc__${t}__extra_reminders`, label:'Tour-specific extra reminders (one per line)'},
+  {key:`tmpl__tc__${t}__extra_reminders`, label:'Tour-specific extra reminders', type:'dynamic_lines', max:3},
   ...(['grand_canyon_south','bryce_zion'].includes(t) ? [
     {key:`tmpl__tc__${t}__park_fee_nonresident`,label:'Park fee — non-US residents'},
     {key:`tmpl__tc__${t}__park_fee_resident`,   label:'Park fee — US residents'},
@@ -245,28 +261,22 @@ const GUEST_TIX_PRODUCT_FIELDS = t => [
   {key:`tmpl__tix__${t}__checkin_location`, label:'Check-in location', hint:'Full address shown to guests'},
   {key:`tmpl__tix__${t}__maps_url`,         label:'Google Maps URL', hint:'Link shown as "Google Maps GPS"'},
   {key:`tmpl__tix__${t}__location_photo`,   label:'Location photo URL', hint:'Link shown as "Location Photo"'},
-  {key:`tmpl__tix__${t}__extra_notes`,      label:'Know Before You Go (one item per line)', rows:7},
-  // prepare steps 1–3
-  {key:`tmpl__tix__${t}__prep_1_label`, label:'Prepare Step 1 — Label', hint:'Leave blank to hide this step'},
-  {key:`tmpl__tix__${t}__prep_1_url`,   label:'Prepare Step 1 — Link URL', hint:''},
-  {key:`tmpl__tix__${t}__prep_1_note`,  label:'Prepare Step 1 — Note (optional)', hint:''},
-  {key:`tmpl__tix__${t}__prep_2_label`, label:'Prepare Step 2 — Label', hint:'Leave blank to hide this step'},
-  {key:`tmpl__tix__${t}__prep_2_url`,   label:'Prepare Step 2 — Link URL', hint:''},
-  {key:`tmpl__tix__${t}__prep_2_note`,  label:'Prepare Step 2 — Note (optional)', hint:''},
-  {key:`tmpl__tix__${t}__prep_3_label`, label:'Prepare Step 3 — Label', hint:'Leave blank to hide this step'},
-  {key:`tmpl__tix__${t}__prep_3_url`,   label:'Prepare Step 3 — Link URL', hint:''},
-  {key:`tmpl__tix__${t}__prep_3_note`,  label:'Prepare Step 3 — Note (optional)', hint:''},
+  {key:`tmpl__tix__${t}__extra_notes`,      label:'Know Before You Go', type:'dynamic_lines', max:3},
+  {key:`tmpl__tix__${t}__prepare_steps`,    label:'Prepare for Your Tour', type:'dynamic_steps', max:3},
 ];
 // Helper: group tix prepare steps for preview
 function getTixPrepSteps(t) {
   const steps = [];
   for (let i = 1; i <= 3; i++) {
     const label = v(`tmpl__tix__${t}__prep_${i}_label`);
-    if (label.trim()) {
+    if ((label||'').trim()) {
       steps.push({
         label,
-        url:  v(`tmpl__tix__${t}__prep_${i}_url`),
-        note: v(`tmpl__tix__${t}__prep_${i}_note`),
+        url:   v(`tmpl__tix__${t}__prep_${i}_url`),
+        note:  v(`tmpl__tix__${t}__prep_${i}_note`),
+        lKey:  `tmpl__tix__${t}__prep_${i}_label`,
+        uKey:  `tmpl__tix__${t}__prep_${i}_url`,
+        nKey:  `tmpl__tix__${t}__prep_${i}_note`,
       });
     }
   }
@@ -339,7 +349,292 @@ function pillsHtml(tours, currentKey, onclickFn, prefix) {
   ).join('');
 }
 
+// ── Dynamic lines helpers ─────────────────────────────────────────────────────
+function getDynLines(key) {
+  return (v(key)||'').split('\n').filter(Boolean);
+}
+function setDynLines(key, lines) {
+  if (!ALL_SETTINGS[key]) ALL_SETTINGS[key] = {};
+  ALL_SETTINGS[key].value = lines.join('\n');
+}
+function getDynSteps(tourKey) {
+  const steps = [];
+  for (let i = 1; i <= 3; i++) {
+    steps.push({
+      label: v(`tmpl__tix__${tourKey}__prep_${i}_label`),
+      url:   v(`tmpl__tix__${tourKey}__prep_${i}_url`),
+      note:  v(`tmpl__tix__${tourKey}__prep_${i}_note`),
+    });
+  }
+  return steps;
+}
+
+function dynLinesCard(f, isGlobal) {
+  const lines = getDynLines(f.key);
+  const max   = f.max || 3;
+  const badge   = isGlobal ? `<span class="global-badge">⚠ Global</span>` : '';
+  const warning = isGlobal ? `<div class="global-warning">⚠ This text appears everywhere. Edit carefully.</div>` : '';
+  const cardCls = isGlobal ? 'field-card global-card' : 'field-card';
+  const uid = f.key.replace(/[^a-z0-9]/gi,'_');
+
+  let rowsHtml = lines.map((line, i) => dynLineRow(uid, i, line, max)).join('');
+  const addBtn = lines.length < max
+    ? `<button class="dyn-add-btn" onclick="dynAddLine('${uid}','${f.key}',${max})">+ Add line</button>`
+    : `<span style="font-size:11px;color:#888;">Max ${max} lines. Contact admin to add more.</span>`;
+
+  return `<div class="${cardCls}" id="dyncard-${uid}">
+    <div class="field-header">
+      <div><div class="field-label-text">${f.label}</div><div class="field-scope">${f.key}</div></div>
+      ${badge}
+    </div>
+    ${warning}
+    <div class="field-body">
+      <div class="dyn-list" id="dynlist-${uid}" data-key="${f.key}" data-max="${max}"
+           ondragover="dynDragOver(event)" ondrop="dynDrop(event,'${f.key}')">
+        ${rowsHtml}
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+        <div id="dynadd-${uid}">${addBtn}</div>
+        <button class="save-btn" onclick="saveDynLines('${f.key}','${uid}',this)">Save</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function dynLineRow(uid, idx, val, max) {
+  return `<div class="dyn-row" draggable="true"
+    ondragstart="dynDragStart(event,${idx})"
+    data-idx="${idx}">
+    <span class="dyn-handle" title="Drag to reorder">⠿</span>
+    <input type="text" class="dyn-input" value="${esc(val)}"
+      oninput="dynInputChange('${uid}')"
+      onfocus="onFieldFocus(document.getElementById('dynlist-${uid}').dataset.key)"
+      onblur="onFieldBlur()">
+    <button class="dyn-del-btn" onclick="dynDelLine('${uid}',${idx},${max})" title="Remove">×</button>
+  </div>`;
+}
+
+function dynStepsCard(tourKey) {
+  const steps = getDynSteps(tourKey);
+  const uid   = `steps_${tourKey}`;
+  const max   = 3;
+
+  let stepsHtml = '';
+  steps.forEach((s, i) => {
+    if (s.label || i === 0) {
+      stepsHtml += dynStepGroup(uid, tourKey, i+1, s);
+    }
+  });
+  const visibleCount = steps.filter(s => s.label).length;
+  const addBtn = visibleCount < max
+    ? `<button class="dyn-add-btn" onclick="dynShowStep('${uid}','${tourKey}',${max})">+ Add step</button>`
+    : `<span style="font-size:11px;color:#888;">Max ${max} steps. Contact admin to add more.</span>`;
+
+  return `<div class="field-card" id="dyncard-${uid}">
+    <div class="field-header">
+      <div><div class="field-label-text">Prepare for Your Tour</div>
+      <div class="field-scope">prep steps (label / URL / note)</div></div>
+    </div>
+    <div class="field-body">
+      <div class="dyn-steps-list" id="dynsteps-${uid}"
+           ondragover="dynDragOver(event)" ondrop="dynDropStep(event,'${uid}','${tourKey}')">
+        ${stepsHtml}
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+        <div id="dynstepadd-${uid}">${addBtn}</div>
+        <button class="save-btn" onclick="saveDynSteps('${uid}','${tourKey}',this)">Save</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function dynStepGroup(uid, tourKey, num, s) {
+  const isHidden = !s.label && num > 1;
+  return `<div class="dyn-step-group${isHidden?' dyn-step-hidden':''}" data-stepnum="${num}" draggable="true"
+    ondragstart="dynStepDragStart(event,${num-1})">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+      <span class="dyn-handle">⠿</span>
+      <span style="font-size:11px;font-weight:600;color:#6B5E57;">Step ${num}</span>
+    </div>
+    <input type="text" class="dyn-input" placeholder="Label (required — leave blank to hide)"
+      value="${esc(s.label)}" data-field="label" data-num="${num}"
+      oninput="dynStepChange('${uid}','${tourKey}')"
+      onfocus="onFieldFocus('tmpl__tix__${tourKey}__prep_${num}_label')" onblur="onFieldBlur()">
+    <input type="text" class="dyn-input" placeholder="Link URL (optional)"
+      value="${esc(s.url)}" data-field="url" data-num="${num}"
+      oninput="dynStepChange('${uid}','${tourKey}')"
+      onfocus="onFieldFocus('tmpl__tix__${tourKey}__prep_${num}_url')" onblur="onFieldBlur()">
+    <input type="text" class="dyn-input" placeholder="Note (optional)"
+      value="${esc(s.note)}" data-field="note" data-num="${num}"
+      oninput="dynStepChange('${uid}','${tourKey}')"
+      onfocus="onFieldFocus('tmpl__tix__${tourKey}__prep_${num}_note')" onblur="onFieldBlur()">
+  </div>`;
+}
+
+// ── Drag state ────────────────────────────────────────────────────────────────
+let _dragIdx = -1;
+function dynDragStart(e, idx) { _dragIdx = idx; e.dataTransfer.effectAllowed='move'; }
+function dynDragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect='move'; }
+function dynDrop(e, key) {
+  e.preventDefault();
+  const list = e.currentTarget;
+  const uid  = list.id.replace('dynlist-','');
+  const rows = [...list.querySelectorAll('.dyn-row')];
+  const targetRow = e.target.closest('.dyn-row');
+  if (!targetRow || _dragIdx < 0) return;
+  const toIdx = parseInt(targetRow.dataset.idx);
+  if (toIdx === _dragIdx) return;
+  const lines = rows.map(r => r.querySelector('.dyn-input').value);
+  const moved = lines.splice(_dragIdx, 1)[0];
+  lines.splice(toIdx, 0, moved);
+  setDynLines(key, lines);
+  renderGuestProduct();
+  renderPreview();
+  _dragIdx = -1;
+}
+let _dragStepIdx = -1;
+function dynStepDragStart(e, idx) { _dragStepIdx = idx; e.dataTransfer.effectAllowed='move'; }
+function dynDropStep(e, uid, tourKey) {
+  e.preventDefault();
+  const list   = e.currentTarget;
+  const groups = [...list.querySelectorAll('.dyn-step-group')];
+  const target = e.target.closest('.dyn-step-group');
+  if (!target || _dragStepIdx < 0) return;
+  const toIdx  = groups.indexOf(target);
+  if (toIdx === _dragStepIdx) return;
+  const steps  = getDynSteps(tourKey);
+  const moved  = steps.splice(_dragStepIdx, 1)[0];
+  steps.splice(toIdx, 0, moved);
+  // write back
+  for (let i = 0; i < 3; i++) {
+    const s = steps[i] || {label:'',url:'',note:''};
+    ['label','url','note'].forEach(f => {
+      const k = `tmpl__tix__${tourKey}__prep_${i+1}_${f}`;
+      if (!ALL_SETTINGS[k]) ALL_SETTINGS[k]={};
+      ALL_SETTINGS[k].value = s[f]||'';
+    });
+  }
+  renderGuestProduct();
+  renderPreview();
+  _dragStepIdx = -1;
+}
+
+// ── Dynamic line actions ──────────────────────────────────────────────────────
+function dynInputChange(uid) {
+  const list = document.getElementById('dynlist-'+uid);
+  const key  = list.dataset.key;
+  const lines = [...list.querySelectorAll('.dyn-input')].map(i=>i.value);
+  setDynLines(key, lines.filter(Boolean));
+  renderPreview();
+}
+function dynAddLine(uid, key, max) {
+  const list  = document.getElementById('dynlist-'+uid);
+  const rows  = list.querySelectorAll('.dyn-row');
+  if (rows.length >= max) return;
+  const idx   = rows.length;
+  list.insertAdjacentHTML('beforeend', dynLineRow(uid, idx, '', max));
+  // update add btn
+  const addDiv = document.getElementById('dynadd-'+uid);
+  if (rows.length + 1 >= max) {
+    addDiv.innerHTML = `<span style="font-size:11px;color:#888;">Max ${max} lines. Contact admin to add more.</span>`;
+  }
+}
+function dynDelLine(uid, idx, max) {
+  const list  = document.getElementById('dynlist-'+uid);
+  const key   = list.dataset.key;
+  const rows  = [...list.querySelectorAll('.dyn-row')];
+  rows[idx]?.remove();
+  // re-index
+  [...list.querySelectorAll('.dyn-row')].forEach((r,i) => {
+    r.dataset.idx = i;
+    r.setAttribute('ondragstart', `dynDragStart(event,${i})`);
+    r.querySelector('.dyn-del-btn').setAttribute('onclick', `dynDelLine('${uid}',${i},${max})`);
+  });
+  const lines = [...list.querySelectorAll('.dyn-input')].map(i=>i.value);
+  setDynLines(key, lines.filter(Boolean));
+  // restore add btn if below max
+  const addDiv = document.getElementById('dynadd-'+uid);
+  const cur = list.querySelectorAll('.dyn-row').length;
+  if (cur < max) addDiv.innerHTML = `<button class="dyn-add-btn" onclick="dynAddLine('${uid}','${key}',${max})">+ Add line</button>`;
+  renderPreview();
+}
+
+function dynShowStep(uid, tourKey, max) {
+  const list   = document.getElementById('dynsteps-'+uid);
+  const groups = list.querySelectorAll('.dyn-step-group');
+  // find first hidden
+  let shown = 0;
+  groups.forEach(g => { if (!g.classList.contains('dyn-step-hidden')) shown++; });
+  if (shown >= max) return;
+  groups.forEach(g => {
+    if (g.classList.contains('dyn-step-hidden') && shown < max) {
+      g.classList.remove('dyn-step-hidden');
+      shown++;
+    }
+  });
+  const addDiv = document.getElementById('dynstepadd-'+uid);
+  if (shown >= max) addDiv.innerHTML = `<span style="font-size:11px;color:#888;">Max ${max} steps. Contact admin to add more.</span>`;
+}
+function dynStepChange(uid, tourKey) {
+  const list = document.getElementById('dynsteps-'+uid);
+  list.querySelectorAll('.dyn-step-group').forEach(g => {
+    const num = parseInt(g.dataset.stepnum);
+    ['label','url','note'].forEach(field => {
+      const inp = g.querySelector(`[data-field="${field}"]`);
+      if (!inp) return;
+      const k = `tmpl__tix__${tourKey}__prep_${num}_${field}`;
+      if (!ALL_SETTINGS[k]) ALL_SETTINGS[k]={};
+      ALL_SETTINGS[k].value = inp.value;
+    });
+  });
+  renderPreview();
+}
+
+async function saveDynLines(key, uid, btn) {
+  const list  = document.getElementById('dynlist-'+uid);
+  const lines = [...list.querySelectorAll('.dyn-input')].map(i=>i.value).filter(Boolean);
+  const value = lines.join('\n');
+  btn.textContent='Saving…'; btn.classList.add('saving');
+  try {
+    const r = await fetch('/api/template-settings/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,value})});
+    if (!r.ok) throw new Error();
+    if (!ALL_SETTINGS[key]) ALL_SETTINGS[key]={};
+    ALL_SETTINGS[key].value = value;
+    btn.textContent='Saved ✓'; btn.classList.remove('saving'); btn.classList.add('saved');
+    setTimeout(()=>{btn.textContent='Save';btn.classList.remove('saved');},2000);
+  } catch(e) {
+    btn.textContent='Error'; btn.classList.remove('saving'); btn.classList.add('err');
+    setTimeout(()=>{btn.textContent='Save';btn.classList.remove('err');},2500);
+  }
+}
+async function saveDynSteps(uid, tourKey, btn) {
+  btn.textContent='Saving…'; btn.classList.add('saving');
+  const list   = document.getElementById('dynsteps-'+uid);
+  const groups = [...list.querySelectorAll('.dyn-step-group')];
+  const saves  = [];
+  for (let i = 0; i < 3; i++) {
+    const g = groups[i];
+    for (const field of ['label','url','note']) {
+      const key = `tmpl__tix__${tourKey}__prep_${i+1}_${field}`;
+      const val = g ? (g.querySelector(`[data-field="${field}"]`)?.value || '') : '';
+      saves.push(fetch('/api/template-settings/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,value:val})}));
+    }
+  }
+  try {
+    await Promise.all(saves);
+    btn.textContent='Saved ✓'; btn.classList.remove('saving'); btn.classList.add('saved');
+    setTimeout(()=>{btn.textContent='Save';btn.classList.remove('saved');},2000);
+  } catch(e) {
+    btn.textContent='Error'; btn.classList.remove('saving'); btn.classList.add('err');
+    setTimeout(()=>{btn.textContent='Save';btn.classList.remove('err');},2500);
+  }
+}
+
 function fieldCard(f, isGlobal) {
+  // Route to dynamic renderers
+  if (f.type === 'dynamic_lines') return dynLinesCard(f, isGlobal);
+  if (f.type === 'dynamic_steps') return dynStepsCard(currentGuestTour);
+
   const val  = v(f.key);
   const rows = f.rows || 3;
   const vars = f.vars || [];
@@ -392,7 +687,7 @@ function renderGuestTab() {
   if (!currentGuestTour) currentGuestTour = TC_TOURS[0].key;
   const pills = document.getElementById('guest-tour-pills');
   pills.innerHTML =
-    '<div style="width:100%;font-size:13px;font-weight:700;color:#5a8a3c;margin-bottom:4px;">Tour Confirmation</div>' +
+    '<div style="width:100%;font-size:13px;font-weight:700;color:#3a7d44;margin-bottom:4px;">Tour Confirmation</div>' +
     '<div style="width:100%;font-size:11px;color:#6B5E57;margin-bottom:8px;">Select a tour to edit. Changes only apply to the selected tour. To apply a change to all tours, edit the Global section above.</div>' +
     pillsHtml(TC_TOURS, currentGuestTour, 'selectGuestTour', 'tc') +
     '<div style="width:100%;font-size:13px;font-weight:700;color:#b87333;margin:14px 0 4px;">Tickets Reminder</div>' +
@@ -695,9 +990,9 @@ function renderTixGuestPreview(tourKey) {
   let prepHtml = '';
   if (prepSteps.length) {
     const items = prepSteps.map(s => {
-      const noteHtml = s.note ? `<br><span style="font-size:11px;color:#555;">${esc(s.note)}</span>` : '';
-      const urlHtml  = s.url  ? `&nbsp;<a href="#" style="color:#1a3a5c;font-size:11px;font-weight:600;">→ Open Link</a>` : '';
-      return `<li style="margin-bottom:6px;">${esc(s.label)}${urlHtml}${noteHtml}</li>`;
+      const noteHtml = s.note ? `<br><span style="font-size:11px;color:#555;">${hlE(esc(s.note), s.nKey)}</span>` : '';
+      const urlHtml  = s.url  ? `&nbsp;<a href="#" style="color:#1a3a5c;font-size:11px;font-weight:600;">${hlE('→ Open Link', s.uKey)}</a>` : '';
+      return `<li style="margin-bottom:6px;">${hlE(esc(s.label), s.lKey)}${urlHtml}${noteHtml}</li>`;
     }).join('');
     prepHtml = `<div style="background:#eaf4ff;border-bottom:1px solid #b3d9ff;padding:12px 14px;margin-bottom:12px;">
       <div class="gp-reminders-title" style="color:#1a3a5c;">📋 Prepare for Your Tour</div>
