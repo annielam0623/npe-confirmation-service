@@ -180,6 +180,7 @@
       <div class="cs-sub-tabs">
         <button class="cs-sub-tab active" onclick="switchSub(this,'tc-global-panel')">Global</button>
         <button class="cs-sub-tab" onclick="switchSub(this,'tc-email-panel')">Email</button>
+        <button class="cs-sub-tab" onclick="switchSub(this,'tc-lm-panel')">Last Minute Email</button>
         <button class="cs-sub-tab" onclick="switchSub(this,'tc-sms-panel')">SMS</button>
         <button class="cs-sub-tab" onclick="switchSub(this,'tc-guest-panel')">Guest Page</button>
       </div>
@@ -194,6 +195,7 @@
         </div>
       </div>
       <div class="cs-panel" id="tc-email-panel"><div id="tc-email-fields"></div></div>
+      <div class="cs-panel" id="tc-lm-panel"><div id="tc-lm-fields"></div></div>
       <div class="cs-panel" id="tc-sms-panel"><div id="tc-sms-fields"></div></div>
       <div class="cs-panel" id="tc-guest-panel">
         <div class="product-section-label tc">Tour Confirmation</div>
@@ -296,12 +298,45 @@ const TIX_TOURS = [
 const VAR_WARN = '⚠ Do not remove or modify the { } variables — they are replaced with real guest data when sent.';
 
 const TC_GLOBAL_FIELDS = [
-  {key:'tmpl__global__guest_sms_notice',        label:'Morning SMS notice (📱 row on guest page)', rows:2},
-  {key:'tmpl__global__guest_depart_warning',    label:'Departure warning (red text)', rows:2},
-  {key:'tmpl__global__guest_phone_confirm',     label:'Phone confirmation box', rows:3, vars:['{phone}']},
+  // ── Guest Page: Pickup box ─────────────────────────────────────────────────
+  {key:'tmpl__global__tc_guest_pickup_box_title',  label:'Pickup box section title', rows:1},
+  {key:'tmpl__global__tc_guest_pu_sms_head',       label:'Pickup step: SMS reminder — heading', rows:1},
+  {key:'tmpl__global__tc_guest_pu_sms_text',       label:'Pickup step: SMS reminder — body text', rows:2},
+  {key:'tmpl__global__tc_guest_pu_wrong_number',   label:'Pickup step: Wrong number hint', rows:1},
+  {key:'tmpl__global__tc_guest_pu_head_head',      label:'Pickup step: "Head to location" title', rows:1},
+  {key:'tmpl__global__tc_guest_pu_depart_warn',    label:'Pickup step: Departure warning (red)', rows:1},
+  {key:'tmpl__global__tc_guest_pu_checkin_head',   label:'Pickup step: "Check in when you arrive" title', rows:1},
+  {key:'tmpl__global__tc_guest_pu_checkin_text',   label:'Pickup step: Check in body text', rows:2},
+  {key:'tmpl__global__tc_guest_pu_notsure_head',   label:'Pickup step: "Not sure where to go?" title', rows:1},
+  // ── Guest Page: Info / state banners ──────────────────────────────────────
+  {key:'tmpl__global__tc_guest_already_submitted', label:'"Already submitted" info box (green)', rows:2},
+  // ── Guest Page: Confirm/Modify instructions ───────────────────────────────
   {key:'tmpl__global__guest_confirm_instructions', label:'Confirm / Modify instructions box', hint:'Format: Title|Body — one section per line', rows:5},
-  {key:'tmpl__global__guest_thanks_text',       label:'Thank you page body text', rows:2},
-  {key:'tmpl__global__guest_expired_text',      label:'Expired link page text', rows:2},
+  // ── Guest Page: Lunch section ─────────────────────────────────────────────
+  {key:'tmpl__global__tc_guest_lunch_title',         label:'Lunch section title', rows:1},
+  {key:'tmpl__global__tc_guest_lunch_hint',          label:'Lunch section hint', rows:1, vars:['{qty}']},
+  {key:'tmpl__global__tc_guest_lunch_default',       label:'Lunch default note (small text)', rows:1},
+  {key:'tmpl__global__tc_guest_lunch_note_main',     label:'Lunch note — main line (email + guest page)', rows:2},
+  {key:'tmpl__global__tc_guest_lunch_note_disclaimer', label:'Lunch note — disclaimer (orange text)', rows:2},
+  // ── Guest Page: MTLV ──────────────────────────────────────────────────────
+  {key:'tmpl__global__tc_guest_mtlv_title',          label:'MTLV section title', rows:1},
+  {key:'tmpl__global__tc_guest_mtlv_hint',           label:'MTLV hint paragraph', rows:3, vars:['{qty}']},
+  {key:'tmpl__global__tc_guest_mtlv_bullet_1',       label:'MTLV bullet 1 — visit info', rows:3},
+  {key:'tmpl__global__tc_guest_mtlv_bullet_2',       label:'MTLV bullet 2 — disclaimer', rows:3},
+  {key:'tmpl__global__tc_guest_mtlv_locked_cancelled', label:'MTLV locked — cancelled message', rows:1},
+  {key:'tmpl__global__tc_guest_mtlv_locked_confirmed', label:'MTLV locked — confirmed message', rows:1},
+  // ── Guest Page: Notes / Submit / Footer ───────────────────────────────────
+  {key:'tmpl__global__tc_guest_notes_title',         label:'Notes section title', rows:1},
+  {key:'tmpl__global__tc_guest_notes_placeholder',   label:'Notes textarea placeholder', rows:1},
+  {key:'tmpl__global__tc_guest_last_update_label',   label:'"Your last update" label', rows:1},
+  {key:'tmpl__global__tc_guest_submit_btn',          label:'Submit button text', rows:1},
+  {key:'tmpl__global__tc_guest_footer_thanks',       label:'Footer thank you text', rows:2},
+  // ── Guest Page: Date modal ────────────────────────────────────────────────
+  {key:'tmpl__global__tc_guest_date_modal_title',    label:'Date change modal title', rows:1},
+  {key:'tmpl__global__tc_guest_date_modal_desc',     label:'Date change modal description', rows:2},
+  // ── Guest Page: Expired / Thanks ──────────────────────────────────────────
+  {key:'tmpl__global__guest_thanks_text',            label:'Thank you page body text (after submit)', rows:2},
+  {key:'tmpl__global__guest_expired_text',           label:'Expired link page text', rows:2},
 ];
 const TC_EMAIL_FIELDS = [
   {key:'tmpl__global__tc_email_greeting',      label:'Opening greeting', rows:2},
@@ -315,6 +350,17 @@ const TC_SMS_FIELDS = [
   {key:'tmpl__global__tc_sms_with_lunch', label:'SMS body — tours WITH lunch', rows:4, vars:['{name}','{label}','{date}','{url}']},
   {key:'tmpl__global__tc_sms_no_lunch',   label:'SMS body — tours WITHOUT lunch', rows:4, vars:['{name}','{label}','{date}','{url}']},
 ];
+const TC_LM_EMAIL_FIELDS = [
+  {key:'tmpl__global__tc_email_greeting',         label:'Opening greeting (shared with main email)', rows:1},
+  {key:'tmpl__global__tc_lm_email_intro_with_lunch', label:'Intro — tours WITH lunch', rows:2},
+  {key:'tmpl__global__tc_lm_email_intro_no_lunch',   label:'Intro — tours WITHOUT lunch', rows:2},
+  {key:'tmpl__global__tc_lm_email_closing',          label:'Closing line', rows:1},
+  {key:'tmpl__global__tc_lm_email_btn_lunch',        label:'CTA button — tours with lunch', rows:1},
+  {key:'tmpl__global__tc_lm_email_btn_no_lunch',     label:'CTA button — tours without lunch', rows:1},
+  {key:'tmpl__global__tc_email_link_expiry',         label:'Link expiry notice (shared with main email)', rows:1},
+  {key:'tmpl__global__tc_email_footer_contact',      label:'Footer contact block (shared with main email)', rows:3},
+];
+
 const TC_GUEST_PRODUCT_FIELDS = t => [
   {key:`tmpl__tc__${t}__reminders`,       label:'Important Reminders (one bullet per line)', rows:5},
   {key:`tmpl__tc__${t}__extra_reminders`, label:'Tour-specific extra reminders', type:'dynamic_lines', max:3},
@@ -415,6 +461,8 @@ function renderModuleFields(mod) {
     document.getElementById('tc-global-fields').innerHTML = TC_GLOBAL_FIELDS.map(f=>fieldCard(f,true)).join('');
     document.getElementById('tc-email-fields').innerHTML =
       '<div class="field-group-title">Global — all products</div>' + TC_EMAIL_FIELDS.map(f=>fieldCard(f,true)).join('');
+    document.getElementById('tc-lm-fields').innerHTML =
+      '<div class="field-group-title">Global — all products</div>' + TC_LM_EMAIL_FIELDS.map(f=>fieldCard(f,true)).join('');
     document.getElementById('tc-sms-fields').innerHTML =
       '<div class="field-group-title">Global — all products</div>' + TC_SMS_FIELDS.map(f=>fieldCard(f,true)).join('');
     if (!currentTcTour) currentTcTour = TC_TOURS[0].key;
@@ -840,16 +888,38 @@ function renderTixSmsPreview() {
 function renderTcGuestPreview() {
   const tourKey=currentTcTour||TC_TOURS[0].key;
   const tourLabel=TC_TOURS.find(t=>t.key===tourKey)?.label||SAMPLE.label;
-  const smsNotice=hl(esc(v('tmpl__global__guest_sms_notice')),'tmpl__global__guest_sms_notice');
-  const departWarn=hl(esc(v('tmpl__global__guest_depart_warning')),'tmpl__global__guest_depart_warning');
-  const phoneText=hl(nl2br(fill(v('tmpl__global__guest_phone_confirm'))),'tmpl__global__guest_phone_confirm');
-  const thanksText=hl(esc(v('tmpl__global__guest_thanks_text')),'tmpl__global__guest_thanks_text');
+
+  // Pickup box
+  const puBoxTitle =hl(esc(v('tmpl__global__tc_guest_pickup_box_title')),'tmpl__global__tc_guest_pickup_box_title');
+  const puSmsHead  =hl(esc(v('tmpl__global__tc_guest_pu_sms_head')),'tmpl__global__tc_guest_pu_sms_head');
+  const puSmsText  =hl(esc(v('tmpl__global__tc_guest_pu_sms_text')),'tmpl__global__tc_guest_pu_sms_text');
+  const puWrongNum =hl(esc(v('tmpl__global__tc_guest_pu_wrong_number')),'tmpl__global__tc_guest_pu_wrong_number');
+  const puHeadHead =hl(esc(v('tmpl__global__tc_guest_pu_head_head')),'tmpl__global__tc_guest_pu_head_head');
+  const puDepart   =hl(esc(v('tmpl__global__tc_guest_pu_depart_warn')),'tmpl__global__tc_guest_pu_depart_warn');
+  const puCheckinH =hl(esc(v('tmpl__global__tc_guest_pu_checkin_head')),'tmpl__global__tc_guest_pu_checkin_head');
+  const puCheckinT =hl(esc(v('tmpl__global__tc_guest_pu_checkin_text')),'tmpl__global__tc_guest_pu_checkin_text');
+  const puNotsure  =hl(esc(v('tmpl__global__tc_guest_pu_notsure_head')),'tmpl__global__tc_guest_pu_notsure_head');
+
+  // Banners
+  const alreadySub =hl(esc(v('tmpl__global__tc_guest_already_submitted')),'tmpl__global__tc_guest_already_submitted');
+
+  // Confirm/Modify instructions
   const instrRaw=v('tmpl__global__guest_confirm_instructions');
   const instrHtml=instrRaw.split('\n').map(line=>{
     const [title,...rest]=line.split('|');
     return rest.length?`<div style="margin-bottom:5px;"><strong>${esc(title)}</strong> ${esc(rest.join('|'))}</div>`:`<div style="margin-bottom:5px;">${esc(line)}</div>`;
   }).join('');
   const instrBlock=hl(instrHtml,'tmpl__global__guest_confirm_instructions');
+
+  // Lunch
+  const lunchTitle =hl(esc(v('tmpl__global__tc_guest_lunch_title')),'tmpl__global__tc_guest_lunch_title');
+  const lunchHint  =hl(esc(v('tmpl__global__tc_guest_lunch_hint').replace('{qty}',SAMPLE.pax)),'tmpl__global__tc_guest_lunch_hint');
+  const lunchDef   =hl(esc(v('tmpl__global__tc_guest_lunch_default')),'tmpl__global__tc_guest_lunch_default');
+  const lunchNoteM =hl(esc(v('tmpl__global__tc_guest_lunch_note_main')),'tmpl__global__tc_guest_lunch_note_main');
+  const lunchNoteD =hl(esc(v('tmpl__global__tc_guest_lunch_note_disclaimer')),'tmpl__global__tc_guest_lunch_note_disclaimer');
+  const hasLunch   =!['grand_canyon_west','valley_of_fire_half','hoover_dam'].includes(tourKey);
+
+  // Park fee
   const hasParkFee=['grand_canyon_south','bryce_zion'].includes(tourKey);
   let feeHtml='';
   if(hasParkFee){
@@ -857,28 +927,88 @@ function renderTcGuestPreview() {
     const re=hl(esc(v(`tmpl__tc__${tourKey}__park_fee_resident`)),`tmpl__tc__${tourKey}__park_fee_resident`);
     feeHtml=`<div class="gp-fee-box"><div style="font-size:11px;font-weight:700;color:#795548;margin-bottom:5px;">ℹ️ National Park Entry Fee</div><div style="margin-bottom:3px;">👤 ${nr}</div><div>🪪 ${re}</div></div>`;
   }
-  const remKey=`tmpl__tc__${tourKey}__reminders`;
+
+  // MTLV
+  const mtlvTitle  =hl(esc(v('tmpl__global__tc_guest_mtlv_title')),'tmpl__global__tc_guest_mtlv_title');
+  const mtlvHint   =hl(esc(v('tmpl__global__tc_guest_mtlv_hint').replace('{qty}',SAMPLE.pax)),'tmpl__global__tc_guest_mtlv_hint');
+  const mtlvB1     =hl(esc(v('tmpl__global__tc_guest_mtlv_bullet_1')),'tmpl__global__tc_guest_mtlv_bullet_1');
+  const mtlvB2     =hl(esc(v('tmpl__global__tc_guest_mtlv_bullet_2')),'tmpl__global__tc_guest_mtlv_bullet_2');
+
+  // Reminders
+  const remKey =`tmpl__tc__${tourKey}__reminders`;
   const extraKey=`tmpl__tc__${tourKey}__extra_reminders`;
   const items=v(remKey).split('\n').filter(Boolean).map(r=>`<li style="margin-bottom:4px;">${hl(esc(r),remKey)}</li>`).join('');
   const extra=v(extraKey).split('\n').filter(Boolean).map(r=>`<li style="margin-bottom:4px;">${hl(esc(r),extraKey)}</li>`).join('');
+
+  // Notes / Submit / Footer
+  const notesTitle =hl(esc(v('tmpl__global__tc_guest_notes_title')),'tmpl__global__tc_guest_notes_title');
+  const notesPlhdr =hl(esc(v('tmpl__global__tc_guest_notes_placeholder')),'tmpl__global__tc_guest_notes_placeholder');
+  const submitBtn  =hl(esc(v('tmpl__global__tc_guest_submit_btn')),'tmpl__global__tc_guest_submit_btn');
+  const footerThanks=hl(esc(v('tmpl__global__tc_guest_footer_thanks')),'tmpl__global__tc_guest_footer_thanks');
+
   return `<div class="gp-wrap">
     <div class="gp-header"><h2>Tour Confirmation</h2><p>${esc(tourLabel)} · ${SAMPLE.date}</p></div>
     <div class="gp-body">
+
+      <!-- Pickup box -->
       <div class="gp-pickup-box">
-        <div class="gp-pickup-title">🚌 Your Pickup Information</div>
-        <div class="gp-row"><span>📱</span><span>${smsNotice}</span></div>
-        <div class="gp-row"><span>⏰</span><span>Please arrive at <strong>${SAMPLE.pickup_loc}</strong> by <strong>${SAMPLE.pickup_time}</strong></span></div>
-        <div class="gp-warn">${departWarn}</div>
+        <div class="gp-pickup-title">${puBoxTitle}</div>
+        <div class="gp-row"><span>📱</span><div><strong>${puSmsHead}</strong><br><span style="font-size:11px;">${puSmsText}</span><br><span style="font-size:11px;color:#888;">Sending to: <strong>${SAMPLE.phone}</strong></span><br><span style="font-size:11px;color:#888;">${puWrongNum}</span></div></div>
+        <div class="gp-row"><span>⏰</span><div><strong>${puHeadHead}</strong><br><span style="font-size:11px;">Please arrive at <strong>${SAMPLE.pickup_loc}</strong> by <strong>${SAMPLE.pickup_time}</strong>.</span><br><span style="font-size:11px;color:#c0392b;">${puDepart}</span></div></div>
+        <div class="gp-row"><span>✅</span><div><strong>${puCheckinH}</strong><br><span style="font-size:11px;">${puCheckinT}</span></div></div>
+        <div class="gp-row"><span>🗺️</span><div><strong>${puNotsure}</strong><br><a href="#" style="color:#1a3a5c;font-size:11px;">Park MGM Hotel Pickup Photos →</a></div></div>
       </div>
-      <div class="gp-info-box">${phoneText}</div>
+
+      <!-- Already submitted banner -->
+      <div style="background:#d4edda;color:#155724;border-radius:7px;padding:9px 13px;margin-bottom:10px;font-size:12px;">${alreadySub}</div>
+
       ${feeHtml}
+
+      <!-- Confirm/Modify instructions -->
       <div class="gp-instructions">${instrBlock}</div>
+
+      <!-- Lunch note (email version shown here) -->
+      ${hasLunch?`<div style="background:#fffbf0;border:1px solid #f0d080;border-radius:8px;padding:10px 13px;margin-bottom:10px;font-size:12px;">
+        🍽 <span style="color:#24364f;">${lunchNoteM}</span><br>
+        <span style="color:#f97316;font-size:11px;">${lunchNoteD}</span>
+      </div>`:''}
+
+      <!-- Lunch selection (guest page) -->
+      ${hasLunch?`<div style="background:#fafafa;border:1px solid #eee;border-radius:8px;padding:10px 13px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;color:#1a3a5c;margin-bottom:5px;">${lunchTitle}</div>
+        <div style="font-size:11px;color:#555;margin-bottom:8px;">${lunchHint}</div>
+        <div style="display:flex;gap:8px;margin-bottom:6px;">
+          <div style="border:1px solid #e0e0e0;border-radius:8px;padding:8px;text-align:center;flex:1;font-size:11px;">🦃<br>Turkey</div>
+          <div style="border:1px solid #e0e0e0;border-radius:8px;padding:8px;text-align:center;flex:1;font-size:11px;">🥗<br>Veggie</div>
+        </div>
+        <div style="font-size:11px;color:#888;text-align:center;">${lunchDef}</div>
+      </div>`:''}
+
+      <!-- MTLV -->
+      <div style="background:#f5f0ff;border:1.5px solid #b39ddb;border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:700;color:#512da8;margin-bottom:5px;">${mtlvTitle}</div>
+        <div style="font-size:11px;color:#7e57c2;margin-bottom:8px;">${mtlvHint}</div>
+        <ul style="margin:0;padding-left:16px;font-size:11px;color:#7e57c2;line-height:1.6;">
+          <li style="margin-bottom:4px;">${mtlvB1}</li>
+          <li>${mtlvB2}</li>
+        </ul>
+      </div>
+
+      <!-- Important Reminders -->
       <div class="gp-reminders">
         <div class="gp-reminders-title">📌 Important Reminders</div>
         <ul style="margin:0;padding-left:16px;font-size:12px;color:#333;">${items}${extra}</ul>
       </div>
-      <div class="gp-btn">CONFIRM MY TOUR</div>
-      <div class="gp-thanks-text">${thanksText}</div>
+
+      <!-- Notes -->
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:600;color:#1a3a5c;margin-bottom:6px;">${notesTitle} <span style="font-weight:400;color:#aaa;font-size:11px;">(optional)</span></div>
+        <div style="border:1px solid #ddd;border-radius:8px;padding:8px 10px;font-size:11px;color:#aaa;background:#fafafa;">${notesPlhdr}</div>
+      </div>
+
+      <!-- Submit / Footer -->
+      <div class="gp-btn">${submitBtn}</div>
+      <div class="gp-thanks-text">${footerThanks}</div>
     </div>
   </div>`;
 }

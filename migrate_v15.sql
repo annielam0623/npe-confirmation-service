@@ -456,3 +456,148 @@ WHERE key LIKE 'tmpl__%'
 INSERT INTO settings (key, value, label) VALUES
 ('tmpl__global__tix_sms_body','Dear {name}, reminder for your {sms_label} on {date}. Check-in: {checkin}, Tour: {tour_time}. Please use the link below to review important information and reconfirm your booking: {url} Questions? Call 702-948-4190.','[Tickets SMS] Full SMS body — variables: {name} {sms_label} {date} {checkin} {tour_time} {url}')
 ON CONFLICT (key) DO NOTHING;
+
+-- Tickets Reminder: missing global guest page fields
+INSERT INTO settings (key, value, label) VALUES
+('tmpl__global__tix_guest_cfm_note',
+ 'Please present this number to the check-in staff upon arrival.',
+ '[Tickets Guest Page] Confirmation# note'),
+('tmpl__global__tix_guest_already_info',
+ 'If you have any questions, please leave a message in the Notes section below and click Submit to update. Our customer service team will contact you as soon as possible.',
+ '[Tickets Guest Page] Info box (green) when already submitted'),
+('tmpl__global__tix_guest_checkbox_text',
+ 'I have read the information above and confirm my tour reservation.',
+ '[Tickets Guest Page] Checkbox / confirmation statement'),
+('tmpl__global__tix_guest_submit_btn',
+ 'Submit',
+ '[Tickets Guest Page] Submit button text'),
+('tmpl__global__tix_guest_thanks_small',
+ 'Thank you for choosing National Park Express! 🏞️',
+ '[Tickets Guest Page] Footer thank you text')
+ON CONFLICT (key) DO NOTHING;
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- TC Global: Guest Page — missing fields (migrate_v15 supplement)
+-- ─────────────────────────────────────────────────────────────────────────────
+INSERT INTO settings (key, value, label) VALUES
+
+-- Pickup box
+('tmpl__global__tc_guest_pickup_box_title',
+ '🚌 Your Pick-up Process',
+ '[TC Guest Page] Pickup box section title'),
+
+('tmpl__global__tc_guest_pu_sms_head',
+ 'Morning of your tour — SMS reminder',
+ '[TC Guest Page] Pickup step: SMS head'),
+('tmpl__global__tc_guest_pu_sms_text',
+ 'We''ll send you an SMS with your check-in link and live vehicle tracking before departure.',
+ '[TC Guest Page] Pickup step: SMS body text'),
+('tmpl__global__tc_guest_pu_wrong_number',
+ 'Wrong number? Let us know in the Notes section below.',
+ '[TC Guest Page] Pickup step: wrong number hint'),
+
+('tmpl__global__tc_guest_pu_head_head',
+ 'Head to your pickup location',
+ '[TC Guest Page] Pickup step: head to location title'),
+('tmpl__global__tc_guest_pu_depart_warn',
+ '⚠ We depart promptly — the vehicle cannot wait for late arrivals.',
+ '[TC Guest Page] Pickup step: departure warning (red)'),
+
+('tmpl__global__tc_guest_pu_checkin_head',
+ 'Check in when you arrive',
+ '[TC Guest Page] Pickup step: check in title'),
+('tmpl__global__tc_guest_pu_checkin_text',
+ 'Use the link in your SMS to check in on the spot. Your guide will be looking out for you!',
+ '[TC Guest Page] Pickup step: check in body text'),
+
+('tmpl__global__tc_guest_pu_notsure_head',
+ 'Not sure where to go?',
+ '[TC Guest Page] Pickup step: not sure where to go title'),
+
+-- Already submitted info box
+('tmpl__global__tc_guest_already_submitted',
+ 'Response already submitted. You can update it below.',
+ '[TC Guest Page] Already submitted green info box'),
+
+-- Lunch section
+('tmpl__global__tc_guest_lunch_title',
+ '🥪 Lunch Selection',
+ '[TC Guest Page] Lunch section title'),
+('tmpl__global__tc_guest_lunch_hint',
+ 'Select for all {qty} guest(s). Total must equal your party size.',
+ '[TC Guest Page] Lunch section hint — use {qty} for party size'),
+('tmpl__global__tc_guest_lunch_default',
+ 'Default is Turkey Sandwich if no selection received.',
+ '[TC Guest Page] Lunch default note'),
+('tmpl__global__tc_guest_lunch_note_main',
+ 'For tours including lunch, you will choose your lunch option after clicking the Reconfirm My Spot button.',
+ '[TC Guest Page + Email] Lunch note — main line'),
+('tmpl__global__tc_guest_lunch_note_disclaimer',
+ 'This does not apply to Hoover Dam tours, tours without meals, or voucher bookings.',
+ '[TC Guest Page + Email] Lunch note — disclaimer (orange)'),
+
+-- MTLV
+('tmpl__global__tc_guest_mtlv_title',
+ '🏛️ Madame Tussauds Las Vegas Ticket',
+ '[TC Guest Page] MTLV section title'),
+('tmpl__global__tc_guest_mtlv_hint',
+ 'As a special bonus for this trip, you are eligible to receive complimentary Madame Tussauds Las Vegas tickets. Please select the number of tickets you would like to receive for your party (0–{qty}). No action is required for this section if you do not wish to receive the tickets.',
+ '[TC Guest Page] MTLV hint paragraph — use {qty} for party size'),
+('tmpl__global__tc_guest_mtlv_bullet_1',
+ 'If you plan to visit Madame Tussauds Las Vegas, please check the attraction''s operating hours, available dates, and any admission requirements before your visit: https://www.madametussauds.com/las-vegas.',
+ '[TC Guest Page] MTLV bullet 1'),
+('tmpl__global__tc_guest_mtlv_bullet_2',
+ 'Please note that attraction operating hours, closures, capacity restrictions, and admission policies are determined solely by Madame Tussauds Las Vegas and may change without notice. National Park Express is not responsible for attraction availability, operating schedules, or admission decisions made by the attraction.',
+ '[TC Guest Page] MTLV bullet 2'),
+('tmpl__global__tc_guest_mtlv_locked_cancelled',
+ 'Your Madame Tussauds ticket selection has been cancelled.',
+ '[TC Guest Page] MTLV locked — cancelled message'),
+('tmpl__global__tc_guest_mtlv_locked_confirmed',
+ 'Your Madame Tussauds ticket selection has been confirmed and can no longer be changed.',
+ '[TC Guest Page] MTLV locked — confirmed message'),
+
+-- Notes section
+('tmpl__global__tc_guest_notes_title',
+ '📝 Notes',
+ '[TC Guest Page] Notes section title'),
+('tmpl__global__tc_guest_notes_placeholder',
+ 'Special requests, dietary notes...',
+ '[TC Guest Page] Notes textarea placeholder'),
+('tmpl__global__tc_guest_last_update_label',
+ '📝 Your last update',
+ '[TC Guest Page] Last update display label'),
+
+-- Submit / footer
+('tmpl__global__tc_guest_submit_btn',
+ 'Submit Confirmation',
+ '[TC Guest Page] Submit button text'),
+('tmpl__global__tc_guest_footer_thanks',
+ 'Thank you for choosing National Park Express — we look forward to your adventure! 🏞️',
+ '[TC Guest Page] Footer thank you text'),
+
+-- Date modal
+('tmpl__global__tc_guest_date_modal_title',
+ '📅 Select New Tour Date',
+ '[TC Guest Page] Date change modal title'),
+('tmpl__global__tc_guest_date_modal_desc',
+ 'Please select your requested new date below.',
+ '[TC Guest Page] Date change modal description'),
+
+-- ── TC Last Minute Email ──────────────────────────────────────────────────────
+('tmpl__global__tc_lm_email_intro_with_lunch',
+ 'Please review your tour details below and select your lunch option using the button below to help ensure a smooth and hassle-free departure.',
+ '[TC Last Minute Email] Intro — tours with lunch'),
+('tmpl__global__tc_lm_email_intro_no_lunch',
+ 'Please review your tour details below and confirm your pickup information to help ensure a smooth and hassle-free departure.',
+ '[TC Last Minute Email] Intro — tours without lunch'),
+('tmpl__global__tc_lm_email_closing',
+ 'We look forward to seeing you soon.',
+ '[TC Last Minute Email] Closing line'),
+('tmpl__global__tc_lm_email_btn_lunch',
+ '🍽 SELECT MY LUNCH OPTION',
+ '[TC Last Minute Email] CTA button — tours with lunch'),
+('tmpl__global__tc_lm_email_btn_no_lunch',
+ '✓ I''VE READ THIS MESSAGE',
+ '[TC Last Minute Email] CTA button — tours without lunch')
+
+ON CONFLICT (key) DO NOTHING;
