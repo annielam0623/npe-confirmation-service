@@ -187,7 +187,23 @@ def _render(booking, tour_config: dict, error_msg: str = "",
             f'<div class="gf-pu-text">Please arrive at <strong>{pickup_photo_label.replace(" Pickup Photos", "")}</strong> by <strong>{booking.pickup_time}</strong>.</div>'
             f'<div class="gf-pu-warn">⚠ We depart promptly — the vehicle cannot wait for late arrivals.</div>'
             f'</div></div>'
+            f'<div class="gf-pu-step">'
+            f'<div class="gf-pu-icon">✅</div>'
+            f'<div class="gf-pu-body">'
+            f'<div class="gf-pu-head">Check in when you arrive</div>'
+            f'<div class="gf-pu-text">Use the link in your SMS to check in on the spot. Your guide will be looking out for you!</div>'
+            f'</div></div>'
         )
+    if ploc and "resorts world" in ploc.lower():
+        pickup_html += (
+            f'<div class="gf-pu-step">'
+            f'<div class="gf-pu-icon">🖼️</div>'
+            f'<div class="gf-pu-body">'
+            f'<div class="gf-pu-head">Pickup location map</div>'
+            f'<img src="https://nationalparkexpress.com/wp-content/uploads/2026/06/Resorts-World-pickup-map-1-scaled.png" '
+            f'style="width:100%;border-radius:8px;margin-top:6px;" alt="Resorts World pickup map">'
+            f'</div></div>'
+        )    
     if pickup_photo_url:
         pickup_html += (
             f'<div class="gf-pu-step">'
@@ -205,13 +221,7 @@ def _render(booking, tour_config: dict, error_msg: str = "",
         f'<div class="gf-pu-text">We\'ll send you an SMS with your <strong>check-in link</strong> and <strong>live vehicle tracking</strong> before departure.</div>'
         f'<div class="gf-pu-text" style="margin-top:5px;">Sending to: <span class="gf-pu-phone">{booking.phone or "Not on file"}</span></div>'
         f'<div class="gf-pu-sub">Wrong number? Let us know in the Notes section below.</div>'
-        f'</div></div>'
-        f'<div class="gf-pu-step">'
-        f'<div class="gf-pu-icon">✅</div>'
-        f'<div class="gf-pu-body">'
-        f'<div class="gf-pu-head">Check in when you arrive</div>'
-        f'<div class="gf-pu-text">Use the link in your SMS to check in on the spot. Your guide will be looking out for you!</div>'
-        f'</div></div>'
+        f'</div></div>'       
     )
 
     fee_html = ""
