@@ -1159,12 +1159,15 @@ function renderTixGuestPreview() {
         <div class="gp-row"><span>📍</span><span><strong>Location:</strong> ${checkinLoc}</span></div>
         ${mapsUrl?`<div class="gp-row"><span></span><a href="#" style="color:#1a3a5c;font-size:12px;font-weight:600;">🗺️ Google Maps GPS</a></div>`:''}
         <div class="gp-row"><span>⏰</span><span>Check-in: <strong>${SAMPLE.checkin}</strong> | Tour: <strong>${SAMPLE.tour_time}</strong></span></div>
-        <div style="font-size:11px;color:#c0392b;padding:2px 0 2px 26px;">★ Late check-in is subject to forfeiting your tour entry.</div>
-        <div style="font-size:11px;color:#c0392b;padding:2px 0 4px 26px;">★ All times are based on the Arizona (AZ) time zone.</div>
+        ${v('tmpl__global__tix_email_warning').split('\n').filter(Boolean).map(line=>`<div style="font-size:11px;color:#c0392b;padding:2px 0 2px 26px;">${hl(esc(line),'tmpl__global__tix_email_warning')}</div>`).join('')}
         <div class="gp-row"><span>🔖</span><span>Confirmation#: <strong>95151</strong><br><span style="font-size:11px;color:#555;">${cfmNote}</span></span></div>
       </div>
       ${prepHtml}
       ${notesItems?`<div class="gp-reminders"><div class="gp-reminders-title">📌 Know Before You Go</div><ul style="margin:0;padding-left:16px;font-size:12px;color:#333;">${notesItems}</ul></div>`:''}
+      <div style="margin-bottom:10px;">
+        <div style="font-size:12px;font-weight:600;color:#1a3a5c;margin-bottom:6px;">📝 Notes <span style="font-weight:400;color:#aaa;font-size:11px;">(optional)</span></div>
+        <div style="border:1px solid #ddd;border-radius:8px;padding:8px 10px;font-size:11px;color:#aaa;background:#fafafa;">Any questions or special requests...</div>
+      </div>
       <div style="font-size:12px;color:#555;text-align:center;margin-bottom:10px;">${checkboxText}</div>
       <div class="gp-btn">${submitBtn}</div>
       <div class="gp-thanks-text">${thanksSmall}</div>
