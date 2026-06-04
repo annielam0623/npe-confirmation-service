@@ -306,6 +306,18 @@ body{
 
 .btn-logout:hover{color:#fff;background:rgba(255,255,255,.06);}
 
+.btn-topbar-action{
+  display:inline-flex;align-items:center;gap:6px;
+  height:30px;padding:0 12px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,.28);
+  background:rgba(255,255,255,.08);
+  color:#fff;font-size:12px;font-weight:600;
+  text-decoration:none;cursor:pointer;
+  transition:background .15s,border-color .15s;
+}
+.btn-topbar-action:hover{background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.5);}
+
 .content{
   flex:1;
   overflow-y:auto;
@@ -532,6 +544,7 @@ body{
     <span class="topbar-title">{% block page_title %}{% endblock %}</span>
     <div class="topbar-right">
       <div class="top-search">⌕ <span>Search CHD#, guest, tour...</span></div>
+      {% block topbar_actions %}{% endblock %}
       {% if current_user %}<span class="topbar-user">{{ current_user.username }}</span>{% endif %}
     </div>
   </div>
