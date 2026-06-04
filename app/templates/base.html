@@ -4,151 +4,555 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}NPE Operations{% endblock %}</title>
+
 <style>
+/* =========================================================
+   NPE Operations Center — Base Layout V2
+   Flask + Jinja2 + Vanilla CSS/JS
+   ========================================================= */
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#F0EAE2;color:#1a1a1a;display:flex;height:100vh;overflow:hidden;}
-.sidebar{width:210px;min-width:210px;background:#F5F0EB;border-right:0.5px solid rgba(0,0,0,0.1);display:flex;flex-direction:column;overflow-y:auto;height:100vh;}
-.sidebar-top{padding:16px 16px 12px;border-bottom:0.5px solid rgba(0,0,0,0.08);}
-.sidebar-logo{font-size:13px;font-weight:500;color:#1a1a1a;}
-.sidebar-user{font-size:11px;color:#9B8F88;margin-top:2px;}
-.nav-group{padding:10px 0 4px;}
-.nav-group-label{font-size:10px;font-weight:500;color:#B5A9A2;letter-spacing:0.07em;text-transform:uppercase;padding:0 16px 4px;}
-.nav-group-label:hover{font-weight:700;}
-.nav-item{display:flex;align-items:center;padding:6px 16px;font-size:13px;color:#6B5E57;cursor:pointer;border-left:2px solid transparent;text-decoration:none;transition:background 0.1s;}
-.nav-item:hover{color:#3D3530;background:#EDE7E0;font-weight:500;}
-.nav-item.active{color:#3D3530;font-weight:500;border-left:2px solid #3D3530;background:#EDE7E0;}
-.nav-item.sub{padding-left:28px;font-size:12px;font-weight:600;}
-.nav-item.sub .dot{width:5px;height:5px;border-radius:50%;margin-right:8px;flex-shrink:0;background:#aaa;}
-.nav-item.sub.tour .dot{background:#7A9E7E;}
-.nav-item.sub.morning .dot{background:#6D8EA0;}
-.nav-item.sub.tickets .dot{background:#C4956A;}
-.nav-item.sub.activities .dot{background:#9B8BB4;}
-.nav-module-label{display:flex;align-items:center;gap:7px;padding:7px 16px 3px;font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;margin-top:4px;}
-.nav-module-label .dot-module{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.nav-module-label.tour{color:#fff;background:#7A9E7E;padding:5px 16px;margin:4px 0;}
-.nav-module-label .dot-module{display:none;}
-.nav-module-label.morning{color:#fff;background:#6D8EA0;padding:5px 16px;margin:4px 0;}
-.nav-module-label .dot-module{display:none;}
-.nav-module-label.tickets{color:#fff;background:#C4956A;padding:5px 16px;margin:4px 0;}
-.nav-module-label .dot-module{display:none;}
-.nav-item.sub.tour{border-left-color:transparent;}
-.nav-item.sub.tour.active{border-left-color:#7A9E7E;color:#7A9E7E;background:#EEF3EE;}
-.nav-item.sub.tour:hover{background:#EEF3EE;color:#7A9E7E;}
-.nav-item.sub.morning{border-left-color:transparent;}
-.nav-item.sub.morning.active{border-left-color:#6D8EA0;color:#6D8EA0;background:#E9EFF3;}
-.nav-item.sub.morning:hover{background:#E9EFF3;color:#6D8EA0;}
-.nav-item.sub.tickets{border-left-color:transparent;}
-.nav-item.sub.tickets.active{border-left-color:#C4956A;color:#C4956A;background:#F5EDE4;}
-.nav-item.sub.tickets:hover{background:#F5EDE4;color:#C4956A;}
-.nav-module-label.activities{color:#fff;background:#9B8BB4;padding:5px 16px;margin:4px 0;}
-.nav-item.sub.activities{border-left-color:transparent;}
-.nav-item.sub.activities.active{border-left-color:#9B8BB4;color:#9B8BB4;background:#F0EDF5;}
-.nav-item.sub.activities:hover{background:#F0EDF5;color:#9B8BB4;}
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
-.topbar{height:48px;background:#F5F0EB;border-bottom:0.5px solid rgba(0,0,0,0.08);display:flex;align-items:center;padding:0 24px;justify-content:space-between;flex-shrink:0;}
-.topbar-title{font-size:15px;font-weight:500;}
-.topbar-right{display:flex;align-items:center;gap:12px;}
-.topbar-user{font-size:13px;color:#888;}
-.btn-logout{font-size:12px;color:#888;text-decoration:none;padding:4px 10px;border:0.5px solid rgba(0,0,0,0.15);border-radius:6px;}
-.btn-logout:hover{color:#1a1a1a;border-color:rgba(0,0,0,0.3);}
-.content{flex:1;overflow-y:auto;padding:20px 24px;background:#F0EAE2;position:relative;}
-.float-nav{position:fixed;right:20px;bottom:24px;display:flex;flex-direction:column;gap:6px;z-index:100;}
-.float-btn{width:34px;height:34px;border-radius:50%;background:#fff;border:0.5px solid rgba(0,0,0,0.15);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;color:#555;text-decoration:none;transition:background 0.1s;}
-.float-btn:hover{background:#f5f5f3;color:#1a1a1a;}
-.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;}
-.badge-confirmed{background:#EAF3DE;color:#3B6D11;}
-.badge-pending{background:#E6F1FB;color:#185FA5;}
-.badge-onhold{background:#FAEEDA;color:#BA7517;}
-.badge-cancelled{background:#FCEBEB;color:#A32D2D;}
-.badge-new{background:#EEEDFE;color:#534AB7;}
-.badge-handled{background:#EAF3DE;color:#3B6D11;}
-.badge-source{background:#f1efe8;color:#5f5e5a;}
-.btn{display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border-radius:7px;border:0.5px solid rgba(0,0,0,0.15);font-size:12px;cursor:pointer;background:#fff;color:#555;text-decoration:none;transition:background 0.1s;}
-.btn:hover{background:#f5f5f3;color:#1a1a1a;}
-.btn-primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a;}
-.btn-primary:hover{background:#333;}
-.btn-email{border-color:#185FA5;color:#185FA5;}
-.btn-sms{border-color:#3B6D11;color:#3B6D11;}
-.btn-both{background:#1a1a1a;color:#fff;border-color:#1a1a1a;}
-.btn-danger{border-color:#A32D2D;color:#A32D2D;}
+
+:root{
+  --bg:#06101c;
+  --bg-2:#081624;
+  --panel:#0b1724;
+  --panel-2:#0d1b2a;
+  --sidebar:#050b13;
+  --sidebar-2:#07111d;
+  --line:rgba(255,255,255,.10);
+  --line-2:rgba(255,255,255,.16);
+  --text:#f8fafc;
+  --muted:#94a3b8;
+  --muted-2:#64748b;
+  --blue:#3b82f6;
+  --green:#22c55e;
+  --purple:#a855f7;
+  --orange:#f97316;
+  --red:#ef4444;
+  --amber:#f59e0b;
+  --radius:18px;
+  --shadow:0 22px 70px rgba(0,0,0,.34);
+}
+
+html,body{height:100%;}
+
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Arial,sans-serif;
+  background:
+    radial-gradient(circle at 78% 8%, rgba(14,165,233,.13), transparent 34%),
+    radial-gradient(circle at 18% 0%, rgba(59,130,246,.08), transparent 28%),
+    var(--bg);
+  color:var(--text);
+  display:flex;
+  height:100vh;
+  overflow:hidden;
+}
+
+/* ---------------- Sidebar ---------------- */
+.sidebar{
+  width:244px;
+  min-width:244px;
+  height:100vh;
+  background:
+    linear-gradient(180deg, rgba(15,23,42,.95), rgba(2,6,23,.97)),
+    var(--sidebar);
+  border-right:1px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+
+.sidebar-top{
+  padding:24px 22px 22px;
+  border-bottom:1px solid var(--line);
+}
+
+.sidebar-logo{
+  font-size:30px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:-.05em;
+  color:#fff;
+}
+
+.sidebar-subtitle{
+  margin-top:7px;
+  font-size:11px;
+  color:#38bdf8;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+
+.sidebar-user{
+  margin-top:10px;
+  color:var(--muted);
+  font-size:12px;
+}
+
+.nav-scroll{
+  flex:1;
+  overflow-y:auto;
+  padding:14px 12px;
+}
+
+.nav-scroll::-webkit-scrollbar{width:6px;}
+.nav-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:20px;}
+
+.nav-group{margin-bottom:14px;}
+
+.nav-group-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  color:#cbd5e1;
+  background:transparent;
+  border:0;
+  border-radius:13px;
+  padding:11px 12px;
+  font-size:14px;
+  font-weight:700;
+  cursor:pointer;
+  text-align:left;
+  transition:.16s ease;
+}
+
+.nav-group-title:hover{
+  background:rgba(255,255,255,.06);
+  color:#fff;
+}
+
+.nav-group-title.active,
+.nav-item.active{
+  background:linear-gradient(90deg, rgba(37,99,235,.45), rgba(59,130,246,.12));
+  color:#fff;
+  box-shadow:inset 3px 0 0 var(--blue);
+}
+
+.nav-title-left{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.nav-ico{
+  width:18px;
+  height:18px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  opacity:.92;
+}
+
+.nav-caret{
+  font-size:15px;
+  color:var(--muted);
+  transition:.18s ease;
+}
+
+.nav-group.collapsed .nav-caret{transform:rotate(-90deg);}
+
+.nav-sub{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  margin:4px 0 0 0;
+  padding-left:10px;
+  overflow:hidden;
+}
+
+.nav-group.collapsed .nav-sub{display:none;}
+
+.nav-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-height:36px;
+  padding:9px 12px 9px 18px;
+  color:var(--muted);
+  text-decoration:none;
+  border-radius:12px;
+  font-size:13px;
+  font-weight:500;
+  transition:.15s ease;
+}
+
+.nav-item:hover{
+  color:#fff;
+  background:rgba(255,255,255,.06);
+}
+
+.nav-dot{
+  width:7px;
+  height:7px;
+  border-radius:999px;
+  background:var(--muted-2);
+  flex:0 0 auto;
+}
+
+.nav-dot.blue{background:var(--blue);}
+.nav-dot.green{background:var(--green);}
+.nav-dot.purple{background:var(--purple);}
+.nav-dot.orange{background:var(--orange);}
+
+.nav-footer{
+  padding:16px 16px 18px;
+  border-top:1px solid var(--line);
+}
+
+.user-card{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  text-decoration:none;
+  color:#fff;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.04);
+  border-radius:18px;
+  padding:12px;
+}
+
+.user-avatar{
+  width:36px;
+  height:36px;
+  border-radius:999px;
+  background:rgba(255,255,255,.12);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:800;
+}
+
+.user-meta{min-width:0;flex:1;}
+.user-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-role{font-size:11px;color:var(--muted);margin-top:2px;}
+
+.signout{
+  display:block;
+  margin-top:10px;
+  text-align:center;
+  color:var(--muted);
+  text-decoration:none;
+  font-size:12px;
+  padding:8px 10px;
+  border-radius:12px;
+}
+
+.signout:hover{background:rgba(255,255,255,.06);color:#fff;}
+
+/* ---------------- Main ---------------- */
+.main{
+  flex:1;
+  height:100vh;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+.topbar{
+  height:64px;
+  flex:0 0 64px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 28px;
+  border-bottom:1px solid rgba(255,255,255,.06);
+  background:rgba(5,11,19,.56);
+  backdrop-filter:blur(18px);
+}
+
+.topbar-title{
+  font-size:14px;
+  color:var(--muted);
+  font-weight:600;
+}
+
+.topbar-right{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.top-search{
+  width:320px;
+  height:40px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:0 13px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:rgba(255,255,255,.04);
+  color:var(--muted);
+  font-size:13px;
+}
+
+.topbar-user{
+  color:#fff;
+  font-size:13px;
+}
+
+.btn-logout{
+  color:var(--muted);
+  text-decoration:none;
+  border:1px solid var(--line);
+  padding:7px 12px;
+  border-radius:12px;
+  font-size:12px;
+}
+
+.btn-logout:hover{color:#fff;background:rgba(255,255,255,.06);}
+
+.content{
+  flex:1;
+  overflow-y:auto;
+  padding:28px;
+  position:relative;
+}
+
+.content::-webkit-scrollbar{width:8px;}
+.content::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:20px;}
+
+/* ---------------- Shared UI ---------------- */
+.npe-panel{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.035);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:22px;
+  height:22px;
+  padding:0 8px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:800;
+}
+
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  height:36px;
+  padding:0 14px;
+  border-radius:10px;
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.04);
+  color:#fff;
+  text-decoration:none;
+  font-size:13px;
+  font-weight:650;
+  cursor:pointer;
+  transition:.16s ease;
+}
+
+.btn:hover{background:rgba(255,255,255,.08);}
+
+.float-nav{
+  position:fixed;
+  right:18px;
+  bottom:22px;
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  z-index:100;
+}
+
+.float-btn{
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background:rgba(15,23,42,.84);
+  color:var(--muted);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  text-decoration:none;
+  backdrop-filter:blur(10px);
+}
+
+.float-btn:hover{color:#fff;background:rgba(255,255,255,.08);}
+
+@media (max-width:1100px){
+  .sidebar{width:78px;min-width:78px;}
+  .sidebar-subtitle,.sidebar-user,.nav-label,.nav-caret,.nav-sub,.user-meta,.signout{display:none!important;}
+  .sidebar-top{padding:22px 14px;text-align:center;}
+  .sidebar-logo{font-size:24px;}
+  .nav-group-title,.nav-item{justify-content:center;padding:12px;}
+  .nav-title-left{gap:0;}
+  .top-search{display:none;}
+}
+
 {% block extra_styles %}{% endblock %}
 </style>
+
 {% block extra_head %}{% endblock %}
 </head>
+
 <body>
 <nav class="sidebar">
   <div class="sidebar-top">
-    <div class="sidebar-logo">NPE Operations</div>
-    {% if current_user %}<div class="sidebar-user">{{ current_user.display_name or current_user.username }}</div>{% endif %}
+    <div class="sidebar-logo">NPE</div>
+    <div class="sidebar-subtitle">Operations Center</div>
+    {% if current_user %}
+    <div class="sidebar-user">{{ current_user.display_name or current_user.username }}</div>
+    {% endif %}
   </div>
-  <div class="nav-group">
-    <a href="/admin/coming-soon?module=Dashboard" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">Dashboard</a>
-    <a href="/admin/coming-soon?module=30+Days+Forecast" class="nav-item {% if active_page == 'forecast' %}active{% endif %}">30 Days Forecast</a>
+
+  <div class="nav-scroll">
+    <div class="nav-group">
+      <a href="/admin/dashboard" class="nav-group-title {% if active_page == 'dashboard' %}active{% endif %}">
+        <span class="nav-title-left">
+          <span class="nav-ico">⌂</span>
+          <span class="nav-label">Dashboard</span>
+        </span>
+      </a>
+    </div>
+
+    <div class="nav-group" data-nav-group>
+      <button type="button" class="nav-group-title {% if active_section == 'operations' %}active{% endif %}" onclick="toggleNavGroup(this)">
+        <span class="nav-title-left">
+          <span class="nav-ico">▣</span>
+          <span class="nav-label">Operations</span>
+        </span>
+        <span class="nav-caret">⌄</span>
+      </button>
+      <div class="nav-sub">
+        <a href="/admin/coming-soon?module=30+Days+Forecast" class="nav-item {% if active_page == 'forecast' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">30 Days Forecast</span></a>
+        <a href="/admin/manifests" class="nav-item {% if active_page == 'manifests' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">Manifests</span></a>
+        <a href="/admin/operations/orders" class="nav-item {% if active_page == 'orders' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">Orders</span></a>
+        <a href="/admin/coming-soon?module=Dispatch" class="nav-item {% if active_page == 'dispatch' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">Dispatch</span></a>
+      </div>
+    </div>
+
+    <div class="nav-group" data-nav-group>
+      <button type="button" class="nav-group-title {% if active_section == 'notifications' %}active{% endif %}" onclick="toggleNavGroup(this)">
+        <span class="nav-title-left">
+          <span class="nav-ico">◌</span>
+          <span class="nav-label">Notifications</span>
+        </span>
+        <span class="nav-caret">⌄</span>
+      </button>
+      <div class="nav-sub">
+        <a href="/admin/notifications/morning-pickup/send" class="nav-item {% if active_page == 'morning_send' %}active{% endif %}"><span class="nav-dot blue"></span><span class="nav-label">Morning Pickup</span></a>
+        <a href="/admin/notifications/tour-confirmation/send" class="nav-item {% if active_page == 'tour_send' %}active{% endif %}"><span class="nav-dot green"></span><span class="nav-label">Tour Confirmation</span></a>
+        <a href="/admin/notifications/tickets-reminder/send" class="nav-item {% if active_page == 'tickets_send' %}active{% endif %}"><span class="nav-dot purple"></span><span class="nav-label">Ticket Reminder</span></a>
+        <a href="/admin/activities/broadcasting-log" class="nav-item {% if active_page == 'broadcasting_log' %}active{% endif %}"><span class="nav-dot orange"></span><span class="nav-label">Guest Broadcast</span></a>
+      </div>
+    </div>
+
+    <div class="nav-group" data-nav-group>
+      <button type="button" class="nav-group-title {% if active_section == 'activities' %}active{% endif %}" onclick="toggleNavGroup(this)">
+        <span class="nav-title-left">
+          <span class="nav-ico">⇄</span>
+          <span class="nav-label">Activities</span>
+        </span>
+        <span class="nav-caret">⌄</span>
+      </button>
+      <div class="nav-sub">
+        <a href="/admin/activities/order-log" class="nav-item {% if active_page == 'order_log' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">Order Log</span></a>
+        <a href="/admin/notifications/send-log" class="nav-item {% if active_page == 'send_log' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">Send Log</span></a>
+        <a href="/admin/activities/broadcasting-log" class="nav-item {% if active_page == 'broadcasting_log' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">Broadcast Log</span></a>
+      </div>
+    </div>
+
+    <div class="nav-group" data-nav-group>
+      <button type="button" class="nav-group-title {% if active_section == 'reports' %}active{% endif %}" onclick="toggleNavGroup(this)">
+        <span class="nav-title-left">
+          <span class="nav-ico">▤</span>
+          <span class="nav-label">Reports</span>
+        </span>
+        <span class="nav-caret">⌄</span>
+      </button>
+      <div class="nav-sub">
+        <a href="/admin/system/sales-report" class="nav-item {% if active_page == 'sales_report' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">Sales Report</span></a>
+        <a href="/admin/system/ops-summary" class="nav-item {% if active_page == 'ops_summary' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">Operations Summary</span></a>
+        <a href="/admin/system/promotion-stats" class="nav-item {% if active_page == 'promotion_stats' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">Promotion Stats</span></a>
+        <a href="/admin/system/bug-reports" class="nav-item {% if active_page == 'bug_reports' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">Bug Reports</span></a>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <a href="/admin/messages" class="nav-group-title {% if active_page == 'messages' %}active{% endif %}">
+        <span class="nav-title-left">
+          <span class="nav-ico">✉</span>
+          <span class="nav-label">Messages</span>
+        </span>
+      </a>
+    </div>
+
+    {% if current_user and current_user.role in ('admin', 'superadmin') %}
+    <div class="nav-group" data-nav-group>
+      <button type="button" class="nav-group-title {% if active_section == 'settings' %}active{% endif %}" onclick="toggleNavGroup(this)">
+        <span class="nav-title-left">
+          <span class="nav-ico">⚙</span>
+          <span class="nav-label">Settings</span>
+        </span>
+        <span class="nav-caret">⌄</span>
+      </button>
+      <div class="nav-sub">
+        <a href="/admin/coming-soon?module=General+Settings" class="nav-item {% if active_page == 'settings_general' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">General</span></a>
+        <a href="/admin/coming-soon?module=Products" class="nav-item {% if active_page == 'settings_products' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">Products</span></a>
+        <a href="/admin/settings/templates" class="nav-item {% if active_page == 'settings_templates' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">Content Studio</span></a>
+        <a href="/admin/settings/pickup-locations" class="nav-item {% if active_page == 'pickup_locations' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">Pickup Locations</span></a>
+        <a href="/admin/settings/teams" class="nav-item {% if active_page == 'settings_teams' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">Teams</span></a>
+        <a href="/admin/settings/users" class="nav-item {% if active_page == 'settings_users' %}active{% endif %}"><span class="nav-dot"></span><span class="nav-label">Users</span></a>
+      </div>
+    </div>
+    {% endif %}
   </div>
-  <div class="nav-group">
-   <div class="nav-group-label" style="font-size:12px;font-weight:800;color:#1a1a1a;letter-spacing:0.07em;"></div>
-    <a href="/admin/manifests" class="nav-item {% if active_page == 'manifests' %}active{% endif %}">Manifests</a>
-    <a href="/admin/operations/orders" class="nav-item {% if active_page == 'orders' %}active{% endif %}">Orders</a>
-    <a href="/admin/coming-soon?module=Dispatch" class="nav-item {% if active_page == 'dispatch' %}active{% endif %}">Dispatch</a>
+
+  <div class="nav-footer">
+    {% if current_user %}
+    <div class="user-card">
+      <div class="user-avatar">{{ current_user.initials or current_user.username[:2] | upper }}</div>
+      <div class="user-meta">
+        <div class="user-name">{{ current_user.display_name or current_user.username }}</div>
+        <div class="user-role">{{ current_user.role or 'Team Member' }}</div>
+      </div>
+      <span style="color:var(--muted)">›</span>
+    </div>
+    {% endif %}
+    <a href="/auth/logout" class="signout">Sign out</a>
   </div>
-  <div class="nav-group">    
-    <div class="nav-group-label" style="font-size:12px;font-weight:800;color:#1a1a1a;letter-spacing:0.07em;">NOTIFICATIONS</div>
-    <div class="nav-module-label tour"><span class="dot-module"></span>Tour Confirmation</div>
-    <a href="/admin/notifications/tour-confirmation/send" class="nav-item sub tour {% if active_page == 'tour_send' %}active{% endif %}"><span class="dot"></span>Send</a>
-    <a href="/admin/notifications/tour-confirmation/tracking" class="nav-item sub tour {% if active_page == 'tour_tracking' %}active{% endif %}" target="_blank"><span class="dot"></span>Tracking</a>
-    <a href="/admin/notifications/tour-confirmation/utilities" class="nav-item sub tour {% if active_page == 'tour_utilities' %}active{% endif %}"><span class="dot"></span>Utilities</a>
-    <div style="height:6px;"></div>
-    <div class="nav-module-label morning"><span class="dot-module"></span>Morning Pickup</div>
-    <a href="/admin/notifications/morning-pickup/send" class="nav-item sub morning {% if active_page == 'morning_send' %}active{% endif %}"><span class="dot"></span>Send</a>
-    <a href="/admin/notifications/morning-pickup/tracking" class="nav-item sub morning {% if active_page == 'morning_tracking' %}active{% endif %}" target="_blank"><span class="dot"></span>Tracking</a>
-    <a href="/admin/notifications/morning-pickup/utilities" class="nav-item sub morning {% if active_page == 'morning_utilities' %}active{% endif %}"><span class="dot"></span>Utilities</a>
-    <div style="height:6px;"></div>
-    <div class="nav-module-label tickets"><span class="dot-module"></span>Tickets Reminder</div>
-    <a href="/admin/notifications/tickets-reminder/send" class="nav-item sub tickets {% if active_page == 'tickets_send' %}active{% endif %}"><span class="dot"></span>Send</a>
-    <a href="/admin/notifications/tickets-reminder/tracking" class="nav-item sub tickets {% if active_page == 'tickets_tracking' %}active{% endif %}" target="_blank"><span class="dot"></span>Tracking</a>
-    <a href="/admin/notifications/tickets-reminder/utilities" class="nav-item sub tickets {% if active_page == 'tickets_utilities' %}active{% endif %}"><span class="dot"></span>Utilities</a>
-  </div>
-  <div class="nav-group">
-    <div class="nav-module-label activities">Activities</div>
-    <a href="/admin/activities/order-log" class="nav-item sub activities {% if active_page == 'order_log' %}active{% endif %}"><span class="dot"></span>Order Log</a>
-    <a href="/admin/notifications/send-log" class="nav-item sub activities {% if active_page == 'send_log' %}active{% endif %}"><span class="dot"></span>Send Log</a>
-    <a href="/admin/activities/broadcasting-log" class="nav-item sub activities {% if active_page == 'broadcasting_log' %}active{% endif %}"><span class="dot"></span>Broadcasting Log</a>
- </div>
-  <div class="nav-group">
-    <div class="nav-module-label" style="color:#fff;background:#64748b;padding:5px 16px;margin:4px 0;">System</div>
-    <a href="/admin/system/sales-report" class="nav-item sub {% if active_page == 'sales_report' %}active{% endif %}"><span class="dot"></span>Sales Report</a>
-    <a href="/admin/system/ops-summary" class="nav-item sub {% if active_page == 'ops_summary' %}active{% endif %}"><span class="dot"></span>Operations Summary</a>
-    <a href="/admin/system/promotion-stats" class="nav-item sub {% if active_page == 'promotion_stats' %}active{% endif %}"><span class="dot"></span>Promotion Stats</a>
-    <a href="/admin/system/bug-reports" class="nav-item sub {% if active_page == 'bug_reports' %}active{% endif %}"><span class="dot"></span>Bug Reports</a>
-  </div>
-  {% if current_user and current_user.role in ('admin', 'superadmin') %}
-  <div class="nav-group" style="margin-top:auto;">
-    <div class="nav-group-label" style="font-weight:700;color:#1a1a1a;">Settings</div>
-    <a href="/admin/coming-soon?module=General+Settings" class="nav-item sub {% if active_page == 'settings_general' %}active{% endif %}"><span class="dot"></span>General</a>
-    <a href="/admin/coming-soon?module=Products" class="nav-item sub {% if active_page == 'settings_products' %}active{% endif %}"><span class="dot"></span>Products</a>
-    <a href="/admin/settings/templates" class="nav-item sub {% if active_page == 'settings_templates' %}active{% endif %}"><span class="dot"></span>Content Studio</a>
-    <a href="/admin/settings/pickup-locations" class="nav-item sub {% if active_page == 'pickup_locations' %}active{% endif %}"><span class="dot"></span>Pickup Locations</a>
-    <a href="/admin/settings/teams" class="nav-item sub {% if active_page == 'settings_teams' %}active{% endif %}"><span class="dot"></span>Teams</a>
-    <a href="/admin/settings/users" class="nav-item sub {% if active_page == 'settings_users' %}active{% endif %}"><span class="dot"></span>Users</a>
-  </div>
-  {% endif %}
 </nav>
+
 <div class="main">
   <div class="topbar">
     <span class="topbar-title">{% block page_title %}{% endblock %}</span>
     <div class="topbar-right">
+      <div class="top-search">⌕ <span>Search CHD#, guest, tour...</span></div>
       {% if current_user %}<span class="topbar-user">{{ current_user.username }}</span>{% endif %}
-      <a href="/auth/logout" class="btn-logout">Sign out</a>
     </div>
   </div>
+
   <div class="content" id="main-content">
     {% block content %}{% endblock %}
   </div>
 </div>
+
 <div class="float-nav">
   <a class="float-btn" onclick="document.getElementById('main-content').scrollTop=0" title="Top">↑</a>
   <a class="float-btn" onclick="document.getElementById('main-content').scrollTop=999999" title="Bottom">↓</a>
 </div>
+
+<script>
+function toggleNavGroup(button){
+  const group = button.closest('[data-nav-group]');
+  if(!group) return;
+  group.classList.toggle('collapsed');
+}
+</script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
