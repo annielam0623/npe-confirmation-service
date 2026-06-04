@@ -340,6 +340,7 @@
       text-transform: uppercase;
     }
 
+    .stat.s-pax .num { color: #60a5fa; }
     .stat.s-total .num {
       color: #1a3a5c;
     }
@@ -858,7 +859,7 @@
       <h1>Tickets Reminder Log</h1>
       <div class="top-bar-sub">Stay on top of every ticket. Never miss a guest.</div>
     </div>
-    <button class="logout-btn" onclick="location.href='/auth/logout'">Logout</button>
+    <a href="/admin/dashboard" class="logout-btn" style="text-decoration:none;margin-right:8px;">← Back</a><button class="logout-btn" onclick="location.href='/auth/logout'">Logout</button>
   </div>
 
   <div class="toolbar" style="justify-content:space-between;">
@@ -900,6 +901,10 @@
     <div class="stat s-total">
       <div class="num" id="s-total">0</div>
       <div class="lbl">Total</div>
+    </div>
+    <div class="stat s-pax">
+      <div class="num" id="s-pax">0</div>
+      <div class="lbl">Total Pax</div>
     </div>
     <div class="stat s-yes">
       <div class="num" id="s-yes">0</div>
@@ -1446,14 +1451,16 @@
             || (r.phone || '').toLowerCase().includes(q);
         });
       }
-      var tot = rows.length, yes = 0, resc = 0, pend = 0, cancel = 0;
+      var tot = rows.length, yes = 0, resc = 0, pend = 0, cancel = 0, pax = 0;
       rows.forEach(function (r) {
         if (r.confirmation_status === 'yes') yes++;
         else if (r.confirmation_status === 'reschedule_req') resc++;
         else if (r.confirmation_status === 'cancel') cancel++;
         else pend++;
+        pax += parseInt(r.quantities) || 0;
       });
       document.getElementById('s-total').textContent = tot;
+      document.getElementById('s-pax').textContent = pax;
       document.getElementById('s-yes').textContent = yes;
       document.getElementById('s-resc').textContent = resc;
       document.getElementById('s-cancel').textContent = cancel;
