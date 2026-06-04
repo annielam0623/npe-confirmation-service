@@ -236,8 +236,7 @@ border:1px solid;font-size:11px;font-weight:750;flex-shrink:0;
     <div class="db-top-left">
       <div class="db-date" id="dbDate"></div>
       <h1>Good morning, {{ current_user.display_name or current_user.username | capitalize }}</h1>
-      <p>Here is the live operating view for today's NPE tours, guest confirmations, vehicle readiness, and urgent order
-        exceptions.</p>
+      <p>Your daily hub for tour confirmations, morning pickup SMS, ticket reminders, and guest tracking.</p>
     </div>
     <div class="db-top-right">
       <div class="db-search">
@@ -265,14 +264,13 @@ border:1px solid;font-size:11px;font-weight:750;flex-shrink:0;
           </svg>
         </div>
         <div class="qcard-right">
-          <div class="qcard-badge">3</div>
+          <div class="qcard-badge"></div>
           <div class="qcard-chevron"><svg viewBox="0 0 24 24">
               <polyline points="9 18 15 12 9 6" />
             </svg></div>
         </div>
       </div>
       <div class="qcard-title">Morning Pickup</div>
-      <div class="qcard-desc">3 pickups need attention</div>
       <div class="qcard-btns">
         <a class="btn-send" href="/admin/notifications/morning-pickup/send">
           <svg viewBox="0 0 24 24">
@@ -300,14 +298,13 @@ border:1px solid;font-size:11px;font-weight:750;flex-shrink:0;
           </svg>
         </div>
         <div class="qcard-right">
-          <div class="qcard-badge">5</div>
+          <div class="qcard-badge"></div>
           <div class="qcard-chevron"><svg viewBox="0 0 24 24">
               <polyline points="9 18 15 12 9 6" />
             </svg></div>
         </div>
       </div>
       <div class="qcard-title">Bus Tour Confirmation</div>
-      <div class="qcard-desc">5 tours pending confirmation</div>
       <div class="qcard-btns">
         <a class="btn-send" href="/admin/notifications/tour-confirmation/send">
           <svg viewBox="0 0 24 24">
@@ -336,14 +333,13 @@ border:1px solid;font-size:11px;font-weight:750;flex-shrink:0;
           </svg>
         </div>
         <div class="qcard-right">
-          <div class="qcard-badge">4</div>
+          <div class="qcard-badge"></div>
           <div class="qcard-chevron"><svg viewBox="0 0 24 24">
               <polyline points="9 18 15 12 9 6" />
             </svg></div>
         </div>
       </div>
       <div class="qcard-title">Ticket Reminder</div>
-      <div class="qcard-desc">4 reminders need review</div>
       <div class="qcard-btns">
         <a class="btn-send" href="/admin/notifications/tickets-reminder/send">
           <svg viewBox="0 0 24 24">
@@ -361,7 +357,7 @@ border:1px solid;font-size:11px;font-weight:750;flex-shrink:0;
       </div>
     </div>
 
-    <!-- Guest Broadcast -->
+    <!-- Broadcast -->
     <div class="qcard orange">
       <div class="qcard-head">
         <div class="qcard-icon">
@@ -370,14 +366,13 @@ border:1px solid;font-size:11px;font-weight:750;flex-shrink:0;
           </svg>
         </div>
         <div class="qcard-right">
-          <div class="qcard-badge">2</div>
+          <div class="qcard-badge"></div>
           <div class="qcard-chevron"><svg viewBox="0 0 24 24">
               <polyline points="9 18 15 12 9 6" />
             </svg></div>
         </div>
       </div>
-      <div class="qcard-title">Guest Broadcast</div>
-      <div class="qcard-desc">2 broadcasts in progress</div>
+      <div class="qcard-title">Broadcast</div>
       <div class="qcard-btns">
         <a class="btn-send" href="/admin/activities/broadcasting-log" style="text-decoration:none">
           <svg viewBox="0 0 24 24">
@@ -421,139 +416,139 @@ border:1px solid;font-size:11px;font-weight:750;flex-shrink:0;
         <div class="metric">
           <div class="metric-val blue">18</div>
           <div class="metric-label">Departures</div>
-          <div class="metric-sub">6 tours · 12 transfers</div>
+          <div class="metric-sub"></div>
         </div>
         <div class="metric">
           <div class="metric-val green">286</div>
           <div class="metric-label">Guests Confirmed</div>
-          <div class="metric-sub">92% confirmation rate</div>
+          <div class="metric-sub"></div>
         </div>
         <div class="metric">
           <div class="metric-val amber">14</div>
           <div class="metric-label">Need Action</div>
-          <div class="metric-sub">Missing pickup / ref</div>
+          iv>
+          <div class="metric">
+            <div class="metric-val purple">.</div>
+            <div class="metric-label">Revenue Today</div>
+            <div class="metric-sub">.</div>
+          </div>
         </div>
-        <div class="metric">
-          <div class="metric-val purple">$48.6K</div>
-          <div class="metric-label">Revenue Today</div>
-          <div class="metric-sub">+12.8% vs last Tue</div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Urgent Alerts</span>
+          <a class="panel-link" href="/admin/system/ops-summary">View all</a>
+        </div>
+        <div class="alert-rows">
+          <div class="alert-row">
+            <div class="alert-row-left warn">TBA<svg viewBox="0 0 24 24">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg></div>
+            <span class="alert-time"></span>
+          </div>
+          <div class="alert-row">
+            <div class="alert-row-left warn">TBA<svg viewBox="0 0 24 24">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg></div>
+            <span class="alert-time"></span>
+          </div>
+          <div class="alert-row">
+            <div class="alert-row-left warn">TBA<svg viewBox="0 0 24 24">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg></div>
+            <span class="alert-time"></span>
+          </div>
+          <div class="alert-row">
+            <div class="alert-row-left info"><svg viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
+              </svg>TBA</div>
+            <span class="alert-time">2</span>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="panel">
-      <div class="panel-head">
-        <span class="panel-title">Urgent Alerts</span>
-        <a class="panel-link" href="/admin/system/ops-summary">View all</a>
+    <!-- Today's Schedule + My Tasks -->
+    <div class="dash-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Today's Schedule</span>
+          <a class="panel-link" href="/admin/manifests">View full schedule</a>
+        </div>
+        <div class="schedule-rows">
+          <div class="schedule-row"><span class="sched-time">7:00 AM</span><span>West Rim Morning Tour</span><span
+              class="sched-guests">44 Guests</span><span class="sched-status confirmed">Confirmed</span></div>
+          <div class="schedule-row"><span class="sched-time">8:30 AM</span><span>Hoover Dam Express</span><span
+              class="sched-guests">33 Guests</span><span class="sched-status pending">Pending</span></div>
+          <div class="schedule-row"><span class="sched-time">9:00 AM</span><span>Antelope Canyon & Horseshoe
+              Bend</span><span class="sched-guests">52 Guests</span><span
+              class="sched-status confirmed">Confirmed</span>
+          </div>
+          <div class="schedule-row"><span class="sched-time">10:00 AM</span><span>Bryce Canyon Tour</span><span
+              class="sched-guests">48 Guests</span><span class="sched-status confirmed">Confirmed</span></div>
+        </div>
       </div>
-      <div class="alert-rows">
-        <div class="alert-row">
-          <div class="alert-row-left warn"><svg viewBox="0 0 24 24">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>3 Morning Pickup messages unread</div>
-          <span class="alert-time">5m ago</span>
+
+      <div class="panel">
+        <div class="panel-head">
+          <span class="panel-title">My Tasks</span>
+          <a class="panel-link" href="/admin/system/ops-summary">View all tasks</a>
         </div>
-        <div class="alert-row">
-          <div class="alert-row-left warn"><svg viewBox="0 0 24 24">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>6 orders missing supplier confirmation</div>
-          <span class="alert-time">18m ago</span>
-        </div>
-        <div class="alert-row">
-          <div class="alert-row-left warn"><svg viewBox="0 0 24 24">
-              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-              <line x1="12" y1="9" x2="12" y2="13" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>2 failed SMS reminders</div>
-          <span class="alert-time">1h ago</span>
-        </div>
-        <div class="alert-row">
-          <div class="alert-row-left info"><svg viewBox="0 0 24 24">
-              <circle cx="12" cy="12" r="10" />
-              <line x1="12" y1="8" x2="12" y2="12" />
-              <line x1="12" y1="16" x2="12.01" y2="16" />
-            </svg>1 vehicle assignment pending</div>
-          <span class="alert-time">2h ago</span>
+        <div class="task-rows">
+          <div class="task-row">
+            <div class="task-left"><svg viewBox="0 0 24 24">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>Review 3 failed reminders</div>
+            <span class="task-badge high">High</span>
+          </div>
+          <div class="task-row">
+            <div class="task-left"><svg viewBox="0 0 24 24">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>Verify 6 supplier confirmations</div>
+            <span class="task-badge high">High</span>
+          </div>
+          <div class="task-row">
+            <div class="task-left"><svg viewBox="0 0 24 24">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>Check MTLV ticket issue</div>
+            <span class="task-badge medium">Medium</span>
+          </div>
+          <div class="task-row">
+            <div class="task-left"><svg viewBox="0 0 24 24">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                <polyline points="22 4 12 14.01 9 11.01" />
+              </svg>Update Antelope inventory</div>
+            <span class="task-badge low">Low</span>
+          </div>
         </div>
       </div>
     </div>
+
   </div>
+  {% endblock %}
 
-  <!-- Today's Schedule + My Tasks -->
-  <div class="dash-grid">
-    <div class="panel">
-      <div class="panel-head">
-        <span class="panel-title">Today's Schedule</span>
-        <a class="panel-link" href="/admin/manifests">View full schedule</a>
-      </div>
-      <div class="schedule-rows">
-        <div class="schedule-row"><span class="sched-time">7:00 AM</span><span>West Rim Morning Tour</span><span
-            class="sched-guests">44 Guests</span><span class="sched-status confirmed">Confirmed</span></div>
-        <div class="schedule-row"><span class="sched-time">8:30 AM</span><span>Hoover Dam Express</span><span
-            class="sched-guests">33 Guests</span><span class="sched-status pending">Pending</span></div>
-        <div class="schedule-row"><span class="sched-time">9:00 AM</span><span>Antelope Canyon & Horseshoe
-            Bend</span><span class="sched-guests">52 Guests</span><span class="sched-status confirmed">Confirmed</span>
-        </div>
-        <div class="schedule-row"><span class="sched-time">10:00 AM</span><span>Bryce Canyon Tour</span><span
-            class="sched-guests">48 Guests</span><span class="sched-status confirmed">Confirmed</span></div>
-      </div>
-    </div>
+  {% block scripts %}
+  <script>
+    (function () {
+      const el = document.getElementById('dbDate');
+      if (el) {
+        el.textContent = new Date().toLocaleDateString('en-US', {
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+      }
 
-    <div class="panel">
-      <div class="panel-head">
-        <span class="panel-title">My Tasks</span>
-        <a class="panel-link" href="/admin/system/ops-summary">View all tasks</a>
-      </div>
-      <div class="task-rows">
-        <div class="task-row">
-          <div class="task-left"><svg viewBox="0 0 24 24">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>Review 3 failed reminders</div>
-          <span class="task-badge high">High</span>
-        </div>
-        <div class="task-row">
-          <div class="task-left"><svg viewBox="0 0 24 24">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>Verify 6 supplier confirmations</div>
-          <span class="task-badge high">High</span>
-        </div>
-        <div class="task-row">
-          <div class="task-left"><svg viewBox="0 0 24 24">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>Check MTLV ticket issue</div>
-          <span class="task-badge medium">Medium</span>
-        </div>
-        <div class="task-row">
-          <div class="task-left"><svg viewBox="0 0 24 24">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-              <polyline points="22 4 12 14.01 9 11.01" />
-            </svg>Update Antelope inventory</div>
-          <span class="task-badge low">Low</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-</div>
-{% endblock %}
-
-{% block scripts %}
-<script>
-  (function () {
-    const el = document.getElementById('dbDate');
-    if (el) {
-      el.textContent = new Date().toLocaleDateString('en-US', {
-        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-      });
-    }
-
-  })();
-</script>
-{% endblock %}
+    })();
+  </script>
+  {% endblock %}
