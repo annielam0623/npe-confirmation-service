@@ -264,20 +264,20 @@
 
     .pill {
       display: inline-flex;
+      flex-direction: column;
       align-items: center;
-      gap: 4px;
-      padding: 4px 10px;
-      border-radius: 16px;
+      justify-content: center;
+      min-width: 80px;
+      height: 56px;
+      padding: 0 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.6);
       font-size: 13px;
-      font-weight: 600;
       cursor: pointer;
-      border: 1.5px solid #dde3ea;
-      background: #fff;
-      color: #4a6080;
+      transition: .15s;
       white-space: nowrap;
-      font-family: inherit;
-      letter-spacing: 0.3px;
-      transition: all 0.15s;
     }
 
     .pill:hover {
@@ -287,17 +287,16 @@
     }
 
     .pill.active {
-      background: #1a3a5c;
+      background: rgba(24, 95, 165, 0.25);
+      border-color: #185FA5;
       color: #fff;
-      border-color: #1a3a5c;
-      box-shadow: 0 2px 8px rgba(26, 58, 92, 0.2);
     }
 
     .pill .cnt {
-      font-size: 11px;
-      background: rgba(0, 0, 0, .08);
-      border-radius: 8px;
-      padding: 1px 5px;
+      font-size: 15px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 2px;
     }
 
     .pill.active .cnt {
@@ -857,13 +856,12 @@
         <path d="M0,32 Q720,0 1440,32 L1440,32 L0,32 Z" fill="#f0f4f8" />
       </svg>
     </div>
-    <img src="https://nationalparkexpress.com/wp-content/uploads/2026/03/image002.png" alt="NPE">
     <div class="top-bar-text">
+      <a href="/admin/dashboard" class="logout-btn" style="text-decoration:none;margin-right:12px;">← Back</a>
       <h1>Tickets Reminder Log</h1>
       <div class="top-bar-sub">Stay on top of every ticket. Never miss a guest.</div>
     </div>
-    <a href="/admin/dashboard" class="logout-btn" style="text-decoration:none;margin-right:8px;">← Back</a><button
-      class="logout-btn" onclick="location.href='/auth/logout'">Logout</button>
+    <button class="logout-btn" onclick="location.href='/auth/logout'">Logout</button>
   </div>
 
   <div class="toolbar" style="justify-content:space-between;">
@@ -879,7 +877,7 @@
   </div>
 
   <div class="pills-bar">
-    <span class="pill active" data-tour="all" onclick="filterTour(this,'all')">All <span class="cnt"
+    <span class="pill active" data-tour="all" onclick="filterTour(this,'all')">Total Guests<span class="cnt"
         id="p-all">0/0</span></span>
     <span class="pill" data-tour="upper_antelope_tsosie" onclick="filterTour(this,'upper_antelope_tsosie')">U-TC <span
         class="cnt" id="p-utc">0/0</span></span>
@@ -904,7 +902,7 @@
   <div class="stats-bar">
     <div class="stat s-total">
       <div class="num" id="s-total">0</div>
-      <div class="lbl">Total</div>
+      <div class="lbl">Total Orders</div>
     </div>
     <div class="stat s-yes">
       <div class="num" id="s-yes">0</div>
