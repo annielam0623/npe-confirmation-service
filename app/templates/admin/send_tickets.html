@@ -2,10 +2,22 @@
 {% block title %}Send Tickets Reminders — NPE{% endblock %}
 {% block page_title %}Tickets Reminder — Send{% endblock %}
 {% block topbar_actions %}
-<a class="btn-topbar-action" href="/admin/notifications/tickets-reminder/tracking">↗ Tracking</a>
+<style>.top-search{display:none!important}</style>
 {% endblock %}
 
 {% block extra_styles %}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.page-header-title{font-size:20px;font-weight:800;letter-spacing:-.02em;color:#1a1a1a;}
+.btn-tracking-page{
+  display:inline-flex;align-items:center;gap:7px;
+  height:38px;padding:0 16px;border-radius:9px;
+  border:1px solid rgba(107,79,187,.5);
+  background:rgba(107,79,187,.10);
+  color:#6B4FBB;font-size:13px;font-weight:650;
+  cursor:pointer;text-decoration:none;transition:all .18s;
+}
+.btn-tracking-page:hover{background:#6B4FBB;color:#fff;box-shadow:0 0 18px rgba(107,79,187,.35);}
+.btn-tracking-page svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
 .send-card {
   background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
   border-radius: 12px; padding: 24px; max-width: 680px; margin-bottom: 20px;
@@ -99,6 +111,13 @@ table.preview-tbl {
 {% endblock %}
 
 {% block content %}
+<div class="page-header">
+  <div class="page-header-title">Tickets Reminder — Send</div>
+  <a class="btn-tracking-page" href="/admin/notifications/tickets-reminder/tracking">
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    View Tracking
+  </a>
+</div>
 <div id="step-form">
   <div class="send-card">
     <h2>🎟️ Step 1 — Upload Manifest</h2>
