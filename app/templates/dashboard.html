@@ -110,32 +110,20 @@
   border-color:color-mix(in srgb,var(--ac) 55%,transparent);
   background:transparent;
 }
+.btn-send:active{transform:scale(.96)}
 .btn-send:hover{
   background:var(--ac);color:#fff;
   box-shadow:0 0 20px color-mix(in srgb,var(--ac) 42%,transparent);
-}
-.btn-send.sending{
-  background:color-mix(in srgb,var(--ac) 15%,transparent);
-  color:rgba(255,255,255,.6);
-  border-color:color-mix(in srgb,var(--ac) 30%,transparent);
-  pointer-events:none;
-}
-.btn-send.sent{
-  background:#22c55e!important;color:#fff!important;
-  border-color:#22c55e!important;
-  box-shadow:0 0 16px rgba(34,197,94,.35)!important;
-  pointer-events:none;
 }
 .btn-track{
   color:rgba(255,255,255,.65);
   border-color:rgba(255,255,255,.13);
   background:transparent;
 }
+.btn-track:active{transform:scale(.96)}
 .btn-track:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.22);color:#fff}
 .btn-send svg,.btn-track svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
 
-@keyframes spin{to{transform:rotate(360deg)}}
-.spinner{width:13px;height:13px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 
 /* ── Alert Banner ── */
 .alert-banner{
@@ -270,10 +258,10 @@
       <div class="qcard-title">Morning Pickup</div>
       <div class="qcard-desc">3 pickups need attention</div>
       <div class="qcard-btns">
-        <button class="btn-send" data-href="/admin/notifications/morning-pickup/send">
+        <a class="btn-send" href="/admin/notifications/morning-pickup/send">
           <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           <span class="btn-label">Send</span>
-        </button>
+        </a>
         <a class="btn-track" href="/admin/notifications/morning-pickup/tracking">
           <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           Track
@@ -295,10 +283,10 @@
       <div class="qcard-title">Bus Tour Confirmation</div>
       <div class="qcard-desc">5 tours pending confirmation</div>
       <div class="qcard-btns">
-        <button class="btn-send" data-href="/admin/notifications/tour-confirmation/send">
+        <a class="btn-send" href="/admin/notifications/tour-confirmation/send">
           <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           <span class="btn-label">Send</span>
-        </button>
+        </a>
         <a class="btn-track" href="/admin/notifications/tour-confirmation/tracking">
           <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           Track
@@ -320,10 +308,10 @@
       <div class="qcard-title">Ticket Reminder</div>
       <div class="qcard-desc">4 reminders need review</div>
       <div class="qcard-btns">
-        <button class="btn-send" data-href="/admin/notifications/tickets-reminder/send">
+        <a class="btn-send" href="/admin/notifications/tickets-reminder/send">
           <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           <span class="btn-label">Send</span>
-        </button>
+        </a>
         <a class="btn-track" href="/admin/notifications/tickets-reminder/tracking">
           <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           Track
@@ -478,37 +466,6 @@
     });
   }
 
-  // Send button state machine
-  document.querySelectorAll('.btn-send[data-href]').forEach(btn => {
-    btn.addEventListener('click', function(){
-      if(this.dataset.state) return;
-      this.dataset.state = 'sending';
-      this.classList.add('sending');
-      const label = this.querySelector('.btn-label');
-      const icon  = this.querySelector('svg');
-      if(icon) icon.style.display = 'none';
-      if(label) label.innerHTML = '<span class="spinner"></span> Sending...';
-
-      setTimeout(() => {
-        this.classList.remove('sending');
-        this.classList.add('sent');
-        if(icon){
-          icon.style.display = '';
-          icon.innerHTML = '<polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
-        }
-        if(label) label.textContent = 'Sent';
-
-        setTimeout(() => {
-          this.classList.remove('sent');
-          this.dataset.state = '';
-          if(icon){
-            icon.innerHTML = '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>';
-          }
-          if(label) label.textContent = 'Send';
-        }, 2500);
-      }, 1800);
-    });
-  });
 })();
 </script>
 {% endblock %}
