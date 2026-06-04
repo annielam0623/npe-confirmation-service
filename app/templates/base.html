@@ -431,7 +431,7 @@ body{
       </a>
     </div>
 
-    <div class="nav-group" data-nav-group>
+    <div class="nav-group {% if active_section != 'operations' %}collapsed{% endif %}" data-nav-group>
       <button type="button" class="nav-group-title {% if active_section == 'operations' %}active{% endif %}" onclick="toggleNavGroup(this)">
         <span class="nav-title-left">
           <span class="nav-ico">▣</span>
@@ -447,7 +447,7 @@ body{
       </div>
     </div>
 
-    <div class="nav-group" data-nav-group>
+    <div class="nav-group {% if active_section != 'notifications' %}collapsed{% endif %}" data-nav-group>
       <button type="button" class="nav-group-title {% if active_section == 'notifications' %}active{% endif %}" onclick="toggleNavGroup(this)">
         <span class="nav-title-left">
           <span class="nav-ico">◌</span>
@@ -462,7 +462,7 @@ body{
       </div>
     </div>
 
-    <div class="nav-group" data-nav-group>
+    <div class="nav-group {% if active_section != 'activities' %}collapsed{% endif %}" data-nav-groupp>
       <button type="button" class="nav-group-title {% if active_section == 'activities' %}active{% endif %}" onclick="toggleNavGroup(this)">
         <span class="nav-title-left">
           <span class="nav-ico">⇄</span>
@@ -477,7 +477,7 @@ body{
       </div>
     </div>
 
-    <div class="nav-group" data-nav-group>
+    <class="nav-group {% if active_section != 'reports' %}collapsed{% endif %}" data-nav-group>
       <button type="button" class="nav-group-title {% if active_section == 'reports' %}active{% endif %}" onclick="toggleNavGroup(this)">
         <span class="nav-title-left">
           <span class="nav-ico">▤</span>
@@ -503,7 +503,7 @@ body{
     </div>
 
     {% if current_user and current_user.role in ('admin', 'superadmin') %}
-    <div class="nav-group" data-nav-group>
+    <div class="nav-group {% if active_section != 'settings' %}collapsed{% endif %}" data-nav-group>
       <button type="button" class="nav-group-title {% if active_section == 'settings' %}active{% endif %}" onclick="toggleNavGroup(this)">
         <span class="nav-title-left">
           <span class="nav-ico">⚙</span>
