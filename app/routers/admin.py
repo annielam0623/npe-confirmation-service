@@ -97,7 +97,7 @@ async def dashboard(
     # Show 14 days centred around today (offset shifts the window)
     start = today + timedelta(days=offset * 14)
     dates = [datetime.combine(start + timedelta(days=i), datetime.min.time())
-             for i in range(14)]
+            for i in range(14)]
     end_date = dates[-1]
 
     stats = await get_dashboard_stats(db, dates)
