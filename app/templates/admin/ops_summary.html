@@ -59,6 +59,16 @@
   <div id="response-stats-wrap"><div class="os-loading">Loading...</div></div>
 </div>
 
+<div class="os-section">
+  <div class="os-section-title">Guest Response — Tickets Reminder</div>
+  <div id="tickets-response-wrap"><div class="os-loading">Loading...</div></div>
+</div>
+
+<div class="os-section">
+  <div class="os-section-title">Guest Response — Morning Pickup</div>
+  <div id="morning-response-wrap"><div class="os-loading">Loading...</div></div>
+</div>
+
 <script>
 let currentRange = 'today';
 
@@ -123,6 +133,28 @@ function renderSendStats(data){
   document.getElementById('send-stats-wrap').innerHTML = html || '<div class="os-loading">No data</div>';
 }
 
+function renderTicketsResponseStats(data){
+  const html = `<div class="os-card">
+    <div class="stat-grid">
+      <div class="stat-box"><div class="lbl">Total Sent</div><div class="val">${data.total.toLocaleString()}</div></div>
+      <div class="stat-box yes"><div class="lbl">Confirmed</div><div class="val">${data.yes.toLocaleString()}</div><div class="sub">${data.pct_yes}%</div></div>
+      <div class="stat-box pending"><div class="lbl">Pending</div><div class="val">${data.pending.toLocaleString()}</div><div class="sub">${data.pct_pending}%</div></div>
+    </div>
+  </div>`;
+  document.getElementById('tickets-response-wrap').innerHTML = html;
+}
+
+function renderMorningResponseStats(data){
+  const html = `<div class="os-card">
+    <div class="stat-grid">
+      <div class="stat-box"><div class="lbl">Total Sent</div><div class="val">${data.total.toLocaleString()}</div></div>
+      <div class="stat-box yes"><div class="lbl">Checked In</div><div class="val">${data.checked_in.toLocaleString()}</div><div class="sub">${data.pct_checked_in}%</div></div>
+      <div class="stat-box pending"><div class="lbl">Not Yet</div><div class="val">${data.not_yet.toLocaleString()}</div><div class="sub">${data.pct_not_yet}%</div></div>
+    </div>
+  </div>`;
+  document.getElementById('morning-response-wrap').innerHTML = html;
+}
+
 function renderResponseStats(data){
   const avgYes    = data.avg_hours_yes    ? `avg ${data.avg_hours_yes}h` : '';
   const avgModify = data.avg_hours_modify ? `avg ${data.avg_hours_modify}h` : '';
@@ -141,16 +173,24 @@ async function loadAll(){
   const p = rangeParams();
   document.getElementById('send-stats-wrap').innerHTML = '<div class="os-loading">Loading...</div>';
   document.getElementById('response-stats-wrap').innerHTML = '<div class="os-loading">Loading...</div>';
+  document.getElementById('tickets-response-wrap').innerHTML = '<div class="os-loading">Loading...</div>';
+  document.getElementById('morning-response-wrap').innerHTML = '<div class="os-loading">Loading...</div>';
   try {
-    const [r1, r2] = await Promise.all([
+    const [r1, r2, r3, r4] = await Promise.all([
       fetch(`/api/ops-summary/send-stats?${p}`).then(r => r.json()),
       fetch(`/api/ops-summary/response-stats?${p}`).then(r => r.json()),
+      fetch(`/api/ops-summary/tickets-response-stats?${p}`).then(r => r.json()),
+      fetch(`/api/ops-summary/morning-response-stats?${p}`).then(r => r.json()),
     ]);
     renderSendStats(r1);
     renderResponseStats(r2);
+    renderTicketsResponseStats(r3);
+    renderMorningResponseStats(r4);
   } catch(e){
     document.getElementById('send-stats-wrap').innerHTML = '<div class="os-loading">Failed to load</div>';
     document.getElementById('response-stats-wrap').innerHTML = '<div class="os-loading">Failed to load</div>';
+    document.getElementById('tickets-response-wrap').innerHTML = '<div class="os-loading">Failed to load</div>';
+    document.getElementById('morning-response-wrap').innerHTML = '<div class="os-loading">Failed to load</div>';
   }
 }
 

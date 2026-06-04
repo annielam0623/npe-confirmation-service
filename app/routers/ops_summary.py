@@ -143,3 +143,86 @@ async def get_response_stats(
     result["pct_modify"]  = round(result["modify"] / total * 100, 1) if total else 0
     result["pct_pending"] = round(result["pending"]/ total * 100, 1) if total else 0
     return result
+
+
+@router.get("/api/ops-summary/tickets-response-stats")
+async def get_tickets_response_stats(
+    range: str = "month",
+    date_from: str = None,
+    date_to: str = None,
+    db: AsyncSession = Depends(get_db),
+    _user=Depends(require_staff),
+):
+    if range == "today":
+        where = "DATE(sl.sent_at AT TIME ZONE 'America/Los_Angeles') = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Los_Angeles')::date"
+    elif range == "week":
+        where = "sl.sent_at >= NOW() - INTERVAL '7 days'"
+    elif range == "custom" and date_from and date_to:
+        where = f"DATE(sl.sent_at AT TIME ZONE 'America/Los_Angeles') BETWEEN '{date_from}' AND '{date_to}'"
+    else:
+        where = "sl.sent_at >= DATE_TRUNC('month', NOW())"
+
+    rows = await db.execute(text(f"""
+        SELECT tr.confirmation, COUNT(*) AS cnt
+        FROM send_log sl
+        JOIN tickets_reminders tr ON tr.order_number = sl.order_number
+        WHERE {where} AND sl.module = 'tickets_reminder'
+        GROUP BY tr.confirmation
+    """))
+    data = rows.mappings().fetchall()
+
+    total = sum(int(r["cnt"]) for r in data if (r["confirmation"] or '') != 'cancel')
+    result = {"total": total, "yes": 0, "pending": 0}
+    for r in data:
+        conf = r["confirmation"] or "pending"
+        cnt  = int(r["cnt"])
+        if conf == "cancel":
+            continue
+        if conf == "yes":
+            result["yes"] = cnt
+        else:
+            result["pending"] += cnt
+
+    result["pct_yes"]     = round(result["yes"]     / total * 100, 1) if total else 0
+    result["pct_pending"] = round(result["pending"]  / total * 100, 1) if total else 0
+    return result
+
+
+@router.get("/api/ops-summary/morning-response-stats")
+async def get_morning_response_stats(
+    range: str = "month",
+    date_from: str = None,
+    date_to: str = None,
+    db: AsyncSession = Depends(get_db),
+    _user=Depends(require_staff),
+):
+    if range == "today":
+        where_sl = "DATE(sl.sent_at AT TIME ZONE 'America/Los_Angeles') = (CURRENT_TIMESTAMP AT TIME ZONE 'America/Los_Angeles')::date"
+    elif range == "week":
+        where_sl = "sl.sent_at >= NOW() - INTERVAL '7 days'"
+    elif range == "custom" and date_from and date_to:
+        where_sl = f"DATE(sl.sent_at AT TIME ZONE 'America/Los_Angeles') BETWEEN '{date_from}' AND '{date_to}'"
+    else:
+        where_sl = "sl.sent_at >= DATE_TRUNC('month', NOW())"
+
+    rows = await db.execute(text(f"""
+        SELECT
+            COUNT(*) AS total,
+            SUM(CASE WHEN cl.checkin_time IS NOT NULL THEN 1 ELSE 0 END) AS checked_in
+        FROM send_log sl
+        LEFT JOIN checkin_log cl ON cl.order_number = sl.order_number
+        WHERE {where_sl} AND sl.module = 'morning_pickup'
+    """))
+    data = rows.mappings().fetchone()
+
+    total      = int(data["total"] or 0)
+    checked_in = int(data["checked_in"] or 0)
+    not_yet    = total - checked_in
+
+    return {
+        "total":          total,
+        "checked_in":     checked_in,
+        "not_yet":        not_yet,
+        "pct_checked_in": round(checked_in / total * 100, 1) if total else 0,
+        "pct_not_yet":    round(not_yet    / total * 100, 1) if total else 0,
+    }
