@@ -1,149 +1,514 @@
 {% extends "base.html" %}
 {% block title %}Dashboard — NPE Operations{% endblock %}
-{% block page_title %}Dashboard{% endblock %}
+{% block page_title %}{% endblock %}
 
 {% block extra_styles %}
-.date-nav {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 16px;
-}
-.date-display {
-  background: #fff;
-  border: 0.5px solid rgba(0,0,0,0.15);
-  padding: 5px 14px;
-  border-radius: 7px;
-  font-size: 13px;
-  font-weight: 500;
-}
-.btn-nav {
-  width: 28px; height: 28px;
-  border-radius: 7px;
-  border: 0.5px solid rgba(0,0,0,0.15);
-  background: #fff;
-  cursor: pointer;
-  font-size: 15px;
-  display: flex; align-items: center; justify-content: center;
-  color: #555; text-decoration: none;
-}
-.btn-nav:hover { background: #f5f5f3; }
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
 
-/* forecast table */
-.forecast-wrap {
-  background: #fff;
-  border: 0.5px solid rgba(0,0,0,0.1);
-  border-radius: 10px;
-  overflow: auto;
-}
-.forecast-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 12px;
-  min-width: 700px;
-}
-.forecast-table th, .forecast-table td {
-  padding: 7px 10px;
-  border-bottom: 0.5px solid rgba(0,0,0,0.07);
-  text-align: center;
-  white-space: nowrap;
-}
-.forecast-table th:first-child,
-.forecast-table td:first-child {
-  text-align: left;
-  font-weight: 500;
-  color: #1a1a1a;
-  min-width: 130px;
-  position: sticky;
-  left: 0;
-  background: #fff;
-  z-index: 1;
-}
-.forecast-table thead th {
-  font-size: 11px;
-  font-weight: 500;
-  color: #888;
-  background: #fff;
-  position: sticky;
-  top: 0;
-  z-index: 2;
-}
-.forecast-table thead th:first-child { z-index: 3; }
-.forecast-table tr:last-child td { border-bottom: none; }
+.db{max-width:1400px;margin:0 auto;font-family:'DM Sans',-apple-system,sans-serif;}
 
-/* today column */
-.col-today { background: #fffbeb !important; }
-.forecast-table thead .col-today {
-  color: #92400e;
-  font-weight: 500;
+/* ── Topbar ── */
+.db-top{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  margin-bottom:32px;gap:24px;
+}
+.db-top-left .db-date{
+  font-size:12px;color:rgba(255,255,255,.45);
+  margin-bottom:8px;letter-spacing:.04em;
+}
+.db-top-left h1{
+  font-size:38px;font-weight:800;letter-spacing:-.03em;
+  line-height:1.1;margin-bottom:10px;
+}
+.db-top-left p{
+  font-size:14px;color:rgba(255,255,255,.5);
+  max-width:540px;line-height:1.65;
+}
+.db-top-right{
+  display:flex;align-items:center;gap:12px;flex-shrink:0;margin-top:4px;
+}
+.db-search{
+  height:42px;width:280px;border-radius:12px;
+  border:1px solid rgba(255,255,255,.10);
+  background:rgba(255,255,255,.04);
+  display:flex;align-items:center;gap:10px;
+  padding:0 16px;color:rgba(255,255,255,.35);font-size:13px;
+  cursor:text;
 }
 
-/* total row */
-.row-total td {
-  background: #eaf3de;
-  color: #3b6d11;
-  font-weight: 500;
+/* ── Quick Cards ── */
+.quick-grid{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:14px;margin-bottom:18px;
 }
-.row-total td.col-today { background: #d4edbb !important; }
-.row-total td:first-child { color: #3b6d11; }
 
-/* zero value */
-.val-zero { color: #ccc; }
-.val-pos  { color: #1a1a1a; font-weight: 500; }
+.qcard{
+  --ac:#3b82f6;
+  border-radius:18px;
+  border:1px solid color-mix(in srgb,var(--ac) 38%,rgba(255,255,255,.08));
+  background:rgba(255,255,255,.032);
+  padding:22px;
+  transition:border-color .22s,box-shadow .22s,transform .18s,background .22s;
+  position:relative;overflow:hidden;
+}
+.qcard::before{
+  content:"";position:absolute;inset:-1px;
+  opacity:0;pointer-events:none;
+  background:radial-gradient(circle at 18% 0%,color-mix(in srgb,var(--ac) 20%,transparent),transparent 52%);
+  transition:opacity .22s;
+}
+.qcard:hover{
+  border-color:var(--ac);
+  box-shadow:0 0 36px color-mix(in srgb,var(--ac) 20%,transparent);
+  transform:translateY(-2px);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--ac) 8%,transparent),rgba(255,255,255,.025));
+}
+.qcard:hover::before{opacity:1}
+
+.qcard.blue{--ac:#3b82f6}
+.qcard.green{--ac:#22c55e}
+.qcard.purple{--ac:#a855f7}
+.qcard.orange{--ac:#f97316}
+
+.qcard-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+.qcard-icon{
+  width:52px;height:52px;border-radius:14px;
+  border:1px solid color-mix(in srgb,var(--ac) 38%,transparent);
+  background:color-mix(in srgb,var(--ac) 12%,transparent);
+  color:var(--ac);
+  display:flex;align-items:center;justify-content:center;
+  transition:.22s;
+}
+.qcard:hover .qcard-icon{box-shadow:0 0 22px color-mix(in srgb,var(--ac) 30%,transparent)}
+.qcard-icon svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.qcard-right{display:flex;align-items:center;gap:9px}
+.qcard-badge{
+  width:26px;height:26px;border-radius:999px;
+  background:var(--ac);color:#fff;
+  font-size:12px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+}
+.qcard-chevron{color:rgba(255,255,255,.38)}
+.qcard-chevron svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2.5}
+
+.qcard-title{font-size:16px;font-weight:700;margin-bottom:7px;color:#f8fafc}
+.qcard-desc{font-size:13px;color:rgba(255,255,255,.5);margin-bottom:22px;min-height:18px}
+
+.qcard-btns{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.btn-send,.btn-track{
+  height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:13px;font-weight:650;cursor:pointer;
+  border:1px solid;transition:all .18s;
+  font-family:inherit;text-decoration:none;
+  position:relative;overflow:hidden;
+}
+.btn-send{
+  color:var(--ac);
+  border-color:color-mix(in srgb,var(--ac) 55%,transparent);
+  background:transparent;
+}
+.btn-send:hover{
+  background:var(--ac);color:#fff;
+  box-shadow:0 0 20px color-mix(in srgb,var(--ac) 42%,transparent);
+}
+.btn-send.sending{
+  background:color-mix(in srgb,var(--ac) 15%,transparent);
+  color:rgba(255,255,255,.6);
+  border-color:color-mix(in srgb,var(--ac) 30%,transparent);
+  pointer-events:none;
+}
+.btn-send.sent{
+  background:#22c55e!important;color:#fff!important;
+  border-color:#22c55e!important;
+  box-shadow:0 0 16px rgba(34,197,94,.35)!important;
+  pointer-events:none;
+}
+.btn-track{
+  color:rgba(255,255,255,.65);
+  border-color:rgba(255,255,255,.13);
+  background:transparent;
+}
+.btn-track:hover{background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.22);color:#fff}
+.btn-send svg,.btn-track svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:13px;height:13px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+
+/* ── Alert Banner ── */
+.alert-banner{
+  border-radius:14px;
+  border:1px solid rgba(239,68,68,.28);
+  background:rgba(239,68,68,.08);
+  padding:13px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:18px;font-size:13px;
+}
+.alert-banner-left{display:flex;align-items:center;gap:12px;font-weight:600}
+.alert-banner-left svg{width:18px;height:18px;color:#f87171;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+.alert-banner-link{color:#fca5a5;font-weight:600;text-decoration:none;font-size:13px}
+.alert-banner-link:hover{color:#fff}
+
+/* ── Dash Grid ── */
+.dash-grid{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;margin-bottom:14px}
+.panel{
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.09);
+  background:rgba(255,255,255,.032);
+  padding:22px;
+}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.panel-title{font-size:17px;font-weight:750}
+.panel-link{color:#38bdf8;font-size:13px;font-weight:600;text-decoration:none}
+.panel-link:hover{color:#7dd3fc}
+
+/* ── Metrics ── */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:0}
+.metric{padding:0 18px 0 0;border-right:1px solid rgba(255,255,255,.08)}
+.metric:first-child{padding-left:0}
+.metric:last-child{border-right:0}
+.metric-val{font-size:34px;font-weight:850;letter-spacing:-.04em;line-height:1}
+.metric-val.blue{color:#60a5fa}
+.metric-val.green{color:#4ade80}
+.metric-val.amber{color:#fbbf24}
+.metric-val.purple{color:#c084fc}
+.metric-label{font-size:13px;font-weight:700;margin-top:10px}
+.metric-sub{font-size:11px;color:rgba(255,255,255,.38);margin-top:5px}
+
+/* ── Alert Rows ── */
+.alert-rows{display:flex;flex-direction:column}
+.alert-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07);
+  font-size:13px;gap:10px;
+}
+.alert-row:last-child{border-bottom:0}
+.alert-row-left{display:flex;align-items:center;gap:9px}
+.alert-row-left svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.alert-row-left.warn svg{color:#fbbf24}
+.alert-row-left.info svg{color:#60a5fa}
+.alert-time{color:rgba(255,255,255,.35);font-size:11px;flex-shrink:0}
+
+/* ── Schedule ── */
+.schedule-rows{display:flex;flex-direction:column}
+.schedule-row{
+  display:grid;grid-template-columns:96px 1fr 100px 100px;
+  align-items:center;padding:11px 0;
+  border-bottom:1px solid rgba(255,255,255,.07);font-size:13px;
+}
+.schedule-row:last-child{border-bottom:0}
+.sched-time{color:rgba(255,255,255,.55)}
+.sched-guests{color:rgba(255,255,255,.55)}
+.sched-status.confirmed{color:#4ade80}
+.sched-status.pending{color:#fbbf24}
+
+/* ── Tasks ── */
+.task-rows{display:flex;flex-direction:column}
+.task-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 0;border-bottom:1px solid rgba(255,255,255,.07);
+  font-size:13px;gap:10px;
+}
+.task-row:last-child{border-bottom:0}
+.task-left{display:flex;align-items:center;gap:9px}
+.task-left svg{width:15px;height:15px;color:rgba(255,255,255,.3);stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0}
+.task-badge{
+  padding:3px 10px;border-radius:999px;
+  border:1px solid;font-size:11px;font-weight:750;flex-shrink:0;
+}
+.task-badge.high{color:#f87171;border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.10)}
+.task-badge.medium{color:#fbbf24;border-color:rgba(245,158,11,.35);background:rgba(245,158,11,.10)}
+.task-badge.low{color:#60a5fa;border-color:rgba(59,130,246,.35);background:rgba(59,130,246,.10)}
+
+@media(max-width:1280px){
+  .quick-grid{grid-template-columns:repeat(2,1fr)}
+  .dash-grid{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  .quick-grid{grid-template-columns:1fr}
+  .metrics{grid-template-columns:repeat(2,1fr);gap:18px}
+  .metric{border-right:0;padding:0}
+  .db-top{flex-direction:column}
+  .db-top-left h1{font-size:28px}
+}
 {% endblock %}
 
 {% block content %}
-<div class="date-nav">
-  <a class="btn-nav" href="/admin/dashboard?offset={{ offset - 1 }}">&#8249;</a>
-  <span class="date-display">
-    {{ start_date.strftime('%b %d') }} — {{ end_date.strftime('%b %d, %Y') }}
-  </span>
-  <a class="btn-nav" href="/admin/dashboard?offset={{ offset + 1 }}">&#8250;</a>
-  <a class="btn" href="/admin/dashboard">Today</a>
-  <a class="btn" href="/admin/forecast" style="margin-left:4px;">Full Forecast ↗</a>
-</div>
+<div class="db">
 
-<div class="forecast-wrap">
-  <table class="forecast-table">
-    <thead>
-      <tr>
-        <th>Route</th>
-        {% for d in dates %}
-        <th class="{% if d.date() == today %}col-today{% endif %}">
-          {{ d.strftime('%a') }}<br>
-          <span style="font-weight:400;color:#aaa;">{{ d.strftime('%-m/%-d') }}</span>
-          {% if d.date() == today %} ★{% endif %}
-        </th>
-        {% endfor %}
-      </tr>
-    </thead>
-    <tbody>
-      <!-- ANT Total row -->
-      <tr class="row-total">
-        <td>ANT Total</td>
-        {% for d in dates %}
-        {% set v = stats.get(d.strftime('%Y-%m-%d'), {}).get('ant_total', 0) %}
-        <td class="{% if d.date() == today %}col-today{% endif %} {% if v == 0 %}val-zero{% else %}val-pos{% endif %}">
-          {{ v if v > 0 else '—' }}
-        </td>
-        {% endfor %}
-      </tr>
-      <!-- Sub rows -->
-      {% for row_key, row_label in [
-        ('ant_upper', 'ANT Upper'),
-        ('ant_lower', 'ANT Lower'),
-        ('ant_x',     'Canyon X'),
-        ('out_shuttle','Outbound Shuttle'),
-        ('in_shuttle', 'Inbound Shuttle'),
-      ] %}
-      <tr>
-        <td>{{ row_label }}</td>
-        {% for d in dates %}
-        {% set v = stats.get(d.strftime('%Y-%m-%d'), {}).get(row_key, 0) %}
-        <td class="{% if d.date() == today %}col-today{% endif %} {% if v == 0 %}val-zero{% else %}val-pos{% endif %}">
-          {{ v if v > 0 else '—' }}
-        </td>
-        {% endfor %}
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <!-- Top -->
+  <div class="db-top">
+    <div class="db-top-left">
+      <div class="db-date" id="dbDate"></div>
+      <h1>Good morning, {{ current_user.display_name or current_user.username | capitalize }}</h1>
+      <p>Here is the live operating view for today's NPE tours, guest confirmations, vehicle readiness, and urgent order exceptions.</p>
+    </div>
+    <div class="db-top-right">
+      <div class="db-search">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Search CHD#, guest, tour...
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Cards -->
+  <section class="quick-grid">
+
+    <!-- Morning Pickup -->
+    <div class="qcard blue">
+      <div class="qcard-head">
+        <div class="qcard-icon">
+          <svg viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 5v3h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+        </div>
+        <div class="qcard-right">
+          <div class="qcard-badge">3</div>
+          <div class="qcard-chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>
+      <div class="qcard-title">Morning Pickup</div>
+      <div class="qcard-desc">3 pickups need attention</div>
+      <div class="qcard-btns">
+        <button class="btn-send" data-href="/admin/notifications/morning-pickup/send">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span class="btn-label">Send</span>
+        </button>
+        <a class="btn-track" href="/admin/notifications/morning-pickup/tracking">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Track
+        </a>
+      </div>
+    </div>
+
+    <!-- Bus Tour Confirmation -->
+    <div class="qcard green">
+      <div class="qcard-head">
+        <div class="qcard-icon">
+          <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="qcard-right">
+          <div class="qcard-badge">5</div>
+          <div class="qcard-chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>
+      <div class="qcard-title">Bus Tour Confirmation</div>
+      <div class="qcard-desc">5 tours pending confirmation</div>
+      <div class="qcard-btns">
+        <button class="btn-send" data-href="/admin/notifications/tour-confirmation/send">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span class="btn-label">Send</span>
+        </button>
+        <a class="btn-track" href="/admin/notifications/tour-confirmation/tracking">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Track
+        </a>
+      </div>
+    </div>
+
+    <!-- Ticket Reminder -->
+    <div class="qcard purple">
+      <div class="qcard-head">
+        <div class="qcard-icon">
+          <svg viewBox="0 0 24 24"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2z"/><path d="M13 5v2M13 17v2M13 11v2"/></svg>
+        </div>
+        <div class="qcard-right">
+          <div class="qcard-badge">4</div>
+          <div class="qcard-chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>
+      <div class="qcard-title">Ticket Reminder</div>
+      <div class="qcard-desc">4 reminders need review</div>
+      <div class="qcard-btns">
+        <button class="btn-send" data-href="/admin/notifications/tickets-reminder/send">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <span class="btn-label">Send</span>
+        </button>
+        <a class="btn-track" href="/admin/notifications/tickets-reminder/tracking">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Track
+        </a>
+      </div>
+    </div>
+
+    <!-- Guest Broadcast -->
+    <div class="qcard orange">
+      <div class="qcard-head">
+        <div class="qcard-icon">
+          <svg viewBox="0 0 24 24"><path d="M3 11l19-9-9 19-2-8-8-2z"/></svg>
+        </div>
+        <div class="qcard-right">
+          <div class="qcard-badge">2</div>
+          <div class="qcard-chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></div>
+        </div>
+      </div>
+      <div class="qcard-title">Guest Broadcast</div>
+      <div class="qcard-desc">2 broadcasts in progress</div>
+      <div class="qcard-btns">
+        <a class="btn-send" href="/admin/activities/broadcasting-log" style="text-decoration:none">
+          <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          Send
+        </a>
+        <a class="btn-track" href="/admin/activities/broadcasting-log">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Track
+        </a>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Alert Banner -->
+  <div class="alert-banner">
+    <div class="alert-banner-left">
+      <svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      6 items need your attention
+    </div>
+    <a class="alert-banner-link" href="/admin/system/ops-summary">View all alerts →</a>
+  </div>
+
+  <!-- Today at a Glance + Urgent Alerts -->
+  <div class="dash-grid">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Today at a Glance</span>
+        <a class="panel-link" href="/admin/system/ops-summary">Today ⌄</a>
+      </div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-val blue">18</div>
+          <div class="metric-label">Departures</div>
+          <div class="metric-sub">6 tours · 12 transfers</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val green">286</div>
+          <div class="metric-label">Guests Confirmed</div>
+          <div class="metric-sub">92% confirmation rate</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val amber">14</div>
+          <div class="metric-label">Need Action</div>
+          <div class="metric-sub">Missing pickup / ref</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val purple">$48.6K</div>
+          <div class="metric-label">Revenue Today</div>
+          <div class="metric-sub">+12.8% vs last Tue</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Urgent Alerts</span>
+        <a class="panel-link" href="/admin/system/ops-summary">View all</a>
+      </div>
+      <div class="alert-rows">
+        <div class="alert-row">
+          <div class="alert-row-left warn"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>3 Morning Pickup messages unread</div>
+          <span class="alert-time">5m ago</span>
+        </div>
+        <div class="alert-row">
+          <div class="alert-row-left warn"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>6 orders missing supplier confirmation</div>
+          <span class="alert-time">18m ago</span>
+        </div>
+        <div class="alert-row">
+          <div class="alert-row-left warn"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>2 failed SMS reminders</div>
+          <span class="alert-time">1h ago</span>
+        </div>
+        <div class="alert-row">
+          <div class="alert-row-left info"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>1 vehicle assignment pending</div>
+          <span class="alert-time">2h ago</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Today's Schedule + My Tasks -->
+  <div class="dash-grid">
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Today's Schedule</span>
+        <a class="panel-link" href="/admin/manifests">View full schedule</a>
+      </div>
+      <div class="schedule-rows">
+        <div class="schedule-row"><span class="sched-time">7:00 AM</span><span>West Rim Morning Tour</span><span class="sched-guests">44 Guests</span><span class="sched-status confirmed">Confirmed</span></div>
+        <div class="schedule-row"><span class="sched-time">8:30 AM</span><span>Hoover Dam Express</span><span class="sched-guests">33 Guests</span><span class="sched-status pending">Pending</span></div>
+        <div class="schedule-row"><span class="sched-time">9:00 AM</span><span>Antelope Canyon & Horseshoe Bend</span><span class="sched-guests">52 Guests</span><span class="sched-status confirmed">Confirmed</span></div>
+        <div class="schedule-row"><span class="sched-time">10:00 AM</span><span>Bryce Canyon Tour</span><span class="sched-guests">48 Guests</span><span class="sched-status confirmed">Confirmed</span></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title">My Tasks</span>
+        <a class="panel-link" href="/admin/system/ops-summary">View all tasks</a>
+      </div>
+      <div class="task-rows">
+        <div class="task-row">
+          <div class="task-left"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Review 3 failed reminders</div>
+          <span class="task-badge high">High</span>
+        </div>
+        <div class="task-row">
+          <div class="task-left"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Verify 6 supplier confirmations</div>
+          <span class="task-badge high">High</span>
+        </div>
+        <div class="task-row">
+          <div class="task-left"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Check MTLV ticket issue</div>
+          <span class="task-badge medium">Medium</span>
+        </div>
+        <div class="task-row">
+          <div class="task-left"><svg viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Update Antelope inventory</div>
+          <span class="task-badge low">Low</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function(){
+  const el = document.getElementById('dbDate');
+  if(el){
+    el.textContent = new Date().toLocaleDateString('en-US',{
+      weekday:'long',year:'numeric',month:'long',day:'numeric'
+    });
+  }
+
+  // Send button state machine
+  document.querySelectorAll('.btn-send[data-href]').forEach(btn => {
+    btn.addEventListener('click', function(){
+      if(this.dataset.state) return;
+      this.dataset.state = 'sending';
+      this.classList.add('sending');
+      const label = this.querySelector('.btn-label');
+      const icon  = this.querySelector('svg');
+      if(icon) icon.style.display = 'none';
+      if(label) label.innerHTML = '<span class="spinner"></span> Sending...';
+
+      setTimeout(() => {
+        this.classList.remove('sending');
+        this.classList.add('sent');
+        if(icon){
+          icon.style.display = '';
+          icon.innerHTML = '<polyline points="20 6 9 17 4 12" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+        }
+        if(label) label.textContent = 'Sent';
+
+        setTimeout(() => {
+          this.classList.remove('sent');
+          this.dataset.state = '';
+          if(icon){
+            icon.innerHTML = '<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>';
+          }
+          if(label) label.textContent = 'Send';
+        }, 2500);
+      }, 1800);
+    });
+  });
+})();
+</script>
 {% endblock %}

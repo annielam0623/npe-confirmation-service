@@ -3,104 +3,266 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NPE Operations — Sign in</title>
+<title>Sign In — NPE Operations</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Pacifico&family=Bungee&family=Archivo+Black&family=Black+Han+Sans&family=Playfair+Display:wght@700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: #f5f5f3;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #1a1a1a;
-  }
-  .card {
-    background: #fff;
-    border: 0.5px solid rgba(0,0,0,0.12);
-    border-radius: 12px;
-    padding: 40px 44px;
-    width: 360px;
-  }
-  .brand { text-align: center; margin-bottom: 32px; }
-  .brand-name { font-size: 16px; font-weight: 500; margin-bottom: 4px; }
-  .brand-sub { font-size: 12px; color: #888; }
-  .field { margin-bottom: 16px; }
-  .field label {
-    display: block;
-    font-size: 12px;
-    color: #555;
-    margin-bottom: 6px;
-  }
-  .field input {
-    width: 100%;
-    padding: 9px 12px;
-    border: 0.5px solid rgba(0,0,0,0.18);
-    border-radius: 8px;
-    font-size: 13px;
-    color: #1a1a1a;
-    background: #fff;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .field input:focus { border-color: rgba(0,0,0,0.4); }
-  .error {
-    background: #fff5f5;
-    border: 0.5px solid #fca5a5;
-    border-radius: 8px;
-    padding: 9px 12px;
-    font-size: 12px;
-    color: #b91c1c;
-    margin-bottom: 16px;
-  }
-  .btn-login {
-    width: 100%;
-    padding: 10px;
-    background: #1a1a1a;
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    margin-top: 4px;
-    transition: opacity 0.15s;
-  }
-  .btn-login:hover { opacity: 0.85; }
-  .footer {
-    text-align: center;
-    margin-top: 24px;
-    font-size: 11px;
-    color: #bbb;
-  }
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --day-color:#34A853;
+  --day-font:'Bebas Neue',sans-serif;
+}
+
+html,body{height:100%}
+
+body{
+  font-family:'DM Sans',-apple-system,sans-serif;
+  background:
+    radial-gradient(circle at 75% 10%, rgba(14,165,233,.14), transparent 36%),
+    radial-gradient(circle at 20% 90%, rgba(139,92,246,.10), transparent 32%),
+    #06101c;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  padding:32px 16px;
+}
+
+/* Animated background orbs */
+.orb{
+  position:fixed;
+  border-radius:50%;
+  pointer-events:none;
+  filter:blur(80px);
+  opacity:0;
+  animation:orbFade 1.2s .1s forwards;
+}
+.orb1{
+  width:420px;height:420px;
+  top:-80px;right:-80px;
+  background:color-mix(in srgb,var(--day-color) 18%,transparent);
+}
+.orb2{
+  width:320px;height:320px;
+  bottom:-60px;left:-60px;
+  background:rgba(139,92,246,.12);
+}
+@keyframes orbFade{to{opacity:1}}
+
+/* Card */
+.card{
+  position:relative;z-index:1;
+  width:100%;max-width:400px;
+  display:flex;flex-direction:column;
+  align-items:center;
+}
+
+/* Logo */
+.npe-logo{
+  font-family:var(--day-font);
+  font-size:128px;
+  line-height:1;
+  letter-spacing:6px;
+  color:var(--day-color);
+  animation:popIn .5s cubic-bezier(.22,1,.36,1) both;
+  margin-bottom:8px;
+  text-shadow:0 0 60px color-mix(in srgb,var(--day-color) 30%,transparent);
+}
+@keyframes popIn{
+  from{opacity:0;transform:scale(0.82) translateY(18px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
+}
+
+.npe-sub{
+  font-size:10px;letter-spacing:5px;text-transform:uppercase;
+  color:rgba(255,255,255,.32);margin-bottom:5px;
+  animation:fadeUp .7s .15s both;
+}
+.npe-date{
+  font-size:12px;color:rgba(255,255,255,.28);
+  margin-bottom:36px;
+  animation:fadeUp .7s .22s both;
+}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+/* Form */
+.form{
+  width:100%;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:22px;
+  padding:28px 26px 26px;
+  backdrop-filter:blur(12px);
+  animation:fadeUp .7s .3s both;
+}
+
+.form-title{
+  font-size:16px;font-weight:700;color:#f8fafc;
+  text-align:center;margin-bottom:22px;
+  letter-spacing:-.01em;
+}
+
+/* Flash messages */
+.flash{
+  border-radius:10px;padding:10px 14px;
+  font-size:13px;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px;
+}
+.flash.error{
+  background:rgba(239,68,68,.12);
+  border:1px solid rgba(239,68,68,.28);
+  color:#fca5a5;
+}
+.flash.success{
+  background:rgba(34,197,94,.10);
+  border:1px solid rgba(34,197,94,.25);
+  color:#86efac;
+}
+
+/* Fields */
+.field{margin-bottom:14px}
+.field label{
+  display:block;font-size:11px;font-weight:600;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:rgba(255,255,255,.38);margin-bottom:7px;
+}
+.field input{
+  width:100%;padding:12px 15px;
+  background:rgba(255,255,255,.055);
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:12px;
+  font-size:14px;color:#fff;
+  font-family:inherit;
+  outline:none;
+  transition:border-color .18s, box-shadow .18s, background .18s;
+}
+.field input::placeholder{color:rgba(255,255,255,.2)}
+.field input:focus{
+  border-color:var(--day-color);
+  background:rgba(255,255,255,.07);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--day-color) 15%,transparent);
+}
+
+/* Submit */
+.btn-submit{
+  width:100%;margin-top:6px;
+  padding:13px;
+  background:var(--day-color);
+  border:none;border-radius:12px;
+  font-size:14px;font-weight:700;
+  color:#fff;cursor:pointer;
+  font-family:inherit;
+  letter-spacing:.02em;
+  transition:opacity .18s, box-shadow .18s, transform .12s;
+  box-shadow:0 4px 24px color-mix(in srgb,var(--day-color) 30%,transparent);
+}
+.btn-submit:hover{
+  opacity:.9;
+  box-shadow:0 6px 32px color-mix(in srgb,var(--day-color) 42%,transparent);
+}
+.btn-submit:active{transform:scale(.98)}
+
+/* Footer */
+.login-footer{
+  margin-top:20px;
+  font-size:11px;color:rgba(255,255,255,.18);
+  text-align:center;letter-spacing:.02em;
+  animation:fadeUp .8s .42s both;
+}
+
+/* Day indicator */
+.day-dot{
+  display:inline-block;width:6px;height:6px;
+  border-radius:50%;background:var(--day-color);
+  margin-right:5px;vertical-align:middle;
+  margin-bottom:2px;
+}
 </style>
 </head>
 <body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
 <div class="card">
-  <div class="brand">
-    <div class="brand-name">NPE Operations</div>
-    <div class="brand-sub">confirm.nationalparkexpress.com</div>
+  <div class="npe-logo" id="npelogo">NPE</div>
+  <div class="npe-sub">National Park Express</div>
+  <div class="npe-date" id="npedate"></div>
+
+  <div class="form">
+    <div class="form-title">Sign in to Operations</div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    {% if error %}
+      <div class="flash error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="/auth/login">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" name="username" placeholder="you@nationalparkexpress.com" required autocomplete="email" />
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="••••••••" required autocomplete="current-password" />
+      </div>
+      <button type="submit" class="btn-submit">Sign In</button>
+    </form>
   </div>
 
-  {% if error %}
-  <div class="error">{{ error }}</div>
-  {% endif %}
-
-  <form method="post" action="/auth/login">
-    <div class="field">
-      <label for="username">Username</label>
-      <input type="text" id="username" name="username"
-             placeholder="e.g. annie" autocomplete="username" required>
-    </div>
-    <div class="field">
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password"
-             placeholder="••••••••" autocomplete="current-password" required>
-    </div>
-    <button type="submit" class="btn-login">Sign in</button>
-  </form>
-
-  <div class="footer">National Park Express · Internal use only</div>
+  <div class="login-footer">
+    <span class="day-dot" id="dayDot"></span>
+    National Park Express · Las Vegas Operations Center
+  </div>
 </div>
+
+<script>
+(function(){
+  const days  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months= ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  const themes = [
+    {font:"'Pacifico',cursive",          color:'#EA4335'}, // Sun
+    {font:"'Bebas Neue',sans-serif",     color:'#4285F4'}, // Mon
+    {font:"'Bebas Neue',sans-serif",     color:'#34A853'}, // Tue
+    {font:"'Bungee',cursive",            color:'#FBBC05'}, // Wed
+    {font:"'Playfair Display',serif",    color:'#4285F4'}, // Thu
+    {font:"'Archivo Black',sans-serif",  color:'#EA4335'}, // Fri
+    {font:"'Black Han Sans',sans-serif", color:'#34A853'}, // Sat
+  ];
+
+  const now = new Date();
+  const dow = now.getDay();
+  const t   = themes[dow];
+
+  // Apply theme
+  document.documentElement.style.setProperty('--day-color', t.color);
+  document.documentElement.style.setProperty('--day-font',  t.font);
+
+  const logo = document.getElementById('npelogo');
+  logo.style.fontFamily = t.font;
+  logo.style.color      = t.color;
+  logo.style.textShadow = `0 0 60px color-mix(in srgb,${t.color} 30%,transparent)`;
+
+  document.getElementById('dayDot').style.background = t.color;
+
+  // Date
+  document.getElementById('npedate').textContent =
+    days[dow] + ', ' + months[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear();
+})();
+</script>
 </body>
 </html>
