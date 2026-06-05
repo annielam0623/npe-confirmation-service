@@ -250,9 +250,16 @@ async def tracking_tour_confirmation(
             b.submission_count,
             b.mtlv_eligible, b.mtlv_qty, b.mtlv_ticket_status,
             b.mtlv_ticket_sent_by, b.mtlv_ticket_sent_at,
-            b.action_taken_by,
+            COALESCE(
+                (SELECT NULLIF(au.display_name, '') FROM admin_users au WHERE au.username = b.action_taken_by),
+                b.action_taken_by
+            ) AS action_taken_by,
             (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id) AS notes_count,
-            (SELECT author_username FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author,
+            (SELECT COALESCE(NULLIF(au.display_name, ''), bn.author_username)
+               FROM booking_notes bn
+               LEFT JOIN admin_users au ON au.username = bn.author_username
+              WHERE bn.booking_id = b.id
+              ORDER BY bn.created_at DESC LIMIT 1) AS latest_note_author,
             (SELECT body      FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_body,
             (SELECT direction FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_direction
         FROM bookings b
@@ -328,9 +335,16 @@ async def tracking_morning_pickup(
             b.id, b.order_number, b.first_name, b.last_name,
             b.phone, b.quantities, b.pickup_time, b.pickup_location,
             b.tour_date, b.driver, b.vehicle_no,
-            b.action_taken_by,
+            COALESCE(
+                (SELECT NULLIF(au.display_name, '') FROM admin_users au WHERE au.username = b.action_taken_by),
+                b.action_taken_by
+            ) AS action_taken_by,
             (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id) AS notes_count,
-            (SELECT author_username FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_author,
+            (SELECT COALESCE(NULLIF(au.display_name, ''), bn.author_username)
+               FROM booking_notes bn
+               LEFT JOIN admin_users au ON au.username = bn.author_username
+              WHERE bn.booking_id = b.id
+              ORDER BY bn.created_at DESC LIMIT 1) AS latest_note_author,
             (SELECT body      FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_body,
             (SELECT direction FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_direction,
             COALESCE(sl.sms_status, b.sms_status) AS sms_status,
@@ -408,7 +422,11 @@ async def tracking_tickets_reminder(
             t.submitted_at,
             t.reschedule_notes  AS guest_notes,
             t.submission_count,
-            COALESCE(t.action_taken_by, b.action_taken_by) AS action_taken_by,
+            COALESCE(
+                (SELECT NULLIF(au.display_name, '') FROM admin_users au
+                  WHERE au.username = COALESCE(t.action_taken_by, b.action_taken_by)),
+                t.action_taken_by, b.action_taken_by
+            ) AS action_taken_by,
             COALESCE(
                 (SELECT COUNT(*) FROM booking_notes WHERE booking_id = t.id),
                 0

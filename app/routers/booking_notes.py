@@ -185,7 +185,14 @@ async def get_notes_by_order(
     user=Depends(require_staff),
 ):
     booking_res = await db.execute(
-        text("SELECT id, notes, action_taken_by FROM bookings WHERE order_number = :on ORDER BY id DESC LIMIT 1"),
+        text("""
+            SELECT b.id, b.notes,
+                   COALESCE(NULLIF(au.display_name, ''), b.action_taken_by) AS action_taken_by
+            FROM bookings b
+            LEFT JOIN admin_users au ON au.username = b.action_taken_by
+            WHERE b.order_number = :on
+            ORDER BY b.id DESC LIMIT 1
+        """),
         {"on": order_number}
     )
     booking_row = booking_res.mappings().first()
@@ -194,9 +201,12 @@ async def get_notes_by_order(
 
     notes_res = await db.execute(
         text("""
-            SELECT bn.id, bn.booking_id, bn.author_username, bn.direction,
+            SELECT bn.id, bn.booking_id,
+                   COALESCE(NULLIF(au.display_name, ''), bn.author_username) AS author_username,
+                   bn.direction,
                    bn.body, bn.sms_status, bn.email_status, bn.created_at
             FROM booking_notes bn
+            LEFT JOIN admin_users au ON au.username = bn.author_username
             WHERE bn.booking_id = (
                 SELECT id FROM bookings WHERE order_number = :on ORDER BY id DESC LIMIT 1
             )
