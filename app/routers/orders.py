@@ -85,6 +85,7 @@ async def orders_api(
                 b.source,
                 b.created_at,
                 b.updated_at
+                b.status::text  as status,
             FROM bookings b
             WHERE {where}
             ORDER BY GREATEST(b.created_at, COALESCE(b.updated_at, b.created_at)) DESC
@@ -127,6 +128,7 @@ async def orders_api(
             "source":          r["source"] or "—",
             "created_at":      fmt_dt(r["created_at"]),
             "updated_at":      fmt_dt(r["updated_at"]),
+            "status":          r["status"] or "—",
         })
 
     return JSONResponse({

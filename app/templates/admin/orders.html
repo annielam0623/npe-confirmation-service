@@ -44,6 +44,15 @@ table.ord-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:900px
 .dr-apply:hover{background:#333;}
 .btn-export{height:32px;padding:0 14px;background:#fff;border:0.5px solid rgba(0,0,0,0.2);border-radius:7px;font-size:12px;cursor:pointer;color:#444;}
 .btn-export:hover{background:#f5f5f3;}
+/* ── Column resize ── */
+.ord-tbl thead td{position:relative;}
+.col-resizer{position:absolute;right:0;top:0;bottom:0;width:5px;cursor:col-resize;user-select:none;z-index:1;}
+.col-resizer:hover,.col-resizer.resizing{background:rgba(0,0,0,0.15);}
+/* ── Status badges ── */
+.sp-confirmed{background:#EAF3DE;color:#2F7851;}
+.sp-pending{background:#FEF9EC;color:#BA7517;}
+.sp-onhold{background:#FFF0E6;color:#C4511A;}
+.sp-cancelled{background:#FEEEEE;color:#A32D2D;}
 {% endblock %}
 
 {% block content %}
@@ -83,7 +92,7 @@ table.ord-tbl{width:100%;border-collapse:collapse;font-size:12px;min-width:900px
       <thead>
         <tr>
           <td>Order #</td><td>Guest</td><td>Product</td><td>Type</td>
-          <td>Tour Date</td><td>Pickup</td><td>Pax</td><td>Agent</td>
+          <td>Rezdy Status</td><td>Tour Date</td><td>Pickup</td><td>Pax</td><td>Agent</td>
           <td>Source</td><td>Created</td><td>Updated</td>
         </tr>
       </thead>
@@ -178,6 +187,34 @@ function typeTag(t){
   if(t==='self_drive') return '<span class="sp sp-self">Tickets</span>';
   return `<span class="sp">${t}</span>`;
 }
+function statusTagHtml(s){
+  if(!s||s==='—') return '<span style="color:#ccc;">—</span>';
+  const sl=s.toLowerCase();
+  if(sl==='confirmed')  return `<span class="sp sp-confirmed">Confirmed</span>`;
+  if(sl==='pending')    return `<span class="sp sp-pending">Pending</span>`;
+  if(sl==='on_hold'||sl==='onhold') return `<span class="sp sp-onhold">On Hold</span>`;
+  if(sl==='cancelled')  return `<span class="sp sp-cancelled">Cancelled</span>`;
+  return `<span class="sp" style="background:#f1efe8;color:#5f5e5a;">${s}</span>`;
+}
+function initColResize(){
+  const ths = document.querySelectorAll('.ord-tbl thead td');
+  ths.forEach((th)=>{
+    const resizer = document.createElement('div');
+    resizer.className = 'col-resizer';
+    th.appendChild(resizer);
+    let startX, startW;
+    resizer.addEventListener('mousedown', e=>{
+      startX = e.pageX;
+      startW = th.offsetWidth;
+      resizer.classList.add('resizing');
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      e.preventDefault();
+    });
+    function onMove(e){ th.style.minWidth = Math.max(40, startW + e.pageX - startX) + 'px'; }
+    function onUp(){ resizer.classList.remove('resizing'); document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); }
+  });
+}
 function sourceTagHtml(s){
   if(!s||s==='—') return '<span style="color:#ccc;">—</span>';
   const cls=s==='rezdy'?'sp-rezdy':s==='excel'?'sp-excel':'';
@@ -192,7 +229,7 @@ async function loadOrders(){
   if(from) params.set('date_from',from);
   if(to)   params.set('date_to',to);
 
-  document.getElementById('ord-tbody').innerHTML='<tr><td colspan="11" class="ord-loading">Loading...</td></tr>';
+  document.getElementById('ord-tbody').innerHTML='<tr><td colspan="12" class="ord-loading">Loading...</td></tr>';
   const res=await fetch(`/api/operations/orders?${params}`);
   const data=await res.json();
 
@@ -201,7 +238,7 @@ async function loadOrders(){
   document.getElementById('ord-count').textContent=`${data.total.toLocaleString()} orders`;
 
   if(!allRecords.length){
-    document.getElementById('ord-tbody').innerHTML='<tr><td colspan="11" class="ord-loading">No orders found</td></tr>';
+    document.getElementById('ord-tbody').innerHTML='<tr><td colspan="12" class="ord-loading">No orders found</td></tr>';
     document.getElementById('ord-pagination').style.display='none';
     return;
   }
@@ -211,6 +248,7 @@ async function loadOrders(){
       <td>${r.name}<br><span style="font-size:11px;color:#aaa;">${r.phone!=='—'?r.phone:r.email}</span></td>
       <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.product_name}">${r.product_name}</td>
       <td>${typeTag(r.product_type)}</td>
+      <td>${statusTagHtml(r.status)}</td>
       <td style="white-space:nowrap;">${r.tour_date}</td>
       <td style="font-size:11px;color:#666;">${r.pickup_time!=='—'?r.pickup_time:''}${r.pickup_location!=='—'?'<br>'+r.pickup_location:''}</td>
       <td>${r.quantities}</td>
@@ -219,6 +257,7 @@ async function loadOrders(){
       <td style="white-space:nowrap;font-size:11px;">${r.created_at}</td>
       <td style="white-space:nowrap;font-size:11px;">${r.updated_at}</td>
     </tr>`).join('');
+  initColResize();
 
   const pg=document.getElementById('ord-pagination');
   pg.style.display=totalPages>1?'flex':'none';
