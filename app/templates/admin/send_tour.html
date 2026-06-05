@@ -2,7 +2,11 @@
 {% block title %}Send Tour Confirmations — NPE{% endblock %}
 {% block page_title %}Tour Confirmation — Send{% endblock %}
 {% block topbar_actions %}
-<style>.top-search{display:none!important}</style>
+<style>
+  .top-search {
+    display: none !important
+  }
+</style>
 {% endblock %}
 
 
@@ -11,17 +15,18 @@
 .page-header{display:flex;align-items:center;margin-bottom:20px;}
 .page-header-title{font-size:20px;font-weight:800;letter-spacing:-.02em;color:#fff;}
 .btn-tracking-page{
-  position:fixed;top:72px;right:24px;z-index:100;
-  display:inline-flex;align-items:center;gap:7px;
-  height:38px;padding:0 16px;border-radius:9px;
-  background:#2F7851;color:#fff;
-  border:none;font-size:13px;font-weight:650;
-  cursor:pointer;text-decoration:none;transition:all .18s;
-  box-shadow:0 2px 16px rgba(0,0,0,.30);
+position:fixed;top:72px;right:24px;z-index:100;
+display:inline-flex;align-items:center;gap:7px;
+height:38px;padding:0 16px;border-radius:9px;
+background:#2F7851;color:#fff;
+border:none;font-size:13px;font-weight:650;
+cursor:pointer;text-decoration:none;transition:all .18s;
+box-shadow:0 2px 16px rgba(0,0,0,.30);
 }
 .btn-tracking-page:hover{opacity:.88;box-shadow:0 4px 20px rgba(0,0,0,.40);}
-.btn-tracking-page svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
-
+.btn-tracking-page
+svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.btn:hover{ background:#ebebe8; color:#222; }
 .send-card {
 background: #fff; border: 0.5px solid rgba(0,0,0,0.1);
 border-radius: 12px; padding: 24px; max-width: 680px; margin-bottom: 20px;
@@ -119,7 +124,7 @@ animation: spin 0.7s linear infinite;
 display: inline-flex; align-items: center; gap: 6px;
 padding: 7px 16px; border-radius: 7px; font-size: 13px;
 cursor: pointer; border: 1.5px solid rgba(0,0,0,0.15);
-background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
+background: #fff; color:#555; transition: all 0.15s; user-select: none; white-space: nowrap;
 }
 .stype-btn:hover { opacity: 0.85; }
 .stype-btn.active { border-color: #6B4FBB; background: #F0ECFF; color: #6B4FBB; font-weight: 600; }
@@ -127,11 +132,27 @@ background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
 .stype-btn.stype-email.active{ border-color: #BA7517; background: #FAEEDA; color: #BA7517; font-weight: 600; }
 .stype-icon { font-size: 14px; }
 
+/* ===== 发送页可见性修复 ===== */
+
+/* 1) 送信类型钮：未选中也保留各自颜色（修 SMS / Email 白底白字） */
+.stype-btn { color:#6B4FBB; } /* Combined 紫 */
+.stype-btn.stype-sms { color:#185FA5; } /* SMS 蓝 */
+.stype-btn.stype-email { color:#BA7517; } /* Email 橙 */
+
+/* 2) 结果页白卡：标题 + Send Another 按钮（修白字白底看不见） */
+.result-card h2 { color:#1a1a1a; }
+.result-card .btn { background:#f5f5f3; color:#444; border:0.5px solid rgba(0,0,0,0.2); }
+.result-card .btn:hover { background:#ebebe8; color:#222; }
+
 {% endblock %}
 
 {% block content %}
-<a class="btn-tracking-page" href="/admin/notifications/tour-confirmation/tracking"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg> View Tracking</a>
-<div class="page-header"><div class="page-header-title">Tour Confirmation — Send</div></div>
+<a class="btn-tracking-page" href="/admin/notifications/tour-confirmation/tracking"><svg viewBox="0 0 24 24">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+  </svg> View Tracking</a>
+<div class="page-header">
+  <div class="page-header-title">Tour Confirmation — Send</div>
+</div>
 <div id="step-form">
   <div class="send-card">
     <h2>General Order Confirmation</h2>
@@ -309,71 +330,71 @@ background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
 <!-- ── Last Minute Order ─────────────────────────── -->
 
 <div id="lm-step-form">
-<div class="send-card" style="margin-top:8px;">
-  <h2>⚡ Last Minute Order</h2>
-  <p style="font-size:12px;color:#888;margin-top:-8px;margin-bottom:14px;">
-    For orders placed within the cancellation window — skip reconfirmation, send directly to lunch selection &amp;
-    pickup details.
-  </p>
-  <div class="form-row">
-    <div class="form-group">
-      <label>Tour Type</label>
-      <select id="lm-tour-type">
-        <option value="">— Select tour type —</option>
-        <option value="upper_antelope">Upper Antelope Canyon Bus Tour</option>
-        <option value="lower_antelope">Lower Antelope Canyon Bus Tour</option>
-        <option value="antelop_X">Antelope Canyon X Bus Tour</option>
-        <option value="grand_canyon_south">Grand Canyon South Rim Bus Tour</option>
-        <option value="grand_canyon_west">Grand Canyon West Rim Bus Tour</option>
-        <option value="bryce_zion">Bryce Canyon &amp; Zion Bus Tour</option>
-        <option value="valley_of_fire_full">Valley of Fire — Full Day</option>
-        <option value="valley_of_fire_half">Valley of Fire — Half Day</option>
-        <option value="hoover_dam">Hoover Dam Tour</option>
-      </select>
+  <div class="send-card" style="margin-top:8px;">
+    <h2>⚡ Last Minute Order</h2>
+    <p style="font-size:12px;color:#888;margin-top:-8px;margin-bottom:14px;">
+      For orders placed within the cancellation window — skip reconfirmation, send directly to lunch selection &amp;
+      pickup details.
+    </p>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Tour Type</label>
+        <select id="lm-tour-type">
+          <option value="">— Select tour type —</option>
+          <option value="upper_antelope">Upper Antelope Canyon Bus Tour</option>
+          <option value="lower_antelope">Lower Antelope Canyon Bus Tour</option>
+          <option value="antelop_X">Antelope Canyon X Bus Tour</option>
+          <option value="grand_canyon_south">Grand Canyon South Rim Bus Tour</option>
+          <option value="grand_canyon_west">Grand Canyon West Rim Bus Tour</option>
+          <option value="bryce_zion">Bryce Canyon &amp; Zion Bus Tour</option>
+          <option value="valley_of_fire_full">Valley of Fire — Full Day</option>
+          <option value="valley_of_fire_half">Valley of Fire — Half Day</option>
+          <option value="hoover_dam">Hoover Dam Tour</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tour Date</label>
+        <input type="date" id="lm-tour-date" onclick="try{this.showPicker()}catch(e){}">
+      </div>
     </div>
-    <div class="form-group">
-      <label>Tour Date</label>
-      <input type="date" id="lm-tour-date" onclick="try{this.showPicker()}catch(e){}">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Excel Manifest (.xlsx)</label>
+        <input type="file" id="lm-excel-file" accept=".xlsx">
+      </div>
+    </div>
+    <p style="font-size:11px;color:#aaa;margin-bottom:14px;">
+      Required columns: Order Number, First Name, Last Name, Email, Customer Phone, Pick-up Time, Pick-up Location
+    </p>
+    <button class="btn-send" style="background:#7C4A00;" onmouseenter="this.style.background='#5c3700'"
+      onmouseleave="this.style.background='#7C4A00'" onclick="lmUploadPreview()">
+      ⚡ Upload &amp; Preview
+    </button>
+    <span id="lm-upload-err" style="font-size:12px;color:#A32D2D;margin-left:12px;"></span>
+  </div>
+  <div
+    style="background:#fdf6ee;border:1px solid #e8d5b0;border-radius:10px;padding:16px 20px;max-width:680px;margin-bottom:32px;font-size:12px;color:#5a4020;line-height:1.9;">
+    <div style="font-weight:600;margin-bottom:8px;color:#7C4A00;">📖 How to use — Last Minute Order</div>
+    <ol style="margin:0;padding-left:18px;">
+      <li>Use this section <strong>only for orders placed within the cancellation window</strong> (typically same-day or
+        next-day bookings).</li>
+      <li>These guests skip the reconfirmation step and go directly to lunch selection &amp; pickup details.</li>
+      <li>Select the <strong>Tour Type</strong> and <strong>Tour Date</strong>, then upload the manifest.</li>
+      <li>Review the preview and confirm send.</li>
+    </ol>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e8d5b0;color:#888;">
+      ⚠️ Do not use this for regular bookings — guests will not receive the standard confirmation &amp; reconfirmation
+      flow.
+      <div style="font-weight:600;margin-bottom:4px;">⚠️ <strong>Error Handling</strong></div>
+      <ul style="margin:0;padding-left:18px;">
+        <li><strong>Network Error:</strong> Usually caused by temporary network congestion. Wait 1–2 minutes, refresh
+          the page, then upload and send again.</li>
+        <li style="margin-top:4px;"><strong>Internal Server Error:</strong> Stop sending immediately. Take a screenshot
+          and notify Annie. Use alternative channels for urgent communications. Non-urgent orders should wait until the
+          issue is resolved. Most system issues are fixed within 2 hours.</li>
+      </ul>
     </div>
   </div>
-  <div class="form-row">
-    <div class="form-group">
-      <label>Excel Manifest (.xlsx)</label>
-      <input type="file" id="lm-excel-file" accept=".xlsx">
-    </div>
-  </div>
-  <p style="font-size:11px;color:#aaa;margin-bottom:14px;">
-    Required columns: Order Number, First Name, Last Name, Email, Customer Phone, Pick-up Time, Pick-up Location
-  </p>
-  <button class="btn-send" style="background:#7C4A00;" onmouseenter="this.style.background='#5c3700'"
-    onmouseleave="this.style.background='#7C4A00'" onclick="lmUploadPreview()">
-    ⚡ Upload &amp; Preview
-  </button>
-  <span id="lm-upload-err" style="font-size:12px;color:#A32D2D;margin-left:12px;"></span>
-</div>
-<div
-  style="background:#fdf6ee;border:1px solid #e8d5b0;border-radius:10px;padding:16px 20px;max-width:680px;margin-bottom:32px;font-size:12px;color:#5a4020;line-height:1.9;">
-  <div style="font-weight:600;margin-bottom:8px;color:#7C4A00;">📖 How to use — Last Minute Order</div>
-  <ol style="margin:0;padding-left:18px;">
-    <li>Use this section <strong>only for orders placed within the cancellation window</strong> (typically same-day or
-      next-day bookings).</li>
-    <li>These guests skip the reconfirmation step and go directly to lunch selection &amp; pickup details.</li>
-    <li>Select the <strong>Tour Type</strong> and <strong>Tour Date</strong>, then upload the manifest.</li>
-    <li>Review the preview and confirm send.</li>
-  </ol>
-  <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e8d5b0;color:#888;">
-    ⚠️ Do not use this for regular bookings — guests will not receive the standard confirmation &amp; reconfirmation
-    flow.
-    <div style="font-weight:600;margin-bottom:4px;">⚠️ <strong>Error Handling</strong></div>
-    <ul style="margin:0;padding-left:18px;">
-      <li><strong>Network Error:</strong> Usually caused by temporary network congestion. Wait 1–2 minutes, refresh
-        the page, then upload and send again.</li>
-      <li style="margin-top:4px;"><strong>Internal Server Error:</strong> Stop sending immediately. Take a screenshot
-        and notify Annie. Use alternative channels for urgent communications. Non-urgent orders should wait until the
-        issue is resolved. Most system issues are fixed within 2 hours.</li>
-    </ul>
-  </div>
-</div>
 </div>
 <!-- Last Minute Preview -->
 <div id="lm-step-preview" class="hidden">
@@ -409,8 +430,8 @@ background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
   <div style="display:flex;gap:10px;align-items:center;margin-bottom:20px;">
     <div>
       <div id="lm-preview-warning"
-          style="display:none;background:#fff8e1;border:1px solid #f0d080;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:#7C4A00;line-height:1.8;">
-       </div>
+        style="display:none;background:#fff8e1;border:1px solid #f0d080;border-radius:10px;padding:12px 16px;margin-bottom:12px;font-size:12px;color:#7C4A00;line-height:1.8;">
+      </div>
       <div id="lm-preview-meta-bar" style="font-size:12px;color:#888;margin-bottom:8px;"></div>
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
         <label class="stype-btn active" id="lm-lbl-combined" onclick="lmSetSendType('combined')">
