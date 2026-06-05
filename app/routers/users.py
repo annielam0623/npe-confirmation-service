@@ -269,6 +269,8 @@ async def register_submit(
     error = None
     if len(username.strip()) < 3:
         error = "Username must be at least 3 characters."
+    elif "@" in username:
+        error = "Username cannot be an email address. Please choose a plain username."
     elif password != confirm_password:
         error = "Passwords do not match."
     elif len(password) < 8:
