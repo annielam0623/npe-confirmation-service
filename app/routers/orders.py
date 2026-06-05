@@ -84,8 +84,8 @@ async def orders_api(
                 b.agent_name,
                 b.source,
                 b.created_at,
-                b.updated_at
-                b.status::text  as status,
+                b.updated_at,
+                b.status::text  as status
             FROM bookings b
             WHERE {where}
             ORDER BY GREATEST(b.created_at, COALESCE(b.updated_at, b.created_at)) DESC
