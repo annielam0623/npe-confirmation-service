@@ -75,6 +75,7 @@ async def _upsert_booking(db: AsyncSession, data: dict) -> int:
 
     driver     = data.get("driver")
     vehicle_no = data.get("vehicle_no")
+    mtlv_qty   = data.get("mtlv_qty")
 
     if row:
         await db.execute(text("""
@@ -90,12 +91,13 @@ async def _upsert_booking(db: AsyncSession, data: dict) -> int:
                 driver           = :driver,
                 vehicle_no       = :vehicle_no,
                 mtlv_eligible    = :mtlv_eligible,
+                mtlv_qty         = COALESCE(:mtlv_qty, mtlv_qty),
                 token_created    = NOW(),
                 email_status     = 'pending',
                 sms_status       = 'pending',
                 updated_at       = NOW()
             WHERE id = :id
-        """), {**data, "driver": driver, "vehicle_no": vehicle_no, "id": row.id})
+        """), {**data, "driver": driver, "vehicle_no": vehicle_no, "mtlv_qty": mtlv_qty, "id": row.id})
         return row.id
 
     booking_type = "self_drive" if data.get("module") == "tickets_reminder" else "bus_tour"
@@ -103,17 +105,17 @@ async def _upsert_booking(db: AsyncSession, data: dict) -> int:
         INSERT INTO bookings
             (order_number, first_name, last_name, customer_email, phone,
              quantities, pickup_time, pickup_location, tour_date, tour_type,
-             driver, vehicle_no, mtlv_eligible,
+             driver, vehicle_no, mtlv_eligible, mtlv_qty,
              module, booking_type, confirmation, token_created, email_status, sms_status,
              created_at, updated_at)
         VALUES
             (:order_number, :first_name, :last_name, :customer_email, :phone,
              :quantities, :pickup_time, :pickup_location, :tour_date, :tour_type,
-             :driver, :vehicle_no, :mtlv_eligible,
+             :driver, :vehicle_no, :mtlv_eligible, :mtlv_qty,
              :module, :booking_type, 'pending', NOW(), 'pending', 'pending',
              NOW(), NOW())
         RETURNING id
-    """), {**data, "driver": driver, "vehicle_no": vehicle_no, "booking_type": booking_type})
+    """), {**data, "driver": driver, "vehicle_no": vehicle_no, "mtlv_qty": mtlv_qty, "booking_type": booking_type})
     return result.fetchone().id
 
 
@@ -180,6 +182,19 @@ async def send_tour_confirmation(
             results.append({"order": order_num, "status": "skipped", "reason": "no email"})
             continue
 
+        # MTLV Promo: "Eligible" → eligible (guest picks); a number → eligible + pre-set qty
+        _mtlv_raw = str(row.get("mtlv_promo") or "").strip()
+        try:
+            _mtlv_num = int(float(_mtlv_raw))
+        except (ValueError, TypeError):
+            _mtlv_num = None
+        if _mtlv_raw.upper() == "ELIGIBLE":
+            _mtlv_eligible, _mtlv_qty = True, None
+        elif _mtlv_num is not None and _mtlv_num > 0:
+            _mtlv_eligible, _mtlv_qty = True, _mtlv_num
+        else:
+            _mtlv_eligible, _mtlv_qty = False, None
+
         # Upsert booking
         booking_data = {
             "order_number":    order_num,
@@ -193,7 +208,8 @@ async def send_tour_confirmation(
             "tour_date":       _to_date(tour_date),
             "tour_type":       tour_type,
             "module":          "tour_confirmation",
-            "mtlv_eligible":   (row.get("mtlv_promo") or "").strip().upper() == "ELIGIBLE",
+            "mtlv_eligible":   _mtlv_eligible,
+            "mtlv_qty":        _mtlv_qty,
         }
         booking_id = await _upsert_booking(db, booking_data)
 
