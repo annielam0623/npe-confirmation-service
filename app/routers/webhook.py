@@ -443,9 +443,11 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
               existing.lunch_veggie = fields["lunch_veggie"]
               existing.lunch_beef   = fields["lunch_beef"]
 
-          # If status was cancelled and order comes back, re-activate
-          if existing.status == BookingStatus.cancelled.value:
-              existing.status = BookingStatus.pending.value
+          # Sync status from Rezdy
+          if rezdy_status == "CONFIRMED":
+             existing.status = BookingStatus.confirmed.value
+          elif existing.status == BookingStatus.cancelled.value:
+             existing.status = BookingStatus.pending.value
 
           # Record the time Rezdy pushed this update
           from zoneinfo import ZoneInfo as _ZI
@@ -467,7 +469,7 @@ async def rezdy_webhook(request: Request, db: AsyncSession = Depends(get_db)):
           booking = Booking(
               booking_type     = booking_type,
               source           = BookingSource.rezdy.value,
-              status           = BookingStatus.pending.value,
+              status = BookingStatus.confirmed.value if rezdy_status == "CONFIRMED" else BookingStatus.pending.value,
               confirm_token    = secrets.token_urlsafe(32),
               order_number     = order_number,
               rezdy_order_id   = order_number,
