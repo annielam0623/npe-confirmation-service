@@ -37,7 +37,7 @@ border-radius: 12px; padding: 24px; max-width: 680px; margin-bottom: 20px;
 .form-group label { font-size: 12px; color: #888; font-weight: 500; }
 .form-group input[type="file"] {
 padding: 7px 10px; border: 0.5px solid rgba(0,0,0,0.2);
-border-radius: 7px; font-size: 13px; background: #fff; font-family: inherit;
+border-radius: 7px; font-size: 13px; background: #fff; font-family: inherit; color: #1a1a1a;
 }
 .form-group input:focus { outline: none; border-color: #185FA5; }
 
@@ -430,6 +430,7 @@ background: #fff; transition: all 0.15s; user-select: none; white-space: nowrap;
     updateSelCount();
     document.getElementById('step-form').classList.add('hidden');
     document.getElementById('step-preview').classList.remove('hidden');
+    document.getElementById('step-preview').scrollIntoView({ behavior: 'smooth', block: 'start' });
     refreshSendBtn();
   }
 
