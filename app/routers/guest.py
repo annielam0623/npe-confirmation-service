@@ -310,7 +310,7 @@ def _render(booking, tour_config: dict, error_msg: str = "",
     # MTLV — Madame Tussauds ticket selection (only when mtlv_eligible)
     mtlv_html = ""
     if mtlv_eligible:
-        current_mtlv = int(mtlv_qty_val) if mtlv_qty_val is not None else 0
+        current_mtlv = min(int(mtlv_qty_val), qty) if mtlv_qty_val is not None else 0
         mtlv_locked_status = getattr(booking, "mtlv_ticket_status", None)
         mtlv_locked = mtlv_locked_status in ("sent", "cancel")
         if mtlv_locked:
