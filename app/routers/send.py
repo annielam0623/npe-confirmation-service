@@ -61,6 +61,20 @@ def _fmt_date(date_str: str) -> str:
 # ═══════════════════════════════════════════════════════════
 # Helper — insert or update booking record, return row id
 # ═══════════════════════════════════════════════════════════
+
+def _resolve_mtlv(raw):
+    """MTLV 列 → (eligible, qty)。Eligible→(True,None);正整数→(True,n);其他→(False,None)"""
+    s = str(raw or "").strip()
+    try:
+        n = int(float(s))
+    except (ValueError, TypeError):
+        n = None
+    if s.upper() == "ELIGIBLE":
+        return True, None
+    if n is not None and n > 0:
+        return True, n
+    return False, None
+
 async def _upsert_booking(db: AsyncSession, data: dict) -> int:
     existing = await db.execute(text("""
         SELECT id FROM bookings
@@ -183,17 +197,7 @@ async def send_tour_confirmation(
             continue
 
         # MTLV Promo: "Eligible" → eligible (guest picks); a number → eligible + pre-set qty
-        _mtlv_raw = str(row.get("mtlv_promo") or "").strip()
-        try:
-            _mtlv_num = int(float(_mtlv_raw))
-        except (ValueError, TypeError):
-            _mtlv_num = None
-        if _mtlv_raw.upper() == "ELIGIBLE":
-            _mtlv_eligible, _mtlv_qty = True, None
-        elif _mtlv_num is not None and _mtlv_num > 0:
-            _mtlv_eligible, _mtlv_qty = True, _mtlv_num
-        else:
-            _mtlv_eligible, _mtlv_qty = False, None
+        _mtlv_eligible, _mtlv_qty = _resolve_mtlv(row.get("mtlv_promo"))
 
         # Upsert booking
         booking_data = {
@@ -329,6 +333,7 @@ async def send_tour_confirmation_bulk(
         first     = row.get("first_name", "")
         last      = row.get("last_name", "")
         
+        _mtlv_eligible, _mtlv_qty = _resolve_mtlv(row.get("mtlv_promo")) 
         booking_data = {
             "order_number":    order_num,
             "first_name":      first,
@@ -342,6 +347,7 @@ async def send_tour_confirmation_bulk(
             "tour_type":       tour_type,
             "module":          "tour_confirmation",
             "mtlv_eligible":   row.get("mtlv_eligible", False),
+            "mtlv_qty":        _mtlv_qty,  
         }
         booking_id = await _upsert_booking(db, booking_data)
 
@@ -465,6 +471,7 @@ async def send_last_minute_confirmation_bulk(
         first     = row.get("first_name", "")
         last      = row.get("last_name", "")
 
+        _mtlv_eligible, _mtlv_qty = _resolve_mtlv(row.get("mtlv_promo"))
         booking_data = {
             "order_number":    order_num,
             "first_name":      first,
@@ -478,6 +485,7 @@ async def send_last_minute_confirmation_bulk(
             "tour_type":       tour_type,
             "module":          "tour_confirmation",
             "mtlv_eligible":   row.get("mtlv_eligible", False),
+            "mtlv_qty":        _mtlv_qty,  
         }
         booking_id = await _upsert_booking(db, booking_data)
 

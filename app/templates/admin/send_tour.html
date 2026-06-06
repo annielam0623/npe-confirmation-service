@@ -652,7 +652,8 @@ background: #fff; color:#555; transition: all 0.15s; user-select: none; white-sp
         quantities: r.quantities || 1,
         pickup_time: r.pickup_time || '',
         pickup_location: r.pickup_location || '',
-        mtlv_eligible: (r.mtlv_promo || '').trim().toUpperCase() === 'ELIGIBLE',
+        mtlv_promo: r.mtlv_promo || '',
+        mtlv_qty: parseInt(r.mtlv_promo, 10) > 0 ? parseInt(r.mtlv_promo, 10) : null,
       }));
 
     try {
@@ -848,7 +849,8 @@ background: #fff; color:#555; transition: all 0.15s; user-select: none; white-sp
         quantities: r.quantities || 1,
         pickup_time: r.pickup_time || '',
         pickup_location: r.pickup_location || '',
-        mtlv_eligible: (r.mtlv_promo || '').trim().toUpperCase() === 'ELIGIBLE',
+        mtlv_promo: r.mtlv_promo || '',
+        mtlv_qty: parseInt(r.mtlv_promo, 10) > 0 ? parseInt(r.mtlv_promo, 10) : null,
       }));
 
     try {
