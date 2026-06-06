@@ -291,8 +291,8 @@ async def send_tour_confirmation(
             "error_msg":        "" if email_status.startswith("sent") else email_status,
             "sent_by":          user.username,
             "agent_name":       "",
-            "mtlv_eligible":    row.get("mtlv_eligible", False),
-            "mtlv_ticket_status": row.get("mtlv_ticket_status", None),
+            "mtlv_eligible":    _mtlv_eligible,
+            "mtlv_qty":        _mtlv_qty,
         })
         results.append({
             "order":        order_num,
@@ -346,8 +346,8 @@ async def send_tour_confirmation_bulk(
             "tour_date":       _to_date(tour_date),
             "tour_type":       tour_type,
             "module":          "tour_confirmation",
-            "mtlv_eligible":   row.get("mtlv_eligible", False),
-            "mtlv_qty":        _mtlv_qty,  
+            "mtlv_eligible":   _mtlv_eligible,
+            "mtlv_qty":        _mtlv_qty,
         }
         booking_id = await _upsert_booking(db, booking_data)
 
@@ -428,7 +428,7 @@ async def send_tour_confirmation_bulk(
             "sent_by":          user.username,
             "agent_name":       "",
             "mtlv_eligible":    row.get("mtlv_eligible", False),
-            "mtlv_ticket_status": row.get("mtlv_ticket_status", None),
+            "mtlv_eligible":    _mtlv_eligible,
         })
 
         results.append({
@@ -484,8 +484,8 @@ async def send_last_minute_confirmation_bulk(
             "tour_date":       _to_date(tour_date),
             "tour_type":       tour_type,
             "module":          "tour_confirmation",
-            "mtlv_eligible":   row.get("mtlv_eligible", False),
-            "mtlv_qty":        _mtlv_qty,  
+            "mtlv_eligible":   _mtlv_eligible,
+            "mtlv_qty":        _mtlv_qty, 
         }
         booking_id = await _upsert_booking(db, booking_data)
 
@@ -570,7 +570,7 @@ async def send_last_minute_confirmation_bulk(
             "error_msg":        "" if email_status.startswith("sent") else email_status,
             "sent_by":          user.username,
             "agent_name":       "",
-            "mtlv_eligible":    row.get("mtlv_eligible", False),
+            "mtlv_eligible":    _mtlv_eligible,
             "mtlv_ticket_status": row.get("mtlv_ticket_status", None),
         })
 
