@@ -5,7 +5,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
-from datetime import date
+from datetime import date as date_cls
 from typing import Optional
 from zoneinfo import ZoneInfo
 
@@ -45,9 +45,8 @@ async def get_broadcasting_log(
 
     if date:
         try:
-            tour_date = date
-            q = q.where(BroadcastLog.tour_date == tour_date)
-        except Exception:
+            q = q.where(BroadcastLog.tour_date == date_cls.fromisoformat(date))
+        except ValueError:
             pass
     if module:
         q = q.where(BroadcastLog.module == module)
