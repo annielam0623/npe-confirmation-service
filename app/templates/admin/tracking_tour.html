@@ -1942,14 +1942,29 @@
       let _bcastTemplates = [];
       let _bcastChannel = 'both';
 
-      const BROADCAST_TEMPLATES_LOCAL = [
+      // Broadcast templates + signature come from Content Studio (settings DB).
+      // These remain as a fallback if the fetch fails or nothing has been saved yet.
+      let BROADCAST_TEMPLATES = [
         { name: "tour_cancelled", label: "Tour cancelled", body: "Hi {first_name}, your National Park Express tour on {tour_date} has been cancelled. Please contact us at 702-948-4190 for assistance." },
         { name: "time_changed", label: "Pickup time updated", body: "Hi {first_name}, your pickup time for your National Park Express tour on {tour_date} has been updated. Please contact us at 702-948-4190 for details." },
         { name: "weather_delay", label: "Weather delay", body: "Hi {first_name}, due to weather conditions your National Park Express tour on {tour_date} may experience delays. We will keep you updated." },
         { name: "custom", label: "Custom message", body: "" },
       ];
+      let BROADCAST_SIGNATURE = '';
 
-      function openBroadcast() {
+      async function loadBroadcastTemplates() {
+        try {
+          const res = await fetch('/api/broadcast-templates');
+          if (!res.ok) return;
+          const data = await res.json();
+          const set = data.tour;   // this page = Tour broadcasts
+          if (set && Array.isArray(set.templates) && set.templates.length) BROADCAST_TEMPLATES = set.templates;
+          if (set && typeof set.signature === 'string') BROADCAST_SIGNATURE = set.signature;
+        } catch (e) { /* keep fallback templates */ }
+      }
+
+      async function openBroadcast() {
+        await loadBroadcastTemplates();   // pull latest templates/signature from Content Studio
         // Build tour checkboxes from allRows — use pill labels from DOM to get display names
         const toursPresent = [...new Set(allRows.map(r => r.tour_type).filter(Boolean))];
 
@@ -1973,7 +1988,7 @@
         // Populate templates
         const sel = document.getElementById('broadcastTemplate');
         sel.innerHTML = '<option value="">— Select template —</option>' +
-          BROADCAST_TEMPLATES_LOCAL.map(t => `<option value="${t.name}">${t.label}</option>`).join('');
+          BROADCAST_TEMPLATES.map(t => `<option value="${t.name}">${t.label}</option>`).join('');
         document.getElementById('broadcastBody').value = '';
 
         // Reset state
@@ -2009,7 +2024,7 @@
 
       function onTemplateChange() {
         const val = document.getElementById('broadcastTemplate').value;
-        const t = BROADCAST_TEMPLATES_LOCAL.find(t => t.name === val);
+        const t = BROADCAST_TEMPLATES.find(t => t.name === val);
         if (t) document.getElementById('broadcastBody').value = t.body;
       }
 
@@ -2043,6 +2058,9 @@
         const body = document.getElementById('broadcastBody').value.trim();
         if (!body) { alert('Please enter a message.'); return; }
 
+        // Auto-append the module signature (managed in Content Studio)
+        const finalBody = BROADCAST_SIGNATURE ? `${body}\n${BROADCAST_SIGNATURE}` : body;
+
         const selectedTours = _getSelectedTours();
         if (!selectedTours.length) { alert('Please select at least one tour.'); return; }
 
@@ -2069,7 +2087,7 @@
               status_filter: 'all',
               tour_date: currentDate,
               template_name: document.getElementById('broadcastTemplate').value || null,
-              message_body: body,
+              message_body: finalBody,
               recipients: finalRecipients.map(r => ({
                 order_number: r.order_number,
                 customer_name: r.guest_name || r.first_name || '',

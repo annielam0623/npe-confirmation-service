@@ -98,6 +98,16 @@ UI",sans-serif;line-height:1.6;color:#1a1a1a;resize:vertical;min-height:60px;box
 .chip-insert-btn:hover{background:#eef6ff;border-color:#1a3a5c;}
 .sms-counter{margin-left:auto;font-size:10px;color:#9B8F88;font-variant-numeric:tabular-nums;}
 
+/* Dashboard-aligned card colors + Broadcasting editor */
+.cs-big-btn.tix{background:linear-gradient(145deg,#c084fc 0%,#a855f7 45%,#7e22ce 100%);box-shadow:0 8px 28px rgba(150,70,210,0.4),0 2px 8px rgba(0,0,0,0.12);}
+.cs-big-btn.bc{background:linear-gradient(145deg,#fba35a 0%,#f97316 45%,#c2410c 100%);box-shadow:0 8px 28px rgba(230,110,20,0.4),0 2px 8px rgba(0,0,0,0.12);}
+.bc-label-input{border:1px solid #e5e7eb;border-radius:7px;padding:6px 10px;font-size:13px;background:#fff;}
+.bc-label-input:focus{outline:none;border-color:#1a1a1a;}
+.bc-del-btn{border:1px solid #f3c0c0;background:#fff5f5;color:#c0392b;border-radius:7px;padding:4px 9px;cursor:pointer;font-size:13px;}
+.bc-del-btn:hover{background:#fde8e8;}
+.bc-add-btn{padding:5px 12px;font-size:12px;border:1px solid #d0d0d0;border-radius:7px;background:#fff;cursor:pointer;}
+.bc-add-btn:hover{border-color:#1a1a1a;}
+
 /* Global collapsible */
 .global-toggle-bar{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:8px
 12px;background:#fff5f5;border:1.5px solid #fca5a5;border-radius:8px;margin-bottom:0;user-select:none;}
@@ -215,6 +225,13 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
             Antelope Canyon ticket products only.</div>
           <div class="cs-btn-footer"><span class="cs-btn-tag">Self-Drive</span><span class="cs-btn-arrow">→</span></div>
         </button>
+        <button class="cs-big-btn bc" onclick="goInner('bc')">
+          <span class="cs-btn-emoji">📣</span>
+          <div class="cs-btn-title">Broadcasting</div>
+          <div class="cs-btn-desc">Manage the broadcast message templates used from the Tour and Tickets tracking
+            pages, plus the signature appended to each broadcast.</div>
+          <div class="cs-btn-footer"><span class="cs-btn-tag">SMS / Email</span><span class="cs-btn-arrow">→</span></div>
+        </button>
       </div>
     </div>
 
@@ -293,6 +310,17 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
         <div class="tour-selector" id="tix-guest-pills"></div>
         <div id="tix-guest-fields"></div>
       </div>
+    </div>
+
+    <!-- BROADCASTING INNER -->
+    <div class="cs-inner" id="inner-bc">
+      <div class="cs-breadcrumb" onclick="goHome()">← Back &nbsp;<strong>Broadcasting</strong></div>
+      <div class="cs-sub-tabs">
+        <button class="cs-sub-tab active" onclick="switchBcSet(this,'tour')">Tour</button>
+        <button class="cs-sub-tab" onclick="switchBcSet(this,'tix')">Tickets</button>
+      </div>
+      <div class="cs-panel active" id="bc-tour-panel"><div id="bc-tour-fields"></div></div>
+      <div class="cs-panel" id="bc-tix-panel"><div id="bc-tix-fields"></div></div>
     </div>
   </div>
 
@@ -610,6 +638,7 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
 
   // ── Render fields ─────────────────────────────────────────────────────────────
   function renderModuleFields(mod) {
+    if (mod === 'bc') { renderBcModule(); return; }
     if (mod === 'tc') {
       document.getElementById('tc-global-fields').innerHTML = TC_GLOBAL_FIELDS.map(f => fieldCard(f, true)).join('');
       document.getElementById('tc-email-fields').innerHTML =
@@ -998,6 +1027,7 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
   function renderPreview() {
     const el = document.getElementById('preview-body');
     if (!currentModule) { el.innerHTML = '<div style="color:#aaa;font-size:12px;text-align:center;padding:40px 0;">Select a module to see preview</div>'; return; }
+    if (currentModule === 'bc') { el.innerHTML = renderBcPreview(); return; }
     if (currentSubTab === 'email') el.innerHTML = currentModule === 'tc' ? renderTcEmailPreview() : renderTixEmailPreview();
     else if (currentSubTab === 'lm') el.innerHTML = renderTcLmEmailPreview();
     else if (currentSubTab === 'sms') el.innerHTML = currentModule === 'tc' ? renderTcSmsPreview() : renderTixSmsPreview();
@@ -1319,6 +1349,181 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
       <div class="gp-thanks-text">${thanksSmall}</div>
     </div>
   </div>`;
+  }
+
+  // ── Broadcasting module ─────────────────────────────────────────────────────────
+  const BC_VARS = ['{first_name}', '{tour_date}'];
+  const BC_DEFAULT_LIST = [
+    { name: "tour_cancelled", label: "Tour cancelled", body: "Hi {first_name}, your National Park Express tour on {tour_date} has been cancelled. Please contact us at 702-948-4190 for assistance." },
+    { name: "time_changed", label: "Pickup time updated", body: "Hi {first_name}, your pickup time for your National Park Express tour on {tour_date} has been updated. Please contact us at 702-948-4190 for details." },
+    { name: "weather_delay", label: "Weather delay", body: "Hi {first_name}, due to weather conditions your National Park Express tour on {tour_date} may experience delays. We will keep you updated." },
+    { name: "custom", label: "Custom message", body: "" },
+  ];
+  let bcSet = 'tour';
+  let bcWork = null;       // { tour:{list,signature}, tix:{list,signature} }
+  let bcActive = null;     // highlight target: 'tour:2' (body) | 'tour:sig'
+  let bcLastIdx = 0;       // which template the preview shows
+
+  function bcListKey(set) { return `tmpl__bcast__${set}__list`; }
+  function bcSigKey(set) { return `tmpl__bcast__${set}__signature`; }
+  function bcGenName() { return 'tpl_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5); }
+  function fillBc(s) { return String(s == null ? '' : s).replace(/\{first_name\}/g, SAMPLE.name).replace(/\{tour_date\}/g, SAMPLE.date); }
+  function bcCounterText(body) { const { len, seg } = smsSegments(fillBc(body)); return `≈ ${len} chars · ${seg} SMS`; }
+  function bcParseList(raw) {
+    if (!raw) return BC_DEFAULT_LIST.map(t => ({ ...t }));
+    try {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr) && arr.length) return arr.map(t => ({ name: t.name || bcGenName(), label: t.label || '', body: t.body || '' }));
+    } catch (e) { }
+    return BC_DEFAULT_LIST.map(t => ({ ...t }));
+  }
+  function bcEnsureWork() {
+    if (bcWork) return;
+    bcWork = {};
+    for (const set of ['tour', 'tix']) {
+      bcWork[set] = { list: bcParseList(v(bcListKey(set))), signature: v(bcSigKey(set)) || '' };
+    }
+  }
+
+  function renderBcModule() {
+    bcEnsureWork();
+    bcSet = 'tour'; bcActive = null; bcLastIdx = 0;
+    renderBcSet('tour');
+    renderBcSet('tix');
+  }
+  function renderBcSet(set) {
+    const host = document.getElementById('bc-' + set + '-fields');
+    if (!host) return;
+    const w = bcWork[set];
+    const cards = w.list.map((tpl, idx) => bcTemplateCard(set, idx, tpl)).join('');
+    host.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div class="field-group-title" style="margin:0;">${set === 'tour' ? 'Tour' : 'Tickets'} broadcast templates</div>
+        <button class="bc-add-btn" onclick="bcAddTemplate('${set}')">+ Add template</button>
+      </div>
+      <div id="bc-${set}-list">${cards}</div>
+      <div class="field-card" style="margin-top:14px;">
+        <div class="field-header"><span class="field-label">✍ Signature</span></div>
+        <div class="field-body">
+          <textarea class="field-textarea" rows="2" data-bcsig="${set}"
+            oninput="bcSigInput('${set}',this.value)" onfocus="onBcFocus('${set}','sig')" onblur="onBcBlur()">${esc(w.signature)}</textarea>
+          <div class="var-hint" style="margin-top:5px;">Appended to the end of every ${set === 'tour' ? 'Tour' : 'Tickets'} broadcast.</div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+        <button class="save-btn" onclick="saveBcSet('${set}',this)" style="padding:8px 22px;">Save broadcasting templates</button>
+      </div>`;
+  }
+  function bcTemplateCard(set, idx, tpl) {
+    return `
+    <div class="field-card" data-bccard="${set}:${idx}" style="margin-bottom:10px;">
+      <div class="field-header" style="gap:8px;">
+        <input type="text" class="bc-label-input" value="${esc(tpl.label)}" placeholder="Template name"
+          style="flex:1;font-weight:600;" oninput="bcLabelInput('${set}',${idx},this.value)" />
+        <button class="bc-del-btn" title="Delete template" onclick="bcRemoveTemplate('${set}',${idx})">🗑</button>
+      </div>
+      <div class="var-warning">${VAR_WARN}</div>
+      <div class="field-body">${bcChipEditorHtml(set, idx, tpl.body)}</div>
+    </div>`;
+  }
+  function bcChipEditorHtml(set, idx, body) {
+    const ck = `bcbody:${set}:${idx}`;
+    const btns = BC_VARS.map(x => {
+      const name = x.replace(/[{}]/g, '');
+      return `<button type="button" class="chip-insert-btn" onmousedown="event.preventDefault()" onclick="bcChipInsert('${set}',${idx},'${name}')">+ ${name}</button>`;
+    }).join('');
+    return `<div class="chip-editor" contenteditable="true" data-chipkey="${ck}" data-sms="1"
+        oninput="onBcChipInput('${set}',${idx},this)" onkeydown="chipKeydown(event)" onpaste="bcChipPaste(event,'${set}',${idx})"
+        onfocus="onBcFocus('${set}','${idx}')" onblur="onBcBlur()">${renderChipContent(body, true)}</div>
+      <div class="chip-insert-bar"><span style="font-size:11px;color:#9B8F88;">Insert:</span>${btns}<span class="sms-counter" id="bcsmsc-${set}-${idx}">${bcCounterText(body)}</span></div>`;
+  }
+  function onBcChipInput(set, idx, el) {
+    bcWork[set].list[idx].body = serializeChips(el);
+    const c = document.getElementById(`bcsmsc-${set}-${idx}`);
+    if (c) c.textContent = bcCounterText(bcWork[set].list[idx].body);
+    renderPreview();
+  }
+  function bcChipInsert(set, idx, name) {
+    const ed = document.querySelector(`[data-chipkey="bcbody:${set}:${idx}"]`);
+    if (!ed) return;
+    const frag = document.createDocumentFragment();
+    const tmp = document.createElement('span'); tmp.innerHTML = chipSpan(name);
+    frag.appendChild(tmp.firstChild);
+    frag.appendChild(document.createTextNode('\u200b'));
+    chipInsertNode(ed, frag);
+    onBcChipInput(set, idx, ed);
+  }
+  function bcChipPaste(e, set, idx) {
+    e.preventDefault();
+    const ed = e.currentTarget;
+    const text = ((e.clipboardData || window.clipboardData).getData('text/plain') || '').replace(/\s*\n\s*/g, ' ');
+    chipInsertNode(ed, document.createTextNode(text));
+    onBcChipInput(set, idx, ed);
+  }
+  function bcLabelInput(set, idx, val) { bcWork[set].list[idx].label = val; renderPreview(); }
+  function bcSigInput(set, val) { bcWork[set].signature = val; renderPreview(); }
+  function bcAddTemplate(set) {
+    bcWork[set].list.push({ name: bcGenName(), label: 'New template', body: '' });
+    renderBcSet(set);
+    renderPreview();
+  }
+  function bcRemoveTemplate(set, idx) {
+    if (!confirm('Delete this template? It will be permanently removed when you Save.')) return;
+    bcWork[set].list.splice(idx, 1);
+    bcActive = null;
+    if (bcLastIdx >= bcWork[set].list.length) bcLastIdx = 0;
+    renderBcSet(set);
+    renderPreview();
+  }
+  function onBcFocus(set, which) {
+    bcActive = `${set}:${which}`; bcSet = set;
+    if (which !== 'sig') bcLastIdx = parseInt(which, 10) || 0;
+    renderPreview();
+  }
+  function onBcBlur() { bcActive = null; renderPreview(); }
+  function switchBcSet(btn, set) {
+    const inner = btn.closest('.cs-inner');
+    inner.querySelectorAll('.cs-sub-tab').forEach(t => t.classList.remove('active'));
+    inner.querySelectorAll('.cs-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('bc-' + set + '-panel').classList.add('active');
+    bcSet = set; bcActive = null; bcLastIdx = 0;
+    renderPreview();
+  }
+  function renderBcPreview() {
+    bcEnsureWork();
+    const set = bcSet || 'tour';
+    const w = bcWork[set];
+    if (!w.list.length) return '<div style="color:#aaa;font-size:12px;text-align:center;padding:40px 0;">No templates yet — click “+ Add template”.</div>';
+    let idx = Math.min(bcLastIdx, w.list.length - 1); if (idx < 0) idx = 0;
+    const tpl = w.list[idx];
+    let bodyHtml = esc(fillBc(tpl.body)).replace(/\n/g, '<br>');
+    if (bcActive === `${set}:${idx}`) bodyHtml = `<span class="gp-highlight">${bodyHtml || '&nbsp;'}</span>`;
+    else if (!bodyHtml) bodyHtml = '<span style="opacity:.4;">(empty)</span>';
+    let sigHtml = w.signature ? esc(w.signature).replace(/\n/g, '<br>') : '';
+    if (bcActive === `${set}:sig` && sigHtml) sigHtml = `<span class="gp-highlight">${sigHtml}</span>`;
+    const sigBlock = sigHtml ? `<br><br>${sigHtml}` : '';
+    return `<div class="sms-phone"><div class="sms-screen"><div class="sms-label">National Park Express</div><div class="sms-bubble">${bodyHtml}${sigBlock}</div></div></div>`;
+  }
+  async function saveBcSet(set, btn) {
+    const listVal = JSON.stringify(bcWork[set].list);
+    const sigVal = bcWork[set].signature || '';
+    const orig = btn.textContent;
+    btn.textContent = 'Saving…'; btn.classList.add('saving');
+    try {
+      const save = (key, value) => fetch('/api/template-settings/save', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, value }) }).then(r => { if (!r.ok) throw new Error(); });
+      await Promise.all([save(bcListKey(set), listVal), save(bcSigKey(set), sigVal)]);
+      const now = new Date().toISOString(), by = window._currentUser || '';
+      [[bcListKey(set), listVal], [bcSigKey(set), sigVal]].forEach(([k, val]) => {
+        if (!ALL_SETTINGS[k]) ALL_SETTINGS[k] = {};
+        ALL_SETTINGS[k].value = val; ALL_SETTINGS[k].updated_by = by; ALL_SETTINGS[k].updated_at = now;
+      });
+      btn.textContent = 'Saved ✓'; btn.classList.remove('saving'); btn.classList.add('saved');
+      setTimeout(() => { btn.textContent = 'Save broadcasting templates'; btn.classList.remove('saved'); }, 2000);
+    } catch (e) {
+      btn.textContent = 'Error'; btn.classList.remove('saving'); btn.classList.add('err');
+      setTimeout(() => { btn.textContent = 'Save broadcasting templates'; btn.classList.remove('err'); }, 2000);
+    }
   }
 
   // ── Load ──────────────────────────────────────────────────────────────────────
