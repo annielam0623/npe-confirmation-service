@@ -133,7 +133,8 @@ async def preview_tour_confirmation(
             FROM send_log
             WHERE order_number = :order_number
               AND tour_date    = :tour_date
-              AND module       = 'tour_confirmation'
+              AND module       IN ('tour_confirmation', 'last_minute')
+              ORDER BY sent_at DESC                         
             LIMIT 1
         """), {"order_number": row["order_number"], "tour_date": _to_date(tour_date)})
         sent_row = result.fetchone()

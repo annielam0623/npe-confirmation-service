@@ -239,6 +239,7 @@ background: #fff; color:#555; transition: all 0.15s; user-select: none; white-sp
             <td>Email</td>
             <td>Phone</td>
             <td>Qty</td>
+            <td>MTLV</td>
             <td>Pickup Time</td>
             <td>Pickup Location</td>
             <td>Note</td>
@@ -412,6 +413,7 @@ background: #fff; color:#555; transition: all 0.15s; user-select: none; white-sp
             <td>Email</td>
             <td>Phone</td>
             <td>Qty</td>
+            <td>MTLV</td>
             <td>Pickup Time</td>
             <td>Pickup Location</td>
             <td>Note</td>
@@ -580,6 +582,16 @@ background: #fff; color:#555; transition: all 0.15s; user-select: none; white-sp
     }
   }
 
+  function mtlvCell(r) {
+    const raw = (r.mtlv_promo || '').toString().trim();
+    if (raw.toUpperCase() === 'ELIGIBLE')
+    return '<span style="font-size:11px;color:#2F7851;font-weight:600;">Eligible</span>';
+    const n = parseInt(raw, 10);
+    if (!isNaN(n) && n > 0)
+    return `<span style="font-size:11px;color:#2F7851;font-weight:600;">🎫 ${n}</span>`;
+    return '<span style="color:#ccc">—</span>';
+  }
+  
   function showPreview(data) {
     const rows = data.rows;
     const dups = rows.filter(r => r.duplicate).length;
@@ -619,6 +631,7 @@ background: #fff; color:#555; transition: all 0.15s; user-select: none; white-sp
       <td style="font-size:11px;">${r.email || '<span style="color:#ccc">—</span>'}</td>
       <td style="font-size:11px;">${r.phone || '<span style="color:#ccc">—</span>'}</td>
       <td>${r.quantities}</td>
+      <td style="text-align:center;">${mtlvCell(r)}</td>
       <td>${r.pickup_time}</td>
       <td>${r.pickup_location}</td>
       <td>${r.duplicate ? `<span class="dup-badge">${r.sent_label}</span>` : ''}</td>
@@ -817,6 +830,7 @@ background: #fff; color:#555; transition: all 0.15s; user-select: none; white-sp
       <td style="font-size:11px;">${r.email || '<span style="color:#ccc">—</span>'}</td>
       <td style="font-size:11px;">${r.phone || '<span style="color:#ccc">—</span>'}</td>
       <td>${r.quantities}</td>
+      <td style="text-align:center;">${mtlvCell(r)}</td>
       <td>${r.pickup_time}</td>
       <td>${r.pickup_location}</td>
       <td>${r.duplicate ? `<span class="dup-badge">${r.sent_label}</span>` : ''}</td>

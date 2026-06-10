@@ -145,7 +145,30 @@ async def _update_sms_status(db: AsyncSession, booking_id: int, status: str):
     ), {"s": status, "id": booking_id})
 
 
-async def _log_send(db: AsyncSession, data: dict):
+async def _log_send(db: AsyncSession, data: dict) -> bool:
+    """写一条 send_log。函数内部给每一列兜底默认值——调用点漏传键不会再炸 INSERT，
+    以后加新列只需在这一处补默认值。失败会 loud log + rollback 并返回 False（不再静默吞掉）。"""
+    params = {
+        "module":           None,
+        "order_number":     None,
+        "first_name":       None,
+        "last_name":        None,
+        "email":            None,
+        "phone":            None,
+        "tour_date":        None,
+        "tour_type":        None,
+        "email_status":     "",
+        "sms_status":       "",
+        "sms_sid":          "",
+        "email_message_id": "",
+        "error_msg":        "",
+        "sent_by":          None,
+        "agent_name":       "",
+        "mtlv_eligible":    False,
+        "mtlv_ticket_status": None,
+    }
+    params.update(data)
+    params["sent_at"] = datetime.now(LA)
     try:
         await db.execute(text("""
             INSERT INTO send_log
@@ -158,10 +181,13 @@ async def _log_send(db: AsyncSession, data: dict):
                  :tour_date, :tour_type, :email_status, :sms_status,
                  :sms_sid, :email_message_id, :error_msg, :sent_by, :sent_at,
                  :agent_name, :mtlv_eligible, :mtlv_ticket_status)
-        """), {**data, "sent_at": datetime.now(LA)})
+        """), params)
         await db.commit()
+        return True
     except Exception as e:
-        logger.error(f"[_log_send] failed for {data.get('order_number')}: {e}")
+        await db.rollback()
+        logger.error(f"[_log_send] FAILED to write send_log for order={params.get('order_number')}: {e}")
+        return False
 
 
 # ═══════════════════════════════════════════════════════════
