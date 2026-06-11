@@ -255,14 +255,14 @@ async def tracking_tour_confirmation(
                 (SELECT NULLIF(au.display_name, '') FROM admin_users au WHERE au.username = b.action_taken_by),
                 b.action_taken_by
             ) AS action_taken_by,
-            (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id) AS notes_count,
+            (SELECT COUNT(*) FROM booking_notes WHERE order_number = b.order_number) AS notes_count,
             (SELECT COALESCE(NULLIF(au.display_name, ''), bn.author_username)
                FROM booking_notes bn
                LEFT JOIN admin_users au ON au.username = bn.author_username
-              WHERE bn.booking_id = b.id
+              WHERE bn.order_number = b.order_number
               ORDER BY bn.created_at DESC LIMIT 1) AS latest_note_author,
-            (SELECT body      FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_body,
-            (SELECT direction FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_direction
+            (SELECT body      FROM booking_notes WHERE order_number = b.order_number ORDER BY created_at DESC LIMIT 1) AS latest_note_body,
+            (SELECT direction FROM booking_notes WHERE order_number = b.order_number ORDER BY created_at DESC LIMIT 1) AS latest_note_direction
         FROM bookings b
         LEFT JOIN LATERAL (
             SELECT sms_status
@@ -340,14 +340,14 @@ async def tracking_morning_pickup(
                 (SELECT NULLIF(au.display_name, '') FROM admin_users au WHERE au.username = b.action_taken_by),
                 b.action_taken_by
             ) AS action_taken_by,
-            (SELECT COUNT(*) FROM booking_notes WHERE booking_id = b.id) AS notes_count,
+            (SELECT COUNT(*) FROM booking_notes WHERE order_number = b.order_number) AS notes_count,
             (SELECT COALESCE(NULLIF(au.display_name, ''), bn.author_username)
                FROM booking_notes bn
                LEFT JOIN admin_users au ON au.username = bn.author_username
-              WHERE bn.booking_id = b.id
+              WHERE bn.order_number = b.order_number
               ORDER BY bn.created_at DESC LIMIT 1) AS latest_note_author,
-            (SELECT body      FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_body,
-            (SELECT direction FROM booking_notes WHERE booking_id = b.id ORDER BY created_at DESC LIMIT 1) AS latest_note_direction,
+            (SELECT body      FROM booking_notes WHERE order_number = b.order_number ORDER BY created_at DESC LIMIT 1) AS latest_note_body,
+            (SELECT direction FROM booking_notes WHERE order_number = b.order_number ORDER BY created_at DESC LIMIT 1) AS latest_note_direction,
             COALESCE(sl.sms_status, b.sms_status) AS sms_status,
             COALESCE(sl.agent_name, '') AS agent_name,
             c.checkin_time
@@ -429,11 +429,11 @@ async def tracking_tickets_reminder(
                 t.action_taken_by, b.action_taken_by
             ) AS action_taken_by,
             COALESCE(
-                (SELECT COUNT(*) FROM booking_notes WHERE booking_id = t.id),
+                (SELECT COUNT(*) FROM booking_notes WHERE order_number = t.chd_number),
                 0
             ) AS notes_count,
-            (SELECT body      FROM booking_notes WHERE booking_id = t.id ORDER BY created_at DESC LIMIT 1) AS latest_note_body,
-            (SELECT direction FROM booking_notes WHERE booking_id = t.id ORDER BY created_at DESC LIMIT 1) AS latest_note_direction
+            (SELECT body      FROM booking_notes WHERE order_number = t.chd_number ORDER BY created_at DESC LIMIT 1) AS latest_note_body,
+            (SELECT direction FROM booking_notes WHERE order_number = t.chd_number ORDER BY created_at DESC LIMIT 1) AS latest_note_direction
         FROM tickets_reminders t
         LEFT JOIN bookings b
             ON b.order_number = t.chd_number
@@ -451,7 +451,7 @@ async def tracking_tickets_reminder(
         ORDER BY
           CASE
             WHEN COALESCE(t.action_taken_by, b.action_taken_by) IS NULL
-                 AND (SELECT COUNT(*) FROM booking_notes WHERE booking_id = t.id) > 0 THEN 0
+                 AND (SELECT COUNT(*) FROM booking_notes WHERE order_number = t.chd_number) > 0 THEN 0
             WHEN t.confirmation = 'yes' THEN 1
             WHEN COALESCE(t.action_taken_by, b.action_taken_by) IS NOT NULL THEN 2
             ELSE 3
