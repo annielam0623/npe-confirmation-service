@@ -428,13 +428,15 @@ class BookingNote(Base):
     __tablename__ = "booking_notes"
 
     id              = Column(Integer, primary_key=True, index=True)
-    booking_id      = Column(Integer, ForeignKey("bookings.id", ondelete="CASCADE"), nullable=False, index=True)
+    booking_id      = Column(Integer, ForeignKey("bookings.id", ondelete="CASCADE"), nullable=True, index=True)
+    order_number    = Column(String(50), nullable=True, index=True)
     author_username = Column(String(100), nullable=False)
     direction       = Column(String(20), nullable=False, default="staff_note")
-    # 'staff_note' | 'sms_out' | 'email_out' | 'guest_reply'
+    # 'staff_note' | 'sms_out' | 'email_out' | 'guest_reply' | 'sms_in' | 'email_in'
     body            = Column(Text, nullable=False)
     sms_status      = Column(String(20), nullable=True)    # 'sent' | 'failed' | None
     email_status    = Column(String(20), nullable=True)    # 'sent' | 'failed' | None
+    channel         = Column(String(20), nullable=True)    # 'sms' | 'email' | None
     created_at      = Column(DateTime(timezone=True), nullable=False, default=_now_la)
     booking         = relationship("Booking", back_populates="booking_notes")
 
