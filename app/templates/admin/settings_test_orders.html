@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+{% block title %}Test Order Deletion — NPE{% endblock %}
+{% block page_title %}Test Orders{% endblock %}
+
+{% block extra_styles %}
+.util-card {
+  background:#fff; border:0.5px solid rgba(0,0,0,0.1);
+  border-radius:12px; padding:22px; max-width:760px; margin-bottom:18px;
+}
+.util-card h3 { font-size:14px; font-weight:600; margin-bottom:12px; color:#1a1a1a; }
+.util-card p  { font-size:13px; color:#666; margin-bottom:14px; line-height:1.6; }
+.form-row { display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap; }
+.form-group { display:flex; flex-direction:column; gap:5px; }
+.form-group label { font-size:12px; color:#888; }
+.form-group input {
+  padding:7px 10px; border:0.5px solid rgba(0,0,0,0.2); border-radius:7px;
+  font-size:13px; background:#fff; font-family:inherit; min-width:200px;
+}
+.form-group input:focus { outline:none; border-color:#3B6D11; }
+.btn-action {
+  background:#3B6D11; color:#fff; border:none; padding:8px 20px;
+  border-radius:7px; font-size:13px; font-weight:600; cursor:pointer;
+}
+.btn-action:hover { background:#2d5409; }
+.btn-danger-action {
+  background:#A32D2D; color:#fff; border:none; padding:8px 20px;
+  border-radius:7px; font-size:13px; font-weight:600; cursor:pointer;
+}
+.btn-danger-action:hover { background:#821f1f; }
+.btn-danger-action:disabled { opacity:.45; cursor:not-allowed; }
+.hint { font-size:12px; color:#888; line-height:1.6; }
+code { font-family:ui-monospace,monospace; font-size:12px; background:#f3f4f6; padding:1px 5px; border-radius:4px; }
+
+.flag { display:inline-flex; align-items:center; gap:3px; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:600; }
+.f-test  { background:#e6f4ea; color:#1e7e34; }
+.f-phone { background:#fcefdc; color:#9a6212; }
+.warn-row { background:#fdf6ec; }
+.tbl { width:100%; border-collapse:collapse; font-size:12px; margin-top:12px; }
+.tbl th { text-align:left; color:#999; font-weight:600; font-size:11px; padding:8px 10px; border-bottom:1px solid #e5e7eb; }
+.tbl td { padding:8px 10px; border-bottom:1px solid #f3f4f6; }
+.mono { font-family:ui-monospace,monospace; }
+.summary { display:flex; align-items:center; gap:8px; background:#f9f9f7; border-radius:8px; padding:8px 12px; font-size:13px; margin-top:12px; }
+.ack { display:flex; align-items:flex-start; gap:8px; font-size:13px; color:#555; margin:14px 0; line-height:1.5; cursor:pointer; }
+.result-msg { font-size:12px; margin-top:10px; }
+.result-ok { color:#3B6D11; }
+.result-fail { color:#A32D2D; }
+{% endblock %}
+
+{% block content %}
+<div class="util-card">
+  <h3>🧪 Test Order Deletion <span style="float:right;font-size:11px;font-weight:500;background:#f3f4f6;color:#888;padding:3px 10px;border-radius:6px;">Admin only</span></h3>
+  <p>Permanently remove test orders across all dates and all tables. Match by order number or phone (either or both).</p>
+
+  <!-- Step 1: match -->
+  <div class="form-row">
+    <div class="form-group">
+      <label>Order number</label>
+      <input type="text" id="m-order" placeholder="CHDTESTORDER…">
+    </div>
+    <div class="form-group">
+      <label>Phone</label>
+      <input type="text" id="m-phone" placeholder="+17023333073">
+    </div>
+    <button class="btn-action" onclick="preview()">Preview matches</button>
+  </div>
+  <p class="hint" style="margin-top:10px;">Order-number matching only accepts <code>CHDTESTORDER…</code> — real <code>CHD</code> orders can't be purged by order number. Use <strong>phone</strong> to clean up old test data created before the prefix rule. Enter phone in full <code>+1XXXXXXXXXX</code> format (with +1, no spaces) — it's matched exactly.</p>
+
+  <!-- Step 2: review -->
+  <div id="review" style="display:none;">
+    <div class="summary" id="summary"></div>
+    <table class="tbl" id="results"></table>
+    <p class="hint" id="warn-note" style="color:#9a6212;display:none;margin-top:10px;">⚠ Amber rows matched by phone but the order number isn't <code>CHDTESTORDER…</code> — likely a real order. Unchecked by default; tick only if you're sure.</p>
+
+    <!-- Step 3: confirm -->
+    <label class="ack">
+      <input type="checkbox" id="ack" style="margin-top:2px;">
+      <span>I've reviewed the checked rows. This permanently deletes them from every table and can't be undone.</span>
+    </label>
+    <button class="btn-danger-action" id="delbtn" disabled onclick="purge()">
+      🗑 <span id="dellabel">Delete 0 matched orders</span>
+    </button>
+    <div id="purge-result" class="result-msg"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  let MATCHED = [];   // current preview items
+
+  async function preview() {
+    const order = document.getElementById('m-order').value.trim();
+    const phone = document.getElementById('m-phone').value.trim();
+    if (!order && !phone) { alert('Enter an order number or a phone.'); return; }
+
+    const res = await fetch('/api/test-orders/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order, phone }),
+    });
+    if (!res.ok) { alert('Preview failed.'); return; }
+    const data = await res.json();
+    MATCHED = data.items;
+
+    document.getElementById('review').style.display = 'block';
+    document.getElementById('summary').innerHTML =
+      `Found <strong>${data.total}</strong> order(s)` +
+      (data.flagged ? ` · <span style="color:#9a6212;">${data.flagged} flagged for review</span>` : '');
+    document.getElementById('warn-note').style.display = data.flagged ? 'block' : 'none';
+
+    const rows = data.items.map((it, i) => {
+      const isTest = it.flag === 'test';
+      const flagHtml = isTest
+        ? '<span class="flag f-test">🧪 test</span>'
+        : '<span class="flag f-phone">⚠ phone</span>';
+      return `
+        <tr class="${isTest ? '' : 'warn-row'}">
+          <td><input type="checkbox" class="rowchk" data-i="${i}" ${isTest ? 'checked' : ''}></td>
+          <td>${flagHtml}</td>
+          <td class="mono" ${isTest ? '' : 'style="color:#9a6212;"'}>${it.order_number}</td>
+          <td>${it.name}</td>
+          <td>${it.phone}</td>
+          <td>${it.date}</td>
+          <td style="color:#777;" title="${it.tables.join(', ')}">${it.table_count} table(s)</td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('results').innerHTML = `
+      <thead><tr>
+        <th></th><th>Flag</th><th>Order #</th><th>Name</th><th>Phone</th><th>Date</th><th>Found in</th>
+      </tr></thead>
+      <tbody>${rows || '<tr><td colspan="7" style="color:#888;padding:14px;">No matches.</td></tr>'}</tbody>`;
+
+    document.getElementById('ack').checked = false;
+    bindRecompute();
+    recompute();
+  }
+
+  function selectedOrders() {
+    return Array.prototype.slice.call(document.querySelectorAll('.rowchk'))
+      .filter(c => c.checked)
+      .map(c => MATCHED[+c.dataset.i].order_number);
+  }
+
+  function recompute() {
+    const n = selectedOrders().length;
+    document.getElementById('dellabel').textContent =
+      `Delete ${n} matched order${n === 1 ? '' : 's'}`;
+    document.getElementById('delbtn').disabled =
+      !(document.getElementById('ack').checked && n > 0);
+  }
+
+  function bindRecompute() {
+    document.querySelectorAll('.rowchk').forEach(c => c.addEventListener('change', recompute));
+    document.getElementById('ack').addEventListener('change', recompute);
+  }
+
+  async function purge() {
+    const order_numbers = selectedOrders();
+    if (!order_numbers.length) return;
+    if (!confirm(`Permanently delete ${order_numbers.length} order(s) from all tables? This cannot be undone.`)) return;
+
+    const phone = document.getElementById('m-phone').value.trim();
+    const res = await fetch('/api/test-orders/purge', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ order_numbers, phone, ack: true }),
+    });
+    const data = await res.json();
+    const el = document.getElementById('purge-result');
+    if (!res.ok) {
+      el.innerHTML = `<span class="result-fail">${data.detail || 'Delete failed.'}</span>`;
+      return;
+    }
+    el.innerHTML = `<span class="result-ok">${data.message}</span>`;
+    // refresh preview to show remaining
+    setTimeout(preview, 600);
+  }
+</script>
+{% endblock %}
