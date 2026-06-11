@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update, func, text
+from sqlalchemy import select, update, func, text, or_, and_
 from sqlalchemy.orm import selectinload
 from pydantic import BaseModel
 from typing import Optional, List
@@ -155,11 +155,48 @@ async def get_notes(
     db: AsyncSession = Depends(get_db),
     user=Depends(require_staff),
 ):
-    result = await db.execute(
-        select(BookingNote)
-        .where(BookingNote.booking_id == booking_id)
-        .order_by(BookingNote.created_at.asc())
-    )
+    # Resolve order_number from booking_id so we can read notes by order_number
+    # (the canonical key). tickets → chd_number, otherwise → bookings.order_number.
+    order_number = None
+    if source == "tickets":
+        tr_res = await db.execute(
+            text("SELECT chd_number FROM tickets_reminders WHERE id = :id"),
+            {"id": booking_id}
+        )
+        tr = tr_res.mappings().first()
+        if tr:
+            order_number = tr["chd_number"]
+    else:
+        b_res = await db.execute(
+            text("SELECT order_number FROM bookings WHERE id = :id"),
+            {"id": booking_id}
+        )
+        b = b_res.mappings().first()
+        if b:
+            order_number = b["order_number"]
+
+    # Read notes by order_number when available; fall back to booking_id for
+    # any legacy rows that were never backfilled with an order_number.
+    if order_number:
+        result = await db.execute(
+            select(BookingNote)
+            .where(
+                or_(
+                    BookingNote.order_number == order_number,
+                    and_(
+                        BookingNote.order_number.is_(None),
+                        BookingNote.booking_id == booking_id,
+                    ),
+                )
+            )
+            .order_by(BookingNote.created_at.asc())
+        )
+    else:
+        result = await db.execute(
+            select(BookingNote)
+            .where(BookingNote.booking_id == booking_id)
+            .order_by(BookingNote.created_at.asc())
+        )
     notes = result.scalars().all()
 
     # Update handler on booking (only for tour/morning, not tickets)
