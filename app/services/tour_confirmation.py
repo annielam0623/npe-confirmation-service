@@ -31,7 +31,7 @@ TOUR_TYPES: dict[str, dict] = {
             "To reduce dropoff time, tour will only drop off at: <strong>TREASURE ISLAND, PARK MGM, or EXCALIBUR</strong>. Subject to change due to road closures."
         ],
     },
-    "antelop_X": {
+    "antelope_x": {
         "label": "Antelope Canyon X Bus Tour",
         "has_lunch": True, "has_beef": True, "has_park_fee": False,
         "extra_reminders": [
@@ -108,7 +108,7 @@ def confirm_url(token: str, src: str = "email") -> str:
 TOUR_IMAGES: dict[str, str] = {
     "upper_antelope":       "https://nationalparkexpress.com/wp-content/uploads/2026/04/Upper_Antelope_BSCT_lg.jpg",
     "lower_antelope":       "https://nationalparkexpress.com/wp-content/uploads/2023/09/leon-liu-_0aOFIW34rw-unsplash-scaled.jpg",
-    "antelop_X":            "https://nationalparkexpress.com/wp-content/uploads/2023/09/leon-liu-_0aOFIW34rw-unsplash-scaled.jpg",
+    "antelope_x":            "https://nationalparkexpress.com/wp-content/uploads/2023/09/leon-liu-_0aOFIW34rw-unsplash-scaled.jpg",
     "grand_canyon_south":   "https://nationalparkexpress.com/wp-content/uploads/2024/04/National-Park-Express-Which-Section-of-the-Grand-Canyon-img1.jpg",
     "grand_canyon_west":    "https://nationalparkexpress.com/wp-content/uploads/2023/04/GCW_Banner.jpg",
     "bryce_zion":           "https://nationalparkexpress.com/wp-content/uploads/2023/01/6Bryce.jpg",

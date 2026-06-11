@@ -995,23 +995,23 @@
 
     <script>
       const TOUR_ABBR = {
-        upper_antelope: 'AC-U', lower_antelope: 'AC-L', antelop_X: 'AC-X',
+        upper_antelope: 'AC-U', lower_antelope: 'AC-L', antelope_x: 'AC-X',
         grand_canyon_south: 'South', grand_canyon_west: 'West',
         bryce_zion: 'BZ', valley_of_fire_full: 'VOF-F', valley_of_fire_half: 'VOF-H',
         hoover_dam: 'HD',
       };
       const TOUR_HAS_BEEF = {
-        upper_antelope: true, lower_antelope: true, antelop_X: true,
+        upper_antelope: true, lower_antelope: true, antelope_x: true,
         grand_canyon_south: false, grand_canyon_west: false,
         bryce_zion: false, valley_of_fire_full: false, valley_of_fire_half: false, hoover_dam: false,
       };
       const TOUR_HAS_LUNCH = {
-        upper_antelope: true, lower_antelope: true, antelop_X: true,
+        upper_antelope: true, lower_antelope: true, antelope_x: true,
         grand_canyon_south: true, grand_canyon_west: false,
         bryce_zion: true, valley_of_fire_full: true, valley_of_fire_half: false, hoover_dam: false,
       };
       const LUNCH_GROUPS = {
-        'Antelope': ['upper_antelope', 'lower_antelope', 'antelop_X'],
+        'Antelope': ['upper_antelope', 'lower_antelope', 'antelope_x'],
         'South': ['grand_canyon_south'],
         'BZ': ['bryce_zion'],
         'VOF-F': ['valley_of_fire_full'],
@@ -1057,7 +1057,7 @@
       }
 
       const TOUR_ORDER = [
-        'upper_antelope', 'lower_antelope', 'antelop_X',
+        'upper_antelope', 'lower_antelope', 'antelope_x',
         'grand_canyon_south', 'grand_canyon_west',
         'bryce_zion', 'valley_of_fire_full', 'valley_of_fire_half', 'hoover_dam',
       ];
@@ -2214,7 +2214,7 @@
           guest_reply: { label: 'Guest', color: '#1a3a5c', right: false, dot: null },
         };
         var msgs = [];
-          (notes || []).forEach(function (n) {
+        (notes || []).forEach(function (n) {
           msgs.push(Object.assign({}, n, { _sort: n.created_at ? new Date(n.created_at).getTime() : 1 }));
         });
         msgs.sort(function (a, b) { return (a._sort || 0) - (b._sort || 0); });

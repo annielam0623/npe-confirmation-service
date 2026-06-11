@@ -163,7 +163,7 @@ background: #fff; color:#555; transition: all 0.15s; user-select: none; white-sp
           <option value="">— Select tour type —</option>
           <option value="upper_antelope">Upper Antelope Canyon Bus Tour</option>
           <option value="lower_antelope">Lower Antelope Canyon Bus Tour</option>
-          <option value="antelop_X">Antelope Canyon X Bus Tour</option>
+          <option value="antelope_x">Antelope Canyon X Bus Tour</option>
           <option value="grand_canyon_south">Grand Canyon South Rim Bus Tour</option>
           <option value="grand_canyon_west">Grand Canyon West Rim Bus Tour</option>
           <option value="bryce_zion">Bryce Canyon & Zion Bus Tour</option>
@@ -344,7 +344,7 @@ background: #fff; color:#555; transition: all 0.15s; user-select: none; white-sp
           <option value="">— Select tour type —</option>
           <option value="upper_antelope">Upper Antelope Canyon Bus Tour</option>
           <option value="lower_antelope">Lower Antelope Canyon Bus Tour</option>
-          <option value="antelop_X">Antelope Canyon X Bus Tour</option>
+          <option value="antelope_x">Antelope Canyon X Bus Tour</option>
           <option value="grand_canyon_south">Grand Canyon South Rim Bus Tour</option>
           <option value="grand_canyon_west">Grand Canyon West Rim Bus Tour</option>
           <option value="bryce_zion">Bryce Canyon &amp; Zion Bus Tour</option>
@@ -509,7 +509,7 @@ background: #fff; color:#555; transition: all 0.15s; user-select: none; white-sp
   const TOUR_SLUG_MAP = {
     upper_antelope: 'antelope-upper',
     lower_antelope: 'antelope-lower',
-    antelop_X: 'antelope-x',
+    antelope_x: 'antelope-x',
     grand_canyon_south: 'south',
     grand_canyon_west: 'west',
     bryce_zion: 'bryce-zion',
@@ -585,13 +585,13 @@ background: #fff; color:#555; transition: all 0.15s; user-select: none; white-sp
   function mtlvCell(r) {
     const raw = (r.mtlv_promo || '').toString().trim();
     if (raw.toUpperCase() === 'ELIGIBLE')
-    return '<span style="font-size:11px;color:#2F7851;font-weight:600;">Eligible</span>';
+      return '<span style="font-size:11px;color:#2F7851;font-weight:600;">Eligible</span>';
     const n = parseInt(raw, 10);
     if (!isNaN(n) && n > 0)
-    return `<span style="font-size:11px;color:#2F7851;font-weight:600;">🎫 ${n}</span>`;
+      return `<span style="font-size:11px;color:#2F7851;font-weight:600;">🎫 ${n}</span>`;
     return '<span style="color:#ccc">—</span>';
   }
-  
+
   function showPreview(data) {
     const rows = data.rows;
     const dups = rows.filter(r => r.duplicate).length;
