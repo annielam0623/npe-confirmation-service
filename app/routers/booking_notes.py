@@ -127,6 +127,7 @@ def _serialize_note(n: BookingNote) -> dict:
     return {
         "id":              n.id,
         "booking_id":      n.booking_id,
+        "order_number":    getattr(n, "order_number", None),
         "author_username": n.author_username,
         "direction":       n.direction,
         "body":            n.body,
@@ -201,15 +202,13 @@ async def get_notes_by_order(
 
     notes_res = await db.execute(
         text("""
-            SELECT bn.id, bn.booking_id,
+            SELECT bn.id, bn.booking_id, bn.order_number,
                    COALESCE(NULLIF(au.display_name, ''), bn.author_username) AS author_username,
                    bn.direction,
                    bn.body, bn.sms_status, bn.email_status, bn.created_at
             FROM booking_notes bn
             LEFT JOIN admin_users au ON au.username = bn.author_username
-            WHERE bn.booking_id = (
-                SELECT id FROM bookings WHERE order_number = :on ORDER BY id DESC LIMIT 1
-            )
+            WHERE bn.order_number = :on
             ORDER BY bn.created_at ASC
         """),
         {"on": order_number}
@@ -276,6 +275,7 @@ async def add_note_by_order(
 
     note = BookingNote(
         booking_id=booking.id,
+        order_number=order_number,
         author_username=user.username,
         direction=direction,
         body=payload.body,
@@ -370,6 +370,7 @@ async def add_note(
 
     note = BookingNote(
         booking_id=booking_id,
+        order_number=order_number,
         author_username=user.username,
         direction=direction,
         body=payload.body,

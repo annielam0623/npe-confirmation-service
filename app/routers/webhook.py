@@ -714,15 +714,22 @@ async def twilio_inbound_sms(request: Request, db: AsyncSession = Depends(get_db
     # ── Find most recent send_log entry matching this phone ──
     # send_log.phone stores the number as sent (may vary in format),
     # so we match on the last 10 digits which are format-independent.
+    #
+    # IMPORTANT: booking_notes is keyed by order_number (NOT booking_id).
+    # We resolve the order_number directly from send_log and do NOT join
+    # bookings — Excel-sourced sends have an order_number that may not exist
+    # in the bookings table, and bookings.id is not unique per order_number
+    # (id drift), which previously caused inbound replies to be dropped.
     suffix = clean_from[-10:] if len(clean_from) >= 10 else clean_from
 
     try:
         result = await db.execute(
             _text("""
-                SELECT b.id as booking_id
+                SELECT sl.order_number
                 FROM send_log sl
-                JOIN bookings b ON b.order_number = sl.order_number
                 WHERE RIGHT(REGEXP_REPLACE(sl.phone, '[^0-9]', '', 'g'), 10) = :suffix
+                  AND sl.order_number IS NOT NULL
+                  AND sl.order_number <> ''
                 ORDER BY sl.sent_at DESC
                 LIMIT 1
             """),
@@ -730,47 +737,39 @@ async def twilio_inbound_sms(request: Request, db: AsyncSession = Depends(get_db
         )
         row = result.fetchone()
 
-        if not row or not row.booking_id:
-            print(f"[webhook/twilio/inbound] no matching booking for {from_number}")
+        if not row or not row.order_number:
+            print(f"[webhook/twilio/inbound] no matching order for {from_number}")
             return _twiml_response("")
 
-        booking_id = row.booking_id
+        order_number = row.order_number
 
-        # ── Write to booking_notes ──
+        # ── Write to booking_notes (keyed by order_number) ──
         now_la = datetime.now(ZoneInfo("America/Los_Angeles"))
         await db.execute(
             _text("""
                 INSERT INTO booking_notes
-                  (booking_id, author_username, body, direction, channel, created_at)
+                  (order_number, author_username, body, direction, channel, created_at)
                 VALUES
-                  (:booking_id, 'guest', :body, 'sms_in', 'sms', :created_at)
+                  (:order_number, 'guest', :body, 'sms_in', 'sms', :created_at)
             """),
             {
-                "booking_id": booking_id,
-                "body":       body_text,
-                "created_at": now_la,
+                "order_number": order_number,
+                "body":         body_text,
+                "created_at":   now_la,
             },
         )
         # ── Clear action_taken_by — new inbound message needs staff attention ──
-        await db.execute(
-            _text("""
-                UPDATE tickets_reminders
-                SET action_taken_by = NULL, action_taken_at = NULL
-                WHERE id = :id
-            """),
-            {"id": booking_id}
-        )
-        # Also clear on bookings table if matched there
+        # Resolve by order_number on the bookings table.
         await db.execute(
             _text("""
                 UPDATE bookings
                 SET action_taken_by = NULL, action_taken_at = NULL
-                WHERE id = :id
+                WHERE order_number = :order_number
             """),
-            {"id": booking_id}
+            {"order_number": order_number}
         )
         await db.commit()
-        print(f"[webhook/twilio/inbound] wrote sms_in note for booking_id={booking_id}")
+        print(f"[webhook/twilio/inbound] wrote sms_in note for order_number={order_number}")
     except Exception as e:
         print(f"[webhook/twilio/inbound] db error: {e}")
         try:

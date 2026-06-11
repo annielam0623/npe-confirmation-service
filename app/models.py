@@ -457,6 +457,7 @@ class BroadcastLog(Base):
     email_sent       = Column(Integer, nullable=False, default=0)
     email_failed     = Column(Integer, nullable=False, default=0)
     created_at       = Column(DateTime(timezone=True), nullable=False, default=_now_la)
+    order_number     = Column(String, nullable=True, index=True)
 
     recipients       = relationship("BroadcastRecipient", back_populates="broadcast", cascade="all, delete-orphan")
 
