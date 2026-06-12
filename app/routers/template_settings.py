@@ -14,7 +14,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.auth import require_admin
 from app.models import AdminUser
-from app.services.template_copy import invalidate_cache
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
@@ -87,6 +86,5 @@ async def save_template_setting(
         {"v": value, "k": key, "u": current_user.username},
     )
     await db.commit()
-    invalidate_cache(key)
 
     return {"ok": True, "key": key}

@@ -16,6 +16,7 @@ from app.database import get_db
 from app.models import Booking, BookingNote
 from app.services.tour_config import TOUR_TYPES
 from app.services.sendgrid import send_staff_notification
+from app.services.template_copy import get_copy_many, get_copy_value, TC_GUEST_KEYS
 
 router = APIRouter()
 BASE_URL = "https://confirm.nationalparkexpress.com"
@@ -145,7 +146,8 @@ def _thanks(booking) -> HTMLResponse:
 
 def _render(booking, tour_config: dict, error_msg: str = "",
             pickup_instruction: str = "", pickup_photo_url: str = "", pickup_photo_label: str = "",
-            is_last_minute: bool = False) -> HTMLResponse:
+            is_last_minute: bool = False, copy: dict | None = None) -> HTMLResponse:
+    copy = copy or {}
     tour_date  = booking.tour_date
     date_fmt   = tour_date.strftime("%A, %B %-d, %Y") if tour_date else "—"
     qty        = int(booking.quantities or 1)
@@ -237,7 +239,7 @@ def _render(booking, tour_config: dict, error_msg: str = "",
     if error_msg:
         banners += f'<div class="gf-error">{error_msg}</div>'
     if already:
-        banners += '<div class="gf-info">Response already submitted. You can update it below.</div>'
+        banners += '<div class="gf-info">' + get_copy_value(copy, 'tmpl__global__tc_guest_already_submitted', 'Response already submitted. You can update it below.') + '</div>'
 
     # v4.17.14: YES button states
     if yes_locked:
@@ -378,6 +380,9 @@ def _render(booking, tour_config: dict, error_msg: str = "",
     else:
         notes_display_html = ""
 
+    # E: escape stored guest notes before injecting into the textarea
+    notes_textarea_val = (booking.notes or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
     js = f"""
 var partySize={qty},hasLunch={'true' if has_lunch else 'false'};
 function onYN(el){{if(hasLunch){{var ls=document.getElementById('lunch-section');if(ls)ls.style.display=el.value==='yes'?'':'none';}}var rs=document.getElementById('reschedule-section');if(rs)rs.style.display='none';}}
@@ -476,13 +481,13 @@ function adjMtlv(d){{var el=document.getElementById('c-mtlv');if(!el)return;var 
           
         <div class="gf-section">
           {notes_display_html}
-          <h2>📝 Notes <span class="gf-opt">(optional)</span></h2>
-          <textarea name="notes" rows="3" placeholder="Special requests, dietary notes...">{booking.notes or ''}</textarea>
+          <h2>{get_copy_value(copy, 'tmpl__global__tc_guest_notes_title', '📝 Notes')} <span class="gf-opt">(optional)</span></h2>
+          <textarea name="notes" rows="3" placeholder="{get_copy_value(copy, 'tmpl__global__tc_guest_notes_placeholder', 'Special requests, dietary notes...')}">{notes_textarea_val}</textarea>
         </div>
 
         <div class="gf-submit">
-          <button type="submit" class="gf-btn">Submit Confirmation</button>
-          <p class="gf-small">Thank you for choosing National Park Express — we look forward to your adventure! 🏞️</p>
+          <button type="submit" class="gf-btn">{get_copy_value(copy, 'tmpl__global__tc_guest_submit_btn', 'Submit Confirmation')}</button>
+          <p class="gf-small">{get_copy_value(copy, 'tmpl__global__tc_guest_footer_thanks', 'Thank you for choosing National Park Express — we look forward to your adventure! 🏞️')}</p>
         </div>
       </form>
     </div></div>
@@ -546,7 +551,10 @@ async def tix_confirm_get(request: Request, db: AsyncSession = Depends(get_db)):
     # Auto-YES: guest clicked the email CTA button
     if autoyes == "1" and row.get("confirmation") != "yes":
         new_count = int(row.get("submission_count") or 0) + 1
-        now_ts = datetime.now(timezone.utc).replace(tzinfo=None)
+        # C: tickets_reminders.submitted_at is timestamptz -> aware;
+        #    bookings.submitted_at is naive -> LA wall-clock
+        now_aware = datetime.now(LA)
+        now_naive = now_aware.replace(tzinfo=None)
         order_number = row.get("chd_number") or row.get("order_number", "")
         # Write to tickets_reminders (backward compat)
         await db.execute(
@@ -554,7 +562,7 @@ async def tix_confirm_get(request: Request, db: AsyncSession = Depends(get_db)):
                          SET confirmation='yes', submitted_at=:ts,
                              submission_count=:c, source=:s
                          WHERE id=:id"""),
-            {"ts": now_ts, "c": new_count, "s": src, "id": row["id"]},
+            {"ts": now_aware, "c": new_count, "s": src, "id": row["id"]},
         )
         # Also sync to bookings table (primary tracking source)
         await db.execute(
@@ -563,7 +571,7 @@ async def tix_confirm_get(request: Request, db: AsyncSession = Depends(get_db)):
                              submission_count=:c
                          WHERE order_number=:order_number
                            AND module='tickets_reminder'"""),
-            {"ts": now_ts, "c": new_count, "order_number": order_number},
+            {"ts": now_naive, "c": new_count, "order_number": order_number},
         )
         await db.commit()
         result = await db.execute(
@@ -598,7 +606,10 @@ async def tix_confirm_post(
                                             error_msg="Please select YES to confirm."))
 
     new_count = int(row.get("submission_count") or 0) + 1
-    now_ts = datetime.now(LA).replace(tzinfo=None)
+    # C: tickets_reminders.submitted_at is timestamptz -> aware;
+    #    bookings.submitted_at is naive -> LA wall-clock
+    now_aware = datetime.now(LA)
+    now_naive = now_aware.replace(tzinfo=None)
     order_number = row.get("chd_number") or row.get("order_number", "")
     # Write to tickets_reminders (backward compat)
     await db.execute(
@@ -606,7 +617,7 @@ async def tix_confirm_post(
                      SET confirmation='yes', reschedule_notes=:n,
                          submitted_at=:ts, submission_count=:c, source='form'
                      WHERE id=:id"""),
-        {"n": notes, "ts": now_ts, "c": new_count, "id": row["id"]},
+        {"n": notes, "ts": now_aware, "c": new_count, "id": row["id"]},
     )
     # Also sync to bookings table (primary tracking source)
     await db.execute(
@@ -615,7 +626,7 @@ async def tix_confirm_post(
                          submitted_at=:ts, submission_count=:c
                      WHERE order_number=:order_number
                        AND module='tickets_reminder'"""),
-        {"n": notes, "ts": now_ts, "c": new_count, "order_number": order_number},
+        {"n": notes, "ts": now_naive, "c": new_count, "order_number": order_number},
     )
     await db.commit()
     result = await db.execute(
@@ -647,9 +658,11 @@ async def guest_confirm_page(token: str, db: AsyncSession = Depends(get_db)):
     tour_config = TOUR_TYPES.get(booking.tour_type or "", list(TOUR_TYPES.values())[0])
     pu_inst, pu_photo, pu_label = await _fetch_pickup_info(booking.pickup_location, db)
     is_last_minute = bool(booking.is_last_minute)
+    copy = await get_copy_many(db, TC_GUEST_KEYS)
+    print(f"[guest] TC Guest copy loaded: {len(copy)} keys")
     return _render(booking, tour_config,
                    pickup_instruction=pu_inst, pickup_photo_url=pu_photo, pickup_photo_label=pu_label,
-                   is_last_minute=is_last_minute)
+                   is_last_minute=is_last_minute, copy=copy)
 
 
 @router.post("/confirm/{token}", response_class=HTMLResponse)
@@ -713,7 +726,7 @@ async def guest_confirm_submit(
     if is_last_minute:
         confirmation = "yes"
     elif not confirmation:
-        error_msg = "Please select YES oSr Modify."
+        error_msg = "Please select YES or Modify."
     elif confirmation not in ("yes", "modify_req"):
         error_msg = "Please select YES or Modify."
     elif confirmation == "yes" and is_yes_confirmed and _mod_locked:
@@ -728,8 +741,10 @@ async def guest_confirm_submit(
 
     if error_msg:
         pu_inst, pu_photo, pu_label = await _fetch_pickup_info(booking.pickup_location, db)
+        copy = await get_copy_many(db, TC_GUEST_KEYS)
+        print(f"[guest] TC Guest copy loaded: {len(copy)} keys")
         return _render(booking, tour_config, error_msg=error_msg,
-                       pickup_instruction=pu_inst, pickup_photo_url=pu_photo, pickup_photo_label=pu_label)
+                       pickup_instruction=pu_inst, pickup_photo_url=pu_photo, pickup_photo_label=pu_label, copy=copy)
 
     # v4.17.14: Build notes/history with full logging for every action
     new_count   = int(booking.submission_count or 0) + 1
@@ -796,7 +811,9 @@ async def guest_confirm_submit(
             created_at=datetime.now(LA),
         )
         db.add(guest_note)
-        await db.commit()
+
+    # A: persist booking confirmation (+ guest note) before best-effort steps below
+    await db.commit()
 
     # Activity log
     try:
@@ -838,6 +855,7 @@ async def guest_confirm_submit(
 
         await db.commit()
     except Exception as exc:
+        await db.rollback()
         print(f"[guest] activity log failed: {exc}")
     await db.refresh(booking)
 
