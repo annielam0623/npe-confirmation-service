@@ -39,13 +39,13 @@ rgba(255,255,255,0.28);color:rgba(255,255,255,0.92);}
 .cs-inner{display:none;}
 .cs-inner.active{display:block;}
 .cs-breadcrumb{display:flex;align-items:center;gap:6px;font-size:12px;color:#888;margin-bottom:16px;cursor:pointer;}
-.cs-breadcrumb:hover{color:#1a1a1a;}
-.cs-breadcrumb strong{color:#1a1a1a;}
+.cs-breadcrumb:hover{color:#fff;}
+.cs-breadcrumb strong{color:#fff;}
 .cs-sub-tabs{display:flex;gap:0;border-bottom:1px solid rgba(0,0,0,0.1);margin-bottom:18px;}
 .cs-sub-tab{padding:7px 18px;font-size:13px;font-weight:500;color:#888;cursor:pointer;border-bottom:2px solid
 transparent;margin-bottom:-1px;background:none;border-top:none;border-left:none;border-right:none;}
-.cs-sub-tab:hover{color:#1a1a1a;}
-.cs-sub-tab.active{color:#1a1a1a;border-bottom-color:#1a1a1a;}
+.cs-sub-tab:hover{color:#fff;}
+.cs-sub-tab.active{color:#fff;border-bottom-color:#fff;}
 .cs-panel{display:none;}
 .cs-panel.active{display:block;}
 
@@ -178,7 +178,7 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
 .ep-highlight{background:#fffbcc;transition:background 0.6s;border-radius:3px;padding:1px 2px;}
 
 /* Guest preview */
-.gp-wrap{background:#fff;border-radius:10px;overflow:hidden;font-family:-apple-system,sans-serif;font-size:13px;}
+.gp-wrap{background:#fff;color:#333;border-radius:10px;overflow:hidden;font-family:-apple-system,sans-serif;font-size:13px;}
 .gp-header{background:#1a3a5c;color:#fff;padding:14px;}
 .gp-header h2{margin:0 0 2px;font-size:14px;}
 .gp-header p{margin:0;font-size:11px;opacity:0.8;}
@@ -1337,7 +1337,7 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
       }).join('');
       prepHtml = `<div style="background:#eaf4ff;border-bottom:1px solid #b3d9ff;padding:11px 13px;margin-bottom:10px;">
       <div class="gp-reminders-title" style="color:#1a3a5c;">📋 Prepare for Your Tour</div>
-      <ul style="margin:5px 0 0;padding-left:16px;font-size:12px;">${items}</ul>
+      <ul style="margin:5px 0 0;padding-left:16px;font-size:12px;color:#333;">${items}</ul>
     </div>`;
     }
     return `<div class="gp-wrap">
