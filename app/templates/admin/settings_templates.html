@@ -13,27 +13,22 @@ rgba(0,0,0,0.08);display:flex;align-items:center;justify-content:space-between;f
 
 /* Home screen */
 .cs-home{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px;}
-.cs-big-btn{border:none;border-radius:24px;padding:26px 20px
-20px;cursor:pointer;text-align:left;position:relative;overflow:hidden;transition:transform 0.18s
-cubic-bezier(.34,1.56,.64,1),box-shadow 0.18s;width:100%;}
-.cs-big-btn::before{content:'';position:absolute;top:0;left:0;right:0;height:55%;background:linear-gradient(to
-bottom,rgba(255,255,255,0.22),rgba(255,255,255,0));border-radius:24px 24px 0 0;pointer-events:none;}
-.cs-big-btn::after{content:'';position:absolute;inset:0;border-radius:24px;border:0.5px solid
-rgba(255,255,255,0.25);pointer-events:none;}
-.cs-big-btn:hover{transform:translateY(-2px) scale(1.015);}
-.cs-big-btn:active{transform:scale(0.97);}
-.cs-big-btn.tc{background:linear-gradient(145deg,#72c27a 0%,#3a8c45 45%,#1f5c2a 100%);box-shadow:0 8px 28px
-rgba(40,110,55,0.4),0 2px 8px rgba(0,0,0,0.12);}
-.cs-big-btn.tix{background:linear-gradient(145deg,#e8b060 0%,#c07830 45%,#8a4e10 100%);box-shadow:0 8px 28px
-rgba(180,110,30,0.4),0 2px 8px rgba(0,0,0,0.12);}
-.cs-btn-emoji{font-size:34px;margin-bottom:14px;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.2));}
-.cs-btn-title{font-size:15px;font-weight:500;color:#fff;margin-bottom:7px;text-shadow:0 1px 4px rgba(0,0,0,0.2);}
-.cs-btn-desc{font-size:11px;color:rgba(255,255,255,0.75);line-height:1.65;}
+.cs-big-btn{--ac:#3b82f6;border:1px solid color-mix(in srgb,var(--ac) 38%,rgba(255,255,255,0.08));border-radius:18px;padding:22px 20px;cursor:pointer;text-align:left;position:relative;overflow:hidden;transition:border-color 0.22s,box-shadow 0.22s,transform 0.18s,background 0.22s;width:100%;background:rgba(255,255,255,0.032);}
+.cs-big-btn::before{content:'';position:absolute;inset:-1px;opacity:0;pointer-events:none;background:radial-gradient(circle at 18% 0%,color-mix(in srgb,var(--ac) 20%,transparent),transparent 52%);transition:opacity 0.22s;}
+.cs-big-btn::after{content:'';position:absolute;inset:0;pointer-events:none;}
+.cs-big-btn:hover{transform:translateY(-2px);border-color:var(--ac);box-shadow:0 0 36px color-mix(in srgb,var(--ac) 20%,transparent);background:linear-gradient(135deg,color-mix(in srgb,var(--ac) 8%,transparent),rgba(255,255,255,0.025));}
+.cs-big-btn:hover::before{opacity:1;}
+.cs-big-btn:active{transform:scale(0.98);}
+.cs-big-btn.tc{--ac:#22c55e;}
+.cs-big-btn.tix{--ac:#a855f7;}
+.cs-btn-emoji{font-size:30px;margin-bottom:14px;display:block;}
+.cs-btn-title{font-size:16px;font-weight:700;color:#f8fafc;margin-bottom:7px;}
+.cs-btn-desc{font-size:12px;color:rgba(255,255,255,0.5);line-height:1.65;}
 .cs-btn-footer{display:flex;align-items:center;justify-content:space-between;margin-top:16px;}
-.cs-btn-tag{font-size:10px;font-weight:500;padding:3px
-10px;border-radius:20px;background:rgba(255,255,255,0.18);border:0.5px solid
-rgba(255,255,255,0.28);color:rgba(255,255,255,0.92);}
-.cs-btn-arrow{font-size:15px;color:rgba(255,255,255,0.55);}
+.cs-btn-tag{font-size:10px;font-weight:600;padding:3px
+10px;border-radius:999px;background:color-mix(in srgb,var(--ac) 12%,transparent);border:1px solid
+color-mix(in srgb,var(--ac) 38%,transparent);color:var(--ac);}
+.cs-btn-arrow{font-size:15px;color:rgba(255,255,255,0.38);}
 
 /* Inner page */
 .cs-inner{display:none;}
@@ -105,10 +100,8 @@ solid #cfe1f6;border-radius:5px;padding:2px 7px;cursor:pointer;}
 .sms-counter{margin-left:auto;font-size:10px;color:#9B8F88;font-variant-numeric:tabular-nums;}
 
 /* Dashboard-aligned card colors + Broadcasting editor */
-.cs-big-btn.tix{background:linear-gradient(145deg,#c084fc 0%,#a855f7 45%,#7e22ce 100%);box-shadow:0 8px 28px
-rgba(150,70,210,0.4),0 2px 8px rgba(0,0,0,0.12);}
-.cs-big-btn.bc{background:linear-gradient(145deg,#fba35a 0%,#f97316 45%,#c2410c 100%);box-shadow:0 8px 28px
-rgba(230,110,20,0.4),0 2px 8px rgba(0,0,0,0.12);}
+.cs-big-btn.tix{--ac:#a855f7;}
+.cs-big-btn.bc{--ac:#f97316;}
 .bc-label-input{border:1px solid #e5e7eb;border-radius:7px;padding:6px 10px;font-size:13px;background:#fff;}
 .bc-label-input:focus{outline:none;border-color:#1a1a1a;}
 .bc-del-btn{border:1px solid #f3c0c0;background:#fff5f5;color:#c0392b;border-radius:7px;padding:4px
