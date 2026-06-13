@@ -85,7 +85,7 @@ UI",sans-serif;line-height:1.6;color:#1a1a1a;resize:vertical;min-height:60px;box
 /* Chip editor (variable-protected fields) */
 .chip-editor{width:100%;border:1px solid #e5e7eb;border-radius:7px;padding:8px
 10px;font-size:12px;font-family:-apple-system,BlinkMacSystemFont,"Segoe
-UI",sans-serif;line-height:1.8;color:#1a1a1a !important;min-height:38px;box-sizing:border-box;background:#fafafa;white-space:pre-wrap;word-break:break-word;transition:border-color
+UI",sans-serif;line-height:1.8;color:#1a1a1a;min-height:38px;box-sizing:border-box;background:#fafafa;white-space:pre-wrap;word-break:break-word;transition:border-color
 0.12s,background 0.12s;}
 .chip-editor:focus{outline:none;border-color:#1a1a1a;background:#fff;}
 .chip-editor.global-card-ta{border-color:#fca5a5;background:#fff8f8;}
@@ -93,6 +93,10 @@ UI",sans-serif;line-height:1.8;color:#1a1a1a !important;min-height:38px;box-sizi
 .var-chip{display:inline-block;background:#eef6ff;color:#1a3a5c;border:1px solid #cfe1f6;border-radius:5px;padding:0
 6px;margin:0
 1px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;line-height:1.5;white-space:nowrap;user-select:none;cursor:default;}
+/* chip-editor text color fix — covers all variable fields (Tour/Tickets SMS, Broadcast). Force editable text dark; keep var chips blue. */
+.chip-editor{color:#1a1a1a !important;-webkit-text-fill-color:#1a1a1a !important;caret-color:#1a1a1a;}
+.chip-editor *:not(.var-chip){color:inherit !important;-webkit-text-fill-color:inherit !important;}
+.chip-editor .var-chip{color:#1a3a5c !important;-webkit-text-fill-color:#1a3a5c !important;}
 .chip-insert-bar{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-top:6px;}
 .chip-insert-btn{font-size:10px;font-family:ui-monospace,Menlo,Consolas,monospace;color:#1a3a5c;background:#fff;border:1px
 solid #cfe1f6;border-radius:5px;padding:2px 7px;cursor:pointer;}
