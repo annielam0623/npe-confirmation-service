@@ -13,7 +13,7 @@ POST /update-status
 
 import asyncio
 import logging
-from datetime import datetime
+from datetime import datetime, time as dtime
 
 from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
@@ -25,6 +25,7 @@ from app.auth import get_current_user
 from app.services.sendgrid import send_raw_email
 from app.services.sms import send_sms_async
 from app.services.excel_parser import parse_excel
+from app.services.short_links import upsert_short_link
 from app.services.tickets_reminder import (
     TOUR_TYPES, make_token, confirm_url, build_sms, build_email, build_staff_email,
 )
@@ -96,7 +97,22 @@ async def _do_send(d: dict, send_type: str, db: AsyncSession, sent_by: str = "")
 
     rid      = await _insert_record(db, d)
     token    = make_token(rid, email_addr, svc_date)
-    form_url = confirm_url(token, send_type)
+
+    # ── Build short link (-TR) so guests receive a clean /c/{code}, not the long
+    #    confirm_url. Mirrors send.py tour/morning + the existing tickets sample at
+    #    send.py:822. Key = chd_number (unique per ticket). expires = service-day
+    #    23:59:59 LA, passed NAIVE (no tzinfo) per short_links.py UTC/LA convention
+    #    — adding tzinfo here would shift it ~7-8h and expire the link early (D-doc §6#3).
+    #    ONE upsert only: code is deterministic ({chd}-TR), so a second upsert with the
+    #    same code would just ON CONFLICT-overwrite the first. email & sms share this
+    #    link; src is a tracking-only param (token/autoyes identical) so one value is fine.
+    #    To split src per channel the code itself would need a channel suffix (-TR-E/-TR-S)
+    #    — separate change, out of scope here.
+    chd_no      = d.get("chd_number") or d.get("order_number", "")
+    _svc_date   = _parse_date(svc_date)
+    _tr_expires = datetime.combine(_svc_date, dtime(23, 59, 59)) if _svc_date else datetime.now(ZoneInfo("America/Los_Angeles")).replace(tzinfo=None)
+    form_url = await upsert_short_link(db, chd_no, "ticket_reminder",
+                                       confirm_url(token, src="email"), _tr_expires)
 
     sms_ok, email_ok = False, False
     sms_sid = ""
