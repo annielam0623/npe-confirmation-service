@@ -500,6 +500,28 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
   function v(key) { return (ALL_SETTINGS[key] || {}).value || ''; }
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   function nl2br(s) { return esc(s).replace(/\n/g, '<br>'); }
+  // Footer rendering: esc -> linkify (url/email/tel) -> nl2br. Must stay byte-identical
+  // with the backend _footer_html() in tour_confirmation.py so preview == sent email.
+  function footerHtml(s) {
+    let out = esc(s);                                    // 1. escape user text first
+    // 2a. full URLs: https://… or www.… (www gets https:// in href only, display unchanged)
+    out = out.replace(/(https?:\/\/[^\s<]+|www\.[^\s<]+)/g, function (m) {
+      var href = m.indexOf('http') === 0 ? m : 'https://' + m;
+      return '<a href="' + href + '" style="color:#93c5fd;">' + m + '</a>';
+    });
+    // 2b. emails -> mailto: (skip ones already inside an href)
+    out = out.replace(/([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})/g, function (m, _e, off, full) {
+      var before = full.slice(0, off);
+      if (/href="[^"]*$/.test(before)) return m;         // already linkified
+      return '<a href="mailto:' + m + '" style="color:#93c5fd;">' + m + '</a>';
+    });
+    // 2c. phone numbers -> tel: (strip spaces/parens for href, display unchanged)
+    out = out.replace(/(\+?\d[\d()\s\-]{7,}\d)/g, function (m) {
+      var tel = m.replace(/[^\d+]/g, '');
+      return '<a href="tel:' + tel + '" style="color:#93c5fd;">' + m + '</a>';
+    });
+    return out.replace(/\n/g, '<br>');                   // 3. newlines last
+  }
   function fill(s) {
     return s.replace(/\{name\}/g, SAMPLE.name).replace(/\{date\}/g, SAMPLE.date)
       .replace(/\{label\}/g, SAMPLE.label).replace(/\{phone\}/g, SAMPLE.phone)
@@ -1055,7 +1077,7 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
     const review = hlE(esc(v('tmpl__global__tc_email_review')), 'tmpl__global__tc_email_review');
     const closing = hlE(esc(v('tmpl__global__tc_email_closing')), 'tmpl__global__tc_email_closing');
     const expiry = hlE(esc(v('tmpl__global__tc_email_link_expiry')), 'tmpl__global__tc_email_link_expiry');
-    const footer = hlE(nl2br(v('tmpl__global__tc_email_footer_contact')), 'tmpl__global__tc_email_footer_contact');
+    const footer = hlE(footerHtml(v('tmpl__global__tc_email_footer_contact')), 'tmpl__global__tc_email_footer_contact');
     let feeHtml = '';
     if (hasParkFee) {
       const nr = hlE(esc(v(`tmpl__tc__${tourKey}__park_fee_nonresident`)), `tmpl__tc__${tourKey}__park_fee_nonresident`);
@@ -1132,7 +1154,7 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
       ? hlE(esc(v('tmpl__global__tc_lm_email_btn_lunch')), 'tmpl__global__tc_lm_email_btn_lunch')
       : hlE(esc(v('tmpl__global__tc_lm_email_btn_no_lunch')), 'tmpl__global__tc_lm_email_btn_no_lunch');
     const expiry = hlE(esc(v('tmpl__global__tc_email_link_expiry')), 'tmpl__global__tc_email_link_expiry');
-    const footer = hlE(nl2br(v('tmpl__global__tc_email_footer_contact')), 'tmpl__global__tc_email_footer_contact');
+    const footer = hlE(footerHtml(v('tmpl__global__tc_email_footer_contact')), 'tmpl__global__tc_email_footer_contact');
     return `<div class="ep-wrap">
     <div class="ep-hero"><img src="${heroImg}" alt="">
       <div class="ep-hero-overlay">

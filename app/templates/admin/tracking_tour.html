@@ -864,6 +864,10 @@
         <div class="num" id="stat-cancel">—</div>
         <div class="lbl">Cancel</div>
       </div>
+      <div class="stat-card" title="Replied (non-pending) / successfully sent">
+        <div class="num" id="stat-resprate">—</div>
+        <div class="lbl">Response Rate</div>
+      </div>
       <div class="lunch-groups" id="lunch-groups"></div>
     </div>
 
@@ -1083,6 +1087,13 @@
         document.getElementById('stat-modify').textContent = modify;
         document.getElementById('stat-pending').textContent = pending;
         document.getElementById('stat-cancel').textContent = cancel;
+
+        const respSent = rows.filter(r =>
+          r.email_status?.startsWith('sent') ||
+          ['sp-sent', 'sp-delivered'].includes(smsClass(r.sms_status)));
+        const respReplied = respSent.filter(r => (r.confirmation_status || 'pending') !== 'pending').length;
+        document.getElementById('stat-resprate').textContent =
+          respSent.length ? Math.round(respReplied / respSent.length * 100) + '%' : '—';
 
         const yesRows = rows.filter(r => r.confirmation_status === 'yes');
         let lunchHtml = '';

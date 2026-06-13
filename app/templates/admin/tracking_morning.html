@@ -430,6 +430,10 @@
         <div class="num" id="stat-pending">—</div>
         <div class="lbl">Pending</div>
       </div>
+      <div class="stat-card" title="Checked in / successfully sent SMS">
+        <div class="num" id="stat-cirate">—</div>
+        <div class="lbl">Check-in Rate</div>
+      </div>
     </div>
 
     <div class="filter-bar">
@@ -684,6 +688,11 @@
       document.getElementById('stat-total').textContent = rows.length;
       document.getElementById('stat-checkedin').textContent = rows.filter(r => r.checkin_status === 'checked_in').length;
       document.getElementById('stat-pending').textContent = rows.filter(r => r.checkin_status !== 'checked_in').length;
+
+      const ciSent = rows.filter(r => ['sp-sent', 'sp-delivered'].includes(smsStatusClass(r.sms_status)));
+      const ciDone = ciSent.filter(r => r.checkin_status === 'checked_in').length;
+      document.getElementById('stat-cirate').textContent =
+        ciSent.length ? Math.round(ciDone / ciSent.length * 100) + '%' : '—';
       document.getElementById('records-count').textContent = `${rows.length} records`;
 
       const cols = getOrderedCols();

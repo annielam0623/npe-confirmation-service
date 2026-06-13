@@ -920,6 +920,10 @@
       <div class="num" id="s-cancel">0</div>
       <div class="lbl">Cancelled</div>
     </div>
+    <div class="stat s-resprate">
+      <div class="num" id="s-resprate">—</div>
+      <div class="lbl">Response Rate</div>
+    </div>
   </div>
 
   <div class="records-bar" style="justify-content:flex-start;gap:8px;align-items:center;padding:8px 20px 12px;">
@@ -1486,6 +1490,12 @@
       document.getElementById('s-resc').textContent = resc;
       document.getElementById('s-cancel').textContent = cancel;
       document.getElementById('s-pend').textContent = pend;
+
+      var _respOk = function (s) { return s === 'delivered' || s === 'sent' || s === 'queued'; };
+      var respSent = rows.filter(function (r) { return _respOk(r.email_status) || _respOk(r.sms_status); });
+      var respReplied = respSent.filter(function (r) { return (r.confirmation_status || 'pending') !== 'pending'; }).length;
+      document.getElementById('s-resprate').textContent =
+        respSent.length ? Math.round(respReplied / respSent.length * 100) + '%' : '—';
       document.getElementById('rec-label').textContent = tot + ' record' + (tot === 1 ? '' : 's');
 
       // Update Notes header bubble
