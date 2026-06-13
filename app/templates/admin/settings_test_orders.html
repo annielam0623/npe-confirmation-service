@@ -1,8 +1,93 @@
 {% extends "base.html" %}
-{% block title %}Test Order Deletion — NPE{% endblock %}
+{% block title %}Test Orders — NPE{% endblock %}
 {% block page_title %}Test Orders{% endblock %}
 
 {% block extra_styles %}
+/* ===== Test send cards (light-port of dashboard .qcard) ===== */
+.test-intro { max-width:760px; font-size:13px; color:#666; line-height:1.6; margin-bottom:20px; }
+
+.tcard {
+  --ac:#3b82f6;
+  background:#fff;
+  border:1px solid rgba(0,0,0,0.08);
+  border-radius:18px;
+  padding:22px 24px;
+  max-width:760px;
+  margin-bottom:18px;
+  position:relative;
+  transition:border-color .22s, box-shadow .22s;
+}
+.tcard::before {
+  content:""; position:absolute; inset:0; border-radius:18px; pointer-events:none;
+  background:radial-gradient(circle at 16% 0%, color-mix(in srgb,var(--ac) 9%,transparent), transparent 55%);
+}
+.tcard:hover { border-color:color-mix(in srgb,var(--ac) 45%,transparent);
+  box-shadow:0 0 26px color-mix(in srgb,var(--ac) 14%,transparent); }
+.tcard.blue   { --ac:#3b82f6; }
+.tcard.green  { --ac:#22c55e; }
+.tcard.brown  { --ac:#a16207; }
+.tcard.purple { --ac:#a855f7; }
+
+.tcard-head { display:flex; align-items:center; gap:12px; margin-bottom:4px; position:relative; }
+.tcard-icon {
+  width:42px; height:42px; border-radius:12px; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center; font-size:20px;
+  background:color-mix(in srgb,var(--ac) 12%,transparent); color:var(--ac);
+}
+.tcard-title { font-size:16px; font-weight:700; color:#1a1a1a; }
+.tcard-ep { font-size:11px; color:#aaa; font-family:ui-monospace,monospace; margin-top:2px; }
+.tcard-desc { font-size:12px; color:#777; line-height:1.55; margin:10px 0 16px; position:relative; }
+
+.t-form-row { display:flex; gap:12px; align-items:flex-end; flex-wrap:wrap; position:relative; }
+.t-group { display:flex; flex-direction:column; gap:5px; }
+.t-group label { font-size:12px; color:#888; font-weight:500; }
+.t-group select, .t-group input[type="date"], .t-group input[type="file"] {
+  padding:7px 10px; border:0.5px solid rgba(0,0,0,0.2); border-radius:7px;
+  font-size:13px; background:#fff; font-family:inherit; color:#1a1a1a; min-width:180px;
+}
+.t-group select:focus, .t-group input:focus { outline:none; border-color:var(--ac); }
+
+/* send_type pills */
+.stype-wrap { display:flex; gap:7px; }
+.stype-pill {
+  display:inline-flex; align-items:center; gap:5px; padding:7px 14px;
+  border-radius:8px; font-size:12px; font-weight:600; cursor:pointer;
+  border:1.5px solid rgba(0,0,0,0.14); background:#fff; color:#888; user-select:none;
+  transition:all .14s;
+}
+.stype-pill.active { border-color:var(--ac); background:color-mix(in srgb,var(--ac) 10%,transparent); color:var(--ac); }
+
+.t-send-btn {
+  background:var(--ac); color:#fff; border:none; padding:9px 22px;
+  border-radius:9px; font-size:13px; font-weight:650; cursor:pointer;
+  display:inline-flex; align-items:center; gap:7px;
+}
+.t-send-btn:hover { opacity:.9; }
+.t-send-btn:disabled { opacity:.5; cursor:not-allowed; }
+.t-err { font-size:12px; color:#A32D2D; margin-left:10px; }
+
+/* per-card result area */
+.t-result { margin-top:16px; position:relative; display:none; }
+.t-result.show { display:block; }
+.t-result-summary {
+  display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; font-size:12px;
+}
+.t-stat { background:#f7f7f5; border-radius:8px; padding:6px 14px; text-align:center; }
+.t-stat .n { font-size:18px; font-weight:700; }
+.t-stat.ok .n   { color:#22a043; }
+.t-stat.fail .n { color:#A32D2D; }
+.t-stat.skip .n { color:#BA7517; }
+.t-tbl { width:100%; border-collapse:collapse; font-size:12px; }
+.t-tbl th { text-align:left; color:#999; font-weight:600; font-size:11px; padding:6px 8px; border-bottom:1px solid #e5e7eb; }
+.t-tbl td { padding:6px 8px; border-bottom:1px solid #f3f4f6; }
+.t-tbl .mono { font-family:ui-monospace,monospace; }
+.st-ok   { color:#22a043; }
+.st-fail { color:#A32D2D; }
+.st-skip { color:#BA7517; }
+.spin { display:inline-block; width:13px; height:13px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff; border-radius:50%; animation:sp .7s linear infinite; }
+@keyframes sp { to { transform:rotate(360deg); } }
+
+/* ===== Deletion card (unchanged, moved to bottom) ===== */
 .util-card {
   background:#fff; border:0.5px solid rgba(0,0,0,0.1);
   border-radius:12px; padding:22px; max-width:760px; margin-bottom:18px;
@@ -47,7 +132,185 @@ code { font-family:ui-monospace,monospace; font-size:12px; background:#f3f4f6; p
 {% endblock %}
 
 {% block content %}
-<div class="util-card">
+<p class="test-intro">
+  Send a real test confirmation through each channel to verify delivery, message content per tour type,
+  link validity, the tracking page, and notes interaction. No duplicate-checking — every row in the file is sent.
+  Clean up afterwards with <strong>Test Order Deletion</strong> at the bottom.
+</p>
+
+<!-- ════════ 1. MORNING PICKUP (blue) ════════ -->
+<div class="tcard blue" data-mod="morning">
+  <div class="tcard-head">
+    <div class="tcard-icon">🚐</div>
+    <div>
+      <div class="tcard-title">Morning Pickup</div>
+      <div class="tcard-ep">/send/morning-pickup</div>
+    </div>
+  </div>
+  <div class="tcard-desc">No tour type or date — both come from the file. Pickup time / location / driver / vehicle are read from the manifest.</div>
+  <div class="t-form-row">
+    <div class="t-group">
+      <label>Channel</label>
+      <div class="stype-wrap" data-stype="morning">
+        <span class="stype-pill" data-v="combined">✉️ Both</span>
+        <span class="stype-pill active" data-v="sms">📱 SMS</span>
+        <span class="stype-pill" data-v="email">📧 Email</span>
+      </div>
+    </div>
+    <div class="t-group">
+      <label>Manifest (.xlsx)</label>
+      <input type="file" id="morning-file" accept=".xlsx">
+    </div>
+    <button class="t-send-btn" onclick="runTest('morning')">📤 Send Test</button>
+    <span class="t-err" id="morning-err"></span>
+  </div>
+  <div class="t-result" id="morning-result"></div>
+</div>
+
+<!-- ════════ 2. TOUR CONFIRMATION (green) ════════ -->
+<div class="tcard green" data-mod="tour">
+  <div class="tcard-head">
+    <div class="tcard-icon">🏞️</div>
+    <div>
+      <div class="tcard-title">Tour Confirmation</div>
+      <div class="tcard-ep">/send/tour-confirmation-bulk</div>
+    </div>
+  </div>
+  <div class="tcard-desc">Select the tour type and date, then upload the file. Verify the guest page YES / Modify buttons and lunch selection.</div>
+  <div class="t-form-row">
+    <div class="t-group">
+      <label>Tour type</label>
+      <select id="tour-type">
+        <option value="upper_antelope">Upper Antelope Canyon Bus Tour</option>
+        <option value="lower_antelope">Lower Antelope Canyon Bus Tour</option>
+        <option value="antelope_x">Antelope Canyon X Bus Tour</option>
+        <option value="grand_canyon_south">Grand Canyon South Rim Bus Tour</option>
+        <option value="grand_canyon_west">Grand Canyon West Rim Bus Tour</option>
+        <option value="bryce_zion">Bryce Canyon &amp; Zion National Park Bus Tour</option>
+        <option value="valley_of_fire_full">Valley of Fire Tour (Full Day)</option>
+        <option value="valley_of_fire_half">Valley of Fire Tour (Half Day)</option>
+        <option value="hoover_dam">Hoover Dam Tour</option>
+      </select>
+    </div>
+    <div class="t-group">
+      <label>Tour date</label>
+      <input type="date" id="tour-date">
+    </div>
+    <div class="t-group">
+      <label>Channel</label>
+      <div class="stype-wrap" data-stype="tour">
+        <span class="stype-pill active" data-v="combined">✉️ Both</span>
+        <span class="stype-pill" data-v="sms">📱 SMS</span>
+        <span class="stype-pill" data-v="email">📧 Email</span>
+      </div>
+    </div>
+    <div class="t-group">
+      <label>File (.xlsx)</label>
+      <input type="file" id="tour-file" accept=".xlsx">
+    </div>
+    <button class="t-send-btn" onclick="runTest('tour')">📤 Send Test</button>
+    <span class="t-err" id="tour-err"></span>
+  </div>
+  <div class="t-result" id="tour-result"></div>
+</div>
+
+<!-- ════════ 3. LAST MINUTE (brown) ════════ -->
+<div class="tcard brown" data-mod="lastminute">
+  <div class="tcard-head">
+    <div class="tcard-icon">⏱️</div>
+    <div>
+      <div class="tcard-title">Last Minute</div>
+      <div class="tcard-ep">/send/last-minute-confirmation-bulk</div>
+    </div>
+  </div>
+  <div class="tcard-desc">Same fields as Tour Confirmation, but sent through the last-minute endpoint. Verify the guest page <strong>hides</strong> the YES / Modify buttons.</div>
+  <div class="t-form-row">
+    <div class="t-group">
+      <label>Tour type</label>
+      <select id="lastminute-type">
+        <option value="upper_antelope">Upper Antelope Canyon Bus Tour</option>
+        <option value="lower_antelope">Lower Antelope Canyon Bus Tour</option>
+        <option value="antelope_x">Antelope Canyon X Bus Tour</option>
+        <option value="grand_canyon_south">Grand Canyon South Rim Bus Tour</option>
+        <option value="grand_canyon_west">Grand Canyon West Rim Bus Tour</option>
+        <option value="bryce_zion">Bryce Canyon &amp; Zion National Park Bus Tour</option>
+        <option value="valley_of_fire_full">Valley of Fire Tour (Full Day)</option>
+        <option value="valley_of_fire_half">Valley of Fire Tour (Half Day)</option>
+        <option value="hoover_dam">Hoover Dam Tour</option>
+      </select>
+    </div>
+    <div class="t-group">
+      <label>Tour date</label>
+      <input type="date" id="lastminute-date">
+    </div>
+    <div class="t-group">
+      <label>Channel</label>
+      <div class="stype-wrap" data-stype="lastminute">
+        <span class="stype-pill active" data-v="combined">✉️ Both</span>
+        <span class="stype-pill" data-v="sms">📱 SMS</span>
+        <span class="stype-pill" data-v="email">📧 Email</span>
+      </div>
+    </div>
+    <div class="t-group">
+      <label>File (.xlsx)</label>
+      <input type="file" id="lastminute-file" accept=".xlsx">
+    </div>
+    <button class="t-send-btn" onclick="runTest('lastminute')">📤 Send Test</button>
+    <span class="t-err" id="lastminute-err"></span>
+  </div>
+  <div class="t-result" id="lastminute-result"></div>
+</div>
+
+<!-- ════════ 4. TICKETS REMINDER (purple) ════════ -->
+<div class="tcard purple" data-mod="tickets">
+  <div class="tcard-head">
+    <div class="tcard-icon">🎟️</div>
+    <div>
+      <div class="tcard-title">Tickets Reminder</div>
+      <div class="tcard-ep">/api/tickets-reminder/send-bulk</div>
+    </div>
+  </div>
+  <div class="tcard-desc">Self-drive Antelope Canyon reminders. Select operator and service date, then upload the manifest.</div>
+  <div class="t-form-row">
+    <div class="t-group">
+      <label>Tour type</label>
+      <select id="tickets-type">
+        <option value="upper_antelope_tsosie">Upper Antelope – Chief Tsosie Tours</option>
+        <option value="upper_antelope_brenda">Upper Antelope – Brenda (Tse Bighanilini)</option>
+        <option value="upper_antelope_brenda_no_fee">Upper Antelope – Brenda (no fee)</option>
+        <option value="upper_antelope_aact">Upper Antelope – Adventurous Group (AACT)</option>
+        <option value="upper_antelope_hogan_transport">Upper Antelope – Hogan with Transport</option>
+        <option value="upper_antelope_hogan_hiking">Upper Antelope – Hogan Hiking Tour</option>
+        <option value="lower_antelope_kens">Lower Antelope – Ken's Tours</option>
+        <option value="lower_antelope_dixie">Lower Antelope – Dixie's Tours</option>
+        <option value="canyon_x">Antelope Canyon X – Taadidiin Tours</option>
+        <option value="rattlesnake_aact">Rattlesnake Canyon – Adventurous Group</option>
+      </select>
+    </div>
+    <div class="t-group">
+      <label>Service date</label>
+      <input type="date" id="tickets-date">
+    </div>
+    <div class="t-group">
+      <label>Channel</label>
+      <div class="stype-wrap" data-stype="tickets">
+        <span class="stype-pill active" data-v="combined">✉️ Both</span>
+        <span class="stype-pill" data-v="sms">📱 SMS</span>
+        <span class="stype-pill" data-v="email">📧 Email</span>
+      </div>
+    </div>
+    <div class="t-group">
+      <label>Manifest (.xlsx)</label>
+      <input type="file" id="tickets-file" accept=".xlsx">
+    </div>
+    <button class="t-send-btn" onclick="runTest('tickets')">📤 Send Test</button>
+    <span class="t-err" id="tickets-err"></span>
+  </div>
+  <div class="t-result" id="tickets-result"></div>
+</div>
+
+<!-- ════════ TEST ORDER DELETION (moved to bottom) ════════ -->
+<div class="util-card" style="margin-top:30px;">
   <h3>🧪 Test Order Deletion <span style="float:right;font-size:11px;font-weight:500;background:#f3f4f6;color:#888;padding:3px 10px;border-radius:6px;">Admin only</span></h3>
   <p>Permanently remove test orders across all dates and all tables. Match by order number or phone (either or both).</p>
 
@@ -86,6 +349,212 @@ code { font-family:ui-monospace,monospace; font-size:12px; background:#f3f4f6; p
 
 {% block scripts %}
 <script>
+  /* ══════════════ TEST SEND CARDS ══════════════ */
+
+  // send_type pill selection (per card)
+  document.querySelectorAll('.stype-wrap').forEach(wrap => {
+    wrap.querySelectorAll('.stype-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        wrap.querySelectorAll('.stype-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+      });
+    });
+  });
+  function getSendType(mod) {
+    const el = document.querySelector(`.stype-wrap[data-stype="${mod}"] .stype-pill.active`);
+    return el ? el.dataset.v : 'combined';
+  }
+
+  // module config: preview endpoint, file field name, send logic
+  const TEST_CFG = {
+    morning: {
+      previewUrl: '/api/notifications/morning-pickup/preview',
+      fileField: 'file',
+      needType: false, needDate: false,
+    },
+    tour: {
+      previewUrl: '/api/notifications/tour-confirmation/preview',
+      fileField: 'file',
+      needType: true, needDate: true, dateField: 'tour_date',
+    },
+    lastminute: {
+      previewUrl: '/api/notifications/tour-confirmation/preview',
+      fileField: 'file',
+      needType: true, needDate: true, dateField: 'tour_date',
+    },
+    tickets: {
+      previewUrl: '/api/tickets-reminder/check-duplicates',
+      fileField: 'manifest',
+      needType: true, needDate: true, dateField: 'service_date',
+    },
+  };
+
+  function splitName(r) {
+    const first = r.first_name || (r.name || '').split(' ')[0] || '';
+    const last  = r.last_name  || (r.name || '').split(' ').slice(1).join(' ') || '';
+    return { first, last };
+  }
+
+  async function runTest(mod) {
+    const cfg = TEST_CFG[mod];
+    const errEl = document.getElementById(mod + '-err');
+    const btn = event.currentTarget;
+    errEl.textContent = '';
+
+    const fileEl = document.getElementById(mod + '-file');
+    const file = fileEl.files[0];
+    if (!file) { errEl.textContent = 'Please select a file.'; return; }
+
+    let tourType = '', tourDate = '';
+    if (cfg.needType) {
+      tourType = document.getElementById(mod + '-type').value;
+    }
+    if (cfg.needDate) {
+      tourDate = document.getElementById(mod + '-date').value;
+      if (!tourDate) { errEl.textContent = 'Please pick a date.'; return; }
+    }
+    const sendType = getSendType(mod);
+
+    const origLabel = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span> Sending…';
+
+    try {
+      // ── Step 1: preview (parse the file into rows) ──
+      const pfd = new FormData();
+      pfd.append(cfg.fileField, file);
+      if (mod === 'tour' || mod === 'lastminute') {
+        pfd.append('tour_type', tourType);
+        pfd.append('tour_date', tourDate);
+      } else if (mod === 'tickets') {
+        pfd.append('tour_type', tourType);
+        pfd.append('service_date', tourDate);
+      }
+      const pres = await fetch(cfg.previewUrl, { method: 'POST', body: pfd });
+      const ptext = await pres.text();
+      let pdata; try { pdata = JSON.parse(ptext); } catch (_) { pdata = null; }
+      if (!pres.ok) { errEl.textContent = pdata?.detail || `Preview failed (${pres.status})`; resetBtn(); return; }
+      if (!pdata) { errEl.textContent = 'Empty preview response.'; resetBtn(); return; }
+      const rows = pdata.rows || [];
+      if (!rows.length) { errEl.textContent = 'No rows found in file.'; resetBtn(); return; }
+
+      // ── Step 2: send (no dup-check — send every row) ──
+      let data;
+      if (mod === 'morning') {
+        // FormData: re-send file + send_type + all order numbers
+        const sfd = new FormData();
+        sfd.append('file', file);
+        sfd.append('send_type', sendType);
+        sfd.append('selected_orders', JSON.stringify(rows.map(r => r.order_number)));
+        const sres = await fetch('/send/morning-pickup', { method: 'POST', body: sfd });
+        const stext = await sres.text();
+        try { data = JSON.parse(stext); } catch (_) { data = null; }
+        if (!sres.ok) { errEl.textContent = data?.detail || `Send failed (${sres.status})`; resetBtn(); return; }
+
+      } else if (mod === 'tour' || mod === 'lastminute') {
+        const guests = rows.map(r => {
+          const { first, last } = splitName(r);
+          return {
+            order_number: r.order_number,
+            first_name: first, last_name: last,
+            customer_email: r.email || '',
+            phone: r.phone || '',
+            quantities: r.quantities || 1,
+            pickup_time: r.pickup_time || '',
+            pickup_location: r.pickup_location || '',
+            mtlv_promo: r.mtlv_promo || '',
+            mtlv_qty: parseInt(r.mtlv_promo, 10) > 0 ? parseInt(r.mtlv_promo, 10) : null,
+          };
+        });
+        const url = (mod === 'tour')
+          ? '/send/tour-confirmation-bulk'
+          : '/send/last-minute-confirmation-bulk';
+        const sres = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tour_type: tourType, tour_date: tourDate, send_type: sendType, guests }),
+        });
+        data = await sres.json();
+        if (!sres.ok) { errEl.textContent = data.detail || 'Send failed.'; resetBtn(); return; }
+
+      } else if (mod === 'tickets') {
+        const guests = rows.map(r => {
+          const { first, last } = splitName(r);
+          return {
+            chd_number: r.order_number,
+            confirmation_no: r.confirmation_no || '',
+            first_name: first, last_name: last,
+            customer_email: r.email || '',
+            phone: r.phone || '',
+            service_date: tourDate,
+            tour_type: tourType,
+            checkin_time: r.checkin_time || '',
+            tour_time: r.tour_time || '',
+            no_of_pax: r.quantities || 1,
+          };
+        });
+        const sres = await fetch('/api/tickets-reminder/send-bulk', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ send_type: sendType, guests }),
+        });
+        data = await sres.json();
+        if (!sres.ok) { errEl.textContent = data.detail || 'Send failed.'; resetBtn(); return; }
+      }
+
+      renderResult(mod, data);
+    } catch (e) {
+      errEl.textContent = 'Network error: ' + e.message;
+    } finally {
+      resetBtn();
+    }
+
+    function resetBtn() { btn.disabled = false; btn.innerHTML = origLabel; }
+  }
+
+  function renderResult(mod, data) {
+    const box = document.getElementById(mod + '-result');
+    const results = data.results || [];
+    const sent = results.filter(r =>
+      (r.email_status || '').startsWith('sent') ||
+      (r.sms_status || '').includes('sent')).length;
+    const failed = results.filter(r =>
+      (r.email_status || '').startsWith('failed') ||
+      (r.sms_status || '').includes('failed')).length;
+    const skipped = results.filter(r =>
+      r.skipped || r.status === 'skipped').length;
+
+    const rowsHtml = results.map(r => {
+      const order = r.order || r.order_number || '';
+      const name  = r.name || '';
+      const em = r.email_status || '';
+      const sm = r.sms_status || '';
+      const emClass = em.startsWith('sent') ? 'st-ok' : em.startsWith('failed') ? 'st-fail' : em ? 'st-skip' : '';
+      const smClass = sm.includes('sent') ? 'st-ok' : sm.includes('failed') ? 'st-fail' : sm ? 'st-skip' : '';
+      const skip = (r.skipped || r.status === 'skipped');
+      return `<tr>
+        <td class="mono">${order}</td>
+        <td>${name}</td>
+        <td class="${emClass}">${skip ? 'skipped' : (em || '—')}</td>
+        <td class="${smClass}">${skip ? 'skipped' : (sm || '—')}</td>
+      </tr>`;
+    }).join('');
+
+    box.innerHTML = `
+      <div class="t-result-summary">
+        <div class="t-stat"><div class="n">${data.total ?? results.length}</div>total</div>
+        <div class="t-stat ok"><div class="n">${sent}</div>sent</div>
+        <div class="t-stat fail"><div class="n">${failed}</div>failed</div>
+        <div class="t-stat skip"><div class="n">${skipped}</div>skipped</div>
+      </div>
+      <table class="t-tbl">
+        <thead><tr><th>Order #</th><th>Name</th><th>Email</th><th>SMS</th></tr></thead>
+        <tbody>${rowsHtml || '<tr><td colspan="4" style="color:#888;padding:12px;">No results returned.</td></tr>'}</tbody>
+      </table>`;
+    box.classList.add('show');
+  }
+
+  /* ══════════════ TEST ORDER DELETION (unchanged) ══════════════ */
   let MATCHED = [];   // current preview items
 
   async function preview() {
