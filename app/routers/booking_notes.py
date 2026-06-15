@@ -286,14 +286,20 @@ async def add_note_by_order(
     sms_status = None
     email_status = None
 
-    if payload.send_sms and booking.phone:
+    # staff_note is an INTERNAL note — never send to guest, never reclassify.
+    # Guard against the UI passing send_sms/send_email=true while Save note is clicked.
+    is_internal = (payload.direction == "staff_note")
+    do_send_sms = bool(payload.send_sms) and not is_internal
+    do_send_email = bool(payload.send_email) and not is_internal
+
+    if do_send_sms and booking.phone:
         try:
             await send_sms_async(booking.phone, payload.body)
             sms_status = "sent"
         except Exception:
             sms_status = "failed"
 
-    if payload.send_email and booking.customer_email:
+    if do_send_email and booking.customer_email:
         try:
             subject = f"Update on your National Park Express tour — Order {booking.order_number}"
             html = f"<p>Hi {booking.first_name},</p><p>{payload.body}</p><p>If you have any questions, please contact us at 702-948-4190.</p><p>National Park Express</p>"
@@ -303,11 +309,13 @@ async def add_note_by_order(
             email_status = "failed"
 
     direction = payload.direction
-    if payload.send_sms and payload.send_email:
+    if is_internal:
+        direction = "staff_note"
+    elif do_send_sms and do_send_email:
         direction = "sms_out"
-    elif payload.send_sms:
+    elif do_send_sms:
         direction = "sms_out"
-    elif payload.send_email:
+    elif do_send_email:
         direction = "email_out"
 
     note = BookingNote(
