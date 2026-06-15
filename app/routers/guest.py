@@ -185,15 +185,15 @@ def _render(booking, tour_config: dict, error_msg: str = "",
             f'<div class="gf-pu-step">'
             f'<div class="gf-pu-icon">⏰</div>'
             f'<div class="gf-pu-body">'
-            f'<div class="gf-pu-head">Head to your pickup location</div>'
+            f'<div class="gf-pu-head">{get_copy_value(copy, "tmpl__global__tc_guest_pu_head_head", "Head to your pickup location")}</div>'
             f'<div class="gf-pu-text">Please arrive at <strong>{pickup_photo_label.replace(" Pickup Photos", "")}</strong> by <strong>{booking.pickup_time}</strong>.</div>'
-            f'<div class="gf-pu-warn">⚠ We depart promptly — the vehicle cannot wait for late arrivals.</div>'
+            f'<div class="gf-pu-warn">{get_copy_value(copy, "tmpl__global__tc_guest_pu_depart_warn", "⚠ We depart promptly — the vehicle cannot wait for late arrivals.")}</div>'
             f'</div></div>'
             f'<div class="gf-pu-step">'
             f'<div class="gf-pu-icon">✅</div>'
             f'<div class="gf-pu-body">'
-            f'<div class="gf-pu-head">Check in when you arrive</div>'
-            f'<div class="gf-pu-text">Use the link in your SMS to check in on the spot. Your guide will be looking out for you!</div>'
+            f'<div class="gf-pu-head">{get_copy_value(copy, "tmpl__global__tc_guest_pu_checkin_head", "Check in when you arrive")}</div>'
+            f'<div class="gf-pu-text">{get_copy_value(copy, "tmpl__global__tc_guest_pu_checkin_text", "Use the link in your SMS to check in on the spot. Your guide will be looking out for you!")}</div>'
             f'</div></div>'
         )
     if ploc and "resorts world" in ploc.lower():
@@ -211,18 +211,20 @@ def _render(booking, tour_config: dict, error_msg: str = "",
             f'<div class="gf-pu-step">'
             f'<div class="gf-pu-icon">🗺️</div>'
             f'<div class="gf-pu-body">'
-            f'<div class="gf-pu-head">Not sure where to go?</div>'
+            f'<div class="gf-pu-head">{get_copy_value(copy, "tmpl__global__tc_guest_pu_notsure_head", "Not sure where to go?")}</div>'
             f'<div class="gf-pu-text"><a href="{pickup_photo_url}" target="_blank" style="color:#1a3a5c;font-weight:600;">{pickup_photo_label} →</a></div>'
             f'</div></div>'
         )
+    _pu_sms_text_default = """We'll send you an SMS with your <strong>check-in link</strong> and <strong>live vehicle tracking</strong> before departure."""
+    _pu_sms_text = get_copy_value(copy, "tmpl__global__tc_guest_pu_sms_text", _pu_sms_text_default)
     phone_html = (
         f'<div class="gf-pu-step" style="border-bottom:none;padding-bottom:0;">'
         f'<div class="gf-pu-icon">📱</div>'
         f'<div class="gf-pu-body">'
-        f'<div class="gf-pu-head">Morning of your tour — SMS reminder</div>'
-        f'<div class="gf-pu-text">We\'ll send you an SMS with your <strong>check-in link</strong> and <strong>live vehicle tracking</strong> before departure.</div>'
+        f'<div class="gf-pu-head">{get_copy_value(copy, "tmpl__global__tc_guest_pu_sms_head", "Morning of your tour — SMS reminder")}</div>'
+        f'<div class="gf-pu-text">{_pu_sms_text}</div>'
         f'<div class="gf-pu-text" style="margin-top:5px;">Sending to: <span class="gf-pu-phone">{booking.phone or "Not on file"}</span></div>'
-        f'<div class="gf-pu-sub">Wrong number? Let us know in the Notes section below.</div>'
+        f'<div class="gf-pu-sub">{get_copy_value(copy, "tmpl__global__tc_guest_pu_wrong_number", "Wrong number? Let us know in the Notes section below.")}</div>'
         f'</div></div>'       
     )
 
@@ -429,7 +431,7 @@ function adjMtlv(d){{var el=document.getElementById('c-mtlv');if(!el)return;var 
       </div>
 
       <div class="gf-pickup-box">
-        <div class="gf-box-title">🚌 Your Pick-up Process</div>
+        <div class="gf-box-title">{get_copy_value(copy, "tmpl__global__tc_guest_pickup_box_title", "🚌 Your Pick-up Process")}</div>
           {phone_html}
           {pickup_html}
       </div>

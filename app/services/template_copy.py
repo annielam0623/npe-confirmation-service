@@ -52,16 +52,16 @@ TC_GUEST_KEYS = [
     "tmpl__global__tc_guest_submit_btn",
     "tmpl__global__tc_guest_footer_thanks",
 
-    # 待接入 · pickup
-    # "tmpl__global__tc_guest_pickup_box_title",
-    # "tmpl__global__tc_guest_pu_sms_head",
-    # "tmpl__global__tc_guest_pu_sms_text",
-    # "tmpl__global__tc_guest_pu_wrong_number",
-    # "tmpl__global__tc_guest_pu_head_head",
-    # "tmpl__global__tc_guest_pu_depart_warn",
-    # "tmpl__global__tc_guest_pu_checkin_head",
-    # "tmpl__global__tc_guest_pu_checkin_text",
-    # "tmpl__global__tc_guest_pu_notsure_head",
+    # pickup（已接入）
+    "tmpl__global__tc_guest_pickup_box_title",
+    "tmpl__global__tc_guest_pu_sms_head",
+    "tmpl__global__tc_guest_pu_sms_text",
+    "tmpl__global__tc_guest_pu_wrong_number",
+    "tmpl__global__tc_guest_pu_head_head",
+    "tmpl__global__tc_guest_pu_depart_warn",
+    "tmpl__global__tc_guest_pu_checkin_head",
+    "tmpl__global__tc_guest_pu_checkin_text",
+    "tmpl__global__tc_guest_pu_notsure_head",
 
     # 待接入 · lunch / mtlv
     # "tmpl__global__tc_guest_lunch_title",
