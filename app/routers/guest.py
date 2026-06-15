@@ -830,6 +830,7 @@ async def guest_confirm_submit(
             booking.mtlv_ticket_status = "pending_send"
     
     # Save guest message to booking_notes if notes were provided
+    print(f"[guest_note] writing note, booking.order_number = {booking.order_number!r}")
     if notes and notes.strip():
         guest_note = BookingNote(
             booking_id=booking.id,
