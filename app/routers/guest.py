@@ -16,7 +16,7 @@ from app.database import get_db
 from app.models import Booking, BookingNote
 from app.services.tour_config import TOUR_TYPES
 from app.services.sendgrid import send_staff_notification
-from app.services.template_copy import get_copy_many, get_copy_value, TC_GUEST_KEYS
+from app.services.template_copy import get_copy_many, get_copy_value, render_copy, TC_GUEST_KEYS
 
 router = APIRouter()
 BASE_URL = "https://confirm.nationalparkexpress.com"
@@ -297,12 +297,20 @@ def _render(booking, tour_config: dict, error_msg: str = "",
             for k, icon, name, val in items
         )
         lunch_show = "" if (booking.confirmation == "yes" or is_last_minute) else "display:none"
+        _lunch_title = get_copy_value(copy, "tmpl__global__tc_guest_lunch_title", "🥪 Lunch Selection")
+        _lunch_hint = render_copy(
+            get_copy_value(copy, "tmpl__global__tc_guest_lunch_hint",
+                           "Select for all <strong>{qty}</strong> guest(s). Total must equal your party size."),
+            qty=qty,
+        )
+        _lunch_default = get_copy_value(copy, "tmpl__global__tc_guest_lunch_default",
+                                        "Default is Turkey Sandwich if no selection received.")
         lunch_html = f"""<div class="gf-section" id="lunch-section" style="{lunch_show}">
-          <h2>🥪 Lunch Selection</h2>
-          <p class="gf-hint">Select for all <strong>{qty}</strong> guest(s). Total must equal your party size.</p>
+          <h2>{_lunch_title}</h2>
+          <p class="gf-hint">{_lunch_hint}</p>
           <div class="gf-lunch-grid">{items_html}</div>
           <div class="gf-lunch-total">Total: <span id="ltotal" style="font-weight:bold;">0</span> / {qty}</div>
-          <p class="gf-small" style="text-align:center;margin-top:6px;">Default is Turkey Sandwich if no selection received.</p>
+          <p class="gf-small" style="text-align:center;margin-top:6px;">{_lunch_default}</p>
         </div>"""
 
     reminders_html = "".join(f"<li>{r}</li>" for r in (tour_config.get("extra_reminders") or []))
@@ -317,25 +325,40 @@ def _render(booking, tour_config: dict, error_msg: str = "",
         current_mtlv = min(int(mtlv_qty_val), qty) if mtlv_qty_val is not None else 0
         mtlv_locked_status = getattr(booking, "mtlv_ticket_status", None)
         mtlv_locked = mtlv_locked_status in ("sent", "cancel")
+        _mtlv_title = get_copy_value(copy, "tmpl__global__tc_guest_mtlv_title",
+                                     "🏛️ Madame Tussauds Las Vegas Ticket")
         if mtlv_locked:
             if mtlv_locked_status == "cancel":
-                lock_msg = "Your Madame Tussauds ticket selection has been cancelled."
+                lock_msg = get_copy_value(copy, "tmpl__global__tc_guest_mtlv_locked_cancelled",
+                                          "Your Madame Tussauds ticket selection has been cancelled.")
                 lock_style = "color:#999;"
             else:
-                lock_msg = "Your Madame Tussauds ticket selection has been confirmed and can no longer be changed."
+                lock_msg = get_copy_value(copy, "tmpl__global__tc_guest_mtlv_locked_confirmed",
+                                          "Your Madame Tussauds ticket selection has been confirmed and can no longer be changed.")
                 lock_style = "color:#2F7851;font-weight:600;"
             mtlv_html = f"""<div class="gf-section">
           <div class="gf-mtlv-box" style="opacity:0.7;">
-            <div class="gf-mtlv-title">🏛️ Madame Tussauds Las Vegas Ticket</div>
+            <div class="gf-mtlv-title">{_mtlv_title}</div>
             <div style="font-size:13px;{lock_style}margin-top:6px;">{lock_msg}</div>
             <input type="hidden" name="mtlv_qty" value="{current_mtlv}">
           </div>
         </div>"""
         else:
+            _mtlv_hint = render_copy(
+                get_copy_value(copy, "tmpl__global__tc_guest_mtlv_hint",
+                               "As a special bonus for this trip, you are eligible to receive complimentary Madame Tussauds Las Vegas tickets. Please select the number of tickets you would like to receive for your party (0–{qty}). No action is required for this section if you do not wish to receive the tickets."),
+                qty=qty,
+            )
+            _mtlv_bullet_1 = get_copy_value(
+                copy, "tmpl__global__tc_guest_mtlv_bullet_1",
+                """If you plan to visit Madame Tussauds Las Vegas, please check the attraction's operating hours, available dates, and any admission requirements before your visit: https://www.madametussauds.com/las-vegas.""")
+            _mtlv_bullet_2 = get_copy_value(
+                copy, "tmpl__global__tc_guest_mtlv_bullet_2",
+                """Please note that attraction operating hours, closures, capacity restrictions, and admission policies are determined solely by Madame Tussauds Las Vegas and may change without notice. National Park Express is not responsible for attraction availability, operating schedules, or admission decisions made by the attraction.""")
             mtlv_html = f"""<div class="gf-section">
           <div class="gf-mtlv-box">
-            <div class="gf-mtlv-title">🏛️ Madame Tussauds Las Vegas Ticket</div>
-            <div class="gf-mtlv-hint">As a special bonus for this trip, you are eligible to receive complimentary Madame Tussauds Las Vegas tickets. Please select the number of tickets you would like to receive for your party (0–{qty}). No action is required for this section if you do not wish to receive the tickets.</div>
+            <div class="gf-mtlv-title">{_mtlv_title}</div>
+            <div class="gf-mtlv-hint">{_mtlv_hint}</div>
             <div class="gf-mtlv-counter">
               <button type="button" onclick="adjMtlv(-1)">−</button>
               <input type="number" name="mtlv_qty" id="c-mtlv" value="{current_mtlv}" min="0" max="{qty}" readonly>
@@ -344,8 +367,8 @@ def _render(booking, tour_config: dict, error_msg: str = "",
             </div>
             <div class="gf-mtlv-hint">
             <ul style="margin:0;padding-left:18px;">
-                <li>If you plan to visit Madame Tussauds Las Vegas, please check the attraction's operating hours, available dates, and any admission requirements before your visit: https://www.madametussauds.com/las-vegas.</li>
-                <li style="margin-top:4px;">Please note that attraction operating hours, closures, capacity restrictions, and admission policies are determined solely by Madame Tussauds Las Vegas and may change without notice. National Park Express is not responsible for attraction availability, operating schedules, or admission decisions made by the attraction.</li>
+                <li>{_mtlv_bullet_1}</li>
+                <li style="margin-top:4px;">{_mtlv_bullet_2}</li>
             </ul>            
             </div>
           </div>

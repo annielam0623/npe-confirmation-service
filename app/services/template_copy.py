@@ -11,6 +11,7 @@ Key naming convention:
   tmpl__tix__{tour_type}__{field}        — Tickets Reminder per product
 """
 from __future__ import annotations
+import re
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -42,6 +43,16 @@ def get_copy_value(copy: dict, key: str, default: str = "") -> str:
     return copy.get(key) or default
 
 
+# ── helper：把文案里的 {var} 占位符替换成实际值 ──
+# 只替换已传入的命名变量；未知 {foo} 原样保留；裸花括号不报错。
+# 用于含动态值（如 {qty}）的文案字段，替换后再塞进外层 f-string，
+# 外层不会二次解析，避免 ≤3.11 f-string 内反斜杠/引号的雷。
+def render_copy(text: str, **vals) -> str:
+    if not text:
+        return ""
+    return re.sub(r"\{(\w+)\}", lambda m: str(vals.get(m.group(1), m.group(0))), text)
+
+
 # ── Content Studio key 清单（集中管理；分批激活靠注释，名字不绑版本）──
 # TC Guest Page：每接入一批就解开对应注释，调用处永远用 TC_GUEST_KEYS。
 TC_GUEST_KEYS = [
@@ -63,13 +74,16 @@ TC_GUEST_KEYS = [
     "tmpl__global__tc_guest_pu_checkin_text",
     "tmpl__global__tc_guest_pu_notsure_head",
 
-    # 待接入 · lunch / mtlv
-    # "tmpl__global__tc_guest_lunch_title",
-    # "tmpl__global__tc_guest_lunch_hint",
-    # "tmpl__global__tc_guest_lunch_default",
-    # "tmpl__global__tc_guest_mtlv_title",
-    # "tmpl__global__tc_guest_mtlv_locked_cancelled",
-    # "tmpl__global__tc_guest_mtlv_locked_confirmed",
+    # lunch / mtlv（已接入）
+    "tmpl__global__tc_guest_lunch_title",
+    "tmpl__global__tc_guest_lunch_hint",
+    "tmpl__global__tc_guest_lunch_default",
+    "tmpl__global__tc_guest_mtlv_title",
+    "tmpl__global__tc_guest_mtlv_hint",
+    "tmpl__global__tc_guest_mtlv_bullet_1",
+    "tmpl__global__tc_guest_mtlv_bullet_2",
+    "tmpl__global__tc_guest_mtlv_locked_cancelled",
+    "tmpl__global__tc_guest_mtlv_locked_confirmed",
 
     # 待接入 · 其它
     # "tmpl__global__tc_guest_last_update_label",
