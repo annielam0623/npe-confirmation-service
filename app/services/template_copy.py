@@ -85,8 +85,8 @@ TC_GUEST_KEYS = [
     "tmpl__global__tc_guest_mtlv_locked_cancelled",
     "tmpl__global__tc_guest_mtlv_locked_confirmed",
 
-    # 待接入 · 其它
-    # "tmpl__global__tc_guest_last_update_label",
-    # "tmpl__global__tc_guest_date_modal_title",
-    # "tmpl__global__tc_guest_date_modal_desc",
+    # 其它（已接入）
+    "tmpl__global__tc_guest_last_update_label",
+    "tmpl__global__tc_guest_date_modal_title",
+    "tmpl__global__tc_guest_date_modal_desc",
 ]

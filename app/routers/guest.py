@@ -148,6 +148,9 @@ def _render(booking, tour_config: dict, error_msg: str = "",
             pickup_instruction: str = "", pickup_photo_url: str = "", pickup_photo_label: str = "",
             is_last_minute: bool = False, copy: dict | None = None) -> HTMLResponse:
     copy = copy or {}
+    _last_update_label = get_copy_value(copy, "tmpl__global__tc_guest_last_update_label", "📝 Your last update")
+    _date_modal_title  = get_copy_value(copy, "tmpl__global__tc_guest_date_modal_title", "📅 Select New Tour Date")
+    _date_modal_desc   = get_copy_value(copy, "tmpl__global__tc_guest_date_modal_desc", "Please select your requested new date below.")
     tour_date  = booking.tour_date
     date_fmt   = tour_date.strftime("%A, %B %-d, %Y") if tour_date else "—"
     qty        = int(booking.quantities or 1)
@@ -399,7 +402,7 @@ def _render(booking, tour_config: dict, error_msg: str = "",
             prefix = prefix_m.group(1).replace("&","&amp;").replace("<","&lt;").replace(">","&gt;") if prefix_m else ""
             note_display = prefix + colored
         notes_display_html = f'''<div style="background:#fffbf0;border:1px solid #f0d080;border-radius:8px;padding:12px 16px;margin-bottom:12px;">
-          <div style="font-size:12px;font-weight:bold;color:#8a6000;margin-bottom:4px;">📝 Your last update</div>
+          <div style="font-size:12px;font-weight:bold;color:#8a6000;margin-bottom:4px;">{_last_update_label}</div>
           <div style="font-size:13px;color:#8a6000;">{note_display}</div>
         </div>'''
     else:
@@ -519,8 +522,8 @@ function adjMtlv(d){{var el=document.getElementById('c-mtlv');if(!el)return;var 
 
     <div id="date-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
       <div style="background:#fff;border-radius:16px;padding:28px 24px;max-width:340px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);">
-        <h3 style="margin:0 0 6px;color:#1a3a5c;font-size:17px;">📅 Select New Tour Date</h3>
-        <p style="margin:0 0 16px;font-size:13px;color:#666;">Please select your requested new date below.</p>
+        <h3 style="margin:0 0 6px;color:#1a3a5c;font-size:17px;">{_date_modal_title}</h3>
+        <p style="margin:0 0 16px;font-size:13px;color:#666;">{_date_modal_desc}</p>
         <input type="date" id="modal-date-picker" min="{tomorrow}" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:8px;font-size:16px;margin-bottom:16px;" onclick="try{{this.showPicker();}}catch(e){{}}">
         <div style="display:flex;gap:10px;">
           <button type="button" onclick="closeDateModal()" style="flex:1;padding:12px;border:1px solid #ccc;border-radius:8px;background:#f5f5f5;font-size:14px;cursor:pointer;">← Back</button>
