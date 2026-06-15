@@ -833,6 +833,7 @@ async def guest_confirm_submit(
     if notes and notes.strip():
         guest_note = BookingNote(
             booking_id=booking.id,
+            order_number=booking.order_number,
             author_username="guest",
             direction="guest_reply",
             body=notes.strip(),
