@@ -6,7 +6,8 @@ from __future__ import annotations
 import os
 
 TRACKING_BASE_URL = os.environ.get("TRACKING_BASE_URL", "https://confirm.nationalparkexpress.com")
-SUPPORT_PHONE = os.environ.get("SUPPORT_PHONE", "702-948-4190")
+SUPPORT_TEXT     = os.environ.get("SUPPORT_TEXT", "+1(702)825-0388")
+SUPPORT_WHATSAPP = os.environ.get("SUPPORT_WHATSAPP", "+1(702)600-9943")
 
 
 def _tracking_url(row: dict) -> str:
@@ -35,12 +36,10 @@ def build_sms(row: dict) -> str:
     name = row.get("name", "")
     pickup_time = row.get("pickup_time", "")
     return (
-        f"Good morning, {name}.\n"
-        f"This is a reminder that your pickup time for today's tour is {pickup_time}.\n"
-        f"Please use the link below to check in when you arrive at your pickup location "
-        f"and to track your vehicle in real time:\n"
-        f"{url}\n"
-        f"If you need assistance, please call {SUPPORT_PHONE}."
+        f"Good morning {name}. Your pickup time today is {pickup_time}. "
+        f"Tap to check in when you arrive at the pickup location, and track "
+        f"your vehicle in real time: {url} "
+        f"Need help? Text {SUPPORT_TEXT} or WhatsApp {SUPPORT_WHATSAPP}."
     )
 
 
@@ -68,7 +67,8 @@ def build_email(row: dict) -> str:
             </a>
         </div>
         <p style="color:#999;font-size:12px;text-align:center">
-            If you need assistance, please call {SUPPORT_PHONE}
+            If you need assistance, text {SUPPORT_TEXT} or message us on
+            <a href="https://wa.me/17026009943" style="color:#1a3a5c">WhatsApp</a>
         </p>"""
 
     return _email_wrap(inner)
