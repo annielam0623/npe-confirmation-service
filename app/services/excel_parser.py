@@ -14,7 +14,7 @@ COL_ALIASES: dict[str, list[str]] = {
     "confirmation_no": ["confirmation#", "confirmation #", "confirmation number"],
     "first_name":      ["first name", "firstname", "customer first name"],
     "last_name":       ["last name", "lastname", "customer last name"],
-    "lead_name":       ["lead name", "leadname", "customer name"],
+    "lead_name":       ["lead name", "leadname", "customer name", "name"],
     "email":           ["email", "customer email", "e-mail"],
     "phone":           ["phone", "phone no", "phone no.", "customer phone", "phone number", "phone #"],
     "quantities":      ["quantities", "no. of pax", "no of pax", "pax", "pax#", "pax #", "party"],
