@@ -95,12 +95,16 @@ TOUR_TYPES: dict[str, dict] = {
         "checkin_location": "Antelope Hogan Canyon Tours, LLC, 302 SR-98 (7 miles east of Page), Page, AZ 86040",
         "maps_url":         "https://maps.app.goo.gl/DgmwCEepZbNLRn7A6",
         "location_photo":   "https://maps.app.goo.gl/DztGqAk8b9pUp8EV7",
+        "skip_confirmation_no": True,
+        "checkin_note": "Please check in under the name on your reservation and let the front desk know how many people are in your group.",
         "extra_notes": [
             "Car seats are required for children under 8. Visitors must provide their own car seat.",
             "★ These entry reservations are non-refundable.",
             "Antelope Canyon does not allow any bags on the walking tour. Please leave them in your vehicle.",
             "If you can't find the check-in location, call: 928-693-9293",
         ],
+        "skip_confirmation_no": True,
+        "checkin_note": "Please check in under the name on your reservation and let the front desk know how many people are in your group.",
         "prepare_steps": [
             {"label": "Pay the permit fee using the provided payment link",
              "url":   "https://fareharbor.com/embeds/book/navajonationparks/items/691331/calendar/2026/01/",
@@ -477,7 +481,7 @@ def render_form(row: dict, cfg: dict, token: str, error_msg: str = "", already: 
         {maps_link}
         <div class="gf-row"><span>⏰</span><span>Check-in: <strong>{checkin}</strong> &nbsp;|&nbsp; Tour: <strong>{tourtime}</strong><br><span class="gf-note-red">★ Late check-in is subject to forfeiting your tour entry.</span></span></div>
         <div class="gf-tz-note">★ All times are based on the Arizona (AZ) time zone.</div>
-        <div class="gf-row"><span>🔖</span><span>Confirmation#: <strong>{cfm_no}</strong><br><span class="gf-sub-note">Please present this number to the check-in staff upon arrival.</span></span></div>
+        {f'<div class="gf-row"><span>🔖</span><span>{escape(cfg.get("checkin_note", ""))}</span></div>' if cfg.get("skip_confirmation_no") else f'<div class="gf-row"><span>🔖</span><span>Confirmation#: <strong>{cfm_no}</strong><br><span class="gf-sub-note">Please present this number to the check-in staff upon arrival.</span></span></div>'}
       </div>
       {prepare_html}{reminders_html}{error_html}{already_html}
       <form method="post">
