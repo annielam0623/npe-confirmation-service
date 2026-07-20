@@ -269,10 +269,11 @@ async def send_tour_confirmation(
         pickup_instruction = loc_row[1] if loc_row else ''
 
         # Build & send email
-        email_html = tc.build_email(row, tour_type, tour_date, email_url,
+        email_html = await tc.build_email(row, tour_type, tour_date, email_url,
                                     pickup_instruction=pickup_instruction,
                                     pickup_photo_url=pickup_photo_url,
-                                    pickup_photo_label=f"{ploc} Pickup location - click here for detail")
+                                    pickup_photo_label=f"{ploc} Pickup location - click here for detail",
+                                    db=db)
         has_lunch = tc.TOUR_TYPES[tour_type].get("has_lunch", False)
         subject = f"Tour Confirmation & Lunch Selection – {_fmt_date(tour_date)}" if has_lunch else f"Tour Confirmation – {_fmt_date(tour_date)}"
 
@@ -290,7 +291,7 @@ async def send_tour_confirmation(
         sms_status = ""
         sms_sid    = ""
         if phone:
-            sms_body = tc.build_sms(first, tour_type, tour_date, sms_url)
+            sms_body = await tc.build_sms(first, tour_type, tour_date, sms_url, db=db)
             sms_res  = await send_sms_async(phone, sms_body, module="tour_confirmation")
             if sms_res["success"]:
                 sms_sid    = sms_res.get("sid", "")
@@ -403,10 +404,11 @@ async def send_tour_confirmation_bulk(
         if send_type in ("email", "combined") and not email:
             email_status = "skipped - no email"
         elif send_type in ("email", "combined") and email:
-            email_html = tc.build_email(row, tour_type, tour_date, email_url,
+            email_html = await tc.build_email(row, tour_type, tour_date, email_url,
                                         pickup_instruction=pickup_instruction,
                                         pickup_photo_url=pickup_photo_url,
-                                        pickup_photo_label=f"{ploc} Pickup location - click here for detail")
+                                        pickup_photo_label=f"{ploc} Pickup location - click here for detail",
+                                        db=db)
         has_lunch = tc.TOUR_TYPES[tour_type].get("has_lunch", False)
         subject = (
             f"Tour Confirmation & Lunch Selection – {_fmt_date(tour_date)}"
@@ -427,7 +429,7 @@ async def send_tour_confirmation_bulk(
         if send_type in ("sms", "combined") and not phone:
             sms_status = "skipped - no phone"
         elif send_type in ("sms", "combined") and phone:
-            sms_body = tc.build_sms(first, tour_type, tour_date, sms_url)
+            sms_body = await tc.build_sms(first, tour_type, tour_date, sms_url, db=db)
             sms_res  = await send_sms_async(phone, sms_body, module="tour_confirmation")
             if sms_res["success"]:
                 sms_sid    = sms_res.get("sid", "")
@@ -544,11 +546,12 @@ async def send_last_minute_confirmation_bulk(
         if send_type in ("email", "combined") and not email:
             email_status = "skipped - no email"
         elif send_type in ("email", "combined") and email:
-            email_html = tc.build_last_minute_email(
+            email_html = await tc.build_last_minute_email(
                 row, tour_type, tour_date, email_url,
                 pickup_instruction=pickup_instruction,
                 pickup_photo_url=pickup_photo_url,
-                pickup_photo_label=f"{ploc} Pickup location - click here for detail"
+                pickup_photo_label=f"{ploc} Pickup location - click here for detail",
+                db=db
             )
             has_lunch = tc.TOUR_TYPES[tour_type].get("has_lunch", False)
             subject = (
@@ -570,7 +573,7 @@ async def send_last_minute_confirmation_bulk(
         if send_type in ("sms", "combined") and not phone:
             sms_status = "skipped - no phone"
         elif send_type in ("sms", "combined") and phone:
-            sms_body = tc.build_sms(first, tour_type, tour_date, sms_url)
+            sms_body = await tc.build_sms(first, tour_type, tour_date, sms_url, db=db)
             sms_res  = await send_sms_async(phone, sms_body, module="tour_confirmation")
             if sms_res["success"]:
                 sms_sid    = sms_res.get("sid", "")
