@@ -103,8 +103,6 @@ TOUR_TYPES: dict[str, dict] = {
             "Antelope Canyon does not allow any bags on the walking tour. Please leave them in your vehicle.",
             "If you can't find the check-in location, call: 928-693-9293",
         ],
-        "skip_confirmation_no": True,
-        "checkin_note": "Please check in under the name on your reservation and let the front desk know how many people are in your group.",
         "prepare_steps": [
             {"label": "Pay the permit fee using the provided payment link",
              "url":   "https://fareharbor.com/embeds/book/navajonationparks/items/691331/calendar/2026/01/",
@@ -118,6 +116,8 @@ TOUR_TYPES: dict[str, dict] = {
         "checkin_location": "Antelope Hogan Canyon Tours, LLC, 302 SR-98 (7 miles east of Page), Page, AZ 86040",
         "maps_url":         "https://maps.app.goo.gl/DgmwCEepZbNLRn7A6",
         "location_photo":   "https://maps.app.goo.gl/DztGqAk8b9pUp8EV7",
+        "skip_confirmation_no": True,
+        "checkin_note": "Please check in under the name on your reservation and let the front desk know how many people are in your group.",
         "extra_notes": [
             "★ Minimum age 8. Guests must be at least 8 years of age to join the hiking tour.",
             "★ Pregnant guests are not permitted to participate due to safety concerns.",
@@ -361,7 +361,7 @@ GUEST_CSS = """*{box-sizing:border-box;margin:0;padding:0;}body{background:#f0f4
 .gf-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;}.gf-row span:first-child{flex-shrink:0;width:20px;text-align:center;}
 .gf-pickup-box a{color:#1a3a5c;font-weight:bold;}
 .gf-section{padding:18px 22px;border-bottom:1px solid #eee;}.gf-section h2{font-size:15px;color:#1a3a5c;margin-bottom:12px;}.gf-opt{font-weight:normal;font-size:12px;color:#aaa;}
-.gf-reminders{background:#f9f9f9;border-top:1px solid #eee;padding:14px 22px;font-size:13px;}.gf-reminders ul{padding-left:18px;line-height:1.9;color:#555;}
+.gf-reminders{background:#f9f9f9;border-top:1px solid #eee;padding:14px 22px;font-size:13px;}.gf-reminders ul{padding-left:18px;line-height:1.9;color:#555;}.gf-reminders li{white-space:pre-line;}
 .gf-section textarea{width:100%;border:1px solid #ddd;border-radius:8px;padding:10px;font-size:13px;resize:vertical;}
 .gf-submit{padding:18px 22px;text-align:center;}.gf-btn{width:100%;background:#1a3a5c;color:#fff;border:none;padding:15px;border-radius:10px;font-size:16px;font-weight:bold;cursor:pointer;}.gf-btn:hover{background:#0f2440;}
 .gf-small{font-size:12px;color:#888;margin-top:10px;}.gf-small a{color:#1a3a5c;}
