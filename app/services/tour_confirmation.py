@@ -10,7 +10,69 @@ import time
 import base64
 from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
+from html import escape as _html_escape
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.services.template_copy import get_copy
+import re as _re
 _LA = ZoneInfo("America/Los_Angeles")
+
+
+# ── Content Studio copy helpers ──────────────────────────────────────────────
+def _esc(s: str) -> str:
+    """Match preview esc(): escape only & < >, NOT quotes (quote=False)."""
+    return _html_escape(str(s), quote=False)
+
+
+# get_copy() returns "" when a settings row exists but is blank. Per product
+# decision, a blank value is intentional (admin removed that line) and is passed
+# through as-is; we only fall back to the English default when the DB read errors.
+async def _copy(db, key: str, fallback: str) -> str:
+    """Read editable copy from settings; fall back to English default only on DB error."""
+    try:
+        return await get_copy(db, key, fallback)
+    except Exception:
+        return fallback
+
+
+def _apply(raw: str, **vars) -> str:
+    """Mirror preview: HTML-escape the DB text first, then substitute system
+    values into {placeholders} (escaped text so injected label/date not double-escaped)."""
+    out = _esc(raw)
+    for k, val in vars.items():
+        out = out.replace("{" + k + "}", val)
+    return out
+
+
+# Footer rendering: esc -> linkify (url/email/tel) -> nl2br. Kept byte-identical
+# with footerHtml() in settings_templates.html so preview == sent email.
+_URL_RE   = _re.compile(r"(https?://[^\s<]+|www\.[^\s<]+)")
+_EMAIL_RE = _re.compile(r"([A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})")
+_TEL_RE   = _re.compile(r"(\+?\d[\d()\s\-]{7,}\d)")
+
+def _footer_html(raw: str) -> str:
+    out = _esc(raw)                                          # 1. escape first
+
+    def _url_sub(m):
+        s = m.group(0)
+        href = s if s.startswith("http") else "https://" + s
+        return f'<a href="{href}" style="color:#93c5fd;">{s}</a>'
+    out = _URL_RE.sub(_url_sub, out)                         # 2a. urls
+
+    def _email_sub(m):
+        before = out[:m.start()]
+        if _re.search(r'href="[^"]*$', before):             # already inside a link
+            return m.group(0)
+        e = m.group(0)
+        return f'<a href="mailto:{e}" style="color:#93c5fd;">{e}</a>'
+    out = _EMAIL_RE.sub(_email_sub, out)                     # 2b. emails
+
+    def _tel_sub(m):
+        s = m.group(0)
+        tel = _re.sub(r"[^\d+]", "", s)
+        return f'<a href="tel:{tel}" style="color:#93c5fd;">{s}</a>'
+    out = _TEL_RE.sub(_tel_sub, out)                         # 2c. phones
+
+    return out.replace("\n", "<br>")                         # 3. newlines last
 
 SECRET_KEY = os.environ.get("TOKEN_SECRET", "tconf_secret_fallback")
 CONFIRM_BASE_URL = os.environ.get("SERVICE_BASE_URL", "https://confirm.nationalparkexpress.com")
@@ -121,7 +183,8 @@ LOGO_URL = "https://nationalparkexpress.com/wp-content/uploads/2026/03/image002.
 
 
 # ── SMS body ─────────────────────────────────────────────────────────────────
-def build_sms(first_name: str, tour_type: str, tour_date: str, form_url: str) -> str:
+async def build_sms(first_name: str, tour_type: str, tour_date: str, form_url: str,
+                    db: AsyncSession) -> str:
     cfg = TOUR_TYPES.get(tour_type, {})
     label = cfg.get("label", tour_type)
     try:
@@ -129,22 +192,28 @@ def build_sms(first_name: str, tour_type: str, tour_date: str, form_url: str) ->
     except ValueError:
         date_fmt = tour_date
 
+    # SMS is plain text — do NOT HTML-escape (would corrupt & ' etc.); bare .replace().
     if cfg.get("has_lunch"):
-        return (
-            f"Hi {first_name}, This is National Park Express, your local tour operator "
-            f"for {label} on {date_fmt}. Please reconfirm your tour and select your lunch "
-            f"option here: {form_url}. Thank you"
-        )
-    return (
-        f"Hi {first_name}, This is National Park Express, your local tour operator "
-        f"for {label} on {date_fmt}. Please reconfirm your tour here: {form_url}. Thank you"
-    )
+        tmpl = await _copy(db, "tmpl__global__tc_sms_with_lunch",
+            "Hi {name}, This is National Park Express, your local tour operator "
+            "for {label} on {date}. Please reconfirm your tour and select your lunch "
+            "option here: {url}. Thank you")
+    else:
+        tmpl = await _copy(db, "tmpl__global__tc_sms_no_lunch",
+            "Hi {name}, This is National Park Express, your local tour operator "
+            "for {label} on {date}. Please reconfirm your tour here: {url}. Thank you")
+
+    return (tmpl
+            .replace("{name}", first_name)
+            .replace("{label}", label)
+            .replace("{date}", date_fmt)
+            .replace("{url}", form_url))
 
 
 # ── Email body ───────────────────────────────────────────────────────────────
-def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
+async def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
                 pickup_instruction: str = "", pickup_photo_url: str = "",
-                pickup_photo_label: str = "") -> str:
+                pickup_photo_label: str = "", db: AsyncSession = None) -> str:
     cfg   = TOUR_TYPES.get(tour_type, {})
     label = cfg.get("label", tour_type)
     has_lunch = cfg.get("has_lunch", False) 
@@ -159,6 +228,47 @@ def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
         date_fmt = datetime.strptime(tour_date, "%Y-%m-%d").strftime("%B %-d, %Y")
     except ValueError:
         date_fmt = tour_date
+
+    # ── Content Studio editable copy (DB-backed) ──────────────────────────────
+    # Rendering mirrors settings_templates.html preview byte-for-byte:
+    #   greeting/review/closing/expiry : esc(value)
+    #   intro                          : esc(value) -> .replace('{label}', label) -> fill {date}
+    #   footer                         : esc -> linkify -> nl2br
+    # label/date are injected as PLAIN TEXT (exactly like preview's tourLabel/SAMPLE.date).
+    # Per product decision: a blank value = admin removed that line, so the whole
+    # <p> block is omitted (no empty paragraph); fallback English only on DB error.
+    greeting_raw = await _copy(db, "tmpl__global__tc_email_greeting",
+        "Greetings from National Park Express!")
+    intro_raw = await _copy(db, "tmpl__global__tc_email_intro",
+        "As your local tour operator for the {label}, we're excited to welcome you on {date}.")
+    review_raw = await _copy(db, "tmpl__global__tc_email_review",
+        "Please review your tour details below and reconfirm your participation so we can ensure everything is ready for your visit.")
+    closing_raw = await _copy(db, "tmpl__global__tc_email_closing",
+        "Thank you for choosing National Park Express. We are honored to be part of your adventure and are committed to making your experience smooth, enjoyable and filled with lasting memories.")
+    expiry_raw = await _copy(db, "tmpl__global__tc_email_link_expiry",
+        "Link expires at 6:00 PM PST the day before your tour")
+    footer_raw = await _copy(db, "tmpl__global__tc_email_footer_contact",
+        "Questions? We're here to help!")
+
+    _PSTYLE = "font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;letter-spacing:-0.1px;"
+    def _para(raw_text, margin, extra_html=""):
+        """Render one <p> only if there's content; empty -> '' (no blank paragraph)."""
+        body = _esc(raw_text).strip()
+        if not body and not extra_html:
+            return ""
+        return f'<p style="{_PSTYLE}margin:{margin};">{body}{extra_html}</p>'
+
+    # intro: replace {label} then {date}, both plain text (matches preview)
+    intro_body = _esc(intro_raw).replace("{label}", _esc(label)).replace("{date}", _esc(date_fmt))
+    intro_html = (f'<p style="{_PSTYLE}margin:0 0 6px;">{intro_body}</p>' if intro_body.strip() else "")
+
+    greeting_html = _para(greeting_raw, "0 0 6px")
+    review_extra = ('  Please also select your <strong style="font-weight:600;">lunch option</strong> using the button below.'
+                    if has_lunch else "")
+    review_html = _para(review_raw, "0 0 6px", review_extra)
+    closing_html = _para(closing_raw, "0 0 28px")
+    link_expiry_txt = _esc(expiry_raw)            # rendered inside its own existing <p>
+    footer_txt = _footer_html(footer_raw)         # esc -> linkify -> nl2br
 
     # Hero image
     hero_url = TOUR_IMAGES.get(tour_type, TOUR_IMAGES["grand_canyon_south"])
@@ -213,7 +323,7 @@ def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
           <tr><td style="padding:14px 18px;">
             <table width="100%" cellpadding="0" cellspacing="0"><tr>
               <td style="width:42px;vertical-align:top;">
-                <div style="width:36px;height:36px;border-radius:9px;background:#eef6ff;text-align:center;line-height:36px;font-size:18px;">&#127374;</div>
+                <div style="width:36px;height:36px;border-radius:9px;background:#eef6ff;text-align:center;line-height:36px;font-size:18px;">&#128101;</div>
               </td>
               <td style="vertical-align:top;padding-left:12px;">
                 <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:300;color:#24364f;line-height:1.6;margin-bottom:4px;">
@@ -257,18 +367,10 @@ def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
   <tr><td style="padding:32px 40px;background:#ffffff;">
 
     <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:15px;font-weight:400;color:#1a1a1a;margin:0 0 8px;letter-spacing:-0.1px;">Hi <strong style="font-weight:600;">{first}</strong>,</p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
-      Greetings from National Park Express!
-    </p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
-      As your local tour operator for the <strong style="font-weight:600;">{label}</strong>, we're excited to welcome you on <strong style="color:#2563eb;font-weight:600;">{date_fmt}</strong>.
-    </p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
-      Please review your tour details below and reconfirm your participation so we can ensure everything is ready for your visit.{'  Please also select your <strong style="font-weight:600;">lunch option</strong> using the button below.' if has_lunch else ''}
-    </p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 28px;letter-spacing:-0.1px;">
-      Thank you for choosing National Park Express. We are honored to be part of your adventure and are committed to making your experience smooth, enjoyable and filled with lasting memories.
-    </p>
+    {greeting_html}
+    {intro_html}
+    {review_html}
+    {closing_html}
 
     <!-- Details card -->
     <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5ecf5;border-radius:12px;overflow:hidden;margin-bottom:24px;">
@@ -328,7 +430,7 @@ def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
         <a href="{form_url}" style="display:inline-block;background:#1a3a5c;color:#ffffff;text-decoration:none;padding:16px 48px;border-radius:10px;font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:15px;font-weight:600;letter-spacing:0.5px;">&#10003; RECONFIRM MY SPOT</a>
       </td></tr>
       <tr><td align="center">
-        <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:11px;font-weight:300;color:#aaa;margin:6px 0 0;">Link expires at 6:00 PM PST the day before your tour</p>
+        <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:11px;font-weight:300;color:#aaa;margin:6px 0 0;">{link_expiry_txt}</p>
       </td></tr>
     </table>
 
@@ -337,9 +439,7 @@ def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
   <!-- Footer -->
   <tr><td style="background:#061a33;padding:20px 36px;text-align:center;">
     <img src="{LOGO_URL}" alt="NPE Logo" width="60" style="width:60px;height:60px;object-fit:contain;border-radius:50%;margin-bottom:12px;" />
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:300;color:#dbeafe;margin:0 0 4px;">Questions? We're here to help!</p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:300;color:#dbeafe;margin:0 0 4px;">+1 (702) 948-4190 | <a href="mailto:reservations@nationalparkexpress.com" style="color:#93c5fd;">reservations@nationalparkexpress.com</a></p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:12px;font-weight:300;color:#93c5fd;margin:0;"><a href="https://www.nationalparkexpress.com" style="color:#93c5fd;">nationalparkexpress.com</a></p>
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:300;color:#dbeafe;line-height:1.7;margin:0;">{footer_txt}</p>
   </td></tr>
 
 </table>
@@ -348,9 +448,9 @@ def build_email(row: dict, tour_type: str, tour_date: str, form_url: str,
 </html>"""
 
 # ── Last Minute Email ─────────────────────────────────────────────────────────
-def build_last_minute_email(row: dict, tour_type: str, tour_date: str, form_url: str,
+async def build_last_minute_email(row: dict, tour_type: str, tour_date: str, form_url: str,
                             pickup_instruction: str = "", pickup_photo_url: str = "",
-                            pickup_photo_label: str = "") -> str:
+                            pickup_photo_label: str = "", db: AsyncSession = None) -> str:
     cfg   = TOUR_TYPES.get(tour_type, {})
     label = cfg.get("label", tour_type)
     has_lunch = cfg.get("has_lunch", False)
@@ -364,6 +464,35 @@ def build_last_minute_email(row: dict, tour_type: str, tour_date: str, form_url:
         date_fmt = datetime.strptime(tour_date, "%Y-%m-%d").strftime("%B %-d, %Y")
     except ValueError:
         date_fmt = tour_date
+
+    # ── Content Studio editable copy (Last Minute) — mirrors renderTcLmEmailPreview ──
+    # Order: greeting(DB) -> "As your local…" (hard-coded, also hard-coded in preview)
+    #        -> lm_intro(DB with/no lunch) -> lm_closing(DB). btn/expiry/footer from DB.
+    lm_greeting_raw = await _copy(db, "tmpl__global__tc_email_greeting",
+        "Greetings from National Park Express!")
+    if has_lunch:
+        lm_intro_raw = await _copy(db, "tmpl__global__tc_lm_email_intro_with_lunch",
+            "Please review your tour details below and select your lunch option using the button below to help ensure a smooth and hassle-free departure.")
+    else:
+        lm_intro_raw = await _copy(db, "tmpl__global__tc_lm_email_intro_no_lunch",
+            "Please review your tour details below and confirm your pickup information to help ensure a smooth and hassle-free departure.")
+    lm_closing_raw = await _copy(db, "tmpl__global__tc_lm_email_closing",
+        "We look forward to seeing you soon.")
+    lm_expiry_raw = await _copy(db, "tmpl__global__tc_email_link_expiry",
+        "Link expires at 6:00 PM PST the day before your tour")
+    lm_footer_raw = await _copy(db, "tmpl__global__tc_email_footer_contact",
+        "Questions? We're here to help!")
+
+    _LMPSTYLE = "font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;letter-spacing:-0.1px;"
+    def _lmpara(raw_text, margin):
+        body = _esc(raw_text).strip()
+        return f'<p style="{_LMPSTYLE}margin:{margin};">{body}</p>' if body else ""
+
+    lm_greeting_html = _lmpara(lm_greeting_raw, "0 0 6px")
+    lm_intro_html    = _lmpara(lm_intro_raw, "0 0 6px")
+    lm_closing_html  = _lmpara(lm_closing_raw, "0 0 28px")
+    lm_expiry_txt    = _esc(lm_expiry_raw)
+    lm_footer_txt    = _footer_html(lm_footer_raw)
 
     hero_url = TOUR_IMAGES.get(tour_type, TOUR_IMAGES["grand_canyon_south"])
 
@@ -414,7 +543,7 @@ def build_last_minute_email(row: dict, tour_type: str, tour_date: str, form_url:
           <tr><td style="padding:14px 18px;">
             <table width="100%" cellpadding="0" cellspacing="0"><tr>
               <td style="width:42px;vertical-align:top;">
-                <div style="width:36px;height:36px;border-radius:9px;background:#eef6ff;text-align:center;line-height:36px;font-size:18px;">&#127374;</div>
+                <div style="width:36px;height:36px;border-radius:9px;background:#eef6ff;text-align:center;line-height:36px;font-size:18px;">&#128101;</div>
               </td>
               <td style="vertical-align:top;padding-left:12px;">
                 <div style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:400;color:#24364f;line-height:1.6;margin-bottom:4px;">
@@ -429,7 +558,12 @@ def build_last_minute_email(row: dict, tour_type: str, tour_date: str, form_url:
         </table>"""
 
     has_lunch = cfg.get("has_lunch", False)
-    btn_text  = "&#127374; SELECT MY LUNCH OPTION" if has_lunch else "&#10003; I'VE READ THIS MESSAGE"
+    if has_lunch:
+        _btn_db = await _copy(db, "tmpl__global__tc_lm_email_btn_lunch", "")
+        btn_text = _esc(_btn_db) if _btn_db.strip() else "🍴 SELECT MY LUNCH OPTION"
+    else:
+        _btn_db = await _copy(db, "tmpl__global__tc_lm_email_btn_no_lunch", "")
+        btn_text = _esc(_btn_db) if _btn_db.strip() else "&#10003; I'VE READ THIS MESSAGE"
 
     return f"""<!DOCTYPE html>
 <html>
@@ -459,18 +593,12 @@ def build_last_minute_email(row: dict, tour_type: str, tour_date: str, form_url:
   <tr><td style="padding:32px 40px;background:#ffffff;">
 
     <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:15px;font-weight:400;color:#1a1a1a;margin:0 0 8px;letter-spacing:-0.1px;">Hi <strong style="font-weight:600;">{first}</strong>,</p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
-      Greetings from National Park Express!
-    </p>
+    {lm_greeting_html}
     <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
       As your local tour operator for the <strong style="font-weight:600;">{label}</strong>, we're excited to welcome you on <strong style="color:#2563eb;font-weight:600;">{date_fmt}</strong>.
     </p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 6px;letter-spacing:-0.1px;">
-      {'Please review your tour details below and select your <strong style="font-weight:600;">lunch option</strong> using the button below to help ensure a smooth and hassle-free departure.' if has_lunch else 'Please review your tour details below and confirm your pickup information to help ensure a smooth and hassle-free departure.'}
-    </p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:14px;font-weight:400;color:#24364f;line-height:1.7;margin:0 0 28px;letter-spacing:-0.1px;">
-      We look forward to seeing you soon.
-    </p>
+    {lm_intro_html}
+    {lm_closing_html}
 
     <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e5ecf5;border-radius:12px;overflow:hidden;margin-bottom:24px;">
       <tr>
@@ -528,7 +656,7 @@ def build_last_minute_email(row: dict, tour_type: str, tour_date: str, form_url:
         <a href="{form_url}" style="display:inline-block;background:#1a3a5c;color:#ffffff;text-decoration:none;padding:16px 48px;border-radius:10px;font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:15px;font-weight:600;letter-spacing:0.5px;">{btn_text}</a>
       </td></tr>
       <tr><td align="center">
-        <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:11px;font-weight:300;color:#aaa;margin:6px 0 0;">Link expires at 6:00 PM PST the day before your tour</p>
+        <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:11px;font-weight:300;color:#aaa;margin:6px 0 0;">{lm_expiry_txt}</p>
       </td></tr>
     </table>
 
@@ -536,9 +664,7 @@ def build_last_minute_email(row: dict, tour_type: str, tour_date: str, form_url:
 
   <tr><td style="background:#061a33;padding:20px 36px;text-align:center;">
     <img src="{LOGO_URL}" alt="NPE Logo" width="60" style="width:60px;height:60px;object-fit:contain;border-radius:50%;margin-bottom:12px;" />
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:300;color:#dbeafe;margin:0 0 4px;">Questions? We're here to help!</p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:300;color:#dbeafe;margin:0 0 4px;">+1 (702) 948-4190 | <a href="mailto:reservations@nationalparkexpress.com" style="color:#93c5fd;">reservations@nationalparkexpress.com</a></p>
-    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:12px;font-weight:300;color:#93c5fd;margin:0;"><a href="https://www.nationalparkexpress.com" style="color:#93c5fd;">nationalparkexpress.com</a></p>
+    <p style="font-family:'Nunito Sans','Segoe UI',Arial,sans-serif;font-size:13px;font-weight:300;color:#dbeafe;line-height:1.7;margin:0;">{lm_footer_txt}</p>
   </td></tr>
 
 </table>

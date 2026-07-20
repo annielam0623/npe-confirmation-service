@@ -325,7 +325,6 @@ async def log(
         for r in result.mappings().fetchall()
     ]
 
-
 # ── POST /update-notes ────────────────────────────────────────────────────────
 @router.post("/update-notes")
 async def update_notes(

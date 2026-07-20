@@ -434,6 +434,7 @@ document.querySelector('form').addEventListener('submit',function(e){{
     }}
   }}
 }});
+
 function lunchWarnContinue(){{_lunchConfirmed=true;document.getElementById('lunch-warn-modal').style.display='none';document.querySelector('form').requestSubmit();}}
 function lunchWarnBack(){{document.getElementById('lunch-warn-modal').style.display='none';}}
 function adj(t,d){{var el=document.getElementById('c-'+t),cur=parseInt(el.value)||0,tot=totL();var nv=cur+d;if(nv<0)return;if(d>0&&tot>=partySize)return;el.value=nv;updT();}}

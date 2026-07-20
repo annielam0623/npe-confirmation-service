@@ -5,6 +5,7 @@ GET  /admin/settings/templates          — page (admin/superadmin only)
 GET  /api/template-settings             — return all tmpl__ keys as JSON
 POST /api/template-settings/save        — save one key
 """
+
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
