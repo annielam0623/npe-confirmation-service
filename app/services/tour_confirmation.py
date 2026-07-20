@@ -12,7 +12,7 @@ from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo
 from html import escape as _html_escape
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.services.template_copy import get_copy
+from app.services.template_copy import get_copy_many, get_copy_value
 import re as _re
 _LA = ZoneInfo("America/Los_Angeles")
 
@@ -27,11 +27,11 @@ def _esc(s: str) -> str:
 # decision, a blank value is intentional (admin removed that line) and is passed
 # through as-is; we only fall back to the English default when the DB read errors.
 async def _copy(db, key: str, fallback: str) -> str:
-    """Read editable copy from settings; fall back to English default only on DB error."""
     try:
-        return await get_copy(db, key, fallback)
+        copy = await get_copy_many(db, [key])
     except Exception:
         return fallback
+    return copy.get(key, "") if key in copy else fallback
 
 
 def _apply(raw: str, **vars) -> str:
