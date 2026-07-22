@@ -5,6 +5,7 @@ GET  /confirm/{token}  — show form
 POST /confirm/{token}  — handle submission
 """
 
+import logging
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Depends, Form, Request
@@ -21,6 +22,34 @@ from app.services.template_copy import get_copy_many, get_copy_value, render_cop
 router = APIRouter()
 BASE_URL = "https://confirm.nationalparkexpress.com"
 LA = ZoneInfo("America/Los_Angeles")
+logger = logging.getLogger(__name__)
+
+
+# ── Content Studio per-tour helpers ───────────────────────────────────────────
+# per-tour 文案 key 拼装：将来改全局键/片段引用时，只改这一个函数。
+_TC_PERTOUR_FIELDS = ["reminders", "extra_reminders", "park_fee_nonresident", "park_fee_resident"]
+
+
+def _tc_key(tour_type: str, field: str) -> str:
+    """Content Studio per-tour key: tmpl__tc__{tour_type}__{field}."""
+    return f"tmpl__tc__{tour_type}__{field}"
+
+
+def _tc_pertour_keys(tour_type: str) -> list[str]:
+    """4 per-tour keys for this booking's tour_type (empty tour_type → keys won't match DB)."""
+    return [_tc_key(tour_type or "", f) for f in _TC_PERTOUR_FIELDS]
+
+
+def _split_lines_to_li(raw: str) -> str:
+    """一行一条 bullet：按 \\n split、strip 后跳过空行、不转义、每行包 <li>。"""
+    if not raw:
+        return ""
+    out = ""
+    for line in raw.split("\n"):
+        s = line.strip()
+        if s:
+            out += f"<li>{s}</li>"
+    return out
 
 
 async def _fetch_pickup_info(pickup_location: str, db: AsyncSession):
@@ -233,12 +262,22 @@ def _render(booking, tour_config: dict, error_msg: str = "",
 
     fee_html = ""
     if tour_config.get("has_park_fee"):
-        fee_html = """<div class="gf-fee-box">
-        <div class="gf-box-title">ℹ️ National Park Entry Fee</div>
-        <ul>
-          <li><strong>Non-U.S. Residents fee (ages 16+):</strong> $100/person or $250 America the Beautiful Annual Pass (up to 4 people).</li>
-          <li><strong>Legal U.S. residents:</strong> Present valid government-issued ID to waive the $100 fee.</li>
-        </ul></div>"""
+        _tt = booking.tour_type or ""
+        # DB is source of truth; 空值=admin 故意删除→不渲染该条。不转义（可含 HTML）。
+        _fee_nonres = copy.get(_tc_key(_tt, "park_fee_nonresident")) or ""
+        _fee_res    = copy.get(_tc_key(_tt, "park_fee_resident")) or ""
+        # 空值=admin 故意删除→整块不渲染。不回退硬编码（回退会复活旧文案）。
+        if _fee_nonres or _fee_res:
+            _fee_items = ""
+            if _fee_nonres:
+                _fee_items += f"<li>{_fee_nonres}</li>"
+            if _fee_res:
+                _fee_items += f"<li>{_fee_res}</li>"
+            fee_html = (
+                '<div class="gf-fee-box">'
+                '<div class="gf-box-title">ℹ️ National Park Entry Fee</div>'
+                f'<ul>{_fee_items}</ul></div>'
+            )
 
     banners = ""
     if error_msg:
@@ -316,11 +355,23 @@ def _render(booking, tour_config: dict, error_msg: str = "",
           <p class="gf-small" style="text-align:center;margin-top:6px;">{_lunch_default}</p>
         </div>"""
 
-    reminders_html = "".join(f"<li>{r}</li>" for r in (tour_config.get("extra_reminders") or []))
-    reminders_html += """<li>Please dress appropriately for the weather and stay hydrated throughout your tour.</li>
-    <li>All vehicles are air-conditioned. During periods of extreme heat, it may take a few minutes for the vehicle to cool down after boarding.You are welcome to bring small personal comfort items, such as handheld fans, cooling towels, or ice packs.</li>
-    <li>To help ensure a pleasant experience for everyone on board, we kindly ask guests to refrain from wearing strong fragrances, including perfumes, colognes, and heavily scented products.</li>
-    <li>If you have any special needs or concerns, please contact us prior to your tour so we can better assist you.</li>"""
+    # Reminders：DB 为准，顺序=通用在前、tour-specific 在后（对齐 Content Studio preview）。
+    # 一行一条 bullet；空行跳过；不转义。空值=不渲染（admin 故意删）。
+    _tt = booking.tour_type or ""
+    _db_general = copy.get(_tc_key(_tt, "reminders")) or ""
+    _db_extra   = copy.get(_tc_key(_tt, "extra_reminders")) or ""
+    # 空值=admin 故意删除→不渲染。不回退硬编码（回退会复活旧文案）。
+    reminders_html = _split_lines_to_li(_db_general)      # 通用在前
+    reminders_html += _split_lines_to_li(_db_extra)       # tour-specific 在后
+    # 整块空 → 整个 reminders 区块不渲染（避免留空标题+空列表）
+    if reminders_html:
+        reminders_section = (
+            '<div class="gf-reminders">'
+            '<div class="gf-box-title">📌 Important Reminders</div>'
+            f'<ul>{reminders_html}</ul></div>'
+        )
+    else:
+        reminders_section = ""
 
     # MTLV — Madame Tussauds ticket selection (only when mtlv_eligible)
     mtlv_html = ""
@@ -502,10 +553,7 @@ function adjMtlv(d){{var el=document.getElementById('c-mtlv');if(!el)return;var 
 
         {mtlv_html}
 
-        <div class="gf-reminders">
-          <div class="gf-box-title">📌 Important Reminders</div>
-          <ul>{reminders_html}</ul>
-        </div>
+        {reminders_section}
 
           
         <div class="gf-section">
@@ -685,9 +733,12 @@ async def guest_confirm_page(token: str, db: AsyncSession = Depends(get_db)):
         return _expired()
 
     tour_config = TOUR_TYPES.get(booking.tour_type or "", list(TOUR_TYPES.values())[0])
+    if (booking.tour_type or "") not in TOUR_TYPES:
+        logger.warning("[guest] unknown tour_type, falling back: order_number=%s tour_type=%r",
+                       booking.order_number, booking.tour_type)
     pu_inst, pu_photo, pu_label = await _fetch_pickup_info(booking.pickup_location, db)
     is_last_minute = bool(booking.is_last_minute)
-    copy = await get_copy_many(db, TC_GUEST_KEYS)
+    copy = await get_copy_many(db, TC_GUEST_KEYS + _tc_pertour_keys(booking.tour_type or ""))
     print(f"[guest] TC Guest copy loaded: {len(copy)} keys")
     return _render(booking, tour_config,
                    pickup_instruction=pu_inst, pickup_photo_url=pu_photo, pickup_photo_label=pu_label,
@@ -717,6 +768,9 @@ async def guest_confirm_submit(
         return _expired()
 
     tour_config = TOUR_TYPES.get(booking.tour_type or "", list(TOUR_TYPES.values())[0])
+    if (booking.tour_type or "") not in TOUR_TYPES:
+        logger.warning("[guest] unknown tour_type, falling back: order_number=%s tour_type=%r",
+                       booking.order_number, booking.tour_type)
     qty         = int(booking.quantities or 1)
     has_lunch   = tour_config.get("has_lunch", False)
 
@@ -770,7 +824,7 @@ async def guest_confirm_submit(
 
     if error_msg:
         pu_inst, pu_photo, pu_label = await _fetch_pickup_info(booking.pickup_location, db)
-        copy = await get_copy_many(db, TC_GUEST_KEYS)
+        copy = await get_copy_many(db, TC_GUEST_KEYS + _tc_pertour_keys(booking.tour_type or ""))
         print(f"[guest] TC Guest copy loaded: {len(copy)} keys")
         return _render(booking, tour_config, error_msg=error_msg,
                        pickup_instruction=pu_inst, pickup_photo_url=pu_photo, pickup_photo_label=pu_label, copy=copy)
