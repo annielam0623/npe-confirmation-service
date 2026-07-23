@@ -90,3 +90,51 @@ TC_GUEST_KEYS = [
     "tmpl__global__tc_guest_date_modal_title",
     "tmpl__global__tc_guest_date_modal_desc",
 ]
+
+
+# ── Tickets Reminder：全局 key 清单（per-tour key 靠 f"tmpl__tix__{tour}__{field}"
+#    动态拼接，不进此列表，与 TC_GUEST_KEYS 只列 global 的模式一致）──
+TIX_KEYS = [
+    # Email（已 seed）
+    "tmpl__global__tix_email_intro",
+    "tmpl__global__tix_email_cta_desc",
+    "tmpl__global__tix_email_link_expiry",
+    "tmpl__global__tix_email_footer",
+    "tmpl__global__tix_email_warning",       # email + guest form 共用
+    # SMS（已 seed）
+    "tmpl__global__tix_sms_body",
+    # Guest Page（已 seed）
+    "tmpl__global__tix_guest_cfm_note",
+    "tmpl__global__tix_guest_already_info",
+    "tmpl__global__tix_guest_checkbox_text",
+    "tmpl__global__tix_guest_submit_btn",
+    "tmpl__global__tix_guest_thanks_small",
+
+    # ── 本次新建（migrate_v17）──
+    # Email
+    "tmpl__global__tix_email_cta_btn",
+    "tmpl__global__tix_email_resource_weather",
+    "tmpl__global__tix_email_resource_photo",
+    "tmpl__global__tix_email_questions",
+    # Guest Page
+    "tmpl__global__tix_guest_prepare_title",
+    "tmpl__global__tix_guest_prepare_intro",
+    "tmpl__global__tix_guest_checkin_note",   # skip_confirmation_no 的 tour 用（email + guest page 共用）
+    # Global
+    "tmpl__global__tix_general_reminder",
+    # 系统页
+    "tmpl__global__tix_thanks_message",
+    "tmpl__global__tix_expired_title",
+    "tmpl__global__tix_expired_message",
+    # Staff mail（labels 留代码不进 DB）
+    "tmpl__global__tix_staffmail_subject",
+    "tmpl__global__tix_staffmail_title",
+]
+
+# per-tour 字段（DB 读，靠 tour_type 拼 key）
+TIX_TOUR_FIELDS = [
+    "checkin_location",
+    "maps_url",
+    "location_photo",
+    "extra_notes",
+]

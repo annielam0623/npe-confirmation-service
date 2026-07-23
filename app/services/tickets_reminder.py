@@ -21,6 +21,14 @@ from zoneinfo import ZoneInfo
 _LA = ZoneInfo("America/Los_Angeles")
 from html import escape
 
+from app.services.template_copy import (
+    get_copy_many,
+    get_copy_value,
+    render_copy,
+    TIX_KEYS,
+    TIX_TOUR_FIELDS,
+)
+
 SECRET_KEY       = os.environ.get("TOKEN_SECRET", "npe_tix_secret_fallback")
 CONFIRM_BASE_URL = os.environ.get("SERVICE_BASE_URL", "https://confirm.nationalparkexpress.com")
 
@@ -231,7 +239,42 @@ async def verify_token(token: str, db) -> tuple[str | None, dict | None]:
 
 
 # ── SMS builder ───────────────────────────────────────────────────────────────
-def build_sms(row: dict, tour_type: str, form_url: str) -> str:
+# ── per-tour DB key helpers ──────────────────────────────────────────────────
+def _tix_pertour_keys(tour_type: str) -> list[str]:
+    """本 tour 的 per-tour key 全名列表（tmpl__tix__{tour}__{field}）。"""
+    if not tour_type:
+        return []
+    return [f"tmpl__tix__{tour_type}__{f}" for f in TIX_TOUR_FIELDS]
+
+
+def _tix_pt(tour_copy: dict, tour_type: str):
+    """返回一个取值函数 pt(field)，从 tour_copy 里取 per-tour 字段值（空回退 ""）。"""
+    prefix = f"tmpl__tix__{tour_type}__"
+    def pt(field: str) -> str:
+        return get_copy_value(tour_copy, prefix + field, "")
+    return pt
+
+
+# 方案 B：值为空 → 整行不渲染（标签不留空壳）
+def _email_row(label: str, value: str, shaded: bool = False, val_style: str = "") -> str:
+    """email 表格一行；value 为空则返回空串（整行不渲染）。"""
+    if not str(value).strip():
+        return ""
+    bg = "background:#e8f0ff;" if shaded else ""
+    return (
+        f'<tr><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#666;{bg}">{label}</td>'
+        f'<td style="padding:10px 16px;font-size:13px;{val_style}">{value}</td></tr>'
+    )
+
+
+def _guest_row(icon: str, inner: str, value: str) -> str:
+    """guest page 一行；value 为空则整行不渲染。"""
+    if not str(value).strip():
+        return ""
+    return f'<div class="gf-row"><span>{icon}</span><span>{inner}</span></div>'
+
+
+async def build_sms(row: dict, tour_type: str, form_url: str, db=None) -> str:
     cfg       = TOUR_TYPES.get(tour_type, {})
     sms_label = cfg.get("sms_label", cfg.get("label", tour_type))
     first     = row.get("first_name", row.get("name", ""))
@@ -242,16 +285,24 @@ def build_sms(row: dict, tour_type: str, form_url: str) -> str:
         date_fmt = datetime.strptime(svc_date, "%Y-%m-%d").strftime("%B %-d, %Y")
     except ValueError:
         date_fmt = svc_date
-    return (
-        f"Dear {first}, reminder for your {sms_label} on {date_fmt}. "
-        f"Check-in: {checkin}, Tour: {tour_time}. "
-        f"Please use the link below to review important information and reconfirm your booking: {form_url} "
-        f"Questions? Call 702-948-4190."
+
+    copy = await get_copy_many(db, TIX_KEYS)
+    # 变量名以 Content Studio tmpl__global__tix_sms_body 定义为准：
+    #   {name} {sms_label} {date} {checkin} {tour_time} {url}
+    body = get_copy_value(copy, "tmpl__global__tix_sms_body", "")
+    return render_copy(
+        body,
+        name=first,
+        sms_label=sms_label,
+        date=date_fmt,
+        checkin=checkin,
+        tour_time=tour_time,
+        url=form_url,
     )
 
 
 # ── Email builder ─────────────────────────────────────────────────────────────
-def build_email(row: dict, tour_type: str, service_date: str, form_url: str) -> str:
+async def build_email(row: dict, tour_type: str, service_date: str, form_url: str, db=None) -> str:
     cfg        = TOUR_TYPES.get(tour_type, {})
     label      = cfg.get("sms_label") or cfg.get("label", tour_type)
     first      = row.get("first_name", "")
@@ -261,24 +312,106 @@ def build_email(row: dict, tour_type: str, service_date: str, form_url: str) -> 
     pax        = row.get("no_of_pax") or row.get("quantities") or "1"
     checkin    = row.get("checkin_time", "")
     tour_time  = row.get("tour_time", "")
-    checkin_loc = cfg.get("checkin_location", "")
-    maps_url   = cfg.get("maps_url", "")
-    location_photo = cfg.get("location_photo", "")
+    # 单次 batch 查询：global + per-tour 一起取（每个 handler 只打一次 DB）
+    copy           = await get_copy_many(db, TIX_KEYS + _tix_pertour_keys(tour_type))
+    pt             = _tix_pt(copy, tour_type)
+    checkin_loc    = pt("checkin_location") or cfg.get("checkin_location", "")
+    maps_url       = pt("maps_url") or cfg.get("maps_url", "")
+    location_photo = pt("location_photo") or cfg.get("location_photo", "")
     try:
         date_fmt = datetime.strptime(service_date, "%Y-%m-%d").strftime("%B %-d, %Y")
     except ValueError:
         date_fmt = service_date
+
+    # 预赋值全部文案变量（Python ≤3.11 f-string 规则：{} 内不放复杂表达式）
+    c_intro     = get_copy_value(copy, "tmpl__global__tix_email_intro", "")
+    c_warning   = get_copy_value(copy, "tmpl__global__tix_email_warning", "")
+    c_cta_desc  = get_copy_value(copy, "tmpl__global__tix_email_cta_desc", "")
+    c_cta_btn   = escape(get_copy_value(copy, "tmpl__global__tix_email_cta_btn", ""))
+    c_expiry    = get_copy_value(copy, "tmpl__global__tix_email_link_expiry", "")
+    c_questions = get_copy_value(copy, "tmpl__global__tix_email_questions", "")
+    c_footer    = get_copy_value(copy, "tmpl__global__tix_email_footer", "")
+    c_res_weather = get_copy_value(copy, "tmpl__global__tix_email_resource_weather", "")
+    c_res_photo   = get_copy_value(copy, "tmpl__global__tix_email_resource_photo", "")
+
+    # 警告框：一行一条（与 render_form 共用同一 key）；空则整块不渲染
+    warning_html = ""
+    if c_warning:
+        warn_lines = "".join(
+            f"      {escape(ln)}<br>\n"
+            for ln in c_warning.split("\n") if ln.strip()
+        )
+        warning_html = (
+            '<div style="background:#fff5f5;border:1px solid #f5c6c6;border-radius:6px;'
+            'padding:8px 14px;margin-bottom:20px;font-size:11px;color:#c0392b;line-height:1.3;">\n'
+            f"{warn_lines}    </div>"
+        )
+
+    intro_html = (
+        f'<p style="color:#555;line-height:1.6;margin:10px 0 20px;">{intro_esc}</p>'
+        if (intro_esc := escape(c_intro)) else ""
+    )
+    cta_desc_html = (
+        f'<p style="color:#555;line-height:1.6;margin-bottom:20px;">{ctadesc_esc}</p>'
+        if (ctadesc_esc := escape(c_cta_desc)) else ""
+    )
+    expiry_html = (
+        f'<p style="margin:10px 0 0;font-size:12px;color:#aaa;">{expiry_esc}</p>'
+        if (expiry_esc := escape(c_expiry)) else ""
+    )
+    questions_html = (
+        f'<p style="color:#999;font-size:12px;text-align:center;margin-top:16px;">{questions_esc}</p>'
+        if (questions_esc := escape(c_questions)) else ""
+    )
+    footer_html = (
+        f'<p style="color:#aaa;font-size:12px;margin:0;">{footer_esc}</p>'
+        if (footer_esc := escape(c_footer)) else ""
+    )
 
     maps_row = (
         f'<tr><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#666;background:#e8f0ff;">🗺️ Maps</td>'
         f'<td style="padding:10px 16px;font-size:13px;"><a href="{maps_url}" style="color:#1a3a5c;" target="_blank">Google Maps GPS</a></td></tr>'
     ) if maps_url else ""
 
-    resource_html = (
-        f'<p style="font-size:12px;margin-top:8px;text-align:center;">'
-        f'<a href="https://www.timeanddate.com/worldclock/usa/page" style="color:#1a3a5c;" target="_blank">🕐 Local Time &amp; Weather</a>'
-        f'&nbsp;&nbsp;<a href="{location_photo}" style="color:#1a3a5c;margin-left:16px;" target="_blank">📸 Location Photo</a></p>'
-    ) if location_photo else ""
+    # cfm 行：与 guest page (render_form) 保持一致
+    #  - skip_confirmation_no 的 tour（不需要 confirmation#）→ 该格显示 checkin_note
+    #  - 其余 tour → 显示 confirmation# 号码
+    _ckn_email = get_copy_value(copy, "tmpl__global__tix_guest_checkin_note", "") or cfg.get("checkin_note", "")
+    if cfg.get("skip_confirmation_no"):
+        ckn_esc = escape(_ckn_email)
+        cfm_row = (
+            f'<tr><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#666;">🔖 Check-in</td>'
+            f'<td style="padding:10px 16px;font-size:13px;">{ckn_esc}</td></tr>'
+        )
+    else:
+        cfm_row = (
+            f'<tr><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#666;">🔖 Confirmation#</td>'
+            f'<td style="padding:10px 16px;font-size:13px;font-weight:bold;">{cfm}</td></tr>'
+        )
+
+    # 方案 B：值为空的行整行不渲染
+    pax_val   = f"{pax} Guest(s)" if str(pax).strip() else ""
+    row_chd     = _email_row("📋 CHD#", chd, shaded=True)
+    row_pax     = _email_row("👥 Party Size", pax_val, shaded=True)
+    row_date    = _email_row("📅 Service Date", date_fmt, val_style="font-weight:bold;color:#1a3a5c;")
+    row_checkin = _email_row("⏰ Check-in Time", checkin, shaded=True, val_style="font-weight:bold;")
+    row_ttime   = _email_row("🎡 Tour Time", tour_time, val_style="font-weight:bold;")
+    row_loc     = _email_row("📍 Check-in Location", checkin_loc, shaded=True)
+
+    # resource_html：链接文字接 DB（weather/photo），URL 仍来自 per-tour cfg
+    resource_html = ""
+    if location_photo and (c_res_weather or c_res_photo):
+        photo_link = (
+            f'&nbsp;&nbsp;<a href="{location_photo}" style="color:#1a3a5c;margin-left:16px;" target="_blank">{escape(c_res_photo)}</a>'
+            if c_res_photo else ""
+        )
+        weather_link = (
+            f'<a href="https://www.timeanddate.com/worldclock/usa/page" style="color:#1a3a5c;" target="_blank">{escape(c_res_weather)}</a>'
+            if c_res_weather else ""
+        )
+        resource_html = (
+            f'<p style="font-size:12px;margin-top:8px;text-align:center;">{weather_link}{photo_link}</p>'
+        )
 
 
     return f"""<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -292,37 +425,34 @@ def build_email(row: dict, tour_type: str, service_date: str, form_url: str) -> 
   </td></tr>
   <tr><td style="background:#fff;padding:32px;">
     <p style="font-size:16px;">Hi <strong>{first} {last}</strong>,</p>
-    <p style="color:#555;line-height:1.6;margin:10px 0 20px;">This is a reminder for your upcoming Antelope Canyon tour. Please reconfirm your attendance using the button below.</p>
+    {intro_html}
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f5ff;border-radius:8px;overflow:hidden;margin-bottom:20px;">
-      <tr><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#666;background:#e8f0ff;width:38%;">📋 CHD#</td><td style="padding:10px 16px;font-size:13px;">{chd}</td></tr>
-      <tr><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#666;">🔖 Confirmation#</td><td style="padding:10px 16px;font-size:13px;font-weight:bold;">{cfm}</td></tr>
-      <tr><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#666;background:#e8f0ff;">👥 Party Size</td><td style="padding:10px 16px;font-size:13px;">{pax} Guest(s)</td></tr>
-      <tr><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#666;">📅 Service Date</td><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#1a3a5c;">{date_fmt}</td></tr>
-      <tr><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#666;background:#e8f0ff;">⏰ Check-in Time</td><td style="padding:10px 16px;font-size:13px;font-weight:bold;">{checkin}</td></tr>
-      <tr><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#666;">🎡 Tour Time</td><td style="padding:10px 16px;font-size:13px;font-weight:bold;">{tour_time}</td></tr>
-      <tr><td style="padding:10px 16px;font-size:13px;font-weight:bold;color:#666;background:#e8f0ff;">📍 Check-in Location</td><td style="padding:10px 16px;font-size:13px;">{checkin_loc}</td></tr>
+      {row_chd}
+      {cfm_row}
+      {row_pax}
+      {row_date}
+      {row_checkin}
+      {row_ttime}
+      {row_loc}
       {maps_row}
     </table>
-    <div style="background:#fff5f5;border:1px solid #f5c6c6;border-radius:6px;padding:8px 14px;margin-bottom:20px;font-size:11px;color:#c0392b;line-height:1.3;">
-      ★ Late check-in is subject to forfeiting your tour entry.<br>
-      ★ All times are based on the Arizona (AZ) time zone.
-    </div>
-    <p style="color:#555;line-height:1.6;margin-bottom:20px;">Please click the &ldquo;Reconfirm My Tour &amp; Continue&rdquo; button below to review important information about your tour. This may include the check-in procedure, supplier rules, age requirements, local regulations, and other important notes to help you prepare for your trip.</p>
+    {warning_html}
+    {cta_desc_html}
     <div style="text-align:center;margin:28px 0;">
-      <a href="{form_url}" style="display:inline-block;background:#1a3a5c;color:#fff;text-decoration:none;padding:16px 44px;border-radius:8px;font-size:16px;font-weight:bold;">Reconfirm My Tour &amp; Continue</a>
-      <p style="margin:10px 0 0;font-size:12px;color:#aaa;">Link expires the day after your tour</p>
+      <a href="{form_url}" style="display:inline-block;background:#1a3a5c;color:#fff;text-decoration:none;padding:16px 44px;border-radius:8px;font-size:16px;font-weight:bold;">{c_cta_btn}</a>
+      {expiry_html}
     </div>
     {resource_html}
-    <p style="color:#999;font-size:12px;text-align:center;margin-top:16px;">Questions? <a href="mailto:reservations@nationalparkexpress.com" style="color:#1a3a5c;">reservations@nationalparkexpress.com</a> | 702-948-4190</p>
+    {questions_html}
   </td></tr>
   <tr><td style="background:#f0f0f0;border-radius:0 0 12px 12px;padding:16px;text-align:center;">
-    <p style="color:#aaa;font-size:12px;margin:0;">National Park Express — Thank you for choosing us! 🏞️</p>
+    {footer_html}
   </td></tr>
 </table></td></tr></table></body></html>"""
 
 
 # ── Staff notification email ───────────────────────────────────────────────────
-def build_staff_email(row: dict, tour_type: str, notes: str) -> tuple[str, str]:
+async def build_staff_email(row: dict, tour_type: str, notes: str, db=None) -> tuple[str, str]:
     cfg      = TOUR_TYPES.get(tour_type, {})
     label    = cfg.get("label") or cfg.get("sms_label", tour_type)  # internal: show supplier
     svc_date = str(row.get("service_date", ""))
@@ -332,18 +462,31 @@ def build_staff_email(row: dict, tour_type: str, notes: str) -> tuple[str, str]:
         date_str = svc_date
     notes_html = notes.replace("\n", "<br>") if notes else "-"
     chd        = row.get("chd_number", "")
-    subject    = f"[Tickets] {chd} – YES – {label} – {date_str}"
+
+    # 预赋值 row 字段（Python ≤3.11：{} 内不放带引号的 .get() 调用）
+    cfm_no     = row.get("confirmation_no", "")
+    first      = row.get("first_name", "")
+    last       = row.get("last_name", "")
+    email      = row.get("customer_email", "")
+    phone      = row.get("phone", "")
+    pax        = row.get("no_of_pax", "")
+
+    copy = await get_copy_many(db, TIX_KEYS)
+    subj_tmpl = get_copy_value(copy, "tmpl__global__tix_staffmail_subject", "")
+    subject   = render_copy(subj_tmpl, chd=chd, label=label, date=date_str)
+    title     = get_copy_value(copy, "tmpl__global__tix_staffmail_title", "")
+
     body = f"""<div style='font-family:Arial,sans-serif;max-width:600px;'>
-    <h2 style='color:#1a5276;'>Guest Reconfirmation Received</h2>
+    <h2 style='color:#1a5276;'>{title}</h2>
     <table style='width:100%;border-collapse:collapse;border:1px solid #ddd;'>
     <tr><td style='padding:8px 12px;font-weight:bold;background:#f0f0f0;'>Tour</td><td style='padding:8px 12px;'>{label}</td></tr>
     <tr><td style='padding:8px 12px;font-weight:bold;background:#f0f0f0;'>Service Date</td><td style='padding:8px 12px;'>{date_str}</td></tr>
     <tr><td style='padding:8px 12px;font-weight:bold;background:#f0f0f0;'>CHD#</td><td style='padding:8px 12px;'>{chd}</td></tr>
-    <tr><td style='padding:8px 12px;font-weight:bold;background:#f0f0f0;'>Confirmation#</td><td style='padding:8px 12px;'>{row.get("confirmation_no","")}</td></tr>
-    <tr><td style='padding:8px 12px;font-weight:bold;background:#f0f0f0;'>Guest</td><td style='padding:8px 12px;'>{row.get("first_name","")} {row.get("last_name","")}</td></tr>
-    <tr><td style='padding:8px 12px;font-weight:bold;background:#f0f0f0;'>Email</td><td style='padding:8px 12px;'>{row.get("customer_email","")}</td></tr>
-    <tr><td style='padding:8px 12px;font-weight:bold;background:#f0f0f0;'>Phone</td><td style='padding:8px 12px;'>{row.get("phone","")}</td></tr>
-    <tr><td style='padding:8px 12px;font-weight:bold;background:#f0f0f0;'>Party Size</td><td style='padding:8px 12px;'>{row.get("no_of_pax","")}</td></tr>
+    <tr><td style='padding:8px 12px;font-weight:bold;background:#f0f0f0;'>Confirmation#</td><td style='padding:8px 12px;'>{cfm_no}</td></tr>
+    <tr><td style='padding:8px 12px;font-weight:bold;background:#f0f0f0;'>Guest</td><td style='padding:8px 12px;'>{first} {last}</td></tr>
+    <tr><td style='padding:8px 12px;font-weight:bold;background:#f0f0f0;'>Email</td><td style='padding:8px 12px;'>{email}</td></tr>
+    <tr><td style='padding:8px 12px;font-weight:bold;background:#f0f0f0;'>Phone</td><td style='padding:8px 12px;'>{phone}</td></tr>
+    <tr><td style='padding:8px 12px;font-weight:bold;background:#f0f0f0;'>Party Size</td><td style='padding:8px 12px;'>{pax}</td></tr>
     <tr><td style='padding:8px 12px;font-weight:bold;background:#f0f0f0;'>Response</td><td style='padding:8px 12px;font-size:22px;font-weight:bold;color:#27ae60;'>YES</td></tr>
     <tr><td style='padding:8px 12px;font-weight:bold;background:#f0f0f0;vertical-align:top;'>Notes</td><td style='padding:8px 12px;'>{notes_html}</td></tr>
     </table></div>"""
@@ -379,24 +522,35 @@ GUEST_CSS = """*{box-sizing:border-box;margin:0;padding:0;}body{background:#f0f4
 
 
 # ── Guest page renderers ───────────────────────────────────────────────────────
-def render_expired() -> str:
-    return """<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+async def render_expired(db=None) -> str:
+    copy    = await get_copy_many(db, TIX_KEYS)
+    title   = escape(get_copy_value(copy, "tmpl__global__tix_expired_title", ""))
+    message = escape(get_copy_value(copy, "tmpl__global__tix_expired_message", ""))
+    # message 多行：DB 存真实换行，用 white-space:pre-line 渲染（与 extra_notes 一致）
+    return f"""<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Link Expired</title>
-    <style>body{font-family:Arial,sans-serif;background:#f0f4f8;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}
-    .box{background:#fff;border-radius:16px;padding:40px;max-width:480px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.1);}
-    h1{color:#1a3a5c;} p{color:#555;line-height:1.7;} a{color:#1a3a5c;font-weight:bold;}</style></head>
-    <body><div class="box"><div style="font-size:56px;margin-bottom:16px;">⏰</div><h1>Link Expired</h1>
-    <p>This confirmation link has expired.</p>
-    <p>Please contact us at <a href="mailto:reservations@nationalparkexpress.com">reservations@nationalparkexpress.com</a> or call <strong>702-948-4190</strong>.</p>
+    <style>body{{font-family:Arial,sans-serif;background:#f0f4f8;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}}
+    .box{{background:#fff;border-radius:16px;padding:40px;max-width:480px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.1);}}
+    h1{{color:#1a3a5c;}} p{{color:#555;line-height:1.7;white-space:pre-line;}} a{{color:#1a3a5c;font-weight:bold;}}</style></head>
+    <body><div class="box"><div style="font-size:56px;margin-bottom:16px;">⏰</div><h1>{title}</h1>
+    <p>{message}</p>
     </div></body></html>"""
 
 
-def render_thanks(row: dict) -> str:
+async def render_thanks(row: dict, db=None) -> str:
     first = escape(row.get("first_name", ""))
     try:
         date_fmt = datetime.strptime(str(row.get("service_date", "")), "%Y-%m-%d").strftime("%A, %B %-d, %Y")
     except ValueError:
         date_fmt = str(row.get("service_date", ""))
+
+    copy = await get_copy_many(db, TIX_KEYS)
+    # 仅 thanks_message（原 407 行）接线；footer 联系方式 spec 未列，保持硬编码
+    msg_tmpl  = get_copy_value(copy, "tmpl__global__tix_thanks_message", "")
+    thanks_msg = escape(render_copy(msg_tmpl, date=date_fmt))
+    thanks_html = (
+        f'<p style="white-space:pre-line;">{thanks_msg}</p>' if thanks_msg else ""
+    )
     return f"""<!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Tickets Reconfirmation – National Park Express</title>
@@ -404,12 +558,12 @@ def render_thanks(row: dict) -> str:
     <div class="gf-wrap"><div class="gf-card gf-thanks">
     <div style="font-size:56px;margin-bottom:16px;">✅</div>
     <h1>Thank You, {first}!</h1>
-    <p>Your response has been recorded.<br>We look forward to seeing you on<br><strong>{date_fmt}</strong>!</p>
+    {thanks_html}
     <p class="gf-small">Questions? <a href="mailto:reservations@nationalparkexpress.com">reservations@nationalparkexpress.com</a> | 702-948-4190</p>
     </div></div></body></html>"""
 
 
-def render_form(row: dict, cfg: dict, token: str, error_msg: str = "", already: bool = False) -> str:
+async def render_form(row: dict, cfg: dict, token: str, error_msg: str = "", already: bool = False, db=None) -> str:
     try:
         date_fmt = datetime.strptime(str(row.get("service_date", "")), "%Y-%m-%d").strftime("%A, %B %-d, %Y")
     except ValueError:
@@ -424,44 +578,140 @@ def render_form(row: dict, cfg: dict, token: str, error_msg: str = "", already: 
     tourtime  = escape(row.get("tour_time", ""))
     notes_val = escape(row.get("reschedule_notes") or "")
 
-    maps_link = ""
-    if cfg.get("maps_url"):
-        maps_link = f'<div class="gf-row"><span></span><a href="{cfg["maps_url"]}" target="_blank" class="gf-map-link">🗺️ Google Maps GPS</a></div>'
+    tour_type = row.get("tour_type", "")
 
+    # ── DB 文案：单次 batch 查询（global + per-tour 一起取）──
+    copy      = await get_copy_many(db, TIX_KEYS + _tix_pertour_keys(tour_type))
+    pt        = _tix_pt(copy, tour_type)
+
+    # per-tour 字段：DB 优先，cfg 作最终空回退
+    db_checkin_loc = pt("checkin_location") or cfg.get("checkin_location", "")
+    db_maps_url    = pt("maps_url")         or cfg.get("maps_url", "")
+    db_photo       = pt("location_photo")   or cfg.get("location_photo", "")
+    db_extra_raw   = pt("extra_notes")  # DB 存纯文本，真实换行分隔
+
+    # 全局文案预赋值（Python ≤3.11：{} 内不放复杂表达式）
+    c_warning      = get_copy_value(copy, "tmpl__global__tix_email_warning", "")
+    c_cfm_note     = escape(get_copy_value(copy, "tmpl__global__tix_guest_cfm_note", ""))
+    # checkin_note：skip_confirmation_no 的 tour 用；global key，cfg 作最终回退
+    _ckn           = get_copy_value(copy, "tmpl__global__tix_guest_checkin_note", "") or cfg.get("checkin_note", "")
+    db_checkin_note = escape(_ckn)
+    c_already      = escape(get_copy_value(copy, "tmpl__global__tix_guest_already_info", ""))
+    c_checkbox     = escape(get_copy_value(copy, "tmpl__global__tix_guest_checkbox_text", ""))
+    c_submit       = escape(get_copy_value(copy, "tmpl__global__tix_guest_submit_btn", ""))
+    c_thanks_small = escape(get_copy_value(copy, "tmpl__global__tix_guest_thanks_small", ""))
+    c_prep_title   = escape(get_copy_value(copy, "tmpl__global__tix_guest_prepare_title", ""))
+    c_prep_intro   = escape(get_copy_value(copy, "tmpl__global__tix_guest_prepare_intro", ""))
+    c_general      = get_copy_value(copy, "tmpl__global__tix_general_reminder", "")
+    c_res_weather  = get_copy_value(copy, "tmpl__global__tix_email_resource_weather", "")
+    c_res_photo    = get_copy_value(copy, "tmpl__global__tix_email_resource_photo", "")
+
+    # 警告框两行：一行一条（与 email 共用 tmpl__global__tix_email_warning）
+    warn_lines = [ln for ln in c_warning.split("\n") if ln.strip()]
+    warn_line1 = escape(warn_lines[0]) if len(warn_lines) >= 1 else ""
+    warn_line2 = escape(warn_lines[1]) if len(warn_lines) >= 2 else ""
+    late_checkin_html = (
+        f'<br><span class="gf-note-red">{warn_line1}</span>' if warn_line1 else ""
+    )
+    az_tz_html = (
+        f'<div class="gf-tz-note">{warn_line2}</div>' if warn_line2 else ""
+    )
+
+    checkin_loc_esc = escape(db_checkin_loc)
+
+    maps_link = ""
+    if db_maps_url:
+        maps_link = f'<div class="gf-row"><span></span><a href="{db_maps_url}" target="_blank" class="gf-map-link">🗺️ Google Maps GPS</a></div>'
+
+    # prepare_steps：不接 DB（独立结构化 UI），维持 cfg 硬编码；仅标题/intro 接 DB
     prepare_html = ""
     if cfg.get("prepare_steps"):
         items = ""
         for s in cfg["prepare_steps"]:
-            note_html = f'<br><span style="font-size:12px;color:#555;line-height:1.6;">{escape(s["note"])}</span>' if s.get("note") else ""
-            items += f'<li>{escape(s["label"])}&nbsp;<a href="{s["url"]}" target="_blank" class="gf-prep-link">→ Open Link</a>{note_html}</li>'
+            s_note = s.get("note")
+            s_label = escape(s["label"])
+            s_url = s["url"]
+            note_esc = escape(s_note) if s_note else ""
+            note_html = f'<br><span style="font-size:12px;color:#555;line-height:1.6;">{note_esc}</span>' if s_note else ""
+            items += f'<li>{s_label}&nbsp;<a href="{s_url}" target="_blank" class="gf-prep-link">→ Open Link</a>{note_html}</li>'
         prepare_html = f"""
       <div class="gf-prepare-box">
-        <div class="gf-box-title">📋 Prepare for Your Tour</div>
-        <p class="gf-prepare-intro">To help you prepare for your tour, you may choose to complete the following steps in advance. Completing these steps before arrival will help shorten your check-in time.</p>
+        <div class="gf-box-title">{c_prep_title}</div>
+        <p class="gf-prepare-intro">{c_prep_intro}</p>
         <ul class="gf-prepare-list">{items}</ul>
       </div>"""
 
-    reminders_html = ""
-    if cfg.get("extra_notes"):
+    # ── Box 1「Know Before You Go」← tmpl__global__tix_general_reminder（9 tour 共用）──
+    general_html = ""
+    if c_general:
+        gen_lis = "".join(
+            f"<li>{escape(ln)}</li>"
+            for ln in c_general.split("\n") if ln.strip()
+        )
+        if gen_lis:
+            general_html = f"""
+      <div class="gf-reminders">
+        <div class="gf-box-title">📌 Know Before You Go</div>
+        <ul>{gen_lis}</ul>
+      </div>"""
+
+    # ── Box 2「Tour-Specific Information」← per-tour extra_notes + res_block ──
+    tourspec_html = ""
+    if db_extra_raw:
+        extra_lines = [ln for ln in db_extra_raw.split("\n") if ln.strip()]
         lis = "".join(
             f'<li style="color:#c0392b;font-weight:bold;">{escape(n)}</li>' if n.startswith("★")
             else f"<li>{escape(n)}</li>"
-            for n in cfg["extra_notes"]
+            for n in extra_lines
         )
+        # res_block 跟 tour 专属字段走，归入本框
         res_links = ""
-        if cfg.get("maps_url"):
-            res_links += f'&nbsp;&nbsp;<a href="{cfg["maps_url"]}" target="_blank">🗺️ Google Maps GPS</a>'
-        if cfg.get("location_photo"):
-            res_links += f'&nbsp;&nbsp;<a href="{cfg["location_photo"]}" target="_blank">📸 Location Photo</a>'
-        res_block = f'<div class="gf-resource-links"><a href="https://www.timeanddate.com/worldclock/usa/page" target="_blank">🕐 Local Time &amp; Weather</a>{res_links}</div>' if res_links else ""
-        reminders_html = f"""
+        if db_maps_url:
+            res_links += f'&nbsp;&nbsp;<a href="{db_maps_url}" target="_blank">🗺️ Google Maps GPS</a>'
+        if db_photo and c_res_photo:
+            res_links += f'&nbsp;&nbsp;<a href="{db_photo}" target="_blank">{escape(c_res_photo)}</a>'
+        weather_txt = escape(c_res_weather)
+        res_block = (
+            f'<div class="gf-resource-links"><a href="https://www.timeanddate.com/worldclock/usa/page" target="_blank">{weather_txt}</a>{res_links}</div>'
+            if (res_links or weather_txt) else ""
+        )
+        tourspec_html = f"""
       <div class="gf-reminders">
-        <div class="gf-box-title">📌 Know Before You Go</div>
+        <div class="gf-box-title">Tour-Specific Information</div>
         <ul>{lis}</ul>{res_block}
       </div>"""
 
+    reminders_html = general_html + tourspec_html
+
     error_html   = f'<div class="gf-error">{escape(error_msg)}</div>' if error_msg else ""
-    already_html = '<div class="gf-info">If you have any questions, please leave a message in the Notes section below and click Submit to update. Our customer service team will contact you as soon as possible.</div>' if already else ""
+    already_html = f'<div class="gf-info">{c_already}</div>' if already else ""
+
+    # cfm 行：
+    #  - skip_confirmation_no 的 tour（不需要 confirmation#）→ 显示 checkin_note（global key，cfg 回退）
+    #  - 其余 tour → 显示 confirmation# + 全局 cfm_note
+    #    （对照 settings_templates.html:478 label 与 :1392 预览位置确认）
+    if cfg.get("skip_confirmation_no"):
+        cfm_row_html = _guest_row("🔖", db_checkin_note, db_checkin_note)
+    else:
+        _cfm_inner = (
+            f'Confirmation#: <strong>{cfm_no}</strong>'
+            f'<br><span class="gf-sub-note">{c_cfm_note}</span>'
+        )
+        cfm_row_html = _guest_row("🔖", _cfm_inner, cfm_no)
+
+    # submit 按钮：空回退保底（与既有前端 v('...') || 'Submit' 一致，见 settings_templates.html:1348）
+    submit_btn_txt = c_submit or "Submit"
+
+    # 方案 B：check-in 框内各行，值为空则整行不渲染
+    loc_row_html = _guest_row("📍", f"<strong>Location:</strong> {checkin_loc_esc}", checkin_loc_esc)
+    # 时间行：check-in 与 tour time 任一有值才渲染，缺的一半不显示标签
+    _t_parts = []
+    if checkin:
+        _t_parts.append(f"Check-in: <strong>{checkin}</strong>")
+    if tourtime:
+        _t_parts.append(f"Tour: <strong>{tourtime}</strong>")
+    _t_inner = " &nbsp;|&nbsp; ".join(_t_parts)
+    time_row_html = _guest_row("⏰", f"{_t_inner}{late_checkin_html}", _t_inner)
 
     return f"""<!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
@@ -477,11 +727,11 @@ def render_form(row: dict, cfg: dict, token: str, error_msg: str = "", already: 
       </div>
       <div class="gf-pickup-box">
         <div class="gf-box-title">Your Check-in Information</div>
-        <div class="gf-row"><span>📍</span><span><strong>Location:</strong> {escape(cfg.get("checkin_location",""))}</span></div>
+        {loc_row_html}
         {maps_link}
-        <div class="gf-row"><span>⏰</span><span>Check-in: <strong>{checkin}</strong> &nbsp;|&nbsp; Tour: <strong>{tourtime}</strong><br><span class="gf-note-red">★ Late check-in is subject to forfeiting your tour entry.</span></span></div>
-        <div class="gf-tz-note">★ All times are based on the Arizona (AZ) time zone.</div>
-        {f'<div class="gf-row"><span>🔖</span><span>{escape(cfg.get("checkin_note", ""))}</span></div>' if cfg.get("skip_confirmation_no") else f'<div class="gf-row"><span>🔖</span><span>Confirmation#: <strong>{cfm_no}</strong><br><span class="gf-sub-note">Please present this number to the check-in staff upon arrival.</span></span></div>'}
+        {time_row_html}
+        {az_tz_html}
+        {cfm_row_html}
       </div>
       {prepare_html}{reminders_html}{error_html}{already_html}
       <form method="post">
@@ -493,9 +743,9 @@ def render_form(row: dict, cfg: dict, token: str, error_msg: str = "", already: 
           <textarea name="notes" rows="3" placeholder="Any questions or special requests...">{notes_val}</textarea>
         </div>
         <div class="gf-submit">
-          <p style="font-size:13px;color:#555;margin-bottom:12px;">I have read the information above and confirm my tour reservation.</p>
-          <button type="submit" class="gf-btn">Submit</button>
-          <p class="gf-small">Thank you for choosing National Park Express! 🏞️</p>
+          <p style="font-size:13px;color:#555;margin-bottom:12px;">{c_checkbox}</p>
+          <button type="submit" class="gf-btn">{submit_btn_txt}</button>
+          <p class="gf-small">{c_thanks_small}</p>
         </div>
       </form>
     </div></div></body></html>"""

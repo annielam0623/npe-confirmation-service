@@ -610,7 +610,13 @@ from app.services.tickets_reminder import (
 )
 from app.services.sendgrid import send_raw_email as _send_email
 
-_TIX_STAFF = "confirmations@nationalparkexpress.com"
+_TIX_STAFF_FALLBACK = "confirmations@nationalparkexpress.com"
+
+
+async def _get_tix_staff(db) -> str:
+    """staff_email__tix：从 settings 读收件地址；缺失/DB 不可达时回退硬编码。"""
+    copy = await get_copy_many(db, ["staff_email__tix"])
+    return get_copy_value(copy, "staff_email__tix", _TIX_STAFF_FALLBACK)
 
 
 @router.get("/confirm/tickets", response_class=HTMLResponse)
@@ -621,7 +627,7 @@ async def tix_confirm_get(request: Request, db: AsyncSession = Depends(get_db)):
 
     err, row = await tix_verify_token(token, db)
     if err:
-        return HTMLResponse(tix_render_expired())
+        return HTMLResponse(await tix_render_expired(db=db))
 
     cfg = TIX_TOUR_TYPES.get(row.get("tour_type", ""), next(iter(TIX_TOUR_TYPES.values())))
 
@@ -655,14 +661,15 @@ async def tix_confirm_get(request: Request, db: AsyncSession = Depends(get_db)):
             _sql_text("SELECT * FROM tickets_reminders WHERE id=:id"), {"id": row["id"]}
         )
         row = dict(result.mappings().fetchone())
-        subj, body = tix_build_staff_email(row, row.get("tour_type", ""), row.get("reschedule_notes", "") or "")
+        subj, body = await tix_build_staff_email(row, row.get("tour_type", ""), row.get("reschedule_notes", "") or "", db=db)
         try:
-            await _send_email(_TIX_STAFF, "NPE Staff", subj, body)
+            _tix_staff = await _get_tix_staff(db)
+            await _send_email(_tix_staff, "NPE Staff", subj, body)
         except Exception as exc:
             print(f"[tix_confirm] staff email failed: {exc}")
 
     already = bool(row.get("submitted_at")) and row.get("confirmation") != "pending"
-    return HTMLResponse(tix_render_form(row, cfg, token=token, already=already))
+    return HTMLResponse(await tix_render_form(row, cfg, token=token, already=already, db=db))
 
 
 @router.post("/confirm/tickets", response_class=HTMLResponse)
@@ -674,13 +681,13 @@ async def tix_confirm_post(
 ):
     err, row = await tix_verify_token(token, db)
     if err:
-        return HTMLResponse(tix_render_expired())
+        return HTMLResponse(await tix_render_expired(db=db))
 
     cfg = TIX_TOUR_TYPES.get(row.get("tour_type", ""), next(iter(TIX_TOUR_TYPES.values())))
 
     if confirmation != "yes":
-        return HTMLResponse(tix_render_form(row, cfg, token=token,
-                                            error_msg="Please select YES to confirm."))
+        return HTMLResponse(await tix_render_form(row, cfg, token=token,
+                                            error_msg="Please select YES to confirm.", db=db))
 
     new_count = int(row.get("submission_count") or 0) + 1
     # C: tickets_reminders.submitted_at is timestamptz -> aware;
@@ -711,13 +718,14 @@ async def tix_confirm_post(
     )
     row = dict(result.mappings().fetchone())
 
-    subj, body = tix_build_staff_email(row, row.get("tour_type", ""), notes)
+    subj, body = await tix_build_staff_email(row, row.get("tour_type", ""), notes, db=db)
     try:
-        await _send_email(_TIX_STAFF, "NPE Staff", subj, body)
+        _tix_staff = await _get_tix_staff(db)
+        await _send_email(_tix_staff, "NPE Staff", subj, body)
     except Exception as exc:
         print(f"[tix_confirm] staff email failed: {exc}")
 
-    return HTMLResponse(tix_render_thanks(row))
+    return HTMLResponse(await tix_render_thanks(row, db=db))
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────

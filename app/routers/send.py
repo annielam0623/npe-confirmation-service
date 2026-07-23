@@ -828,7 +828,7 @@ async def send_tickets_reminder(
         email_status     = ""
         email_message_id = ""
         if email:
-            email_html = tix.build_email(row, tour_type, service_date, form_url)
+            email_html = await tix.build_email(row, tour_type, service_date, form_url, db=db)
             subject    = f"Tickets Reminder – {tix.TOUR_TYPES[tour_type]['label']} – {_fmt_date(service_date)}"
             try:
                 email_res        = await send_email(email, f"{first} {last}", subject, email_html)
@@ -843,7 +843,7 @@ async def send_tickets_reminder(
         sms_status = ""
         sms_sid    = ""
         if phone:
-            sms_body = tix.build_sms(row, tour_type, sms_url)
+            sms_body = await tix.build_sms(row, tour_type, sms_url, db=db)
             sms_res  = await send_sms_async(phone, sms_body, module="tickets_reminder")
             sms_sid    = sms_res.get("sid", "") if sms_res["success"] else ""
             sms_status = f"sent:{sms_sid}" if sms_res["success"] else f"failed: {sms_res.get('error','')}"

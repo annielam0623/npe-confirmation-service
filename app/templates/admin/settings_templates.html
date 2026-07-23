@@ -393,7 +393,12 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
     { key: 'upper_antelope_hogan_transport', label: "U-Antelope (Hogan Transport)" }, { key: 'upper_antelope_hogan_hiking', label: "U-Antelope (Hogan Hiking)" },
     { key: 'lower_antelope_kens', label: "L-Antelope (Ken's)" }, { key: 'lower_antelope_dixie', label: "L-Antelope (Dixie's)" },
     { key: 'canyon_x', label: 'Canyon X' },
+    { key: 'rattlesnake_aact', label: 'Rattlesnake (AACT)' },
   ];
+
+  // 不需要 Confirmation# 的 tour（对应 tickets_reminder.py TOUR_TYPES 的 skip_confirmation_no: True）
+  // 这两个 tour 的 Confirmation# 位置改显示 checkin_note（email + guest page 一致）
+  const SKIP_CFM_TOURS = ['upper_antelope_hogan_transport', 'upper_antelope_hogan_hiking'];
 
   // ── Field definitions ─────────────────────────────────────────────────────────
   const VAR_WARN = '⚠ Do not remove or modify the { } variables — they are replaced with real guest data when sent.';
@@ -472,17 +477,30 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
   ];
 
   const TIX_GLOBAL_FIELDS = [
+    { key: 'tmpl__global__tix_general_reminder', label: 'Know Before You Go — General Reminder (one item per line; 建议不超过 3–4 行)', type: 'dynamic_lines', max: 10 },
     { key: 'tmpl__global__tix_email_warning', label: 'Warning box — late check-in / timezone (one item per line)', rows: 3 },
     { key: 'tmpl__global__tix_guest_cfm_note', label: 'Confirmation# note on guest page', rows: 2 },
+    { key: 'tmpl__global__tix_guest_checkin_note', label: 'Check-in note — tours with no Confirmation# (email + guest page)', rows: 2 },
     { key: 'tmpl__global__tix_guest_already_info', label: '"If you have questions" info box (green box)', rows: 3 },
     { key: 'tmpl__global__tix_guest_checkbox_text', label: 'Checkbox / confirmation statement', rows: 2 },
     { key: 'tmpl__global__tix_guest_submit_btn', label: 'Submit button text', rows: 1 },
     { key: 'tmpl__global__tix_guest_thanks_small', label: 'Thank you footer text', rows: 2 },
+    { key: 'tmpl__global__tix_guest_prepare_title', label: 'Prepare box — title', rows: 1 },
+    { key: 'tmpl__global__tix_guest_prepare_intro', label: 'Prepare box — intro paragraph', rows: 3 },
+    { key: 'tmpl__global__tix_thanks_message', label: 'Thank-you page message (use {date})', rows: 3, vars: ['{date}'] },
+    { key: 'tmpl__global__tix_expired_title', label: 'Expired link page — title', rows: 1 },
+    { key: 'tmpl__global__tix_expired_message', label: 'Expired link page — message (one item per line)', rows: 3 },
+    { key: 'tmpl__global__tix_staffmail_subject', label: 'Staff email — subject (use {chd} {label} {date})', rows: 1, vars: ['{chd}', '{label}', '{date}'] },
+    { key: 'tmpl__global__tix_staffmail_title', label: 'Staff email — heading', rows: 1 },
   ];
   const TIX_EMAIL_FIELDS = [
     { key: 'tmpl__global__tix_email_intro', label: 'Intro paragraph', rows: 2 },
     { key: 'tmpl__global__tix_email_cta_desc', label: 'Paragraph above CTA button', rows: 3 },
+    { key: 'tmpl__global__tix_email_cta_btn', label: 'CTA button text', rows: 1 },
     { key: 'tmpl__global__tix_email_link_expiry', label: 'Link expiry notice (below CTA button)', rows: 2 },
+    { key: 'tmpl__global__tix_email_resource_weather', label: 'Resource link text — Local Time & Weather', rows: 1 },
+    { key: 'tmpl__global__tix_email_resource_photo', label: 'Resource link text — Location Photo', rows: 1 },
+    { key: 'tmpl__global__tix_email_questions', label: 'Questions / contact line', rows: 2 },
     { key: 'tmpl__global__tix_email_footer', label: 'Footer text', rows: 2 },
   ];
   const TIX_SMS_FIELDS = [
@@ -492,7 +510,7 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
     { key: `tmpl__tix__${t}__checkin_location`, label: 'Check-in location', rows: 2 },
     { key: `tmpl__tix__${t}__maps_url`, label: 'Google Maps URL', rows: 1 },
     { key: `tmpl__tix__${t}__location_photo`, label: 'Location photo URL', rows: 1 },
-    { key: `tmpl__tix__${t}__extra_notes`, label: 'Know Before You Go', type: 'dynamic_lines', max: 3 },
+    { key: `tmpl__tix__${t}__extra_notes`, label: 'Tour-Specific Information', type: 'dynamic_lines', max: 3 },
     { key: `tmpl__tix__${t}__prepare_steps`, label: 'Prepare for Your Tour', type: 'dynamic_steps', max: 3 },
   ];
 
@@ -1117,6 +1135,8 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
     const cta = hlE(esc(v('tmpl__global__tix_email_cta_desc')), 'tmpl__global__tix_email_cta_desc');
     const expiry = hlE(esc(v('tmpl__global__tix_email_link_expiry')), 'tmpl__global__tix_email_link_expiry');
     const footer = hlE(esc(v('tmpl__global__tix_email_footer')), 'tmpl__global__tix_email_footer');
+    const ctaBtn = hlE(esc(v('tmpl__global__tix_email_cta_btn')), 'tmpl__global__tix_email_cta_btn');
+    const questions = hlE(esc(v('tmpl__global__tix_email_questions')), 'tmpl__global__tix_email_questions');
     return `<div class="ep-wrap">
     <div style="background:#1a3a5c;padding:22px;text-align:center;">
       <img src="${LOGO}" style="width:64px;height:auto;margin-bottom:8px;">
@@ -1132,8 +1152,9 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
       </div>
       <div style="background:#fff5f5;border:1px solid #f5c6c6;border-radius:6px;padding:9px 12px;margin-bottom:14px;font-size:11px;color:#c0392b;line-height:1.5;">${warning}</div>
       <p class="ep-p">${cta}</p>
-      <div class="ep-cta"><a class="ep-btn" href="#">Reconfirm My Tour &amp; Continue</a></div>
+      <div class="ep-cta"><a class="ep-btn" href="#">${ctaBtn}</a></div>
       <div class="ep-expiry">${expiry}</div>
+      <p style="color:#999;font-size:11px;text-align:center;margin-top:12px;">${questions}</p>
     </div>
     <div style="background:#f0f0f0;padding:12px;text-align:center;font-size:11px;color:#aaa;border-radius:0 0 10px 10px;">${footer}</div>
   </div>`;
@@ -1343,7 +1364,10 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
     const checkinLoc = hl(esc(v(`tmpl__tix__${tourKey}__checkin_location`)), `tmpl__tix__${tourKey}__checkin_location`);
     const mapsUrl = v(`tmpl__tix__${tourKey}__maps_url`);
     const notesItems = v(notesKey).split('\n').filter(Boolean).map(r => `<li style="margin-bottom:5px;${r.startsWith('★') ? 'color:#c0392b;font-weight:600;' : ''}">${hl(esc(r), notesKey)}</li>`).join('');
+    const genKey = 'tmpl__global__tix_general_reminder';
+    const genItems = v(genKey).split('\n').filter(Boolean).map(r => `<li style="margin-bottom:5px;">${hl(esc(r), genKey)}</li>`).join('');
     const cfmNote = hl(esc(v('tmpl__global__tix_guest_cfm_note')), 'tmpl__global__tix_guest_cfm_note');
+    const checkinNote = hl(esc(v('tmpl__global__tix_guest_checkin_note')), 'tmpl__global__tix_guest_checkin_note');
     const thanksSmall = hl(esc(v('tmpl__global__tix_guest_thanks_small')), 'tmpl__global__tix_guest_thanks_small');
     const submitBtn = hl(esc(v('tmpl__global__tix_guest_submit_btn') || 'Submit'), 'tmpl__global__tix_guest_submit_btn');
     const checkboxText = hl(esc(v('tmpl__global__tix_guest_checkbox_text')), 'tmpl__global__tix_guest_checkbox_text');
@@ -1371,10 +1395,13 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
         ${mapsUrl ? `<div class="gp-row"><span></span><a href="#" style="color:#1a3a5c;font-size:12px;font-weight:600;">🗺️ Google Maps GPS</a></div>` : ''}
         <div class="gp-row"><span>⏰</span><span>Check-in: <strong>${SAMPLE.checkin}</strong> | Tour: <strong>${SAMPLE.tour_time}</strong></span></div>
         ${v('tmpl__global__tix_email_warning').split('\n').filter(Boolean).map(line => `<div style="font-size:11px;color:#c0392b;padding:2px 0 2px 26px;">${hl(esc(line), 'tmpl__global__tix_email_warning')}</div>`).join('')}
-        <div class="gp-row"><span>🔖</span><span>Confirmation#: <strong>95151</strong><br><span style="font-size:11px;color:#555;">${cfmNote}</span></span></div>
+        ${SKIP_CFM_TOURS.includes(tourKey)
+          ? `<div class="gp-row"><span>🔖</span><span>${checkinNote}</span></div>`
+          : `<div class="gp-row"><span>🔖</span><span>Confirmation#: <strong>95151</strong><br><span style="font-size:11px;color:#555;">${cfmNote}</span></span></div>`}
       </div>
       ${prepHtml}
-      ${notesItems ? `<div class="gp-reminders"><div class="gp-reminders-title">📌 Know Before You Go</div><ul style="margin:0;padding-left:16px;font-size:12px;color:#333;">${notesItems}</ul></div>` : ''}
+      ${genItems ? `<div class="gp-reminders"><div class="gp-reminders-title">📌 Know Before You Go</div><ul style="margin:0;padding-left:16px;font-size:12px;color:#333;">${genItems}</ul></div>` : ''}
+      ${notesItems ? `<div class="gp-reminders"><div class="gp-reminders-title">Tour-Specific Information</div><ul style="margin:0;padding-left:16px;font-size:12px;color:#333;">${notesItems}</ul></div>` : ''}
       <div style="margin-bottom:10px;">
         <div style="font-size:12px;font-weight:600;color:#1a3a5c;margin-bottom:6px;">📝 Notes <span style="font-weight:400;color:#aaa;font-size:11px;">(optional)</span></div>
         <div style="border:1px solid #ddd;border-radius:8px;padding:8px 10px;font-size:11px;color:#aaa;background:#fafafa;">Any questions or special requests...</div>
