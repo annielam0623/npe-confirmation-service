@@ -305,6 +305,7 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
         </div>
       </div>
       <div class="cs-panel" id="tix-email-panel">
+        <div class="tour-selector" id="tix-email-pills"></div>
         <div id="tix-email-fields"></div>
       </div>
       <div class="cs-panel" id="tix-sms-panel">
@@ -354,6 +355,7 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
   let currentSubTab = 'global';
   let currentTcTour = null;
   let currentTixTour = null;
+  let currentTixEmailTour = null;
   let activeFieldKey = null;
   let _dragIdx = -1, _dragStepIdx = -1;
   let tcGuestMode = 'standard';  // 'standard' | 'lm'
@@ -703,6 +705,8 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
       document.getElementById('tc-guest-fields').innerHTML = TC_GUEST_PRODUCT_FIELDS(currentTcTour).map(f => fieldCard(f, false)).join('');
     } else {
       document.getElementById('tix-global-fields').innerHTML = TIX_GLOBAL_FIELDS.map(f => fieldCard(f, true)).join('');
+      if (!currentTixEmailTour) currentTixEmailTour = TIX_TOURS[0].key;
+      document.getElementById('tix-email-pills').innerHTML = pillsHtml(TIX_TOURS, currentTixEmailTour, 'selectTixEmailTour', 'active-tix');
       document.getElementById('tix-email-fields').innerHTML =
         '<div class="field-group-title">Global — all products</div>' + TIX_EMAIL_FIELDS.map(f => fieldCard(f, true)).join('');
       document.getElementById('tix-sms-fields').innerHTML =
@@ -724,6 +728,14 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
     document.querySelectorAll('#tix-guest-pills .tour-pill').forEach(p => p.classList.remove('active-tix'));
     el.classList.add('active-tix');
     document.getElementById('tix-guest-fields').innerHTML = TIX_GUEST_PRODUCT_FIELDS(key).map(f => fieldCard(f, false)).join('');
+    renderPreview();
+  }
+
+  function selectTixEmailTour(key, el) {
+    // 只切换预览用的 tour；Email 字段本身是 global，不随 tour 变
+    currentTixEmailTour = key;
+    document.querySelectorAll('#tix-email-pills .tour-pill').forEach(p => p.classList.remove('active-tix'));
+    el.classList.add('active-tix');
     renderPreview();
   }
 
@@ -1137,23 +1149,63 @@ bottom,rgba(6,26,51,.45),rgba(6,26,51,.82));display:flex;flex-direction:column;a
     const footer = hlE(esc(v('tmpl__global__tix_email_footer')), 'tmpl__global__tix_email_footer');
     const ctaBtn = hlE(esc(v('tmpl__global__tix_email_cta_btn')), 'tmpl__global__tix_email_cta_btn');
     const questions = hlE(esc(v('tmpl__global__tix_email_questions')), 'tmpl__global__tix_email_questions');
+    const resWeather = hlE(esc(v('tmpl__global__tix_email_resource_weather')), 'tmpl__global__tix_email_resource_weather');
+    const resPhoto = hlE(esc(v('tmpl__global__tix_email_resource_photo')), 'tmpl__global__tix_email_resource_photo');
+    const checkinNote = hlE(esc(v('tmpl__global__tix_guest_checkin_note')), 'tmpl__global__tix_guest_checkin_note');
+
+    // 表格结构忠实于 tickets_reminder.py build_email：7 行 + Maps 行，两列布局
+    // 结构写死在代码里（global，所有 tour 一致）；此处仅填充示例值
+    const TD_L = 'padding:10px 16px;font-size:13px;font-weight:bold;color:#666;';
+    const TD_R = 'padding:10px 16px;font-size:13px;';
+    const SH = 'background:#e8f0ff;';
+    const erow = (label, val, shaded, valStyle) =>
+      `<tr><td style="${TD_L}${shaded ? SH : ''}">${label}</td><td style="${TD_R}${valStyle || ''}">${val}</td></tr>`;
+
+    const tourKey = currentTixEmailTour || TIX_TOURS[0].key;
+    const tourLabel = TIX_TOURS.find(t => t.key === tourKey)?.label || '';
+    const isSkip = SKIP_CFM_TOURS.includes(tourKey);
+    const locVal = v(`tmpl__tix__${tourKey}__checkin_location`);
+    const mapsVal = v(`tmpl__tix__${tourKey}__maps_url`);
+
+    // Confirmation# 行：skip_confirmation_no 的 tour 改显示 checkin_note（对应 build_email 分支）
+    const cfmRow = isSkip
+      ? erow('🔖 Check-in', checkinNote, false, '')
+      : erow('🔖 Confirmation#', '95151', false, 'font-weight:bold;');
+    // 方案 B：值为空的行整行不渲染（与 _email_row 一致）
+    const locRow = locVal.trim()
+      ? erow('📍 Check-in Location', hlE(esc(locVal), `tmpl__tix__${tourKey}__checkin_location`), true, '')
+      : '';
+    const mapsRow = mapsVal.trim()
+      ? erow('🗺️ Maps', '<a href="#" style="color:#1a3a5c;">Google Maps GPS</a>', false, '')
+      : '';
+
     return `<div class="ep-wrap">
     <div style="background:#1a3a5c;padding:22px;text-align:center;">
       <img src="${LOGO}" style="width:64px;height:auto;margin-bottom:8px;">
       <div style="color:#fff;font-size:16px;font-weight:600;">Tickets Reminder &amp; Reconfirmation</div>
+      <p style="color:#a8c4e0;margin:6px 0 0;font-size:13px;">${esc(tourLabel)}</p>
     </div>
     <div class="ep-body">
       <p class="ep-p">Hi <strong>${SAMPLE.name}</strong>,</p>
       <p class="ep-p">${intro}</p>
-      <div class="ep-detail-card" style="margin-bottom:14px;">
-        <div class="ep-row"><div class="ep-icon">📋</div><div><div class="ep-row-label">CHD #</div><div class="ep-row-val">${SAMPLE.order}</div></div></div>
-        <div class="ep-row"><div class="ep-icon">📅</div><div><div class="ep-row-label">Service Date</div><div class="ep-row-val" style="color:#1a3a5c;">${SAMPLE.date}</div></div></div>
-        <div class="ep-row"><div class="ep-icon">⏰</div><div><div class="ep-row-label">Check-in Time</div><div class="ep-row-val">${SAMPLE.checkin}</div></div></div>
-      </div>
+      <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f5ff;border-radius:8px;overflow:hidden;margin-bottom:14px;">
+        ${erow('📋 CHD#', SAMPLE.order, true, '')}
+        ${cfmRow}
+        ${erow('👥 Party Size', '2 Guest(s)', true, '')}
+        ${erow('📅 Service Date', SAMPLE.date, false, 'font-weight:bold;color:#1a3a5c;')}
+        ${erow('⏰ Check-in Time', SAMPLE.checkin, true, 'font-weight:bold;')}
+        ${erow('🎡 Tour Time', SAMPLE.tour_time, false, 'font-weight:bold;')}
+        ${locRow}
+        ${mapsRow}
+      </table>
       <div style="background:#fff5f5;border:1px solid #f5c6c6;border-radius:6px;padding:9px 12px;margin-bottom:14px;font-size:11px;color:#c0392b;line-height:1.5;">${warning}</div>
       <p class="ep-p">${cta}</p>
       <div class="ep-cta"><a class="ep-btn" href="#">${ctaBtn}</a></div>
       <div class="ep-expiry">${expiry}</div>
+      ${v(`tmpl__tix__${tourKey}__location_photo`).trim() && (resWeather || resPhoto) ? `<p style="font-size:12px;margin-top:8px;text-align:center;">
+        <a href="#" style="color:#1a3a5c;">${resWeather}</a>
+        &nbsp;&nbsp;<a href="#" style="color:#1a3a5c;margin-left:16px;">${resPhoto}</a>
+      </p>` : ''}
       <p style="color:#999;font-size:11px;text-align:center;margin-top:12px;">${questions}</p>
     </div>
     <div style="background:#f0f0f0;padding:12px;text-align:center;font-size:11px;color:#aaa;border-radius:0 0 10px 10px;">${footer}</div>
