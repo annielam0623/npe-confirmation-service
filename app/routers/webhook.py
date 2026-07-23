@@ -768,6 +768,16 @@ async def twilio_inbound_sms(request: Request, db: AsyncSession = Depends(get_db
             """),
             {"order_number": order_number}
         )
+        # Tickets rows live in tickets_reminders and take precedence in the
+        # tracking COALESCE, so they must be cleared too. Joined by chd_number.
+        await db.execute(
+            _text("""
+                UPDATE tickets_reminders
+                SET action_taken_by = NULL, action_taken_at = NULL
+                WHERE chd_number = :order_number
+            """),
+            {"order_number": order_number}
+        )
         await db.commit()
         print(f"[webhook/twilio/inbound] wrote sms_in note for order_number={order_number}")
     except Exception as e:

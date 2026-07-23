@@ -712,6 +712,22 @@ async def tix_confirm_post(
                        AND module='tickets_reminder'"""),
         {"n": notes, "ts": now_naive, "c": new_count, "order_number": order_number},
     )
+    # New guest message → clear staff action flag so the row turns red again.
+    # Empty submissions (YES with no text) are not messages and do not reset it.
+    if notes.strip():
+        await db.execute(
+            _sql_text("""UPDATE tickets_reminders
+                         SET action_taken_by=NULL, action_taken_at=NULL
+                         WHERE id=:id"""),
+            {"id": row["id"]},
+        )
+        await db.execute(
+            _sql_text("""UPDATE bookings
+                         SET action_taken_by=NULL, action_taken_at=NULL
+                         WHERE order_number=:order_number
+                           AND module='tickets_reminder'"""),
+            {"order_number": order_number},
+        )
     await db.commit()
     result = await db.execute(
         _sql_text("SELECT * FROM tickets_reminders WHERE id=:id"), {"id": row["id"]}
