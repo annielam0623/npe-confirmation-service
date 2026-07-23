@@ -2239,6 +2239,15 @@
         container.style.gap = '10px';
         container.innerHTML = msgs.map(function (n) {
           var s = sm[n.direction] || { label: n.direction, color: '#333', right: false, dot: null };
+          // Show what actually happened per channel; failures must not read as sent.
+          var lbl = s.label, lblColor = s.color;
+          var parts = [];
+          if (n.sms_status) parts.push('SMS ' + (n.sms_status === 'sent' ? 'sent' : 'failed'));
+          if (n.email_status) parts.push('Email ' + (n.email_status === 'sent' ? 'sent' : 'failed'));
+          if (parts.length) {
+            lbl = parts.join(', ');
+            if (n.sms_status === 'failed' || n.email_status === 'failed') lblColor = '#dc3545';
+          }
           var dotHtml = s.dot ? '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + s.dot + ';margin-right:3px;vertical-align:middle;"></span>' : '';
           var align = s.right ? 'flex-end' : 'flex-start';
           var bubbleBg = s.right ? '#fff' : '#f0f4f8';
@@ -2248,7 +2257,7 @@
             + '<div style="background:' + bubbleBg + ';border:1px solid ' + bubbleBorder + ';border-radius:' + radius + ';padding:9px 12px;font-size:13px;color:#212529;line-height:1.5;white-space:pre-wrap;word-break:break-word;">' + escHtml(n.body) + '</div>'
             + '<div style="font-size:11px;color:#aaa;padding:0 4px;' + (s.right ? 'text-align:right;' : '') + '">'
             + dotHtml
-            + '<span style="font-weight:600;color:' + s.color + ';">' + s.label + '</span>'
+            + '<span style="font-weight:600;color:' + lblColor + ';">' + lbl + '</span>'
             + (n.author_username ? ' · ' + escHtml(n.author_username) : '')
             + (n.created_at ? ' · ' + escHtml(n.created_at) : '')
             + '</div>'
@@ -2260,10 +2269,17 @@
       async function submitNote(dir) {
         var body = document.getElementById("noteInput").value.trim();
         if (!body || !_notesBookingId) return;
+        // Internal notes must never go out to the guest, whatever the
+        // checkboxes happen to be set to.
+        var isStaffNote = (dir === 'staff_note');
+        var smsChk = document.getElementById("sendSmsCheck");
+        var emailChk = document.getElementById("sendEmailCheck");
+        var sendSms = isStaffNote ? false : (smsChk ? smsChk.checked : false);
+        var sendEmail = isStaffNote ? false : (emailChk ? emailChk.checked : false);
         try {
           await fetch("/booking-notes/by-order/" + encodeURIComponent(_notesOrderNumber), {
             method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ body: body, direction: dir, send_sms: document.getElementById("sendSmsCheck").checked, send_email: document.getElementById("sendEmailCheck").checked })
+            body: JSON.stringify({ body: body, direction: dir, send_sms: sendSms, send_email: sendEmail })
           });
           document.getElementById("noteInput").value = "";
           _noteResetHeight();

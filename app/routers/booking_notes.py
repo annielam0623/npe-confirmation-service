@@ -337,6 +337,13 @@ async def add_note_by_order(
             .where(Booking.order_number == order_number)
             .values(action_taken_by=None, action_taken_at=None)
         )
+    elif sms_status == "sent" or email_status == "sent":
+        # Staff actually reached the guest → mark handled. Failed sends stay red.
+        await db.execute(
+            update(Booking)
+            .where(Booking.order_number == order_number)
+            .values(action_taken_by=user.username, action_taken_at=_now_la())
+        )
 
     await db.commit()
     await db.refresh(note)
@@ -384,14 +391,20 @@ async def add_note(
     sms_status   = None
     email_status = None
 
-    if payload.send_sms and phone:
+    # staff_note is an INTERNAL note — never send to guest, never reclassify.
+    # Guarded server-side so correctness does not depend on the caller.
+    is_internal   = (payload.direction == "staff_note")
+    do_send_sms   = bool(payload.send_sms) and not is_internal
+    do_send_email = bool(payload.send_email) and not is_internal
+
+    if do_send_sms and phone:
         try:
             await send_sms_async(phone, payload.body)
             sms_status = "sent"
         except Exception:
             sms_status = "failed"
 
-    if payload.send_email and customer_email:
+    if do_send_email and customer_email:
         try:
             subject = f"Update on your National Park Express tour — Order {order_number}"
             html = f"""
@@ -406,11 +419,13 @@ async def add_note(
             email_status = "failed"
 
     direction = payload.direction
-    if payload.send_sms and payload.send_email:
+    if is_internal:
+        direction = "staff_note"
+    elif do_send_sms and do_send_email:
         direction = "sms_out"
-    elif payload.send_sms:
+    elif do_send_sms:
         direction = "sms_out"
-    elif payload.send_email:
+    elif do_send_email:
         direction = "email_out"
 
     note = BookingNote(
@@ -448,6 +463,23 @@ async def add_note(
                 sa_update(Booking)
                 .where(Booking.id == booking_id)
                 .values(action_taken_by=None, action_taken_at=None)
+            )
+    elif sms_status == "sent" or email_status == "sent":
+        # Staff actually reached the guest → this row is handled, mark it green.
+        # Keyed on delivery result, not intent: a failed send stays red so staff
+        # can see something went wrong instead of trusting a false green.
+        _now = _now_la()
+        if source == "tickets":
+            await db.execute(
+                text("UPDATE tickets_reminders SET action_taken_by=:actor, action_taken_at=:now WHERE id=:id"),
+                {"actor": user.username, "now": _now, "id": booking_id}
+            )
+        else:
+            from sqlalchemy import update as sa_update
+            await db.execute(
+                sa_update(Booking)
+                .where(Booking.id == booking_id)
+                .values(action_taken_by=user.username, action_taken_at=_now)
             )
 
     await db.commit()

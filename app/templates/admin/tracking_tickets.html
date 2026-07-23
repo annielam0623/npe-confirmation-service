@@ -1680,12 +1680,22 @@
       }
       container.innerHTML = msgs.map(function (n) {
         var s = sm[n.direction] || { bg: '#f0f0f0', border: '#ddd', label: n.direction, color: '#333', right: false };
+        // Show what actually happened per channel. A send that failed must not
+        // read as "sent" — staff need to see why the row stayed red.
+        var lbl = s.label, lblColor = s.color;
+        var parts = [];
+        if (n.sms_status) parts.push('SMS ' + (n.sms_status === 'sent' ? 'sent' : 'failed'));
+        if (n.email_status) parts.push('Email ' + (n.email_status === 'sent' ? 'sent' : 'failed'));
+        if (parts.length) {
+          lbl = parts.join(', ');
+          if (n.sms_status === 'failed' || n.email_status === 'failed') lblColor = '#dc3545';
+        }
         var dotHtml = s.dot ? '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:' + s.dot + ';margin-right:3px;vertical-align:middle;"></span>' : '';
         var radius = s.right ? '10px 0 10px 10px' : '0 10px 10px 10px';
         return '<div style="display:flex;flex-direction:column;gap:2px;align-self:' + (s.right ? 'flex-end' : 'flex-start') + ';max-width:88%;">'
           + '<div style="background:' + s.bg + ';border:0.5px solid ' + s.border + ';border-radius:' + radius + ';padding:9px 12px;font-size:13px;color:#333;line-height:1.5;white-space:pre-wrap;word-break:break-word;">' + esc(n.body) + '</div>'
           + '<div style="font-size:11px;color:#aaa;padding:0 4px;' + (s.right ? 'text-align:right;' : '') + '">' + dotHtml
-          + '<span style="font-weight:600;color:' + s.color + ';">' + s.label + '</span>'
+          + '<span style="font-weight:600;color:' + lblColor + ';">' + lbl + '</span>'
           + (n.author_username ? ' · ' + esc(n.author_username) : '')
           + (n.created_at ? ' · ' + esc(n.created_at) : '')
           + '</div></div>';
