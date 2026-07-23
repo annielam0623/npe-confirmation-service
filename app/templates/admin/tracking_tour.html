@@ -1919,7 +1919,7 @@
         </div>
         <div style="padding:12px 14px;border-top:1px solid #eee;background:#fff;">
           <textarea id="noteInput" rows="3" placeholder="Write a note or message to guest..."
-            style="width:100%;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;font-size:13px;resize:vertical;min-height:70px;box-sizing:border-box;outline:none;font-family:inherit;"></textarea>
+            style="width:100%;border:1px solid #dee2e6;border-radius:8px;padding:8px 10px;font-size:13px;resize:vertical;min-height:70px;box-sizing:border-box;outline:none;font-family:inherit;background-color:#fff;background-repeat:no-repeat;background-position:right 3px bottom 3px;background-size:16px 16px;background-image:url(&quot;data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M14 2 L2 14 M14 7 L7 14 M14 12 L12 14' stroke='%236c8f6f' stroke-width='1.6' fill='none' stroke-linecap='round'/></svg>&quot;);"></textarea>
           <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
             <label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:pointer;"><input type="checkbox"
                 id="sendSmsCheck" checked> <span
@@ -2133,6 +2133,7 @@
         document.getElementById("notesTitle").textContent = "Order " + orderNum;
         document.getElementById("notesSubtitle").textContent = name;
         document.getElementById("noteInput").value = "";
+        _noteResetHeight();
         // Clear container immediately so previous booking's notes never show
         document.getElementById("notesMessages").innerHTML = '<div style="text-align:center;color:#aaa;font-size:13px;padding:20px 0;">Loading...</div>';
         // Init Take Action button based on current row state
@@ -2265,10 +2266,34 @@
             body: JSON.stringify({ body: body, direction: dir, send_sms: document.getElementById("sendSmsCheck").checked, send_email: document.getElementById("sendEmailCheck").checked })
           });
           document.getElementById("noteInput").value = "";
+          _noteResetHeight();
           await _fetchNotes();
         } catch (e) { alert("Failed to save note."); }
       }
-    </script>
+    
+      function _noteAutoGrow() {
+        var el = document.getElementById("noteInput");
+        if (!el) return;
+        el.style.height = "auto";
+        el.style.height = Math.max(el.scrollHeight, 70) + "px";
+      }
+      function _noteResetHeight() {
+        var el = document.getElementById("noteInput");
+        if (!el) return;
+        el.style.height = "";
+      }
+      (function () {
+        function _bindNoteAutoGrow() {
+          var el = document.getElementById("noteInput");
+          if (el && !el._agBound) { el._agBound = true; el.addEventListener("input", _noteAutoGrow); }
+        }
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", _bindNoteAutoGrow);
+        } else {
+          _bindNoteAutoGrow();
+        }
+      })();
+</script>
 </body>
 
 </html>
