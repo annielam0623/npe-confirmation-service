@@ -699,7 +699,7 @@ async def resend_booking(
         if module == "tour_confirmation":
             token = tc.make_token(b["id"], b["customer_email"], str(b["tour_date"]))
             url   = tc.confirm_url(token, src="email")
-            html  = tc.build_email(dict(b), b["tour_type"], str(b["tour_date"]), url)
+            html  = await tc.build_email(dict(b), b["tour_type"], str(b["tour_date"]), url, db=db)
             subj  = f"Tour Confirmation – {b['tour_type']}"
         elif module == "morning_pickup":
             html = mp.build_email(dict(b))
@@ -707,7 +707,7 @@ async def resend_booking(
         else:
             token = tix.make_token(b["id"], b["customer_email"], str(b["tour_date"]))
             url   = tix.confirm_url(token, src="email")
-            html  = tix.build_email(dict(b), b["tour_type"], str(b["tour_date"]), url)
+            html  = await tix.build_email(dict(b), b["tour_type"], str(b["tour_date"]), url, db=db)
             subj  = f"Tickets Reminder – {b['tour_type']}"
 
         er = await send_email(b["customer_email"], f"{b['first_name']} {b['last_name']}", subj, html)
@@ -717,13 +717,13 @@ async def resend_booking(
         if module == "tour_confirmation":
             token = tc.make_token(b["id"], b["customer_email"] or "", str(b["tour_date"]))
             url   = tc.confirm_url(token, src="sms")
-            body  = tc.build_sms(b["first_name"], b["tour_type"], str(b["tour_date"]), url)
+            body  = await tc.build_sms(b["first_name"], b["tour_type"], str(b["tour_date"]), url, db=db)
         elif module == "morning_pickup":
             body = mp.build_sms(dict(b))
         else:
             token = tix.make_token(b["id"], b["customer_email"] or "", str(b["tour_date"]))
             url   = tix.confirm_url(token, src="sms")
-            body  = tix.build_sms(dict(b), b["tour_type"], url)
+            body  = await tix.build_sms(dict(b), b["tour_type"], url, db=db)
 
         sr = send_sms(b["phone"], body, module=module)
         results.append(f"SMS: {'sent' if sr['success'] else sr.get('error','failed')}")

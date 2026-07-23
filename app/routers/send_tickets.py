@@ -121,7 +121,7 @@ async def _do_send(d: dict, send_type: str, db: AsyncSession, sent_by: str = "")
         if phone:
             r = await send_sms_async(
                 phone,
-                build_sms(d, d.get("tour_type", ""), form_url),
+                await build_sms(d, d.get("tour_type", ""), form_url, db),
                 module="tickets_reminder",
             )
             sms_ok  = r.get("success", False)
@@ -147,7 +147,7 @@ async def _do_send(d: dict, send_type: str, db: AsyncSession, sent_by: str = "")
                 datetime.strptime(svc_date, "%Y-%m-%d").strftime("%B %-d, %Y") if svc_date else "")
             email_ok = await send_raw_email(
                 email_addr, "Guest", subj,
-                build_email(d, d.get("tour_type", ""), svc_date, form_url),
+                await build_email(d, d.get("tour_type", ""), svc_date, form_url, db),
             )
             if not email_ok:
                 logger.error(
